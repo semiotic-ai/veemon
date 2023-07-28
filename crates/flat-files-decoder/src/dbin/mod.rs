@@ -6,8 +6,7 @@ pub(crate) struct DbinFile {
     pub version: u8,
     pub content_type: String,
     pub content_version: String,
-    pub message_size: u32,
-    pub message: Vec<u8>,
+    pub messages: Vec<Vec<u8>>
 }
 
 impl DbinFile {
@@ -33,22 +32,36 @@ impl DbinFile {
 
         let content_version = String::from_utf8(Vec::from(content_version))?;
 
+        let mut messages: Vec<Vec<u8>> = vec![];
 
-        let mut message_size: [u8; 4] = [0; 4];
-        file.read_exact(&mut message_size).expect("Failed to read file");
+        loop {
+            match Self::read_message(&mut file) {
+                Ok(message) => messages.push(message),
+                Err(err) => {
+                    return if err.kind() == std::io::ErrorKind::UnexpectedEof {
+                        Ok(DbinFile {
+                            version: version[0],
+                            content_type: content_type.clone(),
+                            content_version: content_version.clone(),
+                            messages,
+                        })
+                    } else {
+                        Err(err.into())
+                    }
+                }
+            }
+        }
+    }
 
-        let message_size = u32::from_be_bytes(message_size);
-        println!("Message size: {}", message_size);
+    fn read_message(file: &mut File) -> Result<Vec<u8>, std::io::Error> {
+        let mut size: [u8; 4] = [0; 4];
+        file.read_exact(&mut size)?;
 
-        let mut message: Vec<u8> = vec![0; message_size as usize];
-        file.read_exact(&mut message).expect("Failed to read file");
+        let size = u32::from_be_bytes(size);
 
-        Ok(DbinFile {
-            version: version[0],
-            content_type,
-            content_version,
-            message_size,
-            message,
-        })
+        let mut content: Vec<u8> = vec![0; size as usize];
+        file.read_exact(&mut content)?;
+
+        Ok(content)
     }
 }
