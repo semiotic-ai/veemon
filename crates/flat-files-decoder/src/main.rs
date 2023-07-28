@@ -1,12 +1,13 @@
 mod protos;
 mod dbin;
 
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use protobuf::Message;
 use crate::dbin::DbinFile;
 
-fn hanlde_message(message: Vec<u8>) {
+fn handle_block(message: Vec<u8>) {
     let message: protos::bstream::Block = Message::parse_from_bytes(&message)
         .expect("Failed to parse message");
 
@@ -23,8 +24,8 @@ fn hanlde_message(message: Vec<u8>) {
         .expect("Failed to write json file");
 }
 
-fn main() {
-    let input_file = File::open("example0017686312.dbin")
+fn handle_file(path: &str) {
+    let input_file = File::open(path)
         .expect("Failed to open file");
 
     let dbin_file = DbinFile::from_file(input_file)
@@ -35,8 +36,30 @@ fn main() {
     }
 
     for message in dbin_file.messages {
-        hanlde_message(message);
+        handle_block(message);
     }
+}
+
+fn main() {
+    let paths = fs::read_dir("input_files")
+        .expect("Failed to read input_files directory");
+
+    for path in paths {
+        let path = path.expect("Failed to read path");
+        match path.path().extension() {
+            Some(ext) => {
+                if ext != "dbin" {
+                    continue;
+                }
+            },
+            None => continue
+        };
+
+        println!("Processing file: {}", path.path().display());
+
+        handle_file(path.path().to_str().expect("Failed to convert path to string"));
+    }
+
 }
 
 

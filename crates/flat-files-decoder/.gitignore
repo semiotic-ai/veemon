@@ -1,6 +1,6 @@
 out.json
 block-*.json
-
+input_files/*.dbin
 .idea
 
 
