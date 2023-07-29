@@ -6,5 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.72"
 protobuf = "3.2.0"
 protobuf-json-mapping = "3.2.0"
+reth-blockchain-tree = { git = "https://github.com/paradigmxyz/reth", version = "0.1.0-alpha.4" }
+reth-primitives = { git = "https://github.com/paradigmxyz/reth", version = "0.1.0-alpha.4" }
