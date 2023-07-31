@@ -1,8 +1,10 @@
-use std::error::Error;
+mod error;
+
 use std::fs::File;
 use std::io::Read;
+use crate::dbin::error::DbinFileError;
 
-pub(crate) struct DbinFile {
+pub struct DbinFile {
     pub version: u8,
     pub content_type: String,
     pub content_version: String,
@@ -10,27 +12,35 @@ pub(crate) struct DbinFile {
 }
 
 impl DbinFile {
-    pub(crate) fn from_file(mut file: File) -> Result<Self, Box<dyn Error>> {
+    pub fn from_file(mut file: File) -> Result<Self, DbinFileError> {
         let mut dbin: [u8; 4] = [0; 4];
-        file.read_exact(&mut dbin)?;
+        file.read_exact(&mut dbin)
+            .map_err(DbinFileError::ReadError)?;
 
-        let dbin = String::from_utf8(Vec::from(dbin))?;
+        let dbin = String::from_utf8(Vec::from(dbin))
+            .map_err(DbinFileError::InvalidUTF8)?;
+
         if dbin != "dbin" {
-            return Err("Invalid dbin file".into());
+            return Err(DbinFileError::InvalidDBINBytes);
         }
 
         let mut version: [u8; 1] = [0];
-        file.read_exact(&mut version)?;
+        file.read_exact(&mut version)
+            .map_err(DbinFileError::ReadError)?;
 
         let mut content_type: [u8; 3] = [0; 3];
-        file.read_exact(&mut content_type)?;
+        file.read_exact(&mut content_type)
+            .map_err(DbinFileError::ReadError)?;
 
-        let content_type = String::from_utf8(Vec::from(content_type))?;
+        let content_type = String::from_utf8(Vec::from(content_type))
+            .map_err(DbinFileError::InvalidUTF8)?;
 
         let mut content_version: [u8; 2] = [0; 2];
-        file.read_exact(&mut content_version)?;
+        file.read_exact(&mut content_version)
+            .map_err(DbinFileError::ReadError)?;
 
-        let content_version = String::from_utf8(Vec::from(content_version))?;
+        let content_version = String::from_utf8(Vec::from(content_version))
+            .map_err(DbinFileError::InvalidUTF8)?;
 
         let mut messages: Vec<Vec<u8>> = vec![];
 
@@ -41,12 +51,12 @@ impl DbinFile {
                     return if err.kind() == std::io::ErrorKind::UnexpectedEof {
                         Ok(DbinFile {
                             version: version[0],
-                            content_type: content_type.clone(),
-                            content_version: content_version.clone(),
+                            content_type,
+                            content_version,
                             messages,
                         })
                     } else {
-                        Err(err.into())
+                        Err(DbinFileError::ReadError(err))
                     }
                 }
             }

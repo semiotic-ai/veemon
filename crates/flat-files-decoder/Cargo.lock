@@ -529,6 +529,7 @@ dependencies = [
  "protobuf-json-mapping",
  "reth-blockchain-tree",
  "reth-primitives",
+ "thiserror",
 ]
 
 [[package]]

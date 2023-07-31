@@ -2,8 +2,6 @@ mod protos;
 mod dbin;
 mod receipts;
 
-
-use std::any::Any;
 use std::fs;
 use std::fs::File;
 use std::io::Write;

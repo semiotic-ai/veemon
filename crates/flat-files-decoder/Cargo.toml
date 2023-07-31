@@ -11,3 +11,4 @@ protobuf = "3.2.0"
 protobuf-json-mapping = "3.2.0"
 reth-blockchain-tree = { git = "https://github.com/paradigmxyz/reth", version = "0.1.0-alpha.4" }
 reth-primitives = { git = "https://github.com/paradigmxyz/reth", version = "0.1.0-alpha.4" }
+thiserror = "1.0.44"
