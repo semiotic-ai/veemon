@@ -11,8 +11,8 @@ pub struct DbinFile {
     pub messages: Vec<Vec<u8>>
 }
 
-impl DbinFile {
-    pub fn from_file(mut file: File) -> Result<Self, DbinFileError> {
+impl TryFrom<File> for DbinFile {
+    fn try_from(mut file: File) -> Result<Self, Self::Error> {
         let mut dbin: [u8; 4] = [0; 4];
         file.read_exact(&mut dbin)
             .map_err(DbinFileError::ReadError)?;
@@ -63,6 +63,10 @@ impl DbinFile {
         }
     }
 
+    type Error = DbinFileError;
+}
+
+impl DbinFile {
     fn read_message(file: &mut File) -> Result<Vec<u8>, std::io::Error> {
         let mut size: [u8; 4] = [0; 4];
         file.read_exact(&mut size)?;

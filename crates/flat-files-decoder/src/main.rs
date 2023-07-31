@@ -32,7 +32,7 @@ fn handle_file(path: PathBuf) -> anyhow::Result<Vec<Block>> {
     let input_file = File::open(path)
         .expect("Failed to open file");
 
-    let dbin_file = DbinFile::from_file(input_file)
+    let dbin_file = DbinFile::try_from(input_file)
         .expect("Invalid dbin file");
 
     if dbin_file.content_type != "ETH" {
