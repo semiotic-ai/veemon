@@ -76,3 +76,34 @@ fn handle_block(message: Vec<u8>) -> anyhow::Result<Block> {
     Ok(block)
 }
 
+#[test]
+fn test_handle_file() {
+    let path = PathBuf::from("example0017686312.dbin");
+
+    let result = handle_file(&path);
+
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_check_valid_root_fail() {
+    let path = PathBuf::from("example0017686312.dbin");
+    let file = File::open(path).expect("Failed to open file");
+    let dbin_file = DbinFile::try_from(file)
+        .expect("Failed to parse dbin file");
+
+    let message = dbin_file.messages[0].clone();
+
+    let message: protos::bstream::Block = Message::parse_from_bytes(&message)
+        .expect("Failed to parse message");
+    let mut block: Block = Message::parse_from_bytes(&message.payload_buffer)
+        .expect("Failed to parse block");
+
+    block.balance_changes.pop();
+
+    let result = check_valid_root(&block);
+    matches!(result, Err(receipts::error::InvalidReceiptError::ReceiptRoot(_, _)));
+}
+
+
+

@@ -1,6 +1,6 @@
 mod logs;
 mod receipt;
-mod error;
+pub mod error;
 
 use reth_blockchain_tree::post_state::PostState;
 use reth_primitives::{hex, Receipt};
