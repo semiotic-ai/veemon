@@ -9,6 +9,14 @@ edition = "2021"
 anyhow = "1.0.72"
 protobuf = "3.2.0"
 protobuf-json-mapping = "3.2.0"
+rand = "0.8.5"
 reth-blockchain-tree = { git = "https://github.com/paradigmxyz/reth", version = "0.1.0-alpha.4" }
 reth-primitives = { git = "https://github.com/paradigmxyz/reth", version = "0.1.0-alpha.4" }
 thiserror = "1.0.44"
+
+[dev-dependencies]
+criterion = { version = "0.5.1", features = ["html_reports"] }
+
+[[bench]]
+name = "decoder"
+harness = false

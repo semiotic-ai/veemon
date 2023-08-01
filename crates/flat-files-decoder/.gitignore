@@ -2,7 +2,7 @@ out.json
 block-*.json
 input_files/*.dbin
 .idea
-
+.DS_Store
 
 # Added by cargo
 
