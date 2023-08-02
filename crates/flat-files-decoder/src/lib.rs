@@ -66,12 +66,12 @@ fn handle_block(message: Vec<u8>) -> anyhow::Result<Block> {
 
     check_valid_root(&block)?;
 
-    let file_name = format!("output_files/block-{}.json", block.number);
-    let mut out_file = File::create(file_name)?;
-
-    let block_json = protobuf_json_mapping::print_to_string(&block)?;
-
-    out_file.write_all(block_json.as_bytes())?;
+    // let file_name = format!("output_files/block-{}.json", block.number);
+    // let mut out_file = File::create(file_name)?;
+    //
+    // let block_json = protobuf_json_mapping::print_to_string(&block)?;
+    //
+    // out_file.write_all(block_json.as_bytes())?;
 
     Ok(block)
 }

@@ -8,7 +8,6 @@
 - Firehose dbin files to decode
   - An example file is provided `example0017686312.dbin`
   - Input files must be in the directory input_files
-  - Decoded json files will be output to the directory output_files
 
 ### Running
 - Run `cargo run --release` in the root directory of the project
