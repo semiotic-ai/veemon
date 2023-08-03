@@ -1,16 +1,16 @@
 mod protos;
 mod dbin;
 mod receipts;
+mod transactions;
 
 use std::fs;
 use std::fs::File;
-use std::io::Write;
 use std::path::PathBuf;
 use anyhow::anyhow;
 use protobuf::Message;
 use dbin::DbinFile;
 use protos::block::Block;
-use receipts::check_valid_root;
+use receipts::check_receipt_root;
 
 pub fn decode_flat_files(dir: &str) -> anyhow::Result<Vec<Block>> {
     let paths = fs::read_dir(dir)?;
@@ -64,7 +64,8 @@ fn handle_block(message: Vec<u8>) -> anyhow::Result<Block> {
 
     let block: Block = Message::parse_from_bytes(&message.payload_buffer)?;
 
-    check_valid_root(&block)?;
+    check_receipt_root(&block)?;
+    // check_transaction_root(&block)?; // Not working
 
     // let file_name = format!("output_files/block-{}.json", block.number);
     // let mut out_file = File::create(file_name)?;
@@ -75,6 +76,8 @@ fn handle_block(message: Vec<u8>) -> anyhow::Result<Block> {
 
     Ok(block)
 }
+
+
 
 #[test]
 fn test_handle_file() {
@@ -101,7 +104,7 @@ fn test_check_valid_root_fail() {
 
     block.balance_changes.pop();
 
-    let result = check_valid_root(&block);
+    let result = check_receipt_root(&block);
     matches!(result, Err(receipts::error::InvalidReceiptError::ReceiptRoot(_, _)));
 }
 
