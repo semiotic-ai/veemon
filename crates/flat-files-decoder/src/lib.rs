@@ -64,8 +64,11 @@ fn handle_block(message: Vec<u8>) -> anyhow::Result<Block> {
 
     let block: Block = Message::parse_from_bytes(&message.payload_buffer)?;
 
+
+
     check_receipt_root(&block)?;
-    // check_transaction_root(&block)?; // Not working
+    // crate::transactions::_check_transaction_root(&block)?; // Not working
+
 
     // let file_name = format!("output_files/block-{}.json", block.number);
     // let mut out_file = File::create(file_name)?;

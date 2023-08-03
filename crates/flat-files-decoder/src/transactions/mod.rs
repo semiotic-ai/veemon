@@ -5,7 +5,7 @@ mod access_list;
 
 use std::u128;
 use reth_primitives::{hex, TransactionSigned, U128};
-use reth_primitives::proofs::calculate_transaction_root;
+use reth_primitives::proofs::{calculate_transaction_root};
 use crate::protos::block::{BigInt, Block};
 
 pub fn _check_transaction_root(block: &Block) -> anyhow::Result<()> {
@@ -16,6 +16,7 @@ pub fn _check_transaction_root(block: &Block) -> anyhow::Result<()> {
     }
 
     let tx_root = calculate_transaction_root(&transactions);
+
     if tx_root.as_bytes() != block.header.transactions_root.as_slice() {
         return Err(
             anyhow::anyhow!("Invalid transaction root, expected {}, got {}", hex::encode(block.header.transactions_root.as_slice()), hex::encode(tx_root.as_bytes()))

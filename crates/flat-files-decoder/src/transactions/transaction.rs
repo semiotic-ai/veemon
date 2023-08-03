@@ -25,16 +25,28 @@ impl TryFrom<&TransactionTrace> for Transaction {
             TransactionKind::Call(address)
         };
 
-
         let chain_id = CHAIN_ID;
 
         let value = u128_from_field(&trace.value)?;
         let input = Bytes::from(trace.input.as_slice());
 
+        trace.v.len();
         let transaction: Transaction = match tx_type {
             TxType::Legacy => {
+                let v: u8 = if trace.v.is_empty() {
+                    0
+                } else {
+                    trace.v[0]
+                };
+
+                let chain_id: Option<ChainId> = if v == 27 || v == 28 {
+                    None
+                } else {
+                    Some(ChainId::from(v))
+                };
+
                 Transaction::Legacy(TxLegacy {
-                    chain_id: Some(CHAIN_ID),
+                    chain_id,
                     nonce,
                     gas_price,
                     gas_limit,
