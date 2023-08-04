@@ -30,7 +30,6 @@ impl TryFrom<&TransactionTrace> for Transaction {
         let value = u128_from_field(&trace.value)?;
         let input = Bytes::from(trace.input.as_slice());
 
-        trace.v.len();
         let transaction: Transaction = match tx_type {
             TxType::Legacy => {
                 let v: u8 = if trace.v.is_empty() {
