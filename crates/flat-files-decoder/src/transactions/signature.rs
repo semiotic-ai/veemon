@@ -7,10 +7,10 @@ impl TryFrom<&TransactionTrace> for Signature {
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
         let r_bytes: [u8;32] = trace.r.as_slice().try_into()?;
-        let r = U256::from_le_bytes(r_bytes);
+        let r = U256::from_be_bytes(r_bytes);
 
         let s_bytes: [u8;32] = trace.s.as_slice().try_into()?;
-        let s = U256::from_le_bytes(s_bytes);
+        let s = U256::from_be_bytes(s_bytes);
 
         let odd_y_parity = get_y_parity(trace)?;
 

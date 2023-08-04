@@ -11,6 +11,7 @@ use protobuf::Message;
 use dbin::DbinFile;
 use protos::block::Block;
 use receipts::check_receipt_root;
+use crate::transactions::check_transaction_root;
 
 pub fn decode_flat_files(dir: &str) -> anyhow::Result<Vec<Block>> {
     let paths = fs::read_dir(dir)?;
@@ -64,10 +65,8 @@ fn handle_block(message: Vec<u8>) -> anyhow::Result<Block> {
 
     let block: Block = Message::parse_from_bytes(&message.payload_buffer)?;
 
-
-
     check_receipt_root(&block)?;
-    // crate::transactions::_check_transaction_root(&block)?; // Not working
+    check_transaction_root(&block)?;
 
     // let file_name = format!("output_files/block-{}.json", block.number);
     // let mut out_file = File::create(file_name)?;
@@ -79,35 +78,44 @@ fn handle_block(message: Vec<u8>) -> anyhow::Result<Block> {
     Ok(block)
 }
 
+#[cfg(test)]
+mod tests {
+    use std::fs::File;
+    use std::path::PathBuf;
+    use protobuf::Message;
+    use crate::dbin::DbinFile;
+    use crate::{handle_file, protos, receipts};
+    use crate::protos::block::Block;
+    use crate::receipts::check_receipt_root;
 
+    #[test]
+    fn test_handle_file() {
+        let path = PathBuf::from("example0017686312.dbin");
 
-#[test]
-fn test_handle_file() {
-    let path = PathBuf::from("example0017686312.dbin");
+        let result = handle_file(&path);
 
-    let result = handle_file(&path);
+        assert!(result.is_ok());
+    }
 
-    assert!(result.is_ok());
-}
+    #[test]
+    fn test_check_valid_root_fail() {
+        let path = PathBuf::from("example0017686312.dbin");
+        let file = File::open(path).expect("Failed to open file");
+        let dbin_file = DbinFile::try_from(file)
+            .expect("Failed to parse dbin file");
 
-#[test]
-fn test_check_valid_root_fail() {
-    let path = PathBuf::from("example0017686312.dbin");
-    let file = File::open(path).expect("Failed to open file");
-    let dbin_file = DbinFile::try_from(file)
-        .expect("Failed to parse dbin file");
+        let message = dbin_file.messages[0].clone();
 
-    let message = dbin_file.messages[0].clone();
+        let message: protos::bstream::Block = Message::parse_from_bytes(&message)
+            .expect("Failed to parse message");
+        let mut block: Block = Message::parse_from_bytes(&message.payload_buffer)
+            .expect("Failed to parse block");
 
-    let message: protos::bstream::Block = Message::parse_from_bytes(&message)
-        .expect("Failed to parse message");
-    let mut block: Block = Message::parse_from_bytes(&message.payload_buffer)
-        .expect("Failed to parse block");
+        block.balance_changes.pop();
 
-    block.balance_changes.pop();
-
-    let result = check_receipt_root(&block);
-    matches!(result, Err(receipts::error::InvalidReceiptError::ReceiptRoot(_, _)));
+        let result = check_receipt_root(&block);
+        matches!(result, Err(receipts::error::InvalidReceiptError::ReceiptRoot(_, _)));
+    }
 }
 
 

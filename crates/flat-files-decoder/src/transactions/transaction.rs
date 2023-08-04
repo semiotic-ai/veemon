@@ -1,5 +1,5 @@
 use reth_primitives::{Address, Bytes, ChainId, Transaction, TransactionKind, TxEip1559, TxEip2930, TxLegacy, TxType};
-use crate::protos::block::TransactionTrace;
+use crate::protos::block::{CallType, TransactionTrace};
 use crate::transactions::access_list::compute_access_list;
 use crate::transactions::transaction_signed::u128_from_field;
 
@@ -18,12 +18,7 @@ impl TryFrom<&TransactionTrace> for Transaction {
         let gas_price = u128_from_field(&trace.gas_price)?;
         let gas_limit = trace.gas_limit;
 
-        let to = if trace.to.is_empty() {
-            TransactionKind::Create
-        } else {
-            let address = Address::from_slice(trace.to.as_slice());
-            TransactionKind::Call(address)
-        };
+        let to = get_tx_kind(trace)?;
 
         let chain_id = CHAIN_ID;
 
@@ -41,7 +36,7 @@ impl TryFrom<&TransactionTrace> for Transaction {
                 let chain_id: Option<ChainId> = if v == 27 || v == 28 {
                     None
                 } else {
-                    Some(ChainId::from(v))
+                    Some(CHAIN_ID)
                 };
 
                 Transaction::Legacy(TxLegacy {
@@ -92,5 +87,20 @@ impl TryFrom<&TransactionTrace> for Transaction {
         };
 
         Ok(transaction)
+    }
+}
+
+pub fn get_tx_kind(trace: &TransactionTrace) -> anyhow::Result<TransactionKind> {
+    let first_call = trace.calls.first()
+        .ok_or_else(|| anyhow::anyhow!("Missing call"))?;
+
+    let call_type = first_call.call_type.enum_value()
+        .map_err(|_| anyhow::anyhow!("Missing call type"))?;
+
+    if call_type == CallType::CREATE {
+        Ok(TransactionKind::Create)
+    } else {
+        let address = Address::from_slice(trace.to.as_slice());
+        Ok(TransactionKind::Call(address))
     }
 }
