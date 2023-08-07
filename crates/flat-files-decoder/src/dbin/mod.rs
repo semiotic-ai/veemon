@@ -43,7 +43,7 @@ impl DbinFile {
         let mut messages: Vec<Vec<u8>> = vec![];
 
         loop {
-            match Self::read_message(read.by_ref()) {
+            match Self::read_message(read) {
                 Ok(message) => messages.push(message),
                 Err(err) => {
                     return if err.kind() == std::io::ErrorKind::UnexpectedEof {
