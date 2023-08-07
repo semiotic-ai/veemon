@@ -1,8 +1,8 @@
 extern crate rand;
 
-use std::fs;
-use criterion::{black_box, Criterion, criterion_group, criterion_main};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use decoder::handle_file;
+use std::fs;
 
 const ITERS_PER_FILE: usize = 10;
 

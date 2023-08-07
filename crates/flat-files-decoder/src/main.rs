@@ -5,4 +5,3 @@ fn main() {
 
     println!("Total blocks: {}", blocks.len());
 }
-

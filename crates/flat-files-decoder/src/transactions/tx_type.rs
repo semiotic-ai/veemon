@@ -1,7 +1,7 @@
+use crate::protos::block::transaction_trace::Type;
 use protobuf::EnumOrUnknown;
 use reth_primitives::TxType;
 use thiserror::Error;
-use crate::protos::block::transaction_trace::Type;
 
 #[derive(Debug, Error)]
 pub enum TransactionTypeError {
@@ -21,6 +21,8 @@ impl From<Type> for TxType {
 }
 
 pub fn map_tx_type(tx_type: &EnumOrUnknown<Type>) -> Result<TxType, TransactionTypeError> {
-    let tx_type = tx_type.enum_value().map_err(|_| TransactionTypeError::Missing)?;
+    let tx_type = tx_type
+        .enum_value()
+        .map_err(|_| TransactionTypeError::Missing)?;
     Ok(tx_type.into())
 }

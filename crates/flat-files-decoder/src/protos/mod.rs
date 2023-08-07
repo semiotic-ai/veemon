@@ -1,4 +1,4 @@
 // @generated
 
-pub mod bstream;
 pub mod block;
+pub mod bstream;

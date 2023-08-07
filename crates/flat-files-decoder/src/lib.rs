@@ -1,18 +1,19 @@
-mod protos;
 mod dbin;
+pub mod error;
+mod protos;
 mod receipts;
 mod transactions;
-pub mod error;
 
-use std::fs;
-use std::fs::File;
-use std::path::PathBuf;
-use protobuf::Message;
-use dbin::DbinFile;
-use protos::block::Block;
-use receipts::check_receipt_root;
 use crate::error::DecodeError;
 use crate::transactions::check_transaction_root;
+use dbin::DbinFile;
+use protobuf::Message;
+use protos::block::Block;
+use receipts::check_receipt_root;
+use std::fs;
+use std::fs::File;
+use std::io::Cursor;
+use std::path::PathBuf;
 
 pub fn decode_flat_files(dir: &str) -> Result<Vec<Block>, DecodeError> {
     let paths = fs::read_dir(dir).map_err(DecodeError::IoError)?;
@@ -25,32 +26,55 @@ pub fn decode_flat_files(dir: &str) -> Result<Vec<Block>, DecodeError> {
                 if ext != "dbin" {
                     continue;
                 }
-            },
-            None => continue
+            }
+            None => continue,
         };
 
         println!("Processing file: {}", path.path().display());
         match handle_file(&path.path()) {
             Ok(file_blocks) => {
                 blocks.extend(file_blocks);
-            },
+            }
             Err(err) => {
                 println!("Failed to process file: {}", err);
             }
         }
-    };
+    }
 
     Ok(blocks)
 }
 
 pub fn handle_file(path: &PathBuf) -> Result<Vec<Block>, DecodeError> {
-    let input_file = File::open(path).map_err(DecodeError::IoError)?;
-
-    let dbin_file = DbinFile::try_from(input_file)?;
+    let mut input_file = File::open(path).map_err(DecodeError::IoError)?;
+    let dbin_file = DbinFile::try_from_read(&mut input_file)?;
 
     if dbin_file.content_type != "ETH" {
         return Err(DecodeError::InvalidContentType(dbin_file.content_type));
     }
+
+    let mut blocks: Vec<Block> = vec![];
+
+    for message in dbin_file.messages {
+        blocks.push(handle_block(message)?);
+    }
+
+    Ok(blocks)
+}
+
+pub fn decode_flat_files_iter<'a, I: Iterator<Item = &'a [u8]>>(
+    iter: I,
+) -> Result<Vec<Block>, DecodeError> {
+    let mut blocks: Vec<Block> = vec![];
+
+    for buf in iter {
+        blocks.extend_from_slice(&handle_buf(buf)?);
+    }
+
+    Ok(blocks)
+}
+
+pub fn handle_buf(buf: &[u8]) -> Result<Vec<Block>, DecodeError> {
+    let dbin_file = DbinFile::try_from_read(&mut Cursor::new(buf))?;
 
     let mut blocks: Vec<Block> = vec![];
 
@@ -83,13 +107,13 @@ fn handle_block(message: Vec<u8>) -> Result<Block, DecodeError> {
 
 #[cfg(test)]
 mod tests {
-    use std::fs::File;
-    use std::path::PathBuf;
-    use protobuf::Message;
     use crate::dbin::DbinFile;
-    use crate::{handle_file, protos, receipts};
     use crate::protos::block::Block;
     use crate::receipts::check_receipt_root;
+    use crate::{handle_file, protos, receipts};
+    use protobuf::Message;
+    use std::fs::File;
+    use std::path::PathBuf;
 
     #[test]
     fn test_handle_file() {
@@ -103,23 +127,22 @@ mod tests {
     #[test]
     fn test_check_valid_root_fail() {
         let path = PathBuf::from("example0017686312.dbin");
-        let file = File::open(path).expect("Failed to open file");
-        let dbin_file = DbinFile::try_from(file)
-            .expect("Failed to parse dbin file");
+        let mut file = File::open(path).expect("Failed to open file");
+        let dbin_file = DbinFile::try_from_read(&mut file).expect("Failed to parse dbin file");
 
         let message = dbin_file.messages[0].clone();
 
-        let message: protos::bstream::Block = Message::parse_from_bytes(&message)
-            .expect("Failed to parse message");
-        let mut block: Block = Message::parse_from_bytes(&message.payload_buffer)
-            .expect("Failed to parse block");
+        let message: protos::bstream::Block =
+            Message::parse_from_bytes(&message).expect("Failed to parse message");
+        let mut block: Block =
+            Message::parse_from_bytes(&message.payload_buffer).expect("Failed to parse block");
 
         block.balance_changes.pop();
 
         let result = check_receipt_root(&block);
-        matches!(result, Err(receipts::error::ReceiptError::MismatchedRoot(_, _)));
+        matches!(
+            result,
+            Err(receipts::error::ReceiptError::MismatchedRoot(_, _))
+        );
     }
 }
-
-
-

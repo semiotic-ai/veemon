@@ -1,7 +1,7 @@
-use thiserror::Error;
 use crate::dbin::error::DbinFileError;
 use crate::receipts::error::ReceiptError;
 use crate::transactions::error::TransactionError;
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum DecodeError {
@@ -17,5 +17,4 @@ pub enum DecodeError {
     InvalidContentType(String),
     #[error("Invalid protobuf: {0}")]
     ProtobufError(String),
-
 }

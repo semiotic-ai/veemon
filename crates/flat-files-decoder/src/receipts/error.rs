@@ -1,5 +1,5 @@
-use thiserror::Error;
 use crate::transactions::tx_type::TransactionTypeError;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ReceiptError {
