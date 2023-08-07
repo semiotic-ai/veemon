@@ -1,9 +1,9 @@
-use protobuf::EnumOrUnknown;
-use reth_primitives::{Log, Receipt};
 use crate::protos::block::{TransactionTrace, TransactionTraceStatus};
 use crate::receipts::error::ReceiptError;
 use crate::receipts::logs::map_logs;
 use crate::transactions::tx_type::map_tx_type;
+use protobuf::EnumOrUnknown;
+use reth_primitives::{Log, Receipt};
 
 impl TryFrom<&TransactionTrace> for Receipt {
     type Error = ReceiptError;
@@ -27,7 +27,8 @@ impl TryFrom<&TransactionTrace> for Receipt {
 }
 
 fn map_success(status: &EnumOrUnknown<TransactionTraceStatus>) -> Result<bool, ReceiptError> {
-    let status = status.enum_value().map_err(|_| ReceiptError::InvalidStatus)?;
+    let status = status
+        .enum_value()
+        .map_err(|_| ReceiptError::InvalidStatus)?;
     Ok(status == TransactionTraceStatus::SUCCEEDED)
 }
-

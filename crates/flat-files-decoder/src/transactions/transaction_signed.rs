@@ -1,8 +1,7 @@
-use protobuf::MessageField;
-use reth_primitives::{Signature, Transaction, TransactionSigned};
 use crate::protos::block::{BigInt, TransactionTrace};
 use crate::transactions::error::TransactionError;
-
+use protobuf::MessageField;
+use reth_primitives::{Signature, Transaction, TransactionSigned};
 
 impl TryFrom<&TransactionTrace> for TransactionSigned {
     type Error = TransactionError;

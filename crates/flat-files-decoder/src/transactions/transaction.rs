@@ -1,9 +1,11 @@
-use reth_primitives::{Address, Bytes, ChainId, Transaction, TransactionKind, TxEip1559, TxEip2930, TxLegacy, TxType};
 use crate::protos::block::{CallType, TransactionTrace};
 use crate::transactions::access_list::compute_access_list;
 use crate::transactions::error::TransactionError;
 use crate::transactions::transaction_signed::u128_from_field;
 use crate::transactions::tx_type::map_tx_type;
+use reth_primitives::{
+    Address, Bytes, ChainId, Transaction, TransactionKind, TxEip1559, TxEip2930, TxLegacy, TxType,
+};
 
 pub const CHAIN_ID: ChainId = 1;
 
@@ -26,11 +28,7 @@ impl TryFrom<&TransactionTrace> for Transaction {
 
         let transaction: Transaction = match tx_type {
             TxType::Legacy => {
-                let v: u8 = if trace.v.is_empty() {
-                    0
-                } else {
-                    trace.v[0]
-                };
+                let v: u8 = if trace.v.is_empty() { 0 } else { trace.v[0] };
 
                 let chain_id: Option<ChainId> = if v == 27 || v == 28 {
                     None
@@ -45,7 +43,7 @@ impl TryFrom<&TransactionTrace> for Transaction {
                     gas_limit,
                     to,
                     value,
-                    input
+                    input,
                 })
             }
             TxType::EIP2930 => {
@@ -80,9 +78,7 @@ impl TryFrom<&TransactionTrace> for Transaction {
                     input,
                 })
             }
-            TxType::EIP4844 => {
-                Err(TransactionError::EIP4844NotSupported)?
-            }
+            TxType::EIP4844 => Err(TransactionError::EIP4844NotSupported)?,
         };
 
         Ok(transaction)
@@ -92,7 +88,9 @@ impl TryFrom<&TransactionTrace> for Transaction {
 pub fn get_tx_kind(trace: &TransactionTrace) -> Result<TransactionKind, TransactionError> {
     let first_call = trace.calls.first().ok_or(TransactionError::MissingCall)?;
 
-    let call_type = first_call.call_type.enum_value()
+    let call_type = first_call
+        .call_type
+        .enum_value()
         .map_err(|_| TransactionError::MissingCall)?;
 
     if call_type == CallType::CREATE {

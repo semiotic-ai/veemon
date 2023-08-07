@@ -1,6 +1,6 @@
-use reth_primitives::{Address, Bytes, H256, hex, Log};
-use std::convert::TryInto;
 use crate::receipts::error::ReceiptError;
+use reth_primitives::{hex, Address, Bytes, Log, H256};
+use std::convert::TryInto;
 
 type BlockLog = crate::protos::block::Log;
 
@@ -12,7 +12,10 @@ impl TryFrom<&BlockLog> for Log {
     type Error = ReceiptError;
 
     fn try_from(log: &BlockLog) -> Result<Self, Self::Error> {
-        let slice: [u8;20] = log.address.as_slice().try_into()
+        let slice: [u8; 20] = log
+            .address
+            .as_slice()
+            .try_into()
             .map_err(|_| ReceiptError::InvalidAddress(hex::encode(log.address.clone())))?;
 
         let address = Address::from(slice);
@@ -22,7 +25,7 @@ impl TryFrom<&BlockLog> for Log {
         Ok(Self {
             address,
             topics,
-            data
+            data,
         })
     }
 }
@@ -32,7 +35,9 @@ fn map_topics(topics: &[Vec<u8>]) -> Result<Vec<H256>, ReceiptError> {
 }
 
 fn map_topic(topic: &Vec<u8>) -> Result<H256, ReceiptError> {
-    let slice: [u8;32] = topic.as_slice().try_into()
+    let slice: [u8; 32] = topic
+        .as_slice()
+        .try_into()
         .map_err(|_| ReceiptError::InvalidTopic(hex::encode(topic)))?;
     Ok(H256::from(slice))
 }

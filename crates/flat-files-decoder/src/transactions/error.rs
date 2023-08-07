@@ -1,6 +1,6 @@
-use thiserror::Error;
 use crate::transactions::signature::InvalidSignatureError;
 use crate::transactions::tx_type::TransactionTypeError;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum TransactionError {
@@ -19,4 +19,3 @@ pub enum TransactionError {
     #[error("Invalid Transaction Type: {0}")]
     InvalidType(#[from] TransactionTypeError),
 }
-
