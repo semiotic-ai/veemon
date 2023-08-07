@@ -1,4 +1,4 @@
-mod error;
+pub mod error;
 
 use std::fs::File;
 use std::io::Read;

@@ -1,15 +1,16 @@
 use thiserror::Error;
+use crate::transactions::tx_type::TransactionTypeError;
 
 #[derive(Error, Debug)]
-pub enum InvalidReceiptError {
+pub enum ReceiptError {
     #[error("Invalid status")]
-    Status,
+    InvalidStatus,
     #[error("Invalid tx type")]
-    TxType,
-    #[error("Receipt root mismatch: {0} != {1}")]
-    ReceiptRoot(String, String),
+    InvalidTxType(#[from] TransactionTypeError),
     #[error("Invalid address: {0}")]
-    Address(String),
+    InvalidAddress(String),
     #[error("Invalid topic: {0}")]
-    Topic(String),
+    InvalidTopic(String),
+    #[error("Receipt root mismatch: {0} != {1}")]
+    MismatchedRoot(String, String),
 }

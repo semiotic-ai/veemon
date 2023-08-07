@@ -1,22 +1,24 @@
-use reth_primitives::{AccessList, AccessListItem, Address, H256};
+use reth_primitives::{AccessList, AccessListItem, Address, H256, hex};
 use crate::protos::block::AccessTuple;
+use crate::transactions::error::TransactionError;
 
-pub(crate) fn compute_access_list(access_list: &[AccessTuple]) -> anyhow::Result<AccessList> {
+pub(crate) fn compute_access_list(access_list: &[AccessTuple]) -> Result<AccessList, TransactionError> {
     let access_list_items: Vec<AccessListItem> = access_list.iter()
-        .map(AccessListItem::try_from).collect::<anyhow::Result<Vec<AccessListItem>>>()?;
+        .map(AccessListItem::try_from).collect::<Result<Vec<AccessListItem>, TransactionError>>()?;
 
     Ok(AccessList(access_list_items))
 }
 
 impl TryFrom<&AccessTuple> for AccessListItem {
-    type Error = anyhow::Error;
+    type Error = TransactionError;
 
     fn try_from(tuple: &AccessTuple) -> Result<Self, Self::Error> {
         let address: Address = Address::from_slice(tuple.address.as_slice());
         let storage_keys = tuple.storage_keys.iter().map(|key| {
-            let key_bytes: [u8;32] = key.as_slice().try_into()?;
+            let key_bytes: [u8;32] = key.as_slice().try_into()
+                .map_err(|_| TransactionError::InvalidStorageKey(hex::encode(key.clone())))?;
             Ok(H256::from(key_bytes))
-        }).collect::<anyhow::Result<Vec<H256>>>()?;
+        }).collect::<Result<Vec<H256>, TransactionError>>()?;
 
         Ok(AccessListItem {
             address,

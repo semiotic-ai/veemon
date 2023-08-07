@@ -2,23 +2,24 @@ mod protos;
 mod dbin;
 mod receipts;
 mod transactions;
+pub mod error;
 
 use std::fs;
 use std::fs::File;
 use std::path::PathBuf;
-use anyhow::anyhow;
 use protobuf::Message;
 use dbin::DbinFile;
 use protos::block::Block;
 use receipts::check_receipt_root;
+use crate::error::DecodeError;
 use crate::transactions::check_transaction_root;
 
-pub fn decode_flat_files(dir: &str) -> anyhow::Result<Vec<Block>> {
-    let paths = fs::read_dir(dir)?;
+pub fn decode_flat_files(dir: &str) -> Result<Vec<Block>, DecodeError> {
+    let paths = fs::read_dir(dir).map_err(DecodeError::IoError)?;
 
     let mut blocks: Vec<Block> = vec![];
     for path in paths {
-        let path = path?;
+        let path = path.map_err(DecodeError::IoError)?;
         match path.path().extension() {
             Some(ext) => {
                 if ext != "dbin" {
@@ -42,13 +43,13 @@ pub fn decode_flat_files(dir: &str) -> anyhow::Result<Vec<Block>> {
     Ok(blocks)
 }
 
-pub fn handle_file(path: &PathBuf) -> anyhow::Result<Vec<Block>> {
-    let input_file = File::open(path)?;
+pub fn handle_file(path: &PathBuf) -> Result<Vec<Block>, DecodeError> {
+    let input_file = File::open(path).map_err(DecodeError::IoError)?;
 
     let dbin_file = DbinFile::try_from(input_file)?;
 
     if dbin_file.content_type != "ETH" {
-        return Err(anyhow!("Invalid content type: {}", dbin_file.content_type));
+        return Err(DecodeError::InvalidContentType(dbin_file.content_type));
     }
 
     let mut blocks: Vec<Block> = vec![];
@@ -60,10 +61,12 @@ pub fn handle_file(path: &PathBuf) -> anyhow::Result<Vec<Block>> {
     Ok(blocks)
 }
 
-fn handle_block(message: Vec<u8>) -> anyhow::Result<Block> {
-    let message: protos::bstream::Block = Message::parse_from_bytes(&message)?;
+fn handle_block(message: Vec<u8>) -> Result<Block, DecodeError> {
+    let message: protos::bstream::Block = Message::parse_from_bytes(&message)
+        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
 
-    let block: Block = Message::parse_from_bytes(&message.payload_buffer)?;
+    let block: Block = Message::parse_from_bytes(&message.payload_buffer)
+        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
 
     check_receipt_root(&block)?;
     check_transaction_root(&block)?;
@@ -114,7 +117,7 @@ mod tests {
         block.balance_changes.pop();
 
         let result = check_receipt_root(&block);
-        matches!(result, Err(receipts::error::InvalidReceiptError::ReceiptRoot(_, _)));
+        matches!(result, Err(receipts::error::ReceiptError::MismatchedRoot(_, _)));
     }
 }
 

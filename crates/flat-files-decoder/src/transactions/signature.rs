@@ -1,15 +1,27 @@
-use anyhow::anyhow;
-use reth_primitives::{Signature, U256};
+use reth_primitives::{hex, Signature, U256};
+use thiserror::Error;
 use crate::protos::block::TransactionTrace;
 
+#[derive(Debug, Error)]
+pub enum InvalidSignatureError {
+    #[error("Invalid R: {0}")]
+    R(String),
+    #[error("Invalid S: {0}")]
+    S(String),
+    #[error("Invalid V: {0}")]
+    V(u8),
+}
+
 impl TryFrom<&TransactionTrace> for Signature {
-    type Error = anyhow::Error;
+    type Error = InvalidSignatureError;
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
-        let r_bytes: [u8;32] = trace.r.as_slice().try_into()?;
+        let r_bytes: [u8;32] = trace.r.as_slice().try_into()
+            .map_err(|_| InvalidSignatureError::R(hex::encode(&trace.r)))?;
         let r = U256::from_be_bytes(r_bytes);
 
-        let s_bytes: [u8;32] = trace.s.as_slice().try_into()?;
+        let s_bytes: [u8;32] = trace.s.as_slice().try_into()
+            .map_err(|_| InvalidSignatureError::S(hex::encode(&trace.s)))?;
         let s = U256::from_be_bytes(s_bytes);
 
         let odd_y_parity = get_y_parity(trace)?;
@@ -23,7 +35,7 @@ impl TryFrom<&TransactionTrace> for Signature {
 }
 
 
-fn get_y_parity(trace: &TransactionTrace) -> anyhow::Result<bool> {
+fn get_y_parity(trace: &TransactionTrace) -> Result<bool, InvalidSignatureError> {
     let v: u8 = if trace.v.is_empty() {
         0
     } else {
@@ -37,6 +49,6 @@ fn get_y_parity(trace: &TransactionTrace) -> anyhow::Result<bool> {
     } else if v == 37 || v == 38 {
         Ok(v - 37 == 1)
     } else {
-        Err(anyhow!("Invalid v value: {}", v))
+        Err(InvalidSignatureError::V(v))
     }
 }

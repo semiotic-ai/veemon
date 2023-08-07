@@ -1,14 +1,19 @@
+pub mod error;
+pub mod tx_type;
+
 mod transaction_signed;
 mod transaction;
 mod signature;
 mod access_list;
 
+
 use std::u128;
 use reth_primitives::{hex, TransactionSigned, U128};
 use reth_primitives::proofs::{calculate_transaction_root};
 use crate::protos::block::{BigInt, Block};
+use crate::transactions::error::TransactionError;
 
-pub fn check_transaction_root(block: &Block) -> anyhow::Result<()> {
+pub fn check_transaction_root(block: &Block) -> Result<(), TransactionError> {
     let mut transactions: Vec<TransactionSigned> = Vec::new();
 
     for trace in &block.transaction_traces {
@@ -19,7 +24,10 @@ pub fn check_transaction_root(block: &Block) -> anyhow::Result<()> {
 
     if tx_root.as_bytes() != block.header.transactions_root.as_slice() {
         return Err(
-            anyhow::anyhow!("Invalid transaction root, expected {}, got {}", hex::encode(block.header.transactions_root.as_slice()), hex::encode(tx_root.as_bytes()))
+            TransactionError::MismatchedRoot(
+                hex::encode(tx_root.as_bytes()),
+                hex::encode(block.header.transactions_root.as_slice())
+            )
         );
     }
 
@@ -28,12 +36,12 @@ pub fn check_transaction_root(block: &Block) -> anyhow::Result<()> {
 
 
 impl TryFrom<BigInt> for u128 {
-    type Error = anyhow::Error;
+    type Error = TransactionError;
 
     fn try_from(value: BigInt) -> Result<Self, Self::Error> {
         let slice = value.bytes.as_slice();
         let n = U128::try_from_be_slice(slice)
-            .ok_or(anyhow::anyhow!("BigInt too large"))?;
+            .ok_or(TransactionError::InvalidBigInt(hex::encode(slice)))?;
         Ok(u128::from_le_bytes(n.to_le_bytes()))
     }
 }

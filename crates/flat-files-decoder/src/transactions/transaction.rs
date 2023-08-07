@@ -1,18 +1,17 @@
 use reth_primitives::{Address, Bytes, ChainId, Transaction, TransactionKind, TxEip1559, TxEip2930, TxLegacy, TxType};
 use crate::protos::block::{CallType, TransactionTrace};
 use crate::transactions::access_list::compute_access_list;
+use crate::transactions::error::TransactionError;
 use crate::transactions::transaction_signed::u128_from_field;
+use crate::transactions::tx_type::map_tx_type;
 
 pub const CHAIN_ID: ChainId = 1;
 
 impl TryFrom<&TransactionTrace> for Transaction {
-    type Error = anyhow::Error;
+    type Error = TransactionError;
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
-        let type_enum_val = trace.type_.enum_value()
-            .map_err(|_| anyhow::anyhow!("Missing transaction type"))?;
-
-        let tx_type = TxType::from(type_enum_val);
+        let tx_type = map_tx_type(&trace.type_)?;
 
         let nonce = trace.nonce;
         let gas_price = u128_from_field(&trace.gas_price)?;
@@ -82,7 +81,7 @@ impl TryFrom<&TransactionTrace> for Transaction {
                 })
             }
             TxType::EIP4844 => {
-                Err(anyhow::anyhow!("EIP4844 is not supported"))?
+                Err(TransactionError::EIP4844NotSupported)?
             }
         };
 
@@ -90,12 +89,11 @@ impl TryFrom<&TransactionTrace> for Transaction {
     }
 }
 
-pub fn get_tx_kind(trace: &TransactionTrace) -> anyhow::Result<TransactionKind> {
-    let first_call = trace.calls.first()
-        .ok_or_else(|| anyhow::anyhow!("Missing call"))?;
+pub fn get_tx_kind(trace: &TransactionTrace) -> Result<TransactionKind, TransactionError> {
+    let first_call = trace.calls.first().ok_or(TransactionError::MissingCall)?;
 
     let call_type = first_call.call_type.enum_value()
-        .map_err(|_| anyhow::anyhow!("Missing call type"))?;
+        .map_err(|_| TransactionError::MissingCall)?;
 
     if call_type == CallType::CREATE {
         Ok(TransactionKind::Create)
