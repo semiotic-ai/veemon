@@ -12,11 +12,27 @@ use protos::block::Block;
 use receipts::check_receipt_root;
 use std::fs;
 use std::fs::File;
-use std::io::Cursor;
+use std::io::{Cursor, Write};
 use std::path::PathBuf;
 
-pub fn decode_flat_files(dir: &str) -> Result<Vec<Block>, DecodeError> {
-    let paths = fs::read_dir(dir).map_err(DecodeError::IoError)?;
+pub fn decode_flat_files(input: &str, output: Option<&str>) -> Result<Vec<Block>, DecodeError> {
+    let metadata = fs::metadata(input).map_err(DecodeError::IoError)?;
+
+    if let Some(output) = output {
+        fs::create_dir_all(output).map_err(DecodeError::IoError)?;
+    }
+
+    if metadata.is_dir() {
+        decode_flat_files_dir(input, output)
+    } else if metadata.is_file() {
+        handle_file(&PathBuf::from(input), output)
+    } else {
+        Err(DecodeError::InvalidInput)
+    }
+}
+
+fn decode_flat_files_dir(input: &str, output: Option<&str>) -> Result<Vec<Block>, DecodeError> {
+    let paths = fs::read_dir(input).map_err(DecodeError::IoError)?;
 
     let mut blocks: Vec<Block> = vec![];
     for path in paths {
@@ -31,7 +47,7 @@ pub fn decode_flat_files(dir: &str) -> Result<Vec<Block>, DecodeError> {
         };
 
         println!("Processing file: {}", path.path().display());
-        match handle_file(&path.path()) {
+        match handle_file(&path.path(), output) {
             Ok(file_blocks) => {
                 blocks.extend(file_blocks);
             }
@@ -44,7 +60,7 @@ pub fn decode_flat_files(dir: &str) -> Result<Vec<Block>, DecodeError> {
     Ok(blocks)
 }
 
-pub fn handle_file(path: &PathBuf) -> Result<Vec<Block>, DecodeError> {
+pub fn handle_file(path: &PathBuf, output: Option<&str>) -> Result<Vec<Block>, DecodeError> {
     let mut input_file = File::open(path).map_err(DecodeError::IoError)?;
     let dbin_file = DbinFile::try_from_read(&mut input_file)?;
 
@@ -55,7 +71,7 @@ pub fn handle_file(path: &PathBuf) -> Result<Vec<Block>, DecodeError> {
     let mut blocks: Vec<Block> = vec![];
 
     for message in dbin_file.messages {
-        blocks.push(handle_block(message)?);
+        blocks.push(handle_block(message, output)?);
     }
 
     Ok(blocks)
@@ -79,13 +95,13 @@ pub fn handle_buf(buf: &[u8]) -> Result<Vec<Block>, DecodeError> {
     let mut blocks: Vec<Block> = vec![];
 
     for message in dbin_file.messages {
-        blocks.push(handle_block(message)?);
+        blocks.push(handle_block(message, None)?);
     }
 
     Ok(blocks)
 }
 
-fn handle_block(message: Vec<u8>) -> Result<Block, DecodeError> {
+fn handle_block(message: Vec<u8>, output: Option<&str>) -> Result<Block, DecodeError> {
     let message: protos::bstream::Block = Message::parse_from_bytes(&message)
         .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
 
@@ -95,12 +111,17 @@ fn handle_block(message: Vec<u8>) -> Result<Block, DecodeError> {
     check_receipt_root(&block)?;
     check_transaction_root(&block)?;
 
-    // let file_name = format!("output_files/block-{}.json", block.number);
-    // let mut out_file = File::create(file_name)?;
-    //
-    // let block_json = protobuf_json_mapping::print_to_string(&block)?;
-    //
-    // out_file.write_all(block_json.as_bytes())?;
+    if let Some(output) = output {
+        let file_name = format!("{}/block-{}.json", output, block.number);
+        let mut out_file = File::create(file_name)?;
+
+        let block_json = protobuf_json_mapping::print_to_string(&block)
+            .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+
+        out_file
+            .write_all(block_json.as_bytes())
+            .map_err(DecodeError::IoError)?;
+    }
 
     Ok(block)
 }
@@ -119,7 +140,7 @@ mod tests {
     fn test_handle_file() {
         let path = PathBuf::from("example0017686312.dbin");
 
-        let result = handle_file(&path);
+        let result = handle_file(&path, None);
 
         assert!(result.is_ok());
     }

@@ -5,6 +5,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum DecodeError {
+    #[error("Invalid input")]
+    InvalidInput,
     #[error("Dbin File Error: {0}")]
     DbinFileError(#[from] DbinFileError),
     #[error("Invalid Transaction Root: {0}")]

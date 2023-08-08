@@ -23,7 +23,7 @@ fn bench(c: &mut Criterion) {
                 }
             }
 
-            b.iter(|| handle_file(black_box(&path)));
+            b.iter(|| handle_file(black_box(&path), None));
         }
     });
 
