@@ -142,7 +142,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df752953c49ce90719c7bf1fc587bc8227aed04732ea0c0f85e5397d7fdbd1a1"
 dependencies = [
  "include_dir",
- "itertools 0.10.5",
+ "itertools",
  "proc-macro-error",
  "proc-macro2",
  "quote",
@@ -467,7 +467,7 @@ checksum = "67ba02a97a2bd10f4b59b25c7973101c79642302776489e030cd13cdab09ed15"
 [[package]]
 name = "codecs-derive"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "convert_case 0.6.0",
  "parity-scale-codec",
@@ -546,7 +546,7 @@ dependencies = [
  "clap",
  "criterion-plot",
  "is-terminal",
- "itertools 0.10.5",
+ "itertools",
  "num-traits",
  "once_cell",
  "oorandom",
@@ -567,7 +567,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b50826342786a51a89e2da3a28f1c32b06e387201bc2d19791f622c673706b1"
 dependencies = [
  "cast",
- "itertools 0.10.5",
+ "itertools",
 ]
 
 [[package]]
@@ -911,7 +911,7 @@ dependencies = [
  "rlp",
  "serde",
  "serde_json",
- "strum",
+ "strum 0.25.0",
  "tempfile",
  "thiserror",
  "tiny-keccak",
@@ -1364,15 +1364,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itertools"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1398,9 +1389,9 @@ dependencies = [
 
 [[package]]
 name = "jsonrpsee-types"
-version = "0.19.0"
+version = "0.18.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00aa7cc87bc42e04e26c8ac3e7186142f7fd2949c763d9b6a7e64a69672d8fb2"
+checksum = "6e5bf6c75ce2a4217421154adfc65a24d2b46e77286e59bba5d9fa6544ccc8f4"
 dependencies = [
  "anyhow",
  "beef",
@@ -2166,7 +2157,7 @@ checksum = "e5ea92a5b6195c6ef2a0295ea818b312502c6fc94dde986c5553242e18fd4ce2"
 [[package]]
 name = "reth-blockchain-tree"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "aquamarine",
  "linked_hash_set",
@@ -2184,7 +2175,7 @@ dependencies = [
 [[package]]
 name = "reth-codecs"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "bytes",
  "codecs-derive",
@@ -2194,7 +2185,7 @@ dependencies = [
 [[package]]
 name = "reth-db"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "bytes",
  "derive_more",
@@ -2221,7 +2212,7 @@ dependencies = [
 [[package]]
 name = "reth-ecies"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "aes",
  "block-padding",
@@ -2252,7 +2243,7 @@ dependencies = [
 [[package]]
 name = "reth-eth-wire"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "async-trait",
  "bytes",
@@ -2277,7 +2268,7 @@ dependencies = [
 [[package]]
 name = "reth-interfaces"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "async-trait",
  "auto_impl",
@@ -2301,7 +2292,7 @@ dependencies = [
 [[package]]
 name = "reth-libmdbx"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "bitflags 2.3.3",
  "byteorder",
@@ -2316,7 +2307,7 @@ dependencies = [
 [[package]]
 name = "reth-mdbx-sys"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "bindgen",
  "cc",
@@ -2326,7 +2317,7 @@ dependencies = [
 [[package]]
 name = "reth-metrics"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "futures",
  "metrics",
@@ -2337,7 +2328,7 @@ dependencies = [
 [[package]]
 name = "reth-metrics-derive"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "once_cell",
  "proc-macro2",
@@ -2349,7 +2340,7 @@ dependencies = [
 [[package]]
 name = "reth-net-common"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "pin-project",
  "reth-primitives",
@@ -2359,7 +2350,7 @@ dependencies = [
 [[package]]
 name = "reth-network-api"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "async-trait",
  "reth-eth-wire",
@@ -2373,7 +2364,7 @@ dependencies = [
 [[package]]
 name = "reth-primitives"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "bytes",
  "crc",
@@ -2398,7 +2389,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "strum",
+ "strum 0.24.1",
  "sucds",
  "thiserror",
  "tiny-keccak",
@@ -2413,11 +2404,11 @@ dependencies = [
 [[package]]
 name = "reth-provider"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "auto_impl",
  "derive_more",
- "itertools 0.11.0",
+ "itertools",
  "parking_lot",
  "pin-project",
  "reth-db",
@@ -2433,7 +2424,7 @@ dependencies = [
 [[package]]
 name = "reth-revm-primitives"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "reth-primitives",
  "revm",
@@ -2442,7 +2433,7 @@ dependencies = [
 [[package]]
 name = "reth-rlp"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "arrayvec",
  "auto_impl",
@@ -2456,7 +2447,7 @@ dependencies = [
 [[package]]
 name = "reth-rlp-derive"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2466,9 +2457,8 @@ dependencies = [
 [[package]]
 name = "reth-rpc-types"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
- "itertools 0.11.0",
  "jsonrpsee-types",
  "reth-primitives",
  "reth-rlp",
@@ -2480,12 +2470,12 @@ dependencies = [
 [[package]]
 name = "reth-stages"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "aquamarine",
  "async-trait",
  "futures-util",
- "itertools 0.11.0",
+ "itertools",
  "num-traits",
  "pin-project",
  "rayon",
@@ -2506,7 +2496,7 @@ dependencies = [
 [[package]]
 name = "reth-trie"
 version = "0.1.0-alpha.4"
-source = "git+https://github.com/paradigmxyz/reth#8c70524fc6031dcc268fd771797f35d6229848e7"
+source = "git+https://github.com/paradigmxyz/reth?tag=v0.1.0-alpha.4#b2b2cbedb527c429128ef9302e006bc9af958fb5"
 dependencies = [
  "derive_more",
  "hex",
@@ -2961,11 +2951,33 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "strum"
+version = "0.24.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "063e6045c0e62079840579a7e47a355ae92f60eb74daaf156fb1e84ba164e63f"
+dependencies = [
+ "strum_macros 0.24.3",
+]
+
+[[package]]
+name = "strum"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "290d54ea6f91c969195bdbcd7442c8c2a2ba87da8bf60a7ee86a235d4bc1e125"
 dependencies = [
- "strum_macros",
+ "strum_macros 0.25.1",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.24.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e385be0d24f186b4ce2f9982191e7101bb737312ad61c1f2f984f34bcf85d59"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn 1.0.109",
 ]
 
 [[package]]

@@ -7,3 +7,4 @@ input_files/*.dbin
 # Added by cargo
 
 /target
+receipts
