@@ -1,3 +1,9 @@
+//! # Flat File decoder for Firehose
+//! Crate that provides utility functions to read and verify flat files from disk.
+//! The verifier currently matches computed receipts & transaction roots against the roots
+//! provided in the block header. Future versions will also verify the block header itself
+//! against an external source or file different from the flat files.
+
 mod dbin;
 pub mod error;
 mod protos;
@@ -15,6 +21,13 @@ use std::fs::File;
 use std::io::{Cursor, Write};
 use std::path::PathBuf;
 
+/**
+* Decode & verify flat files from a directory or a single file.
+* Input can be a directory or a file.
+* If input is a directory, all files with the extension .dbin will be processed.
+* If output is provided, the decoded blocks will be written to the directory.
+* If output is not provided, the decoded blocks will not be written to disk.
+**/
 pub fn decode_flat_files(input: &str, output: Option<&str>) -> Result<Vec<Block>, DecodeError> {
     let metadata = fs::metadata(input).map_err(DecodeError::IoError)?;
 
@@ -60,6 +73,11 @@ fn decode_flat_files_dir(input: &str, output: Option<&str>) -> Result<Vec<Block>
     Ok(blocks)
 }
 
+/**
+* Decode & verify a single flat file.
+* If output is provided, the decoded blocks will be written to the directory.
+* If output is not provided, the decoded blocks will not be written to disk.
+**/
 pub fn handle_file(path: &PathBuf, output: Option<&str>) -> Result<Vec<Block>, DecodeError> {
     let mut input_file = File::open(path).map_err(DecodeError::IoError)?;
     let dbin_file = DbinFile::try_from_read(&mut input_file)?;
@@ -77,7 +95,7 @@ pub fn handle_file(path: &PathBuf, output: Option<&str>) -> Result<Vec<Block>, D
     Ok(blocks)
 }
 
-pub fn decode_flat_files_iter<'a, I: Iterator<Item = &'a [u8]>>(
+fn decode_flat_files_iter<'a, I: Iterator<Item = &'a [u8]>>(
     iter: I,
 ) -> Result<Vec<Block>, DecodeError> {
     let mut blocks: Vec<Block> = vec![];
@@ -89,6 +107,12 @@ pub fn decode_flat_files_iter<'a, I: Iterator<Item = &'a [u8]>>(
     Ok(blocks)
 }
 
+/**
+* Decode & verify a single flat file from a buffer with its contents.
+* This is useful for decoding a file that is already in memory.
+* Returns a vector of all the blocks in the flat file
+* (it can be a single block or 100 blocks depending on format).
+**/
 pub fn handle_buf(buf: &[u8]) -> Result<Vec<Block>, DecodeError> {
     let dbin_file = DbinFile::try_from_read(&mut Cursor::new(buf))?;
 
