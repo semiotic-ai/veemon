@@ -3,8 +3,10 @@ block-*.json
 input_files/*.dbin
 .idea
 .DS_Store
+receipts
+headers
 
 # Added by cargo
 
 /target
-receipts
+

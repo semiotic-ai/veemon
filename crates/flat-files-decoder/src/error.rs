@@ -1,4 +1,5 @@
 use crate::dbin::error::DbinFileError;
+use crate::headers::error::BlockHeaderError;
 use crate::receipts::error::ReceiptError;
 use crate::transactions::error::TransactionError;
 use thiserror::Error;
@@ -9,6 +10,8 @@ pub enum DecodeError {
     InvalidInput,
     #[error("Dbin File Error: {0}")]
     DbinFileError(#[from] DbinFileError),
+    #[error("Invalid Block Header: {0}")]
+    BlockHeaderError(#[from] BlockHeaderError),
     #[error("Invalid Transaction Root: {0}")]
     TransactionRoot(#[from] TransactionError),
     #[error("Invalid Receipt Root: {0}")]

@@ -14,6 +14,8 @@ rand = "0.8.5"
 reth-blockchain-tree = { git = "https://github.com/paradigmxyz/reth", version = "=0.1.0-alpha.4", tag = "v0.1.0-alpha.4" }
 reth-primitives = { git = "https://github.com/paradigmxyz/reth", version = "=0.1.0-alpha.4", tag = "v0.1.0-alpha.4" }
 thiserror = "1.0.44"
+serde_json = "1.0.104"
+serde = { version = "1.0.180", features = ["derive"] }
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }

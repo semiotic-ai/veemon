@@ -1,16 +1,18 @@
 //! # Flat File decoder for Firehose
 //! Crate that provides utility functions to read and verify flat files from disk.
 //! The verifier currently matches computed receipts & transaction roots against the roots
-//! provided in the block header. Future versions will also verify the block header itself
-//! against an external source or file different from the flat files.
+//! provided in the block header. Optionally, the verifier can also check the block headers
+//! against a directory of block headers in json format.
 
 mod dbin;
 pub mod error;
+mod headers;
 mod protos;
 mod receipts;
 mod transactions;
 
 use crate::error::DecodeError;
+use crate::headers::check_valid_header;
 use crate::transactions::check_transaction_root;
 use dbin::DbinFile;
 use protobuf::Message;
@@ -24,11 +26,18 @@ use std::path::PathBuf;
 /**
 * Decode & verify flat files from a directory or a single file.
 * Input can be a directory or a file.
+* headers_dir is optional but must be a directory if provided.
+* If headers_dir is provided, the block headers will be verified against the files in the directory.
+* Header files must be named after the block number they represent and be in json format (e.g. 123.json).
 * If input is a directory, all files with the extension .dbin will be processed.
 * If output is provided, the decoded blocks will be written to the directory.
 * If output is not provided, the decoded blocks will not be written to disk.
 **/
-pub fn decode_flat_files(input: &str, output: Option<&str>) -> Result<Vec<Block>, DecodeError> {
+pub fn decode_flat_files(
+    input: &str,
+    output: Option<&str>,
+    headers_dir: Option<&str>,
+) -> Result<Vec<Block>, DecodeError> {
     let metadata = fs::metadata(input).map_err(DecodeError::IoError)?;
 
     if let Some(output) = output {
@@ -36,15 +45,19 @@ pub fn decode_flat_files(input: &str, output: Option<&str>) -> Result<Vec<Block>
     }
 
     if metadata.is_dir() {
-        decode_flat_files_dir(input, output)
+        decode_flat_files_dir(input, output, headers_dir)
     } else if metadata.is_file() {
-        handle_file(&PathBuf::from(input), output)
+        handle_file(&PathBuf::from(input), output, headers_dir)
     } else {
         Err(DecodeError::InvalidInput)
     }
 }
 
-fn decode_flat_files_dir(input: &str, output: Option<&str>) -> Result<Vec<Block>, DecodeError> {
+fn decode_flat_files_dir(
+    input: &str,
+    output: Option<&str>,
+    headers_dir: Option<&str>,
+) -> Result<Vec<Block>, DecodeError> {
     let paths = fs::read_dir(input).map_err(DecodeError::IoError)?;
 
     let mut blocks: Vec<Block> = vec![];
@@ -60,7 +73,7 @@ fn decode_flat_files_dir(input: &str, output: Option<&str>) -> Result<Vec<Block>
         };
 
         println!("Processing file: {}", path.path().display());
-        match handle_file(&path.path(), output) {
+        match handle_file(&path.path(), output, headers_dir) {
             Ok(file_blocks) => {
                 blocks.extend(file_blocks);
             }
@@ -77,11 +90,17 @@ fn decode_flat_files_dir(input: &str, output: Option<&str>) -> Result<Vec<Block>
 * Decode & verify a single flat file.
 * If output is provided, the decoded blocks will be written to the directory.
 * If output is not provided, the decoded blocks will not be written to disk.
+* headers_dir is optional but must be a directory if provided.
+* If headers_dir is provided, the block headers will be verified against the files in the directory.
+* Header files must be named after the block number they represent and be in json format. (e.g. 123.json)
 **/
-pub fn handle_file(path: &PathBuf, output: Option<&str>) -> Result<Vec<Block>, DecodeError> {
+pub fn handle_file(
+    path: &PathBuf,
+    output: Option<&str>,
+    headers_dir: Option<&str>,
+) -> Result<Vec<Block>, DecodeError> {
     let mut input_file = File::open(path).map_err(DecodeError::IoError)?;
     let dbin_file = DbinFile::try_from_read(&mut input_file)?;
-
     if dbin_file.content_type != "ETH" {
         return Err(DecodeError::InvalidContentType(dbin_file.content_type));
     }
@@ -89,19 +108,7 @@ pub fn handle_file(path: &PathBuf, output: Option<&str>) -> Result<Vec<Block>, D
     let mut blocks: Vec<Block> = vec![];
 
     for message in dbin_file.messages {
-        blocks.push(handle_block(message, output)?);
-    }
-
-    Ok(blocks)
-}
-
-fn decode_flat_files_iter<'a, I: Iterator<Item = &'a [u8]>>(
-    iter: I,
-) -> Result<Vec<Block>, DecodeError> {
-    let mut blocks: Vec<Block> = vec![];
-
-    for buf in iter {
-        blocks.extend_from_slice(&handle_buf(buf)?);
+        blocks.push(handle_block(message, output, headers_dir)?);
     }
 
     Ok(blocks)
@@ -119,19 +126,26 @@ pub fn handle_buf(buf: &[u8]) -> Result<Vec<Block>, DecodeError> {
     let mut blocks: Vec<Block> = vec![];
 
     for message in dbin_file.messages {
-        blocks.push(handle_block(message, None)?);
+        blocks.push(handle_block(message, None, None)?);
     }
 
     Ok(blocks)
 }
 
-fn handle_block(message: Vec<u8>, output: Option<&str>) -> Result<Block, DecodeError> {
+fn handle_block(
+    message: Vec<u8>,
+    output: Option<&str>,
+    headers_dir: Option<&str>,
+) -> Result<Block, DecodeError> {
     let message: protos::bstream::Block = Message::parse_from_bytes(&message)
         .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
 
     let block: Block = Message::parse_from_bytes(&message.payload_buffer)
         .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
 
+    if let Some(headers_dir) = headers_dir {
+        check_valid_header(&block, headers_dir)?;
+    }
     check_receipt_root(&block)?;
     check_transaction_root(&block)?;
 
@@ -164,7 +178,7 @@ mod tests {
     fn test_handle_file() {
         let path = PathBuf::from("example0017686312.dbin");
 
-        let result = handle_file(&path, None);
+        let result = handle_file(&path, None, None);
 
         assert!(result.is_ok());
     }

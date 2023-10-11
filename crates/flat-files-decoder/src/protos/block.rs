@@ -21,6 +21,7 @@
 
 //! Generated file from `src/protos/block.proto`
 
+
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
 const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_3_2_0;
