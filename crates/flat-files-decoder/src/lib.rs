@@ -146,8 +146,11 @@ fn handle_block(
     if let Some(headers_dir) = headers_dir {
         check_valid_header(&block, headers_dir)?;
     }
-    check_receipt_root(&block)?;
-    check_transaction_root(&block)?;
+    if block.number != 0 {
+        check_receipt_root(&block)?;
+        check_transaction_root(&block)?;
+    }
+    
 
     if let Some(output) = output {
         let file_name = format!("{}/block-{}.json", output, block.number);
