@@ -1,5 +1,6 @@
 use clap::{Arg, Command};
 use era_validator::era_validate;
+use std::process;
 
 mod era_validator;
 
@@ -50,7 +51,11 @@ fn main() {
                 None => None,
             };
 
-            era_validate(directory, master_accumulator_file, start_epoch, end_epoch);
+            if let Err(result) = era_validate(directory, master_accumulator_file, start_epoch, end_epoch){
+                println!("Error: {}", result);
+                process::exit(1);
+            }
+            process::exit(0);
         }
         _ => {
             println!("No subcommand was used");
