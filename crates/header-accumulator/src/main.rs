@@ -1,100 +1,59 @@
-use clap::Parser;
-use decoder::decode_flat_files;
-use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
-use primitive_types::{H256 as Hash256, U256};
-use tree_hash::TreeHash;
-use trin_validation::accumulator::MasterAccumulator;
+use clap::{Arg, Command};
+use era_validator::era_validate;
 
-const MAX_EPOCH_SIZE: usize = 8192;
-
-/// A program to check whether the validity of block headers stored in a directory of flat files
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    /// Directory where the flat files are stored
-    #[arg(short, long)]
-    directory: String,
-
-    /// Master accumulator file
-    #[arg(short, long, default_value = None)]
-    master_accumulator_file: Option<String>,
-
-    // Start epoch to check
-    #[arg(short, long, default_value = "0")]
-    start_epoch: usize,
-
-    // End epoch to check
-    #[arg(short, long, default_value = None)]
-    end_epoch: Option<usize>,
-}
-
-fn compute_epoch_accumulator(header_records: Vec<HeaderRecord>) -> EpochAccumulator {
-    if header_records.len() > MAX_EPOCH_SIZE {
-        panic!("hashes and tds must be less than MAX_EPOCH_SIZE");
-    }
-
-    let mut epoch_accumulator = EpochAccumulator::new(Vec::new()).unwrap();
-    for header_record in header_records {
-        let _ = epoch_accumulator.push(header_record);
-    }
-    epoch_accumulator
-}
+mod era_validator;
 
 fn main() {
-    let args = Args::parse();
-    let master_accumulator;
+    let matches = Command::new("header_accumulator")
+        .version("0")
+        .author("Semiotic Labs")
+        .about("Validates flat files against Header Accumulators")
+        .subcommand(
+            Command::new("era_validate")
+                .about("Validates entire ERAs of flat files against Header Accumulators")
+                .arg(Arg::new("directory")
+                    .help("Directory where the flat files are stored")
+                    .required(true)
+                    .index(1))
+                .arg(Arg::new("start_epoch")
+                    .help("Start epoch to check")
+                    .required(false)
+                    .short('s')
+                    .long("start_epoch"))
+                .arg(Arg::new("end_epoch")
+                    .help("End epoch to check")
+                    .required(false)
+                    .short('e')
+                    .long("end_epoch"))
+                .arg(Arg::new("master_accumulator_file")
+                    .help("Master accumulator file (optional)")
+                    .required(false)
+                    .short('m')
+                    .long("master_accumulator_file"))
+        )
+        .get_matches();
 
-    // Load master accumulator if available, otherwise use default from Prortal Network
-    if args.master_accumulator_file.is_some() {
-        let master_accumulator_file = args.master_accumulator_file.unwrap();
-        master_accumulator =
-            MasterAccumulator::try_from_file(master_accumulator_file.into()).unwrap();
-    } else {
-        master_accumulator = MasterAccumulator::default();
+    match matches.subcommand() {
+        Some(("era_validate", era_validate_matches)) => {
+            let directory = era_validate_matches.get_one::<String>("directory").expect("Directory is required.");
+            let master_accumulator_file = era_validate_matches.get_one::<String>("master_accumulator_file");
+            let start_epoch = era_validate_matches.get_one::<String>("start_epoch");
+            let end_epoch = era_validate_matches.get_one::<String>("end_epoch");
+
+            let start_epoch = match start_epoch {
+                Some(start_epoch) => start_epoch.parse::<usize>().unwrap(),
+                None => 0,
+            };
+
+            let end_epoch = match end_epoch {
+                Some(end_epoch) => Some(end_epoch.parse::<usize>().unwrap()),
+                None => None,
+            };
+
+            era_validate(directory, master_accumulator_file, start_epoch, end_epoch);
+        }
+        _ => {
+            println!("No subcommand was used");
+        }
     }
-
-    // Load blocks from flat files
-    let blocks = decode_flat_files(&args.directory, None, None).unwrap();
-
-    let mut header_records = Vec::<HeaderRecord>::new();
-    let start_block_number = args.start_epoch * MAX_EPOCH_SIZE;
-    let end_block_number;
-    if let Some(end_epoch) = args.end_epoch {
-        end_block_number = end_epoch * MAX_EPOCH_SIZE;
-        assert!(end_block_number <= blocks.len());
-    }
-    else {
-        end_block_number = start_block_number + MAX_EPOCH_SIZE;
-    }
-    let mut block_number = start_block_number;
-    while block_number < end_block_number {
-        let block = blocks
-            .iter()
-            .find(|&b| b.number == block_number as u64)
-            .unwrap();
-        let header_record = HeaderRecord {
-            block_hash: Hash256::from_slice(block.hash.as_slice()),
-            total_difficulty: U256::try_from(
-                block
-                    .header
-                    .total_difficulty
-                    .as_ref()
-                    .unwrap()
-                    .bytes
-                    .as_slice(),
-            )
-            .unwrap(),
-        };
-        header_records.push(header_record);
-        block_number += 1;
-    }
-
-    let epoch_accumulator = compute_epoch_accumulator(header_records);
-
-    assert_eq!(
-        epoch_accumulator.tree_hash_root().0,
-        master_accumulator.historical_epochs[0].0
-    );
-
-    println!("Flat file accumulator matches master accumulator!");
 }
