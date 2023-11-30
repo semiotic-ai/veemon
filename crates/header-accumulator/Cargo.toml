@@ -6,5 +6,21 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", version = "0.1.0", branch = "skip_first_block_checks" }
+reth-primitives = { git = "https://github.com/paradigmxyz/reth", version = "0.1.0-alpha.4", tag = "v0.1.0-alpha.4" }
+reth-codecs = { git = "https://github.com/paradigmxyz/reth", tag = "v0.1.0-alpha.4" }
+reth-rlp = { git = "https://github.com/paradigmxyz/reth", tag = "v0.1.0-alpha.4" }
+ethportal-api = "0.2.2"
 ssz_rs = "0.9.0"
 ssz_rs_derive = "0.9.0"
+tree_hash = "0.4.0"
+revm-primitives = "=1.1.2"
+protobuf = "=3.2.0"
+primitive-types = "0.10.1"
+trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0" }
+rlp = "0.5.2"
+serde_json = "1.0.108"
+clap = { version = "4.4.10", features = ["derive"] }
+
+[dev-dependencies]
+
