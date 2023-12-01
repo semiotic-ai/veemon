@@ -703,6 +703,7 @@ dependencies = [
  "rand",
  "reth-blockchain-tree",
  "reth-primitives",
+ "revm-primitives",
  "serde",
  "serde_json",
  "thiserror",
