@@ -1,23 +1,18 @@
 use decoder::{decode_flat_files, protos::block::Block};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
 use primitive_types::{H256 as Hash256, U256};
-use trin_validation::accumulator::MasterAccumulator;
 use tree_hash::TreeHash;
-// use decoder::
+use trin_validation::accumulator::MasterAccumulator;
+
 use crate::errors::EraValidateError;
 
 const MAX_EPOCH_SIZE: usize = 8192;
+const FINAL_EPOCH: usize = 01895;
+const MERGE_BLOCK: usize = 15537394;
 
-fn decode_header_records(blocks: &Vec<Block>, start_block: usize, end_block: usize) -> Result<Vec<HeaderRecord>, EraValidateError> {
-
-    let mut block_number = start_block;
+fn decode_header_records(blocks: &Vec<Block>) -> Result<Vec<HeaderRecord>, EraValidateError> {
     let mut header_records = Vec::<HeaderRecord>::new();
-    while block_number < end_block {
-        let block = blocks
-            .iter()
-            .find(|&b| b.number == block_number as u64)
-            .ok_or(EraValidateError::MissingBlock)?;
-        
+    for block in blocks {
         let header_record = HeaderRecord {
             block_hash: Hash256::from_slice(block.hash.as_slice()),
             total_difficulty: U256::try_from(
@@ -28,57 +23,75 @@ fn decode_header_records(blocks: &Vec<Block>, start_block: usize, end_block: usi
                     .ok_or(EraValidateError::HeaderDecodeError)?
                     .bytes
                     .as_slice(),
-            ).map_err(|_| EraValidateError::HeaderDecodeError)?,
+            )
+            .map_err(|_| EraValidateError::HeaderDecodeError)?,
         };
         header_records.push(header_record);
-        block_number += 1;
     }
 
     Ok(header_records)
 }
 
-pub fn compute_epoch_accumulator(header_records: Vec<HeaderRecord>) -> Result<EpochAccumulator, EraValidateError> {
+pub fn compute_epoch_accumulator(
+    header_records: Vec<HeaderRecord>,
+) -> Result<EpochAccumulator, EraValidateError> {
     if header_records.len() > MAX_EPOCH_SIZE {
         Err(EraValidateError::TooManyHeaderRecords)?;
     }
 
-    let mut epoch_accumulator = EpochAccumulator::new(Vec::new()).map_err(|_| EraValidateError::EpochAccumulatorError)?;
+    let mut epoch_accumulator =
+        EpochAccumulator::new(Vec::new()).map_err(|_| EraValidateError::EpochAccumulatorError)?;
     for header_record in header_records {
         let _ = epoch_accumulator.push(header_record);
     }
     Ok(epoch_accumulator)
 }
 
-pub fn era_validate(directory: &String, master_accumulator_file: Option<&String>, start_epoch: usize, end_epoch: Option<usize>) -> Result<(), EraValidateError> {
+pub fn era_validate(
+    directory: &String,
+    master_accumulator_file: Option<&String>,
+    start_epoch: usize,
+    end_epoch: Option<usize>,
+) -> Result<(), EraValidateError> {
     // Load master accumulator if available, otherwise use default from Prortal Network
     let master_accumulator = match master_accumulator_file {
         Some(master_accumulator_file) => {
-            MasterAccumulator::try_from_file(master_accumulator_file.into()).map_err(|_| EraValidateError::InvalidMasterAccumulatorFile)?
+            MasterAccumulator::try_from_file(master_accumulator_file.into())
+                .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile)?
         }
-        None => {
-            MasterAccumulator::default()
-        }
+        None => MasterAccumulator::default(),
     };
 
-    let end_epoch = match end_epoch  {
+    let end_epoch = match end_epoch {
         Some(end_epoch) => end_epoch,
-        None => start_epoch+1
+        None => start_epoch + 1,
     };
-    // Load blocks from flat files
-    let blocks = decode_flat_files(directory, None, None).map_err(|_| EraValidateError::FlatFileDecodeError)?;
-    
-    for epoch in start_epoch..end_epoch{
-        let start_block_number = epoch * MAX_EPOCH_SIZE;
-        let end_block_number = (epoch + 1) * MAX_EPOCH_SIZE;
-        if end_block_number > blocks.len() {
-            Err(EraValidateError::EndEraExceedsAvailableBlocks)?;
+
+    for epoch in start_epoch..end_epoch {
+        let start_100_block = epoch * MAX_EPOCH_SIZE - (epoch * MAX_EPOCH_SIZE % 100);
+        let end_100_block =
+            (epoch + 1) * MAX_EPOCH_SIZE + (100 - ((epoch + 1) * MAX_EPOCH_SIZE % 100));
+
+        let mut blocks: Vec<Block> = Vec::new();
+        for block_number in (start_100_block..end_100_block).step_by(100) {
+            let block_file_name = directory.to_owned() + &format!("/{:010}.dbin", block_number);
+            println!("Reading block file {}", block_file_name);
+            let block = &decode_flat_files(&block_file_name, None, None)
+                .map_err(|_| EraValidateError::FlatFileDecodeError)?;
+            blocks.extend(block.clone());
         }
 
-        let header_records = decode_header_records(&blocks, start_block_number, end_block_number)?;
+        if epoch < FINAL_EPOCH {
+            blocks = blocks[0..MAX_EPOCH_SIZE].to_vec();
+        } else {
+            blocks = blocks[0..MERGE_BLOCK].to_vec();
+        }
+
+        let header_records = decode_header_records(&blocks)?;
         let epoch_accumulator = compute_epoch_accumulator(header_records)?;
 
         // Return an error if the epoch accumulator does not match the master accumulator
-        if epoch_accumulator.tree_hash_root().0 != master_accumulator.historical_epochs[0].0 {
+        if epoch_accumulator.tree_hash_root().0 != master_accumulator.historical_epochs[epoch].0 {
             Err(EraValidateError::EraAccumulatorMismatch)?;
         }
 
