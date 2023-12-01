@@ -7,7 +7,7 @@
 mod dbin;
 pub mod error;
 mod headers;
-mod protos;
+pub mod protos;
 mod receipts;
 mod transactions;
 
