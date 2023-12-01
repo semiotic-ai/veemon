@@ -1068,7 +1068,7 @@ dependencies = [
 [[package]]
 name = "decoder"
 version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/flat-files-decoder.git?branch=skip_first_block_checks#9bd0914b4032688dd4047e3da40a6c053f91b6a5"
+source = "git+https://github.com/semiotic-ai/flat-files-decoder.git#22f8ecd9418c7c7c7693836d51cacc41e5782b9b"
 dependencies = [
  "anyhow",
  "clap",
@@ -1077,6 +1077,7 @@ dependencies = [
  "rand 0.8.5",
  "reth-blockchain-tree",
  "reth-primitives 0.1.0-alpha.4",
+ "revm-primitives 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "thiserror",
@@ -1694,7 +1695,7 @@ dependencies = [
 [[package]]
 name = "ethportal-api"
 version = "0.2.2"
-source = "git+https://github.com/ethereum/trin.git#3f246140ee57e58fec0f028179a08fda7abe5bab"
+source = "git+https://github.com/ethereum/trin.git#836f8d7a94c9a172cad4ed57e4ec17bcd6c01fdf"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
@@ -5670,7 +5671,7 @@ dependencies = [
 [[package]]
 name = "trin-validation"
 version = "0.1.0"
-source = "git+https://github.com/ethereum/trin.git#3f246140ee57e58fec0f028179a08fda7abe5bab"
+source = "git+https://github.com/ethereum/trin.git#836f8d7a94c9a172cad4ed57e4ec17bcd6c01fdf"
 dependencies = [
  "anyhow",
  "async-trait",
