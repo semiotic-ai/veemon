@@ -2,6 +2,7 @@ use crate::{
     errors::EraValidateError,
     utils::{compute_epoch_accumulator, decode_header_records, extract_100_blocks, header_from_block},
 };
+use ethportal_api::{AccumulatorProof, BlockHeaderProof, HeaderWithProof};
 use primitive_types::H256;
 use revm_primitives::bitvec::order::verify_for_type;
 use tree_hash::TreeHash;
@@ -67,50 +68,42 @@ pub fn generate_inclusion_proof(
 // function: verify_inclusion_proof
 // inputs: flat_file_directory, block_range, inclusion_proof
 // outputs: result
+pub fn verify_inclusion_proof(directory: &String, master_accumulator_file: Option<&String>, start_block: usize, end_block: usize, inclusion_proof: Vec<[H256; 15]>) -> Result<bool, EraValidateError> {
+    // Load master accumulator
+    let master_accumulator = match master_accumulator_file {
+        Some(master_accumulator_file) => {
+            MasterAccumulator::try_from_file(master_accumulator_file.into())
+                .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile)?
+        }
+        None => MasterAccumulator::default(),
+    };
 
-// pub fn verify_inclusion_proof(directory: &String, master_accumulator_file: Option<&String>, start_block: usize, end_block: usize, inclusion_proof: Vec<(H256, Vec<H256>, usize)>) -> Result<bool, EraValidateError> {
-//     // Load master accumulator
-//     let master_accumulator = match master_accumulator_file {
-//         Some(master_accumulator_file) => {
-//             MasterAccumulator::try_from_file(master_accumulator_file.into())
-//                 .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile)?
-//         }
-//         None => MasterAccumulator::default(),
-//     };
+    // Verify inclusion proof
+    let blocks = extract_100_blocks(&directory, start_block, end_block).unwrap();
+    let mut headers = Vec::new();
+    let mut hwps = Vec::new();
+    for block_number in start_block..end_block {
+        headers.push(header_from_block(&blocks[block_number]).unwrap());
+        let bhp = BlockHeaderProof::AccumulatorProof(AccumulatorProof{proof: inclusion_proof[block_number].clone()});
+        hwps.push(HeaderWithProof {
+            header: headers[block_number].clone(),
+            proof: bhp,
+        });
+    }
 
-//     // Load blocks from flat files
-//     // Grab the starting 100 block flat file by rounding down to nearest 100
-//     let hundred_block_flat_files_start = start_block - (start_block % 100);
+    let results = hwps.iter().map(|hwp| master_accumulator.validate_header_with_proof(&hwp)).collect::<Result<Vec<_>, _>>();
+    
+    Ok(results.is_ok())
 
-//     // Grab the ending 100 block flat file by rounding up to nearest 100
-//     let hundred_block_flat_files_end = end_block + (100 - (end_block % 100));
-
-//     // Get blocks
-//     let blocks = extract_100_blocks(directory, hundred_block_flat_files_start, hundred_block_flat_files_end)?;
-//     let header_records = decode_header_records(&blocks)?;
-
-//     // Verify header_records against inclusion_proof
-//     for block_number in hundred_block_flat_files_start..hundred_block_flat_files_end {
-//         // Epoch is the block number divided by 8192, rounded down
-//         let epoch = block_number / 8192;
-//         let master_accumulator_leaf = master_accumulator.historical_epochs[epoch];
-//         result = verify_merkle_proof(header_records[block_number].block_hash, inclusion_proof[block_number].1.as_slice(), 13, index, master_accumulator_leaf);
-//     }
-
-//     Ok()
-
-// }
+}
 
 #[cfg(test)]
 mod test {
-    use ethportal_api::{HeaderWithProof, BlockHeaderProof, AccumulatorProof};
-
     use super::*;
 
     // Test inclusion proof
     #[test]
     fn test_inclusion_proof() {
-        let master_accumulator = MasterAccumulator::default();
         let directory = String::from("./src/assets/ethereum_firehose_first_8200");
         let start_block = 0;
         let end_block = 100;
@@ -118,19 +111,7 @@ mod test {
         assert_eq!(inclusion_proof.len(), end_block-start_block);
 
         // Verify inclusion proof
-        let blocks = extract_100_blocks(&directory, start_block, end_block).unwrap();
-        let mut headers = Vec::new();
-        let mut hwps = Vec::new();
-        for block_number in start_block..end_block {
-            headers.push(header_from_block(&blocks[block_number]).unwrap());
-            let bhp = BlockHeaderProof::AccumulatorProof(AccumulatorProof{proof: inclusion_proof[block_number].clone()});
-            hwps.push(HeaderWithProof {
-                header: headers[block_number].clone(),
-                proof: bhp,
-            });
-        }
-        for hwp in hwps {
-            master_accumulator.validate_header_with_proof(&hwp).expect("Failed to validate header with proof");
-        }
+        let result = verify_inclusion_proof(&directory, None, start_block, end_block, inclusion_proof).unwrap();
+        assert_eq!(result, true);
     }
 }
