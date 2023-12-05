@@ -1,8 +1,8 @@
 use decoder::{decode_flat_files, protos::block::Block};
+use ethereum_types::H256 as Hash256;
 use ethereum_types::{Bloom, H160, H64, U256 as EthereumU256};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
 use ethportal_api::Header;
-use ethereum_types::H256 as Hash256;
 
 use crate::errors::EraValidateError;
 
@@ -86,7 +86,8 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
             .ok_or(EraValidateError::HeaderDecodeError)?
             .bytes
             .as_slice(),
-    ).map_err(|_| EraValidateError::HeaderDecodeError)?;
+    )
+    .map_err(|_| EraValidateError::HeaderDecodeError)?;
     let number = block.header.number;
     let gas_limit = EthereumU256::try_from(block.header.gas_limit)
         .map_err(|_| EraValidateError::HeaderDecodeError)?;
@@ -109,7 +110,9 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
     };
     let withdrawals_root = match block.header.withdrawals_root.is_empty() {
         true => None,
-        false => Some(Hash256::from_slice(block.header.withdrawals_root.as_slice())),
+        false => Some(Hash256::from_slice(
+            block.header.withdrawals_root.as_slice(),
+        )),
     };
 
     let header = Header {

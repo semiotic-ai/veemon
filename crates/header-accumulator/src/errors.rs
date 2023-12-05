@@ -4,12 +4,11 @@ use std::fmt;
 pub enum EraValidateError {
     TooManyHeaderRecords,
     InvalidMasterAccumulatorFile,
-    MissingBlock,
     HeaderDecodeError,
     FlatFileDecodeError,
     EraAccumulatorMismatch,
-    EndEraExceedsAvailableBlocks,
     EpochAccumulatorError,
+    ProofGenerationFailure,
 }
 impl std::error::Error for EraValidateError {}
 
@@ -20,17 +19,16 @@ impl fmt::Display for EraValidateError {
             EraValidateError::InvalidMasterAccumulatorFile => {
                 write!(f, "Invalid master accumulator file")
             }
-            EraValidateError::MissingBlock => write!(f, "Missing block in flat files directory"),
             EraValidateError::HeaderDecodeError => {
                 write!(f, "Error decoding header from flat files")
             }
             EraValidateError::FlatFileDecodeError => write!(f, "Error decoding flat files"),
             EraValidateError::EraAccumulatorMismatch => write!(f, "Era accumulator mismatch"),
-            EraValidateError::EndEraExceedsAvailableBlocks => {
-                write!(f, "End era exceeds available blocks")
-            }
             EraValidateError::EpochAccumulatorError => {
                 write!(f, "Error creating epoch accumulator")
+            }
+            EraValidateError::ProofGenerationFailure => {
+                write!(f, "Error generating inclusion proof")
             }
         }
     }
