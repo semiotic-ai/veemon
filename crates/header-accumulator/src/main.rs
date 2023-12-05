@@ -1,5 +1,6 @@
 use clap::{Arg, Command};
 use era_validator::era_validate;
+use primitive_types::H256;
 use std::process;
 
 mod era_validator;
@@ -71,6 +72,34 @@ fn main() {
                         .long("output_file")
                 ),
         )
+        .subcommand(
+            Command::new("verify_inclusion_proof")
+                .about("Verifies inclusion proofs for a range of blocks")
+                .arg(
+                    Arg::new("directory")
+                        .help("Directory where the flat files are stored")
+                        .required(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::new("start_block")
+                        .help("Start block to verify inclusion proof for")
+                        .required(true)
+                        .index(2),
+                )
+                .arg(
+                    Arg::new("end_block")
+                        .help("End block to verify inclusion proof for")
+                        .required(true)
+                        .index(3),
+                )
+                .arg(
+                    Arg::new("inclusion_proof_file")
+                        .help("Inclusion proof to verify")
+                        .required(true)
+                        .index(4),
+                ),
+        )
         .get_matches();
 
     match matches.subcommand() {
@@ -129,6 +158,44 @@ fn main() {
                 }
             }
             process::exit(0);
+        }
+        Some(("verify_inclusion_proof", verify_inclusion_proof_matches)) => {
+            let directory = verify_inclusion_proof_matches
+                .get_one::<String>("directory")
+                .expect("Directory is required.");
+            let start_block = verify_inclusion_proof_matches
+                .get_one::<String>("start_block")
+                .expect("Start block is required.");
+            let end_block = verify_inclusion_proof_matches
+                .get_one::<String>("end_block")
+                .expect("End block is required.");
+            let inclusion_proof_file = verify_inclusion_proof_matches
+                .get_one::<String>("inclusion_proof_file")
+                .expect("Inclusion proof is required.");
+
+            // Load inclusion proof
+            let inclusion_proof = std::fs::read_to_string(inclusion_proof_file)
+                .expect("Error reading inclusion proof file");
+            let inclusion_proof: Vec<[H256; 15]> =
+                serde_json::from_str(&inclusion_proof).expect("Error parsing inclusion proof");
+
+            let result = inclusion_proof::verify_inclusion_proof(
+                &directory,
+                None,
+                start_block.parse::<usize>().unwrap(),
+                end_block.parse::<usize>().unwrap(),
+                inclusion_proof,
+            );
+
+            if result.is_ok() {
+                println!("Inclusion proof verified!");
+                process::exit(0);
+                
+            }
+            else {
+                println!("Inclusion proof failed to verify");
+                process::exit(1);
+            }
         }
         _ => {
             println!("No subcommand was used");
