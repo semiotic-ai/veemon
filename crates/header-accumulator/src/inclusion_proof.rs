@@ -16,6 +16,8 @@ pub fn generate_inclusion_proof(
     start_block: usize,
     end_block: usize,
 ) -> Result<Vec<[H256; 15]>, EraValidateError> {
+    let num_blocks = end_block - start_block;
+
     // Compute the epoch accumulator for the blocks
     // The epochs start on a multiple of 8192 blocks, so we need to round down to the nearest 8192
     let epoch_start = start_block / 8192;
@@ -47,7 +49,7 @@ pub fn generate_inclusion_proof(
     for block_idx in start_block..end_block {
         let epoch = block_idx / 8192;
         let epoch_acc = epoch_accumulators[epoch].clone();
-        let header = headers[block_idx - start_block].clone();
+        let header = headers[block_idx].clone();
         inclusion_proof_vec.push(
             MasterAccumulator::construct_proof(&header, &epoch_acc)
                 .map_err(|_| EraValidateError::ProofGenerationFailure)?,
@@ -65,7 +67,9 @@ pub fn verify_inclusion_proof(
     start_block: usize,
     end_block: usize,
     inclusion_proof: Vec<[H256; 15]>,
-) -> Result<bool, EraValidateError> {
+) -> Result<(), EraValidateError> {
+    let num_blocks = end_block - start_block;
+
     // Load master accumulator
     let master_accumulator = match master_accumulator_file {
         Some(master_accumulator_file) => {
@@ -77,25 +81,20 @@ pub fn verify_inclusion_proof(
 
     // Verify inclusion proof
     let blocks = extract_100_blocks(&directory, start_block, end_block)?;
-    let mut headers = Vec::new();
-    let mut hwps = Vec::new();
-    for block_number in start_block..end_block {
-        headers.push(header_from_block(&blocks[block_number])?);
+    for block_idx in 0..num_blocks {
         let bhp = BlockHeaderProof::AccumulatorProof(AccumulatorProof {
-            proof: inclusion_proof[block_number].clone(),
+            proof: inclusion_proof[block_idx].clone(),
         });
-        hwps.push(HeaderWithProof {
-            header: headers[block_number].clone(),
+        let hwp = HeaderWithProof {
+            header: header_from_block(&blocks[block_idx])?,
             proof: bhp,
-        });
+        };
+        master_accumulator.validate_header_with_proof(&hwp).map_err(|_| {
+            EraValidateError::ProofGenerationFailure
+        })?;
     }
 
-    let results = hwps
-        .iter()
-        .map(|hwp| master_accumulator.validate_header_with_proof(&hwp))
-        .collect::<Result<Vec<_>, _>>();
-
-    Ok(results.is_ok())
+    Ok(())
 }
 
 #[cfg(test)]
@@ -106,15 +105,12 @@ mod test {
     #[test]
     fn test_inclusion_proof() {
         let directory = String::from("./src/assets/ethereum_firehose_first_8200");
-        let start_block = 0;
-        let end_block = 100;
+        let start_block = 301;
+        let end_block = 402;
         let inclusion_proof = generate_inclusion_proof(&directory, start_block, end_block).unwrap();
         assert_eq!(inclusion_proof.len(), end_block - start_block);
 
         // Verify inclusion proof
-        let result =
-            verify_inclusion_proof(&directory, None, start_block, end_block, inclusion_proof)
-                .unwrap();
-        assert_eq!(result, true);
+        assert!(verify_inclusion_proof(&directory, None, start_block, end_block, inclusion_proof).is_ok());
     }
 }
