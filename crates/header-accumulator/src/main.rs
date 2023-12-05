@@ -3,8 +3,8 @@ use era_validator::era_validate;
 use std::process;
 
 mod era_validator;
-// mod inclusion_proof;
 mod errors;
+mod inclusion_proof;
 mod utils;
 fn main() {
     let matches = Command::new("header_accumulator")
