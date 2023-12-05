@@ -11,18 +11,10 @@ use trin_validation::accumulator::MasterAccumulator;
 // outputs: inclusion_proof
 pub fn generate_inclusion_proof(
     directory: &String,
-    master_accumulator_file: Option<&String>,
     start_block: usize,
     end_block: usize,
 ) -> Result<Vec<[H256; 15]>, EraValidateError> {
-    // Load master accumulator if available, otherwise use default from Portal Network
-    let master_accumulator = match master_accumulator_file {
-        Some(master_accumulator_file) => {
-            MasterAccumulator::try_from_file(master_accumulator_file.into())
-                .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile)?
-        }
-        None => MasterAccumulator::default(),
-    };
+
     // Compute the epoch accumulator for the blocks
     // The epochs start on a multiple of 8192 blocks, so we need to round down to the nearest 8192
     let epoch_start = start_block / 8192;
@@ -102,7 +94,7 @@ mod test {
         let directory = String::from("./src/assets/ethereum_firehose_first_8200");
         let start_block = 0;
         let end_block = 100;
-        let inclusion_proof = generate_inclusion_proof(&directory, None, start_block, end_block).unwrap();
+        let inclusion_proof = generate_inclusion_proof(&directory, start_block, end_block).unwrap();
         assert_eq!(inclusion_proof.len(), end_block-start_block);
 
         // Verify inclusion proof
