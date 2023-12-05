@@ -1,4 +1,3 @@
-use decoder::protos::block::Block;
 use tree_hash::TreeHash;
 use trin_validation::accumulator::MasterAccumulator;
 

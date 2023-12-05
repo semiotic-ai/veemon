@@ -2,8 +2,6 @@ use decoder::{decode_flat_files, protos::block::Block};
 use ethereum_types::{Bloom, H160, H64, U256 as EthereumU256};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
 use ethportal_api::Header;
-use revm_primitives::bitvec::view::BitViewSized;
-// use tree_hash::Hash256;
 use ethereum_types::H256 as Hash256;
 
 use crate::errors::EraValidateError;

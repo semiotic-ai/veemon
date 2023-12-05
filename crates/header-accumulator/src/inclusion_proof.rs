@@ -4,12 +4,7 @@ use crate::{
 };
 use ethportal_api::{AccumulatorProof, BlockHeaderProof, HeaderWithProof};
 use primitive_types::H256;
-use revm_primitives::bitvec::order::verify_for_type;
-use tree_hash::TreeHash;
-use trin_validation::{
-    accumulator::MasterAccumulator,
-    merkle::proof::{verify_merkle_proof, MerkleTree},
-};
+use trin_validation::accumulator::MasterAccumulator;
 
 // function: generate_inclusion_proof
 // inputs: flat_file_directory, master_accumulator_file, start_block, end_block
