@@ -140,8 +140,6 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
 
 #[cfg(test)]
 mod test {
-    use revm_primitives::hex;
-
     use super::*;
 
     #[test]

@@ -69,7 +69,7 @@ fn main() {
                         .help("Output file for the inclusion proof")
                         .required(false)
                         .short('o')
-                        .long("output_file")
+                        .long("output_file"),
                 ),
         )
         .subcommand(
@@ -141,9 +141,12 @@ fn main() {
                 .get_one::<String>("end_block")
                 .expect("End block is required.");
 
-            let inclusion_proof =
-                inclusion_proof::generate_inclusion_proof(&directory, start_block.parse::<usize>().unwrap(), end_block.parse::<usize>().unwrap())
-                    .expect("Error generating inclusion proof");
+            let inclusion_proof = inclusion_proof::generate_inclusion_proof(
+                &directory,
+                start_block.parse::<usize>().unwrap(),
+                end_block.parse::<usize>().unwrap(),
+            )
+            .expect("Error generating inclusion proof");
 
             let inclusion_proof_serialized = serde_json::to_string(&inclusion_proof).unwrap();
             // write the proof to a file
@@ -151,10 +154,12 @@ fn main() {
             let output_file = generate_inclusion_proof_matches.get_one::<String>("output_file");
             match output_file {
                 Some(output_file) => {
-                    std::fs::write(output_file.to_owned()+".json", inclusion_proof_serialized).expect("Unable to write file");
+                    std::fs::write(output_file.to_owned() + ".json", inclusion_proof_serialized)
+                        .expect("Unable to write file");
                 }
                 None => {
-                    std::fs::write("inclusion_proof.json", inclusion_proof_serialized).expect("Unable to write file");
+                    std::fs::write("inclusion_proof.json", inclusion_proof_serialized)
+                        .expect("Unable to write file");
                 }
             }
             process::exit(0);
@@ -190,9 +195,7 @@ fn main() {
             if result.is_ok() {
                 println!("Inclusion proof verified!");
                 process::exit(0);
-                
-            }
-            else {
+            } else {
                 println!("Inclusion proof failed to verify");
                 process::exit(1);
             }

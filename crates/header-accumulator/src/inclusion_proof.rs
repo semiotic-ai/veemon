@@ -16,8 +16,6 @@ pub fn generate_inclusion_proof(
     start_block: usize,
     end_block: usize,
 ) -> Result<Vec<[H256; 15]>, EraValidateError> {
-    let num_blocks = end_block - start_block;
-
     // Compute the epoch accumulator for the blocks
     // The epochs start on a multiple of 8192 blocks, so we need to round down to the nearest 8192
     let epoch_start = start_block / 8192;
@@ -89,9 +87,9 @@ pub fn verify_inclusion_proof(
             header: header_from_block(&blocks[block_idx])?,
             proof: bhp,
         };
-        master_accumulator.validate_header_with_proof(&hwp).map_err(|_| {
-            EraValidateError::ProofGenerationFailure
-        })?;
+        master_accumulator
+            .validate_header_with_proof(&hwp)
+            .map_err(|_| EraValidateError::ProofGenerationFailure)?;
     }
 
     Ok(())
@@ -111,6 +109,9 @@ mod test {
         assert_eq!(inclusion_proof.len(), end_block - start_block);
 
         // Verify inclusion proof
-        assert!(verify_inclusion_proof(&directory, None, start_block, end_block, inclusion_proof).is_ok());
+        assert!(
+            verify_inclusion_proof(&directory, None, start_block, end_block, inclusion_proof)
+                .is_ok()
+        );
     }
 }
