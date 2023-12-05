@@ -42,6 +42,35 @@ fn main() {
                         .long("master_accumulator_file"),
                 ),
         )
+        .subcommand(
+            Command::new("generate_inclusion_proof")
+                .about("Generates inclusion proofs for a range of blocks")
+                .arg(
+                    Arg::new("directory")
+                        .help("Directory where the flat files are stored")
+                        .required(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::new("start_block")
+                        .help("Start block to generate inclusion proof for")
+                        .required(true)
+                        .index(2),
+                )
+                .arg(
+                    Arg::new("end_block")
+                        .help("End block to generate inclusion proof for")
+                        .required(true)
+                        .index(3),
+                )
+                .arg(
+                    Arg::new("output_file")
+                        .help("Output file for the inclusion proof")
+                        .required(false)
+                        .short('o')
+                        .long("output_file")
+                ),
+        )
         .get_matches();
 
     match matches.subcommand() {
@@ -69,6 +98,35 @@ fn main() {
             {
                 println!("Error: {}", result);
                 process::exit(1);
+            }
+            process::exit(0);
+        }
+        Some(("generate_inclusion_proof", generate_inclusion_proof_matches)) => {
+            let directory = generate_inclusion_proof_matches
+                .get_one::<String>("directory")
+                .expect("Directory is required.");
+            let start_block = generate_inclusion_proof_matches
+                .get_one::<String>("start_block")
+                .expect("Start block is required.");
+            let end_block = generate_inclusion_proof_matches
+                .get_one::<String>("end_block")
+                .expect("End block is required.");
+
+            let inclusion_proof =
+                inclusion_proof::generate_inclusion_proof(&directory, start_block.parse::<usize>().unwrap(), end_block.parse::<usize>().unwrap())
+                    .expect("Error generating inclusion proof");
+
+            let inclusion_proof_serialized = serde_json::to_string(&inclusion_proof).unwrap();
+            // write the proof to a file
+            // if output_file is not provided, write to inclusion_proof.json
+            let output_file = generate_inclusion_proof_matches.get_one::<String>("output_file");
+            match output_file {
+                Some(output_file) => {
+                    std::fs::write(output_file.to_owned()+".json", inclusion_proof_serialized).expect("Unable to write file");
+                }
+                None => {
+                    std::fs::write("inclusion_proof.json", inclusion_proof_serialized).expect("Unable to write file");
+                }
             }
             process::exit(0);
         }
