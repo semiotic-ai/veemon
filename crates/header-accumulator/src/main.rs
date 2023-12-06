@@ -1,12 +1,8 @@
 use clap::{Arg, Command};
-use era_validator::era_validate;
+use header_accumulator::{era_validator::era_validate, inclusion_proof};
 use primitive_types::H256;
 use std::process;
 
-mod era_validator;
-mod errors;
-mod inclusion_proof;
-mod utils;
 fn main() {
     let matches = Command::new("header_accumulator")
         .version("0")
