@@ -30,9 +30,8 @@ pub fn era_validate(
     };
 
     for epoch in start_epoch..end_epoch {
-        let start_100_block = epoch * MAX_EPOCH_SIZE - (epoch * MAX_EPOCH_SIZE % 100);
-        let end_100_block =
-            (epoch + 1) * MAX_EPOCH_SIZE + (100 - ((epoch + 1) * MAX_EPOCH_SIZE % 100));
+        let start_100_block = epoch * MAX_EPOCH_SIZE;
+        let end_100_block = (epoch + 1) * MAX_EPOCH_SIZE;
 
         let mut blocks = extract_100_blocks(directory, start_100_block, end_100_block)?;
 
