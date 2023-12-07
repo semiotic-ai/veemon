@@ -10,7 +10,6 @@ pub enum TransactionTypeError {
 }
 
 impl From<Type> for TxType {
-    // TODO: check -> nothing maps to TxType::EIP4844
     fn from(tx_type: Type) -> Self {
         match tx_type {
             Type::TRX_TYPE_LEGACY => Self::Legacy,

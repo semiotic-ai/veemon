@@ -11,6 +11,8 @@ pub enum ReceiptError {
     InvalidAddress(String),
     #[error("Invalid topic: {0}")]
     InvalidTopic(String),
+    #[error("Invalid data: {0}")]
+    InvalidBloom(String),
     #[error("Receipt root mismatch: {0} != {1}")]
     MismatchedRoot(String, String),
 }

@@ -78,7 +78,6 @@ impl TryFrom<&TransactionTrace> for Transaction {
                     input,
                 })
             }
-            // TxType::EIP4844 => Err(TransactionError::EIP4844NotSupported)?,
         };
 
         Ok(transaction)
