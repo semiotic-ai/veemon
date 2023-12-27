@@ -1,9 +1,11 @@
 use clap::{Arg, Command};
-use header_accumulator::{era_validator::era_validate, inclusion_proof};
+use header_accumulator::{era_validator::{era_validate, stream_validation}, inclusion_proof, errors::EraValidateError};
 use primitive_types::H256;
-use std::process;
+use trin_validation::accumulator::MasterAccumulator;
+use std::{process, io::BufReader};
 
 fn main() {
+    env_logger::init();
     let matches = Command::new("header_accumulator")
         .version("0")
         .author("Semiotic Labs")
@@ -14,7 +16,7 @@ fn main() {
                 .arg(
                     Arg::new("directory")
                         .help("Directory where the flat files are stored")
-                        .required(true)
+                        .required(false)
                         .index(1),
                 )
                 .arg(
@@ -37,7 +39,18 @@ fn main() {
                         .required(false)
                         .short('m')
                         .long("master_accumulator_file"),
-                ),
+                )
+                .subcommand(
+                    Command::new("stream")
+                        .about("Validates streams ERAs of flat files against Header Accumulators")
+                        .arg(
+                            Arg::new("master_accumulator_file")
+                                .help("Master accumulator file (optional)")
+                                .required(false)
+                                .short('m')
+                                .long("master_accumulator_file"),
+                        )
+                )
         )
         .subcommand(
             Command::new("generate_inclusion_proof")
@@ -100,9 +113,26 @@ fn main() {
 
     match matches.subcommand() {
         Some(("era_validate", era_validate_matches)) => {
-            let directory = era_validate_matches
-                .get_one::<String>("directory")
-                .expect("Directory is required.");
+            match era_validate_matches.subcommand() {
+                Some(("stream", stream_matches)) => {
+                    let master_accumulator_file =
+                        stream_matches.get_one::<String>("master_accumulator_file");
+                    let master_accumulator = match master_accumulator_file {
+                        Some(master_accumulator_file) => {
+                            MasterAccumulator::try_from_file(master_accumulator_file.into())
+                                .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile).expect("Invalid master accumulator file")
+                        }
+                        None => MasterAccumulator::default(),
+                    };
+                    let reader = BufReader::with_capacity(1<<32, std::io::stdin().lock());
+                    let writer = std::io::stdout();
+                    stream_validation(master_accumulator.clone(), reader, writer).expect("Validation Error");
+                    process::exit(0);
+                }
+                _ => {}
+            }
+            let directory = era_validate_matches.get_one::<String>("directory").expect("Directory is required");
+
             let master_accumulator_file =
                 era_validate_matches.get_one::<String>("master_accumulator_file");
             let start_epoch = era_validate_matches.get_one::<String>("start_epoch");
@@ -118,13 +148,21 @@ fn main() {
                 None => None,
             };
 
-            if let Err(result) =
-                era_validate(directory, master_accumulator_file, start_epoch, end_epoch)
-            {
-                println!("Error: {}", result);
+            log::info!("Starting validation.");
+            let result = era_validate(directory, master_accumulator_file, start_epoch, end_epoch);
+
+            // If the result is Ok, then the era was validated successfully
+            // Log the validated era and exit with code 0
+            if result.is_ok() {
+                let validated_epoch = result.unwrap();
+                log::info!("Validated era(s): {:?}", validated_epoch);
+                process::exit(0);
+            } else {
+                // If the result is Err, then the era failed to validate
+                // Log the error and exit with code 1
+                log::error!("Error validating era: {:?}", result.unwrap_err());
                 process::exit(1);
             }
-            process::exit(0);
         }
         Some(("generate_inclusion_proof", generate_inclusion_proof_matches)) => {
             let directory = generate_inclusion_proof_matches

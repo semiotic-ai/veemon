@@ -9,6 +9,12 @@ pub enum EraValidateError {
     EraAccumulatorMismatch,
     EpochAccumulatorError,
     ProofGenerationFailure,
+    IoError,
+    StartEpochBlockNotFound,
+    EndEpochLessThanStartEpoch,
+    MergeBlockNotFound,
+    JsonError,
+    TotalDifficultyDecodeError
 }
 impl std::error::Error for EraValidateError {}
 
@@ -29,6 +35,22 @@ impl fmt::Display for EraValidateError {
             }
             EraValidateError::ProofGenerationFailure => {
                 write!(f, "Error generating inclusion proof")
+            }
+            EraValidateError::IoError => write!(f, "Error reading from stdin"),
+            EraValidateError::StartEpochBlockNotFound => {
+                write!(f, "Start epoch block not found")
+            }
+            EraValidateError::EndEpochLessThanStartEpoch => {
+                write!(f, "Start epoch must be less than end epoch")
+            }
+            EraValidateError::MergeBlockNotFound => {
+                write!(f, "Merge block not found")
+            }
+            EraValidateError::JsonError => {
+                write!(f, "Error reading json from stdin")
+            }
+            EraValidateError::TotalDifficultyDecodeError => {
+                write!(f, "Error decoding total difficulty")
             }
         }
     }

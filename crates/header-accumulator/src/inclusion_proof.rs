@@ -34,14 +34,16 @@ pub fn generate_inclusion_proof(
 
         let blocks = extract_100_blocks(directory, start_block, end_block)?;
 
-        let header_records = decode_header_records(&(blocks))?;
+
         let mut blocks_headers = Vec::new();
-        for block in blocks {
-            let header = header_from_block(&block)?;
-            blocks_headers.push(header);
+        for block in blocks.clone() {
+            let header = header_from_block(block)?;
+            blocks_headers.push(header.clone());
+
         }
+        let header_records = decode_header_records(blocks)?;
         headers.extend(blocks_headers);
-        epoch_accumulators.push(compute_epoch_accumulator(header_records)?);
+        epoch_accumulators.push(compute_epoch_accumulator(&header_records)?);
     }
 
     for block_idx in start_block..end_block {
@@ -84,7 +86,7 @@ pub fn verify_inclusion_proof(
             proof: inclusion_proof[block_idx].clone(),
         });
         let hwp = HeaderWithProof {
-            header: header_from_block(&blocks[block_idx])?,
+            header: header_from_block(blocks[block_idx].clone())?,
             proof: bhp,
         };
         master_accumulator
