@@ -1,4 +1,4 @@
-use crate::protos::block::TransactionTrace;
+use crate::sf::ethereum::r#type::v2::TransactionTrace;
 use reth_primitives::{hex, Signature, U256};
 use thiserror::Error;
 

@@ -11,4 +11,8 @@ pub enum BlockHeaderError {
     InvalidInput,
     #[error("Mismatched roots: expected {0:?}, got {1:?}")]
     MismatchedRoots(BlockHeaderRoots, BlockHeaderRoots),
+    #[error("Missing header")]
+    MissingHeader,
+    #[error("Invalid total difficulty")]
+    InvalidTotalDifficulty,
 }

@@ -15,4 +15,8 @@ pub enum ReceiptError {
     InvalidBloom(String),
     #[error("Receipt root mismatch: {0} != {1}")]
     MismatchedRoot(String, String),
+    #[error("Missing receipt root")]
+    MissingRoot,
+    #[error("Missing receipt")]
+    MissingReceipt,
 }

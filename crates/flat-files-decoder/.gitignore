@@ -5,7 +5,7 @@ input_files/*.dbin
 .DS_Store
 receipts
 headers
-
+.vscode
 # Added by cargo
 
 /target

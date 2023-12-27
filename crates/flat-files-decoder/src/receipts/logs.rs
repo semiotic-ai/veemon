@@ -2,7 +2,8 @@ use crate::receipts::error::ReceiptError;
 use reth_primitives::{hex, Address, Bytes, Log, H256};
 use std::convert::TryInto;
 
-type BlockLog = crate::protos::block::Log;
+// type BlockLog = crate::protos::block::Log;
+use crate::sf::ethereum::r#type::v2::Log as BlockLog;
 
 pub(crate) fn map_logs(logs: &[BlockLog]) -> Result<Vec<Log>, ReceiptError> {
     logs.iter().map(Log::try_from).collect()

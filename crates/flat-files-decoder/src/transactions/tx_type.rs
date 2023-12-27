@@ -1,5 +1,5 @@
-use crate::protos::block::transaction_trace::Type;
-use protobuf::EnumOrUnknown;
+// use crate::protos::block::transaction_trace::Type;
+use crate::sf::ethereum::r#type::v2::transaction_trace::Type;
 use reth_primitives::TxType;
 use thiserror::Error;
 
@@ -12,16 +12,15 @@ pub enum TransactionTypeError {
 impl From<Type> for TxType {
     fn from(tx_type: Type) -> Self {
         match tx_type {
-            Type::TRX_TYPE_LEGACY => Self::Legacy,
-            Type::TRX_TYPE_ACCESS_LIST => Self::EIP2930,
-            Type::TRX_TYPE_DYNAMIC_FEE => Self::EIP1559,
+            Type::TrxTypeLegacy => Self::Legacy,
+            Type::TrxTypeAccessList => Self::EIP2930,
+            Type::TrxTypeDynamicFee => Self::EIP1559,
         }
     }
 }
 
-pub fn map_tx_type(tx_type: &EnumOrUnknown<Type>) -> Result<TxType, TransactionTypeError> {
-    let tx_type = tx_type
-        .enum_value()
-        .map_err(|_| TransactionTypeError::Missing)?;
-    Ok(tx_type.into())
+pub fn map_tx_type(tx_type: &i32) -> Result<TxType, TransactionTypeError> {
+    let tx_type = Type::try_from(*tx_type).map_err(|_| TransactionTypeError::Missing)?; // 1
+    let tx_type = TxType::from(tx_type);
+    Ok(tx_type)
 }

@@ -2,9 +2,10 @@ pub mod error;
 pub mod logs;
 pub mod receipt;
 
-use crate::protos::block::Block;
+// use crate::protos::block::Block;
 use crate::receipts::error::ReceiptError;
 use crate::receipts::receipt::FullReceipt;
+use crate::sf::ethereum::r#type::v2::Block;
 use reth_primitives::bytes::BufMut;
 use reth_primitives::hex;
 use reth_primitives::proofs::ordered_trie_root_with_encoder;
@@ -13,11 +14,14 @@ use revm_primitives::B256;
 
 pub fn check_receipt_root(block: &Block) -> Result<(), ReceiptError> {
     let computed_root = calc_receipt_root(block)?;
-
-    if computed_root.as_bytes() != block.header.receipt_root.as_slice() {
+    let receipt_root = match block.header {
+        Some(ref header) => header.receipt_root.as_slice(),
+        None => return Err(ReceiptError::MissingRoot),
+    };
+    if computed_root.as_bytes() != receipt_root {
         return Err(ReceiptError::MismatchedRoot(
             hex::encode(computed_root.as_bytes()),
-            hex::encode(block.header.receipt_root.as_slice()),
+            hex::encode(receipt_root),
         ));
     }
 

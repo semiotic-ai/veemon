@@ -1,8 +1,7 @@
 pub mod error;
 
 use crate::headers::error::BlockHeaderError;
-use crate::protos::block::{Block, BlockHeader};
-use protobuf::MessageField;
+use crate::sf::ethereum::r#type::v2::{Block, BlockHeader};
 use reth_primitives::H256;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -13,11 +12,10 @@ pub struct BlockHeaderRoots {
     pub transactions_root: H256,
 }
 
-impl TryFrom<MessageField<BlockHeader>> for BlockHeaderRoots {
+impl TryFrom<BlockHeader> for BlockHeaderRoots {
     type Error = BlockHeaderError;
 
-    fn try_from(header: MessageField<BlockHeader>) -> Result<Self, Self::Error> {
-        let header = header.unwrap(); // TODO: ERRRORS
+    fn try_from(header: BlockHeader) -> Result<Self, Self::Error> {
         let receipt_root: [u8; 32] = header.receipt_root.as_slice().try_into().unwrap();
         let transactions_root: [u8; 32] = header.transactions_root.as_slice().try_into().unwrap();
 
@@ -34,7 +32,11 @@ pub fn check_valid_header(block: &Block, header_dir: &str) -> Result<(), BlockHe
 
     let header_roots: BlockHeaderRoots = serde_json::from_reader(header_file)?; // TODO: Errors
 
-    let block_header_roots: BlockHeaderRoots = block.header.clone().try_into()?; // TODO: Errors
+    let block_header = match block.header.as_ref() {
+        Some(header) => header,
+        None => return Err(BlockHeaderError::MissingHeader),
+    };
+    let block_header_roots: BlockHeaderRoots = block_header.clone().try_into()?; // TODO: Errors
 
     if header_roots != block_header_roots {
         return Err(BlockHeaderError::MismatchedRoots(
@@ -44,4 +46,34 @@ pub fn check_valid_header(block: &Block, header_dir: &str) -> Result<(), BlockHe
     }
 
     Ok(())
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct HeaderRecordWithNumber {
+    pub block_hash: Vec<u8>,
+    pub total_difficulty: Vec<u8>,
+    pub block_number: u64,
+}
+
+impl TryFrom<Block> for HeaderRecordWithNumber {
+    type Error = BlockHeaderError;
+    fn try_from(block: Block) -> Result<Self, Self::Error> {
+        let block_header = match block.header.clone() {
+            Some(header) => header,
+            None => {
+                return Err(BlockHeaderError::MissingHeader);
+            }
+        };
+        let header_record_with_number = HeaderRecordWithNumber {
+            block_hash: block.hash.clone(),
+            total_difficulty: block_header
+                .total_difficulty
+                .as_ref()
+                .ok_or(BlockHeaderError::InvalidTotalDifficulty)?
+                .bytes
+                .clone(),
+            block_number: block.number,
+        };
+        Ok(header_record_with_number)
+    }
 }

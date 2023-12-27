@@ -332,90 +332,10 @@ message Log {
 }
 
 message Call {
-  uint32 index = 1;
-  uint32 parent_index = 2;
-  uint32 depth = 3;
+  reserved 1 to 3, 5 to 12, 14 to 16, 20 to 33, 50, 51, 60;
+
   CallType call_type = 4;
-  bytes caller = 5;
-  bytes address = 6;
-  BigInt value = 7;
-  uint64 gas_limit = 8;
-  uint64 gas_consumed = 9;
-  bytes return_data = 13;
-  bytes input = 14;
-  bool executed_code = 15;
-  bool suicide = 16;
 
-  /* hex representation of the hash -> preimage */
-  map<string, string> keccak_preimages = 20;
-  repeated StorageChange storage_changes = 21;
-  repeated BalanceChange balance_changes = 22;
-  repeated NonceChange nonce_changes = 24;
-  repeated Log logs = 25;
-  repeated CodeChange code_changes = 26;
-
-  // Deprecated: repeated bytes created_accounts
-  reserved 27;
-
-  repeated GasChange gas_changes = 28;
-
-  // Deprecated: repeated GasEvent gas_events
-  reserved 29;
-
-  // In Ethereum, a call can be either:
-  // - Successfull, execution passes without any problem encountered
-  // - Failed, execution failed, and remaining gas should be consumed
-  // - Reverted, execution failed, but only gas consumed so far is billed, remaining gas is refunded
-  //
-  // When a call is either `failed` or `reverted`, the `status_failed` field
-  // below is set to `true`. If the status is `reverted`, then both `status_failed`
-  // and `status_reverted` are going to be set to `true`.
-  bool status_failed = 10;
-  bool status_reverted = 12;
-
-  // Populated when a call either failed or reverted, so when `status_failed == true`,
-  // see above for details about those flags.
-  string failure_reason = 11;
-
-  // This field represents wheter or not the state changes performed
-  // by this call were correctly recorded by the blockchain.
-  //
-  // On Ethereum, a transaction can record state changes even if some
-  // of its inner nested calls failed. This is problematic however since
-  // a call will invalidate all its state changes as well as all state
-  // changes performed by its child call. This means that even if a call
-  // has a status of `SUCCESS`, the chain might have reverted all the state
-  // changes it performed.
-  //
-  // ```text
-  //   Trx 1
-  //    Call #1 <Failed>
-  //      Call #2 <Execution Success>
-  //      Call #3 <Execution Success>
-  //      |--- Failure here
-  //    Call #4
-  // ```
-  //
-  // In the transaction above, while Call #2 and Call #3 would have the
-  // status `EXECUTED`.
-  //
-  // If you check all calls and check only `state_reverted` flag, you might be missing
-  // some balance changes and nonce changes. This is because when a full transaction fails
-  // in ethereum (e.g. `calls.all(x.state_reverted == true)`), there is still the transaction
-  // fee that are recorded to the chain.
-  //
-  // Refer to [TransactionTrace#status] field for more details about the handling you must
-  // perform.
-  bool state_reverted = 30;
-
-  uint64 begin_ordinal = 31;
-  uint64 end_ordinal = 32;
-
-  repeated AccountCreation account_creations = 33;
-
-  reserved 50; // repeated ERC20BalanceChange erc20_balance_changes = 50 [deprecated = true];
-  reserved 51; // repeated ERC20TransferEvent erc20_transfer_events = 51 [deprecated = true];
-  reserved 60; // bool filtering_matched = 60 [deprecated = true];
 }
 
 enum CallType {

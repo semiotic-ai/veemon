@@ -4,25 +4,50 @@
 //! provided in the block header. Optionally, the verifier can also check the block headers
 //! against a directory of block headers in json format.
 
-mod dbin;
+pub mod dbin;
 pub mod error;
-mod headers;
-pub mod protos;
-mod receipts;
-mod transactions;
+pub mod headers;
+pub mod receipts;
+pub mod transactions;
 
 use crate::error::DecodeError;
 use crate::headers::check_valid_header;
 use crate::transactions::check_transaction_root;
 use dbin::DbinFile;
-use protobuf::Message;
-use protos::block::Block;
+use error::CheckError;
+use headers::HeaderRecordWithNumber;
+use prost::Message;
+use rayon::prelude::*;
 use receipts::check_receipt_root;
+use sf::ethereum::r#type::v2::Block;
+use simple_log::log;
 use std::fs;
 use std::fs::File;
-use std::io::{Cursor, Write};
+use std::io::{BufReader, Cursor, Read, Write};
 use std::path::PathBuf;
+use tokio::join;
 
+pub mod sf {
+    pub mod ethereum {
+        pub mod r#type {
+            pub mod v2 {
+                include!(concat!(env!("OUT_DIR"), "/sf.ethereum.r#type.v2.rs"));
+            }
+        }
+    }
+    pub mod bstream {
+        pub mod v1 {
+            include!(concat!(env!("OUT_DIR"), "/sf.bstream.v1.rs"));
+        }
+    }
+}
+
+const MERGE_BLOCK: usize = 15537393;
+
+pub enum DecodeInput {
+    Path(String),
+    Reader(Box<dyn Read>),
+}
 /**
 * Decode & verify flat files from a directory or a single file.
 * Input can be a directory or a file.
@@ -34,18 +59,18 @@ use std::path::PathBuf;
 * If output is not provided, the decoded blocks will not be written to disk.
 **/
 pub fn decode_flat_files(
-    input: &str,
+    input: String,
     output: Option<&str>,
     headers_dir: Option<&str>,
 ) -> Result<Vec<Block>, DecodeError> {
-    let metadata = fs::metadata(input).map_err(DecodeError::IoError)?;
+    let metadata = fs::metadata(&input).map_err(DecodeError::IoError)?;
 
     if let Some(output) = output {
         fs::create_dir_all(output).map_err(DecodeError::IoError)?;
     }
 
     if metadata.is_dir() {
-        decode_flat_files_dir(input, output, headers_dir)
+        decode_flat_files_dir(&input, output, headers_dir)
     } else if metadata.is_file() {
         handle_file(&PathBuf::from(input), output, headers_dir)
     } else {
@@ -99,7 +124,7 @@ pub fn handle_file(
     output: Option<&str>,
     headers_dir: Option<&str>,
 ) -> Result<Vec<Block>, DecodeError> {
-    let mut input_file = File::open(path).map_err(DecodeError::IoError)?;
+    let mut input_file = BufReader::new(File::open(path).map_err(DecodeError::IoError)?);
     let dbin_file = DbinFile::try_from_read(&mut input_file)?;
     if dbin_file.content_type != "ETH" {
         return Err(DecodeError::InvalidContentType(dbin_file.content_type));
@@ -108,7 +133,7 @@ pub fn handle_file(
     let mut blocks: Vec<Block> = vec![];
 
     for message in dbin_file.messages {
-        blocks.push(handle_block(message, output, headers_dir)?);
+        blocks.push(handle_block(&message, output, headers_dir)?);
     }
 
     Ok(blocks)
@@ -126,22 +151,17 @@ pub fn handle_buf(buf: &[u8]) -> Result<Vec<Block>, DecodeError> {
     let mut blocks: Vec<Block> = vec![];
 
     for message in dbin_file.messages {
-        blocks.push(handle_block(message, None, None)?);
+        blocks.push(handle_block(&message, None, None)?);
     }
-
     Ok(blocks)
 }
 
 fn handle_block(
-    message: Vec<u8>,
+    message: &Vec<u8>,
     output: Option<&str>,
     headers_dir: Option<&str>,
 ) -> Result<Block, DecodeError> {
-    let message: protos::bstream::Block = Message::parse_from_bytes(&message)
-        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
-
-    let block: Block = Message::parse_from_bytes(&message.payload_buffer)
-        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+    let block = decode_block_from_bytes(message)?;
 
     if let Some(headers_dir) = headers_dir {
         check_valid_header(&block, headers_dir)?;
@@ -150,14 +170,13 @@ fn handle_block(
         check_receipt_root(&block)?;
         check_transaction_root(&block)?;
     }
-    
 
     if let Some(output) = output {
         let file_name = format!("{}/block-{}.json", output, block.number);
         let mut out_file = File::create(file_name)?;
 
-        let block_json = protobuf_json_mapping::print_to_string(&block)
-            .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+        let block_json = serde_json::to_string(&block)
+        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
 
         out_file
             .write_all(block_json.as_bytes())
@@ -167,14 +186,110 @@ fn handle_block(
     Ok(block)
 }
 
+pub fn extract_blocks<R: Read>(mut reader: R) -> Result<Vec<Block>, DecodeError> {
+    log::debug!("Reading messages");
+    let dbin_file = DbinFile::try_from_read(&mut reader)?;
+    log::debug!("Validating blocks");
+
+    // Parallel processing of block headers
+    dbin_file
+        .messages
+        .par_iter()
+        .map(|message| handle_block(message, None, None))
+        .collect()
+}
+
+// pub fn stream_blocks<R: Read, W: Write>()
+// A function which decodes blocks from a reader and writes them, serialized, to a writer
+pub async fn stream_blocks<R: Read, W: Write>(
+    mut reader: R,
+    mut writer: W,
+    end_block: Option<usize>,
+) -> Result<(), DecodeError> {
+    let end_block = match end_block {
+        Some(end_block) => end_block,
+        None => MERGE_BLOCK,
+    };
+    let mut block_number = 0;
+    loop {
+        match DbinFile::read_message_stream(&mut reader) {
+            Ok(message) => {
+                let block = decode_block_from_bytes(&message)?;
+                block_number = block.number as usize;
+                
+                let receipts_check_process = spawn_check(&block, |b| {
+                    check_receipt_root(b).map_err(|e| CheckError::ReceiptError(e))
+                });
+                
+                let transactions_check_process = spawn_check(&block, |b| {
+                    check_transaction_root(b).map_err(|e| CheckError::TransactionError(e))
+                });
+
+                let joint_return = join![receipts_check_process, transactions_check_process];
+                joint_return.0.map_err(|err| DecodeError::JoinError(err))?;
+                joint_return.1.map_err(|err| DecodeError::JoinError(err))?;
+
+                let header_record_with_number = HeaderRecordWithNumber::try_from(block)?;
+                let header_record_bin = bincode::serialize(&header_record_with_number)
+                    .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+
+                let size = header_record_bin.len() as u32;
+                writer.write_all(&size.to_be_bytes())?;
+                writer.write_all(&header_record_bin)?;
+                writer.flush().map_err(DecodeError::IoError)?;
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
+                if block_number < end_block {
+                    log::info!("Reached end of file, waiting for more blocks");
+                    continue; // More blocks to read
+                } else {
+                    break; // read all the blocks
+                }
+            }
+            Err(e) => {
+                log::error!("Error reading DBIN file: {}", e);
+                break;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecodeError> {
+    let block_stream = sf::bstream::v1::Block::decode(bytes.as_slice())
+        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+    let block = sf::ethereum::r#type::v2::Block::decode(block_stream.payload_buffer.as_slice())
+        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+    Ok(block)
+}
+
+// Define a generic function to spawn a blocking task for a given check.
+fn spawn_check<F>(block: &Block, check: F) -> tokio::task::JoinHandle<()>
+where
+F: FnOnce(&Block) -> Result<(), CheckError> + Send + 'static,
+{
+    let block_clone = block.clone();
+    tokio::task::spawn_blocking(move || {
+        match check(&block_clone) {
+            Ok(_) => {}
+            Err(err) => {
+                log::error!("{}", err);
+            }
+        }
+    })
+}
+
 #[cfg(test)]
 mod tests {
+    use prost::Message;
+
     use crate::dbin::DbinFile;
-    use crate::protos::block::Block;
     use crate::receipts::check_receipt_root;
-    use crate::{handle_file, protos, receipts};
-    use protobuf::Message;
+    use crate::sf::bstream::v1::Block as BstreamBlock;
+    use crate::sf::ethereum::r#type::v2::Block;
+    use crate::{handle_file, receipts};
     use std::fs::File;
+    use std::io::BufReader;
     use std::path::PathBuf;
 
     #[test]
@@ -189,15 +304,13 @@ mod tests {
     #[test]
     fn test_check_valid_root_fail() {
         let path = PathBuf::from("example0017686312.dbin");
-        let mut file = File::open(path).expect("Failed to open file");
+        let mut file = BufReader::new(File::open(path).expect("Failed to open file"));
         let dbin_file = DbinFile::try_from_read(&mut file).expect("Failed to parse dbin file");
 
         let message = dbin_file.messages[0].clone();
 
-        let message: protos::bstream::Block =
-            Message::parse_from_bytes(&message).expect("Failed to parse message");
-        let mut block: Block =
-            Message::parse_from_bytes(&message.payload_buffer).expect("Failed to parse block");
+        let block_stream = BstreamBlock::decode(message.as_slice()).unwrap();
+        let mut block = Block::decode(block_stream.payload_buffer.as_slice()).unwrap();
 
         block.balance_changes.pop();
 

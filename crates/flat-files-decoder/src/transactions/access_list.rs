@@ -1,4 +1,5 @@
-use crate::protos::block::AccessTuple;
+// use crate::protos::block::AccessTuple;
+use crate::sf::ethereum::r#type::v2::AccessTuple;
 use crate::transactions::error::TransactionError;
 use reth_primitives::{hex, AccessList, AccessListItem, Address, H256};
 
