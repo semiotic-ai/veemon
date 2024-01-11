@@ -3,13 +3,23 @@ pub mod error;
 use crate::dbin::error::DbinFileError;
 use std::io::Read;
 
+/// `DbinFile` is a struct that represents a simple file storage format to pack a stream of protobuf messages. It is defined by StreamingFast.
+///
+/// For more information, see [the dbin format documentation](https://github.com/streamingfast/dbin?tab=readme-ov-file).
+
 pub struct DbinFile {
+    /// Next single byte after the 4 magic bytes, file format version
     pub version: u8,
+    /// Next 3 bytes, content type like 'ETH', 'EOS', or something else
     pub content_type: String,
+    /// Next 2 bytes, 10-based string representation of content version, ranges in '00'-'99'
     pub content_version: String,
+    /// Rest of the bytes of the file, each message is length-prefixed as 4 bytes big-endian uin32
     pub messages: Vec<Vec<u8>>,
 }
 
+//TODO: why not nest DbinHeader inside DbinFile?
+/// It's just the fist 3 fields of DbinFile, but isolated
 pub struct DbinHeader {
     pub version: u8,
     pub content_type: String,
@@ -17,8 +27,14 @@ pub struct DbinHeader {
 }
 
 impl DbinFile {
+    /// reads a DbinHeader
+    ///
+    /// It nests `read_partial_header` to read header. By itself, it reads the 4 magic bytes
     fn read_header<R: Read>(read: &mut R) -> Result<DbinHeader, DbinFileError> {
+        //TODO: maybe a check in here that the first 4 magic bytes are the "dbin" string
+        // could avoid some unnecessary debbuging later
         let mut buf: [u8; 4] = [0; 4];
+
         read.read_exact(&mut buf)
             .map_err(DbinFileError::ReadError)?;
 
@@ -27,6 +43,7 @@ impl DbinFile {
         Ok(dbin_header)
     }
 
+    /// Reads all the fields that make a DbinHeader
     fn read_partial_header<R: Read>(read: &mut R) -> Result<DbinHeader, DbinFileError> {
         let version;
         let content_type;
@@ -62,6 +79,7 @@ impl DbinFile {
         })
     }
 
+    /// Returns a `DbinFile` from a Reader
     pub fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DbinFileError> {
         let dbin_header = Self::read_header(read)?;
         let mut messages: Vec<Vec<u8>> = vec![];
@@ -96,6 +114,7 @@ impl DbinFile {
 }
 
 impl DbinFile {
+    /// Parses the message length and then returns the message content
     pub fn read_message<R: Read>(read: &mut R) -> Result<Vec<u8>, DbinFileError> {
         let mut size: [u8; 4] = [0; 4];
         read.read_exact(&mut size)?;
@@ -107,6 +126,10 @@ impl DbinFile {
         Ok(Self::read_content(size, read)?)
     }
 
+    /// Reads a stream of messages.
+    ///
+    /// Messages are separated by "dbin" (magical 4 bytes) so each
+    /// new occurrence of it marks a new file
     pub fn read_message_stream<R: Read>(read: &mut R) -> Result<Vec<u8>, DbinFileError> {
         let mut size: [u8; 4] = [0; 4];
         read.read_exact(&mut size)?;
@@ -120,6 +143,7 @@ impl DbinFile {
         Ok(Self::read_content(size, read)?)
     }
 
+    /// reads message content
     fn read_content<R: Read>(size: [u8; 4], read: &mut R) -> Result<Vec<u8>, std::io::Error> {
         let size = u32::from_be_bytes(size);
         let mut content: Vec<u8> = vec![0; size as usize];
