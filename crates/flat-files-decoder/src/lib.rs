@@ -176,7 +176,7 @@ fn handle_block(
         let mut out_file = File::create(file_name)?;
 
         let block_json = serde_json::to_string(&block)
-        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+            .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
 
         out_file
             .write_all(block_json.as_bytes())
@@ -216,11 +216,11 @@ pub async fn stream_blocks<R: Read, W: Write>(
             Ok(message) => {
                 let block = decode_block_from_bytes(&message)?;
                 block_number = block.number as usize;
-                
+
                 let receipts_check_process = spawn_check(&block, |b| {
                     check_receipt_root(b).map_err(|e| CheckError::ReceiptError(e))
                 });
-                
+
                 let transactions_check_process = spawn_check(&block, |b| {
                     check_transaction_root(b).map_err(|e| CheckError::TransactionError(e))
                 });
@@ -266,15 +266,13 @@ fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecodeError> {
 // Define a generic function to spawn a blocking task for a given check.
 fn spawn_check<F>(block: &Block, check: F) -> tokio::task::JoinHandle<()>
 where
-F: FnOnce(&Block) -> Result<(), CheckError> + Send + 'static,
+    F: FnOnce(&Block) -> Result<(), CheckError> + Send + 'static,
 {
     let block_clone = block.clone();
-    tokio::task::spawn_blocking(move || {
-        match check(&block_clone) {
-            Ok(_) => {}
-            Err(err) => {
-                log::error!("{}", err);
-            }
+    tokio::task::spawn_blocking(move || match check(&block_clone) {
+        Ok(_) => {}
+        Err(err) => {
+            log::error!("{}", err);
         }
     })
 }
@@ -319,5 +317,8 @@ mod tests {
             result,
             Err(receipts::error::ReceiptError::MismatchedRoot(_, _))
         );
+
+        #[test]
+        fn test_block_stream() {}
     }
 }
