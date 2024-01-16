@@ -129,7 +129,7 @@ impl DbinFile {
     /// Reads a stream of messages.
     ///
     /// Messages are separated by "dbin" (magical 4 bytes) so each
-    /// new occurrence of it marks a new file
+    /// new occurrence of it marks the start of a new .dbin file
     pub fn read_message_stream<R: Read>(read: &mut R) -> Result<Vec<u8>, DbinFileError> {
         let mut size: [u8; 4] = [0; 4];
         read.read_exact(&mut size)?;
@@ -143,7 +143,7 @@ impl DbinFile {
         Ok(Self::read_content(size, read)?)
     }
 
-    /// reads message content
+    /// reads message bytes
     fn read_content<R: Read>(size: [u8; 4], read: &mut R) -> Result<Vec<u8>, std::io::Error> {
         let size = u32::from_be_bytes(size);
         let mut content: Vec<u8> = vec![0; size as usize];
