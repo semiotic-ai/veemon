@@ -114,7 +114,7 @@ impl DbinFile {
 }
 
 impl DbinFile {
-    /// Parses the message length and then returns the message content
+    /// Reads a single message from a .dbin file
     pub fn read_message<R: Read>(read: &mut R) -> Result<Vec<u8>, DbinFileError> {
         let mut size: [u8; 4] = [0; 4];
         read.read_exact(&mut size)?;
