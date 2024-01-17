@@ -78,7 +78,6 @@ pub fn decode_flat_files(
     }
 }
 
-// TODO: remove this? Seems to be deprecated since decode_flat_files already handles directories
 fn decode_flat_files_dir(
     input: &str,
     output: Option<&str>,
