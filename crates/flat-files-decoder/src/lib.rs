@@ -126,8 +126,10 @@ pub fn handle_file(
 ) -> Result<Vec<Block>, DecodeError> {
     let mut input_file = BufReader::new(File::open(path).map_err(DecodeError::IoError)?);
     let dbin_file = DbinFile::try_from_read(&mut input_file)?;
-    if dbin_file.content_type != "ETH" {
-        return Err(DecodeError::InvalidContentType(dbin_file.content_type));
+    if dbin_file.header.content_type != "ETH" {
+        return Err(DecodeError::InvalidContentType(
+            dbin_file.header.content_type,
+        ));
     }
 
     let mut blocks: Vec<Block> = vec![];
@@ -176,7 +178,7 @@ fn handle_block(
         let mut out_file = File::create(file_name)?;
 
         let block_json = serde_json::to_string(&block)
-        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+            .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
 
         out_file
             .write_all(block_json.as_bytes())
@@ -186,6 +188,7 @@ fn handle_block(
     Ok(block)
 }
 
+/// Gets a vector of blocks from a single .dbin file
 pub fn extract_blocks<R: Read>(mut reader: R) -> Result<Vec<Block>, DecodeError> {
     log::debug!("Reading messages");
     let dbin_file = DbinFile::try_from_read(&mut reader)?;
@@ -199,8 +202,19 @@ pub fn extract_blocks<R: Read>(mut reader: R) -> Result<Vec<Block>, DecodeError>
         .collect()
 }
 
-// pub fn stream_blocks<R: Read, W: Write>()
-// A function which decodes blocks from a reader and writes them, serialized, to a writer
+/// Decode blocks from a reader and writes them, serialized, to a writer
+///
+/// data can be piped into this function from stdin via `cargo run stream < ./example0017686312.dbin`.
+/// It also has a check for end_block. By default, it stops the stream reading when MERGE_BLOCK
+/// is reached.
+///
+/// # Arguments
+///
+/// * `end_block`: Header Accumulator solution is expensive. For blocks after the merge,
+/// Ethereum consensus should be used  in this scenario. This zis why the default block
+/// for this variable is the MERGE_BLOCK (block 15537393)
+/// * `reader`: where bytes are read from
+/// * `writer`: where bytes written to
 pub async fn stream_blocks<R: Read, W: Write>(
     mut reader: R,
     mut writer: W,
@@ -216,11 +230,11 @@ pub async fn stream_blocks<R: Read, W: Write>(
             Ok(message) => {
                 let block = decode_block_from_bytes(&message)?;
                 block_number = block.number as usize;
-                
+
                 let receipts_check_process = spawn_check(&block, |b| {
                     check_receipt_root(b).map_err(|e| CheckError::ReceiptError(e))
                 });
-                
+
                 let transactions_check_process = spawn_check(&block, |b| {
                     check_transaction_root(b).map_err(|e| CheckError::TransactionError(e))
                 });
@@ -266,15 +280,13 @@ fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecodeError> {
 // Define a generic function to spawn a blocking task for a given check.
 fn spawn_check<F>(block: &Block, check: F) -> tokio::task::JoinHandle<()>
 where
-F: FnOnce(&Block) -> Result<(), CheckError> + Send + 'static,
+    F: FnOnce(&Block) -> Result<(), CheckError> + Send + 'static,
 {
     let block_clone = block.clone();
-    tokio::task::spawn_blocking(move || {
-        match check(&block_clone) {
-            Ok(_) => {}
-            Err(err) => {
-                log::error!("{}", err);
-            }
+    tokio::task::spawn_blocking(move || match check(&block_clone) {
+        Ok(_) => {}
+        Err(err) => {
+            log::error!("{}", err);
         }
     })
 }
@@ -287,9 +299,10 @@ mod tests {
     use crate::receipts::check_receipt_root;
     use crate::sf::bstream::v1::Block as BstreamBlock;
     use crate::sf::ethereum::r#type::v2::Block;
-    use crate::{handle_file, receipts};
+    use crate::{handle_file, receipts, stream_blocks};
     use std::fs::File;
-    use std::io::BufReader;
+    use std::io::{self, Cursor, Write};
+    use std::io::{BufReader, BufWriter};
     use std::path::PathBuf;
 
     #[test]
@@ -305,7 +318,8 @@ mod tests {
     fn test_check_valid_root_fail() {
         let path = PathBuf::from("example0017686312.dbin");
         let mut file = BufReader::new(File::open(path).expect("Failed to open file"));
-        let dbin_file = DbinFile::try_from_read(&mut file).expect("Failed to parse dbin file");
+        let dbin_file: DbinFile =
+            DbinFile::try_from_read(&mut file).expect("Failed to parse dbin file");
 
         let message = dbin_file.messages[0].clone();
 
@@ -318,6 +332,33 @@ mod tests {
         matches!(
             result,
             Err(receipts::error::ReceiptError::MismatchedRoot(_, _))
+        );
+    }
+
+    #[test]
+    fn test_block_stream() {
+        let mut buffer = Vec::new();
+        let cursor: Cursor<&mut Vec<u8>> = Cursor::new(&mut buffer);
+        let inputs = vec!["example-create-17686085.dbin", "example0017686312.dbin"];
+        {
+            let mut writer = BufWriter::new(cursor);
+            for i in inputs {
+                let mut input = File::open(i).expect("couldn't read input file");
+
+                io::copy(&mut input, &mut writer).expect("couldn't copy");
+                writer.flush().expect("failed to flush output");
+            }
+        }
+        let mut cursor = Cursor::new(&buffer);
+        cursor.set_position(0);
+
+        let reader = BufReader::new(cursor);
+        let mut in_buffer = Vec::new();
+        let writer = BufWriter::new(Cursor::new(&mut in_buffer));
+
+        matches!(
+            tokio_test::block_on(stream_blocks(reader, writer, None)),
+            Ok(())
         );
     }
 }
