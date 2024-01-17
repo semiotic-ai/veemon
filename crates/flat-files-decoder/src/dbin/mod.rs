@@ -31,12 +31,14 @@ impl DbinFile {
     ///
     /// It nests `read_partial_header` to read header. By itself, it reads the 4 magic bytes
     fn read_header<R: Read>(read: &mut R) -> Result<DbinHeader, DbinFileError> {
-        //TODO: maybe a check in here that the first 4 magic bytes are the "dbin" string
-        // could avoid some unnecessary debbuging later
         let mut buf: [u8; 4] = [0; 4];
 
         read.read_exact(&mut buf)
             .map_err(DbinFileError::ReadError)?;
+
+        if &buf != b"dbin" {
+            return Err(DbinFileError::StartOfNewDBINFile);
+        }
 
         let dbin_header = Self::read_partial_header(read)?;
 
