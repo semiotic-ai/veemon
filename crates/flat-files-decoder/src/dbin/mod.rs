@@ -22,8 +22,6 @@ pub struct DbinHeader {
     pub content_version: String,
 }
 
-//TODO: why not nest DbinHeader inside DbinFile?
-
 impl DbinFile {
     /// reads a DbinHeader
     ///
