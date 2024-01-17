@@ -126,8 +126,10 @@ pub fn handle_file(
 ) -> Result<Vec<Block>, DecodeError> {
     let mut input_file = BufReader::new(File::open(path).map_err(DecodeError::IoError)?);
     let dbin_file = DbinFile::try_from_read(&mut input_file)?;
-    if dbin_file.content_type != "ETH" {
-        return Err(DecodeError::InvalidContentType(dbin_file.content_type));
+    if dbin_file.header.content_type != "ETH" {
+        return Err(DecodeError::InvalidContentType(
+            dbin_file.header.content_type,
+        ));
     }
 
     let mut blocks: Vec<Block> = vec![];

@@ -6,25 +6,23 @@ use std::io::Read;
 /// `DbinFile` is a struct that represents a simple file storage format to pack a stream of protobuf messages. It is defined by StreamingFast.
 ///
 /// For more information, see [the dbin format documentation](https://github.com/streamingfast/dbin?tab=readme-ov-file).
-
 pub struct DbinFile {
+    pub header: DbinHeader,
+    /// Rest of the bytes of the file, each message is length-prefixed as 4 bytes big-endian uin32
+    pub messages: Vec<Vec<u8>>,
+}
+
+/// `DbinHeader` contains the fields that compose the header of the .dbin file.
+pub struct DbinHeader {
     /// Next single byte after the 4 magic bytes, file format version
     pub version: u8,
     /// Next 3 bytes, content type like 'ETH', 'EOS', or something else
     pub content_type: String,
     /// Next 2 bytes, 10-based string representation of content version, ranges in '00'-'99'
     pub content_version: String,
-    /// Rest of the bytes of the file, each message is length-prefixed as 4 bytes big-endian uin32
-    pub messages: Vec<Vec<u8>>,
 }
 
 //TODO: why not nest DbinHeader inside DbinFile?
-/// It's just the fist 3 fields of DbinFile, but isolated
-pub struct DbinHeader {
-    pub version: u8,
-    pub content_type: String,
-    pub content_version: String,
-}
 
 impl DbinFile {
     /// reads a DbinHeader
@@ -92,9 +90,11 @@ impl DbinFile {
                 Err(err) => {
                     if err.kind() == std::io::ErrorKind::UnexpectedEof {
                         return Ok(DbinFile {
-                            version: dbin_header.version,
-                            content_type: dbin_header.content_type,
-                            content_version: dbin_header.content_version,
+                            header: DbinHeader {
+                                version: dbin_header.version,
+                                content_type: dbin_header.content_type,
+                                content_version: dbin_header.content_version,
+                            },
                             messages,
                         });
                     } else if err.kind() == std::io::ErrorKind::Other {
