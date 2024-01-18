@@ -5,6 +5,7 @@
 ### Prerequisites
 - Rust installed
 - Cargo installed
+- [protoc installed](https://grpc.io/docs/protoc-installation/)
 - Firehose dbin files to decode
   - An example file is provided `example0017686312.dbin`
 
