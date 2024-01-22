@@ -26,13 +26,14 @@ jobs:
       - name: Check code formatting
         run: cargo fmt -- --check
 
+      - name: Install Protoc
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+
       - name: Install Clippy
         run: rustup component add clippy
       - name: Run Clippy
         run: cargo clippy 
 
-      - name: Install Protoc
-        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
 
       - run: cargo build --verbose
       - run: cargo test --verbose
