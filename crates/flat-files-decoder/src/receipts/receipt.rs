@@ -38,7 +38,6 @@ impl TryFrom<&TransactionTrace> for FullReceipt {
         Ok(Self {
             receipt,
             state_root: state_root.to_vec(),
- 
         })
     }
 }
