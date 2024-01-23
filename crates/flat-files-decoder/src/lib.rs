@@ -232,7 +232,7 @@ pub async fn stream_blocks<R: Read, W: Write>(
                 block_number = block.number as usize;
 
                 let receipts_check_process = spawn_check(&block, |b| {
-                    check_receipt_root(b).map_err(|e| CheckError::ReceiptError(e))
+                    check_receipt_root(b).map_err(CheckError::ReceiptError)
                 });
 
                 let transactions_check_process = spawn_check(&block, |b| {
@@ -240,8 +240,8 @@ pub async fn stream_blocks<R: Read, W: Write>(
                 });
 
                 let joint_return = join![receipts_check_process, transactions_check_process];
-                joint_return.0.map_err(|err| DecodeError::JoinError(err))?;
-                joint_return.1.map_err(|err| DecodeError::JoinError(err))?;
+                joint_return.0.map_err(DecodeError::JoinError)?;
+                joint_return.1.map_err(DecodeError::JoinError)?;
 
                 let header_record_with_number = HeaderRecordWithNumber::try_from(block)?;
                 let header_record_bin = bincode::serialize(&header_record_with_number)
