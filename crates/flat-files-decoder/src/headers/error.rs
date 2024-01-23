@@ -9,8 +9,8 @@ pub enum BlockHeaderError {
     JsonError(#[from] serde_json::Error),
     #[error("Invalid input")]
     InvalidInput,
-    #[error("Mismatched roots: expected {0:?}, got {1:?}")]
-    MismatchedRoots(BlockHeaderRoots, BlockHeaderRoots),
+    #[error("Mismatched roots")]
+    MismatchedRoots(Box<(BlockHeaderRoots, BlockHeaderRoots)>),
     #[error("Missing header")]
     MissingHeader,
     #[error("Invalid total difficulty")]
