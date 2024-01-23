@@ -236,7 +236,7 @@ pub async fn stream_blocks<R: Read, W: Write>(
                 });
 
                 let transactions_check_process = spawn_check(&block, |b| {
-                    check_transaction_root(b).map_err(|e| CheckError::TransactionError(e))
+                    check_transaction_root(b).map_err(CheckError::TransactionError)
                 });
 
                 let joint_return = join![receipts_check_process, transactions_check_process];
