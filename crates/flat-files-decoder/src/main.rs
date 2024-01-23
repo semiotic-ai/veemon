@@ -46,7 +46,7 @@ async fn main() {
                     .await
                     .expect("Failed to stream blocks");
             } else {
-                let reader = BufReader::with_capacity(64 * 2 << 20, io::stdin().lock());
+                let reader = BufReader::with_capacity((64 * 2) << 20, io::stdin().lock());
                 let writer = BufWriter::new(io::stdout().lock());
                 stream_blocks(reader, writer, end_block)
                     .await
