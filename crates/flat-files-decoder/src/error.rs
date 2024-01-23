@@ -30,7 +30,7 @@ pub enum DecodeError {
 // Define an enum for all possible error types
 #[derive(Debug)]
 pub enum CheckError {
-    ReceiptError(ReceiptError),  // Replace with actual error types
+    ReceiptError(ReceiptError), // Replace with actual error types
     TransactionError(TransactionError),
     // Add more as needed
 }

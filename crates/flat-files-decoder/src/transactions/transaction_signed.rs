@@ -13,8 +13,8 @@ impl TryFrom<&TransactionTrace> for TransactionSigned {
         let hash = B256::from_str(&hex::encode(trace.hash.as_slice()))
             .map_err(|_| TransactionError::MissingCall)?;
         let tx_signed = TransactionSigned {
-            transaction: transaction.clone(),
-            signature: signature.clone(),
+            transaction,
+            signature,
             hash,
         };
         Ok(tx_signed)

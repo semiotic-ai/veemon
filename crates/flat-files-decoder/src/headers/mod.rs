@@ -39,10 +39,10 @@ pub fn check_valid_header(block: &Block, header_dir: &str) -> Result<(), BlockHe
     let block_header_roots: BlockHeaderRoots = block_header.clone().try_into()?; // TODO: Errors
 
     if header_roots != block_header_roots {
-        return Err(BlockHeaderError::MismatchedRoots(
+        return Err(BlockHeaderError::MismatchedRoots(Box::new((
             header_roots,
             block_header_roots,
-        ));
+        ))));
     }
 
     Ok(())

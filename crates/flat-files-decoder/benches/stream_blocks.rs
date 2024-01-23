@@ -5,7 +5,10 @@ use std::{
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use decoder::{
-    dbin::{DbinFile, error::DbinFileError}, receipts::check_receipt_root, sf, transactions::check_transaction_root,
+    dbin::{error::DbinFileError, DbinFile},
+    receipts::check_receipt_root,
+    sf,
+    transactions::check_transaction_root,
 };
 use prost::Message;
 
@@ -30,18 +33,18 @@ fn read_decode_check_bench(c: &mut Criterion) {
             }
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
-            let mut message: Result<Vec<u8>, decoder::dbin::error::DbinFileError> = Err(DbinFileError::InvalidDBINBytes);
+            let mut message: Result<Vec<u8>, decoder::dbin::error::DbinFileError> =
+                Err(DbinFileError::InvalidDBINBytes);
             loop {
-                b.iter(||  {
+                b.iter(|| {
                     message = black_box(DbinFile::read_message_stream(&mut reader));
                 });
                 match message {
                     Ok(_) => continue,
-                        Err(_) => {
-                            break;
-                        }
+                    Err(_) => {
+                        break;
                     }
-
+                }
             }
         }
     });
