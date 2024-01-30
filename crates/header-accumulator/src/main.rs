@@ -1,8 +1,39 @@
-use clap::{Arg, Command};
-use header_accumulator::{era_validator::{era_validate, stream_validation}, inclusion_proof, errors::EraValidateError};
+use clap::{Arg, Command, Parser, Subcommand};
+use header_accumulator::{
+    era_validator::{era_validate, stream_validation},
+    errors::EraValidateError,
+    inclusion_proof,
+};
 use primitive_types::H256;
+use std::{io::BufReader, process};
 use trin_validation::accumulator::MasterAccumulator;
-use std::{process, io::BufReader};
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Cli {
+    #[clap(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Stream data continuously
+    Stream {
+        #[clap(short, long, default_value = "false")]
+        decompress: bool,
+        #[clap(short, long)]
+        end_block: Option<usize>,
+    },
+    /// Decode files from input to output
+    Decode {
+        #[clap(short, long)]
+        input: String,
+        #[clap(long)]
+        headers_dir: Option<String>,
+        #[clap(short, long)]
+        output: Option<String>,
+    },
+}
 
 fn main() {
     env_logger::init();
@@ -49,8 +80,8 @@ fn main() {
                                 .required(false)
                                 .short('m')
                                 .long("master_accumulator_file"),
-                        )
-                )
+                        ),
+                ),
         )
         .subcommand(
             Command::new("generate_inclusion_proof")
@@ -120,18 +151,22 @@ fn main() {
                     let master_accumulator = match master_accumulator_file {
                         Some(master_accumulator_file) => {
                             MasterAccumulator::try_from_file(master_accumulator_file.into())
-                                .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile).expect("Invalid master accumulator file")
+                                .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile)
+                                .expect("Invalid master accumulator file")
                         }
                         None => MasterAccumulator::default(),
                     };
-                    let reader = BufReader::with_capacity(1<<32, std::io::stdin().lock());
+                    let reader = BufReader::with_capacity(1 << 32, std::io::stdin().lock());
                     let writer = std::io::stdout();
-                    stream_validation(master_accumulator.clone(), reader, writer).expect("Validation Error");
+                    stream_validation(master_accumulator.clone(), reader, writer)
+                        .expect("Validation Error");
                     process::exit(0);
                 }
                 _ => {}
             }
-            let directory = era_validate_matches.get_one::<String>("directory").expect("Directory is required");
+            let directory = era_validate_matches
+                .get_one::<String>("directory")
+                .expect("Directory is required");
 
             let master_accumulator_file =
                 era_validate_matches.get_one::<String>("master_accumulator_file");
