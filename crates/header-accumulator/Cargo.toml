@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", branch = "piped" }
+decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", branch = "main" }
 ethportal-api = {git = "https://github.com/ethereum/trin.git", version = "0.2.2"}
 tree_hash = "0.5.2"
 revm-primitives = "=1.1.2"
