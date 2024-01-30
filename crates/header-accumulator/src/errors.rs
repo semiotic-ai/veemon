@@ -14,7 +14,7 @@ pub enum EraValidateError {
     EndEpochLessThanStartEpoch,
     MergeBlockNotFound,
     JsonError,
-    TotalDifficultyDecodeError
+    TotalDifficultyDecodeError,
 }
 impl std::error::Error for EraValidateError {}
 

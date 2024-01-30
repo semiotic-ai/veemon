@@ -1,7 +1,7 @@
 use std::io::{BufRead, Read, Write as StdWrite};
 
 use decoder::headers::HeaderRecordWithNumber;
-use ethportal_api::types::execution::accumulator:: HeaderRecord;
+use ethportal_api::types::execution::accumulator::HeaderRecord;
 use primitive_types::{H256, U256};
 use tree_hash::TreeHash;
 use trin_validation::accumulator::MasterAccumulator;
@@ -9,8 +9,8 @@ use trin_validation::accumulator::MasterAccumulator;
 use crate::{
     errors::EraValidateError,
     utils::{
-        compute_epoch_accumulator, decode_header_records,
-        extract_100_blocks, FINAL_EPOCH, MAX_EPOCH_SIZE, MERGE_BLOCK,
+        compute_epoch_accumulator, decode_header_records, extract_100_blocks, FINAL_EPOCH,
+        MAX_EPOCH_SIZE, MERGE_BLOCK,
     },
 };
 
@@ -74,7 +74,7 @@ fn process_epoch_from_directory(
     Ok(())
 }
 
-pub fn stream_validation<R: Read+BufRead, W: StdWrite>(
+pub fn stream_validation<R: Read + BufRead, W: StdWrite>(
     master_accumulator: MasterAccumulator,
     mut reader: R,
     mut writer: W,
@@ -95,7 +95,8 @@ pub fn stream_validation<R: Read+BufRead, W: StdWrite>(
         if append_flag == true {
             let header_record = HeaderRecord {
                 block_hash: H256::from_slice(&hrwn.block_hash),
-                total_difficulty: U256::try_from(hrwn.total_difficulty.as_slice()).map_err(|_| EraValidateError::TotalDifficultyDecodeError)?,
+                total_difficulty: U256::try_from(hrwn.total_difficulty.as_slice())
+                    .map_err(|_| EraValidateError::TotalDifficultyDecodeError)?,
             };
             header_records.push(header_record);
         }
@@ -103,13 +104,15 @@ pub fn stream_validation<R: Read+BufRead, W: StdWrite>(
         if header_records.len() == MAX_EPOCH_SIZE {
             let epoch = hrwn.block_number as usize / MAX_EPOCH_SIZE;
             let epoch_accumulator = compute_epoch_accumulator(&header_records)?;
-            if epoch_accumulator.tree_hash_root().0 != master_accumulator.historical_epochs[epoch].0 {
+            if epoch_accumulator.tree_hash_root().0 != master_accumulator.historical_epochs[epoch].0
+            {
                 Err(EraValidateError::EraAccumulatorMismatch)?;
             }
             log::info!("Validated epoch: {}", epoch);
-            writer.write_all(format!("Validated epoch: {}\n", epoch).as_bytes()).map_err(|_| EraValidateError::JsonError)?;
+            writer
+                .write_all(format!("Validated epoch: {}\n", epoch).as_bytes())
+                .map_err(|_| EraValidateError::JsonError)?;
             header_records.clear();
-
         }
     }
     log::info!("Read {} block headers from stdin", header_records.len());
@@ -119,7 +122,10 @@ pub fn stream_validation<R: Read+BufRead, W: StdWrite>(
 fn receive_message<R: Read>(reader: &mut R) -> Result<HeaderRecordWithNumber, bincode::Error> {
     let mut size_buf = [0u8; 4];
     if reader.read_exact(&mut size_buf).is_err() {
-        return Err(Box::new(bincode::ErrorKind::Io(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "Failed to read size"))));
+        return Err(Box::new(bincode::ErrorKind::Io(std::io::Error::new(
+            std::io::ErrorKind::UnexpectedEof,
+            "Failed to read size",
+        ))));
     }
     let size = u32::from_be_bytes(size_buf) as usize;
 

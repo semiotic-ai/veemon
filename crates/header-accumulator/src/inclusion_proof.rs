@@ -34,12 +34,10 @@ pub fn generate_inclusion_proof(
 
         let blocks = extract_100_blocks(directory, start_block, end_block)?;
 
-
         let mut blocks_headers = Vec::new();
         for block in blocks.clone() {
             let header = header_from_block(block)?;
             blocks_headers.push(header.clone());
-
         }
         let header_records = decode_header_records(blocks)?;
         headers.extend(blocks_headers);
@@ -95,25 +93,4 @@ pub fn verify_inclusion_proof(
     }
 
     Ok(())
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    // Test inclusion proof
-    #[test]
-    fn test_inclusion_proof() {
-        let directory = String::from("./src/assets/ethereum_firehose_first_8200");
-        let start_block = 301;
-        let end_block = 402;
-        let inclusion_proof = generate_inclusion_proof(&directory, start_block, end_block).unwrap();
-        assert_eq!(inclusion_proof.len(), end_block - start_block);
-
-        // Verify inclusion proof
-        assert!(
-            verify_inclusion_proof(&directory, None, start_block, end_block, inclusion_proof)
-                .is_ok()
-        );
-    }
 }

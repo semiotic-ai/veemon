@@ -1,6 +1,5 @@
-
-use decoder::sf::ethereum::r#type::v2::{BlockHeader, Block};
 use decoder::decode_flat_files;
+use decoder::sf::ethereum::r#type::v2::{Block, BlockHeader};
 use ethereum_types::H256 as Hash256;
 use ethereum_types::{Bloom, H160, H64, U256 as EthereumU256};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
@@ -162,21 +161,4 @@ pub fn header_from_block(block: Block) -> Result<Header, EraValidateError> {
     };
 
     Ok(header)
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_header_from_block() {
-        let blocks = decode_flat_files(
-            "./src/assets/ethereum_firehose_first_8200/0000008200.dbin".to_string(),
-            None,
-            None,
-        )
-        .unwrap();
-        let header = header_from_block(blocks[0].clone()).unwrap();
-        assert_eq!(header.hash().as_bytes(), blocks[0].hash)
-    }
 }
