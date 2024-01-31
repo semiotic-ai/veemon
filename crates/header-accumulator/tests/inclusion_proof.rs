@@ -3,9 +3,6 @@ use header_accumulator::{
     inclusion_proof::{generate_inclusion_proof, verify_inclusion_proof},
 };
 
-// TODO:  explain in PR that a tests folder is mentioned to be used by integration tests.
-// since it uses flat files decoder together with header_accumulator functions (testing many parts of the library working togethher), I believe it makes
-// sense for it to be in the tests folders, which is dedicated to integration tests.
 #[test]
 fn test_inclusion_proof() {
     let directory = String::from("tests/ethereum_firehose_first_8200");
