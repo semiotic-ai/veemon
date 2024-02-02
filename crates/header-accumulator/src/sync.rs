@@ -1,0 +1,48 @@
+use serde::{Deserialize, Serialize};
+use std::fs::{write, File};
+use std::io::Read;
+use std::path::Path;
+
+#[derive(Serialize, Deserialize)]
+pub struct LockEntry {
+    epoch: String,
+    root: String,
+}
+
+impl LockEntry {
+    pub fn new(epoch: &str, root: &str) -> Self {
+        LockEntry {
+            epoch: epoch.to_string(),
+            root: root.to_string(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Lock {
+    entries: Vec<LockEntry>,
+}
+
+pub fn store_last_state(
+    file_path: &Path,
+    entry: LockEntry,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut lock = match File::open(file_path) {
+        Ok(mut file) => {
+            let mut contents = String::new();
+            file.read_to_string(&mut contents)?;
+            serde_json::from_str(&contents)?
+        }
+        Err(_) => Lock {
+            entries: Vec::new(),
+        }, // File doesn't exist or couldn't be opened, start with a new Lock
+    };
+
+    lock.entries.push(entry);
+
+    // Overwrite the file with the updated Lock content
+    let json_string = serde_json::to_string_pretty(&lock)?;
+    write(file_path, json_string)?;
+
+    Ok(())
+}
