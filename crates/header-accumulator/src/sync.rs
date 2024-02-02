@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::error::Error;
 use std::fs::{write, File};
 use std::io::Read;
 use std::path::Path;
@@ -16,17 +18,19 @@ impl LockEntry {
             root: root.to_string(),
         }
     }
+
+    pub fn hash(&self) -> String {
+        self.root.clone()
+    }
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Lock {
-    entries: Vec<LockEntry>,
+    // Changed from Vec<LockEntry> to HashMap<String, String>
+    entries: HashMap<String, String>,
 }
 
-pub fn store_last_state(
-    file_path: &Path,
-    entry: LockEntry,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn store_last_state(file_path: &Path, entry: LockEntry) -> Result<(), Box<dyn Error>> {
     let mut lock = match File::open(file_path) {
         Ok(mut file) => {
             let mut contents = String::new();
@@ -34,15 +38,16 @@ pub fn store_last_state(
             serde_json::from_str(&contents)?
         }
         Err(_) => Lock {
-            entries: Vec::new(),
+            entries: HashMap::new(),
         }, // File doesn't exist or couldn't be opened, start with a new Lock
     };
 
-    lock.entries.push(entry);
+    lock.entries.insert(entry.epoch, entry.root);
 
-    // Overwrite the file with the updated Lock content
     let json_string = serde_json::to_string_pretty(&lock)?;
     write(file_path, json_string)?;
 
     Ok(())
 }
+
+//TODO: function to check sync state and continue from not synced epoch
