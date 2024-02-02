@@ -1783,6 +1783,7 @@ dependencies = [
  "rlp",
  "serde",
  "serde_json",
+ "tempfile",
  "tree_hash",
  "trin-validation",
 ]
