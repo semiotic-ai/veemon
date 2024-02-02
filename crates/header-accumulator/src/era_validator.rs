@@ -12,7 +12,7 @@ use trin_validation::accumulator::MasterAccumulator;
 
 use crate::{
     errors::EraValidateError,
-    sync::{self, store_last_state, LockEntry},
+    sync::{check_sync_state, store_last_state, LockEntry},
     utils::{
         compute_epoch_accumulator, decode_header_records, extract_100_blocks, FINAL_EPOCH,
         MAX_EPOCH_SIZE, MERGE_BLOCK,
@@ -44,17 +44,35 @@ pub fn era_validate(
         Err(EraValidateError::EndEpochLessThanStartEpoch)?;
     }
 
-    let mut validate_epochs = Vec::new();
+    let mut validated_epochs = Vec::new();
     for epoch in start_epoch..end_epoch {
+        // checkes if epoch was already synced form lockfile.
+        match check_sync_state(
+            Path::new("./lockfile.json"),
+            epoch.to_string(),
+            master_accumulator.historical_epochs[epoch].0,
+        ) {
+            Ok(true) => {
+                log::info!("Skipping, epoch already synced: {}", epoch);
+                continue;
+            }
+            Ok(false) => {
+                log::info!("syncing new epoch: {}", epoch);
+            }
+            //TODO: create more specific error handling here
+            Err(_) => return Err(EraValidateError::JsonError),
+        }
+
         let root = process_epoch_from_directory(epoch, directory, master_accumulator.clone())?;
-        validate_epochs.push(epoch);
+        validated_epochs.push(epoch);
+        // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
         let _ = store_last_state(
             Path::new("./lockfile.json"),
             LockEntry::new(&epoch.to_string(), &BASE64_STANDARD.encode(root)),
         );
     }
 
-    Ok(validate_epochs)
+    Ok(validated_epochs)
 }
 
 fn process_epoch_from_directory(
