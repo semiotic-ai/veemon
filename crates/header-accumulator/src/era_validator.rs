@@ -59,13 +59,16 @@ pub fn era_validate(
                 log::info!("syncing new epoch: {}", epoch);
             }
             //TODO: create more specific error handling here
-            Err(_) => return Err(EraValidateError::JsonError),
+            Err(_) => return Err(EraValidateError::EpochAccumulatorError),
         }
 
         let root = process_epoch_from_directory(epoch, directory, master_accumulator.clone())?;
         validated_epochs.push(epoch);
         // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
-        let _ = store_last_state(Path::new("./lockfile.json"), LockEntry::new(&epoch, root));
+        match store_last_state(Path::new("./lockfile.json"), LockEntry::new(&epoch, root)) {
+            Ok(_) => {}
+            Err(_) => return Err(EraValidateError::EpochAccumulatorError),
+        }
     }
 
     Ok(validated_epochs)

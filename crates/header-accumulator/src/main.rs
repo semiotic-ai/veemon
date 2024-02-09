@@ -165,6 +165,7 @@ fn main() {
                 }
                 _ => {}
             }
+
             let directory = era_validate_matches
                 .get_one::<String>("directory")
                 .expect("Directory is required");
