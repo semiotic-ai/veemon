@@ -1,4 +1,3 @@
-use base64::prelude::*;
 use std::{
     io::{BufRead, Read, Write as StdWrite},
     path::Path,
@@ -66,10 +65,7 @@ pub fn era_validate(
         let root = process_epoch_from_directory(epoch, directory, master_accumulator.clone())?;
         validated_epochs.push(epoch);
         // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
-        let _ = store_last_state(
-            Path::new("./lockfile.json"),
-            LockEntry::new(&epoch.to_string(), &BASE64_STANDARD.encode(root)),
-        );
+        let _ = store_last_state(Path::new("./lockfile.json"), LockEntry::new(&epoch, root));
     }
 
     Ok(validated_epochs)
