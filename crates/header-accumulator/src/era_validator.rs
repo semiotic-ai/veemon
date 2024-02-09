@@ -58,7 +58,6 @@ pub fn era_validate(
             Ok(false) => {
                 log::info!("syncing new epoch: {}", epoch);
             }
-            //TODO: create more specific error handling here
             Err(_) => return Err(EraValidateError::EpochAccumulatorError),
         }
 

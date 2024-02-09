@@ -183,8 +183,7 @@ mod tests {
             mac_file.historical_epochs[0].0
         )?);
 
-        //TODO: test when hashes differ but lock is present
-
+        // test when hashes differ but lock is present
         let epoch = "0".to_string();
         assert!(!check_sync_state(
             &file_path,
