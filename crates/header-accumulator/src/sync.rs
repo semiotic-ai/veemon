@@ -1,9 +1,12 @@
+use base64::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs::{write, File};
+use std::fs::{write, File, OpenOptions};
 use std::io::Read;
 use std::path::Path;
+
+use crate::errors::{EraValidateError, SyncError};
 
 #[derive(Serialize, Deserialize)]
 pub struct LockEntry {
@@ -12,10 +15,10 @@ pub struct LockEntry {
 }
 
 impl LockEntry {
-    pub fn new(epoch: &str, root: &str) -> Self {
+    pub fn new(epoch: &usize, root: [u8; 32]) -> Self {
         LockEntry {
             epoch: epoch.to_string(),
-            root: root.to_string(),
+            root: BASE64_STANDARD.encode(root),
         }
     }
 
@@ -29,21 +32,35 @@ pub struct Lock {
     entries: HashMap<String, String>,
 }
 
-pub fn store_last_state(file_path: &Path, entry: LockEntry) -> Result<(), Box<dyn Error>> {
-    let mut lock = match File::open(file_path) {
-        Ok(mut file) => {
-            let mut contents = String::new();
-            file.read_to_string(&mut contents)?;
-            serde_json::from_str(&contents)?
-        }
-        Err(_) => Lock {
+impl Lock {
+    // Convenience method for creating a new Lock instance
+    pub fn new() -> Self {
+        Lock {
             entries: HashMap::new(),
-        },
+        }
+    }
+}
+
+pub fn store_last_state(file_path: &Path, entry: LockEntry) -> Result<(), Box<dyn Error>> {
+    let mut lock = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(file_path)?;
+    let mut contents = String::new();
+
+    lock.read_to_string(&mut contents)?;
+    // Attempt to deserialize the contents of the file into a `Lock` struct
+    let mut json_lock: Lock = match serde_json::from_str(&contents) {
+        Ok(lock) => lock,
+        Err(_) => {
+            Lock::new() // Ensure you have a new() method or equivalent initializer
+        }
     };
 
-    lock.entries.insert(entry.epoch, entry.root);
+    json_lock.entries.insert(entry.epoch, entry.root);
 
-    let json_string = serde_json::to_string_pretty(&lock)?;
+    let json_string = serde_json::to_string_pretty(&json_lock)?;
     write(file_path, json_string)?;
 
     Ok(())
@@ -52,20 +69,47 @@ pub fn store_last_state(file_path: &Path, entry: LockEntry) -> Result<(), Box<dy
 pub fn check_sync_state(
     file_path: &Path,
     epoch: String,
-    _hash: [u8; 32],
+    macc_hash: [u8; 32],
 ) -> Result<bool, Box<dyn Error>> {
-    let mut lock = File::open(file_path)?;
-
+    let mut lock = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(file_path)?;
     let mut contents = String::new();
 
-    let _ = lock.read_to_string(&mut contents)?;
-    let json_lock: Lock = serde_json::from_str(&contents)?;
+    lock.read_to_string(&mut contents)?;
+    // Attempt to deserialize the contents of the file into a `Lock` struct
+    let json_lock: Lock = match serde_json::from_str(&contents) {
+        Ok(lock) => lock,
+        Err(_) => {
+            Lock::new() // Ensure you have a new() method or equivalent initializer
+        }
+    };
 
     if !json_lock.entries.contains_key(&epoch) {
         return Ok(false);
     }
 
-    //TODO: validate hash, check if root sent from master_header_acc is the same as the stored in json
+    let stored_hash = json_lock
+        .entries
+        .get("0")
+        .ok_or(SyncError::LockfileReadError)?;
+
+    let stored_hash = BASE64_STANDARD
+        .decode(&stored_hash)
+        .expect("Failed to decode Base64");
+
+    // Ensure the decoded bytes fit into a `[u8; 32]` array
+
+    let stored_hash: [u8; 32] = match stored_hash.try_into() {
+        Ok(b) => b,
+        Err(_) => panic!("Decoded hash does not fit into a 32-byte array"),
+    };
+
+    if macc_hash != stored_hash {
+        return Err(Box::new(EraValidateError::EraAccumulatorMismatch));
+    }
 
     Ok(true)
 }
@@ -76,6 +120,7 @@ mod tests {
     use std::fs::File;
     use std::io::Write;
     use tempfile::tempdir;
+    use trin_validation::accumulator::MasterAccumulator;
 
     #[test]
     fn test_store_last_state() -> Result<(), Box<dyn Error>> {
@@ -120,18 +165,32 @@ mod tests {
         let mut file = File::create(&file_path)?;
         writeln!(file, "{}", mock_json)?;
 
-        // Test case where epoch exists
+        let mac_file: MasterAccumulator = MasterAccumulator::default();
+
+        // Test case where epoch exists and hashes match
         let epoch = "0".to_string();
-        let hash: [u8; 32] = [0; 32]; // Mock hash, adjust as necessary
-        assert!(check_sync_state(&file_path, epoch, hash)?);
+        assert!(check_sync_state(
+            &file_path,
+            epoch,
+            mac_file.historical_epochs[0].0
+        )?);
 
         // Test case where epoch does not exist
         let epoch = "1".to_string();
-        assert!(!check_sync_state(&file_path, epoch, hash)?);
+        assert!(!check_sync_state(
+            &file_path,
+            epoch.clone(),
+            mac_file.historical_epochs[0].0
+        )?);
 
-        //TODO: test when hashes are different
+        //TODO: test when hashes differ but lock is present
 
-        // TODO: test when are equal
+        let epoch = "0".to_string();
+        assert!(!check_sync_state(
+            &file_path,
+            epoch.clone(),
+            mac_file.historical_epochs[1].0
+        )?);
 
         Ok(())
     }
