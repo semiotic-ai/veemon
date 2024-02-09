@@ -185,11 +185,13 @@ mod tests {
 
         // test when hashes differ but lock is present
         let epoch = "0".to_string();
-        assert!(!check_sync_state(
-            &file_path,
-            epoch.clone(),
-            mac_file.historical_epochs[1].0
-        )?);
+        let result = check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[1].0)
+            .map_err(|error| error.to_string());
+
+        assert_eq!(
+            result.unwrap_err(),
+            EraValidateError::EraAccumulatorMismatch.to_string()
+        );
 
         Ok(())
     }
