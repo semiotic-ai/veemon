@@ -16,7 +16,13 @@ pub enum EraValidateError {
     JsonError,
     TotalDifficultyDecodeError,
 }
+#[derive(Debug)]
+pub enum SyncError {
+    LockfileReadError,
+}
+
 impl std::error::Error for EraValidateError {}
+impl std::error::Error for SyncError {}
 
 impl fmt::Display for EraValidateError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -52,6 +58,14 @@ impl fmt::Display for EraValidateError {
             EraValidateError::TotalDifficultyDecodeError => {
                 write!(f, "Error decoding total difficulty")
             }
+        }
+    }
+}
+
+impl fmt::Display for SyncError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            _ => write!(f, "Error handling lockfile sync"),
         }
     }
 }
