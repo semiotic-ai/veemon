@@ -2,7 +2,7 @@ use base64::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
-use std::fs::{write, File, OpenOptions};
+use std::fs::{metadata, write, OpenOptions};
 use std::io::Read;
 use std::path::Path;
 
@@ -53,9 +53,7 @@ pub fn store_last_state(file_path: &Path, entry: LockEntry) -> Result<(), Box<dy
     // Attempt to deserialize the contents of the file into a `Lock` struct
     let mut json_lock: Lock = match serde_json::from_str(&contents) {
         Ok(lock) => lock,
-        Err(_) => {
-            Lock::new() // Ensure you have a new() method or equivalent initializer
-        }
+        Err(_) => Lock::new(),
     };
 
     json_lock.entries.insert(entry.epoch, entry.root);
@@ -71,6 +69,11 @@ pub fn check_sync_state(
     epoch: String,
     macc_hash: [u8; 32],
 ) -> Result<bool, Box<dyn Error>> {
+    let file_exists = metadata(file_path).is_ok();
+    if !file_exists {
+        log::info!("The lockfile did not exist and was created");
+    }
+
     let mut lock = OpenOptions::new()
         .read(true)
         .write(true)
@@ -79,12 +82,9 @@ pub fn check_sync_state(
     let mut contents = String::new();
 
     lock.read_to_string(&mut contents)?;
-    // Attempt to deserialize the contents of the file into a `Lock` struct
     let json_lock: Lock = match serde_json::from_str(&contents) {
         Ok(lock) => lock,
-        Err(_) => {
-            Lock::new() // Ensure you have a new() method or equivalent initializer
-        }
+        Err(_) => Lock::new(),
     };
 
     if !json_lock.entries.contains_key(&epoch) {
@@ -100,8 +100,7 @@ pub fn check_sync_state(
         .decode(&stored_hash)
         .expect("Failed to decode Base64");
 
-    // Ensure the decoded bytes fit into a `[u8; 32]` array
-
+    // this ensures the decoded bytes fit into a `[u8; 32]` array, which is the hash type
     let stored_hash: [u8; 32] = match stored_hash.try_into() {
         Ok(b) => b,
         Err(_) => panic!("Decoded hash does not fit into a 32-byte array"),
@@ -140,7 +139,7 @@ mod tests {
 
         let lock: Lock = serde_json::from_str(&contents)?;
 
-        // Check if the entry was correctly added
+        // test if the entry was correctly added
         assert!(lock.entries.contains_key("0"));
         assert_eq!(
             lock.entries.get("0"),
@@ -161,7 +160,6 @@ mod tests {
             }
           }"#;
 
-        // Create and write mock JSON to the temp file
         let mut file = File::create(&file_path)?;
         writeln!(file, "{}", mock_json)?;
 
