@@ -1,4 +1,7 @@
-use std::io::{BufRead, Read, Write as StdWrite};
+use std::{
+    io::{BufRead, Read, Write as StdWrite},
+    path::Path,
+};
 
 use decoder::headers::HeaderRecordWithNumber;
 use ethportal_api::types::execution::accumulator::HeaderRecord;
@@ -8,19 +11,21 @@ use trin_validation::accumulator::MasterAccumulator;
 
 use crate::{
     errors::EraValidateError,
+    sync::{check_sync_state, store_last_state, LockEntry},
     utils::{
         compute_epoch_accumulator, decode_header_records, extract_100_blocks, FINAL_EPOCH,
         MAX_EPOCH_SIZE, MERGE_BLOCK,
     },
 };
 
+/// Validates an era against a header accumulator.
 pub fn era_validate(
     directory: &String,
     master_accumulator_file: Option<&String>,
     start_epoch: usize,
     end_epoch: Option<usize>,
 ) -> Result<Vec<usize>, EraValidateError> {
-    // Load master accumulator if available, otherwise use default from Prortal Network
+    // Load master accumulator if available, otherwise use default from Portal Network
     let master_accumulator = match master_accumulator_file {
         Some(master_accumulator_file) => {
             MasterAccumulator::try_from_file(master_accumulator_file.into())
@@ -38,20 +43,41 @@ pub fn era_validate(
         Err(EraValidateError::EndEpochLessThanStartEpoch)?;
     }
 
-    let mut validated_epoch = Vec::new();
+    let mut validated_epochs = Vec::new();
     for epoch in start_epoch..end_epoch {
-        process_epoch_from_directory(epoch, directory, master_accumulator.clone())?;
-        validated_epoch.push(epoch);
+        // checkes if epoch was already synced form lockfile.
+        match check_sync_state(
+            Path::new("./lockfile.json"),
+            epoch.to_string(),
+            master_accumulator.historical_epochs[epoch].0,
+        ) {
+            Ok(true) => {
+                log::info!("Skipping, epoch already synced: {}", epoch);
+                continue;
+            }
+            Ok(false) => {
+                log::info!("syncing new epoch: {}", epoch);
+            }
+            Err(_) => return Err(EraValidateError::EpochAccumulatorError),
+        }
+
+        let root = process_epoch_from_directory(epoch, directory, master_accumulator.clone())?;
+        validated_epochs.push(epoch);
+        // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
+        match store_last_state(Path::new("./lockfile.json"), LockEntry::new(&epoch, root)) {
+            Ok(_) => {}
+            Err(_) => return Err(EraValidateError::EpochAccumulatorError),
+        }
     }
 
-    Ok(validated_epoch)
+    Ok(validated_epochs)
 }
 
 fn process_epoch_from_directory(
     epoch: usize,
     directory: &String,
     master_accumulator: MasterAccumulator,
-) -> Result<(), EraValidateError> {
+) -> Result<[u8; 32], EraValidateError> {
     let start_100_block = epoch * MAX_EPOCH_SIZE;
     let end_100_block = (epoch + 1) * MAX_EPOCH_SIZE;
 
@@ -67,11 +93,12 @@ fn process_epoch_from_directory(
     let epoch_accumulator = compute_epoch_accumulator(&header_records)?;
 
     // Return an error if the epoch accumulator does not match the master accumulator
-    if epoch_accumulator.tree_hash_root().0 != master_accumulator.historical_epochs[epoch].0 {
+    let root: [u8; 32] = epoch_accumulator.tree_hash_root().0;
+    if root != master_accumulator.historical_epochs[epoch].0 {
         Err(EraValidateError::EraAccumulatorMismatch)?;
     }
 
-    Ok(())
+    Ok(root)
 }
 
 pub fn stream_validation<R: Read + BufRead, W: StdWrite>(

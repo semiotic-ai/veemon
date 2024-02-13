@@ -24,7 +24,6 @@ pub fn extract_100_blocks(
     let mut blocks: Vec<Block> = Vec::new();
     for block_number in (start_100_block..end_100_block).step_by(100) {
         let block_file_name = directory.to_owned() + &format!("/{:010}.dbin", block_number);
-        // println!("Reading block file {}", block_file_name);
         let block = &decode_flat_files(block_file_name, None, None)
             .map_err(|_| EraValidateError::FlatFileDecodeError)?;
         blocks.extend(block.clone());

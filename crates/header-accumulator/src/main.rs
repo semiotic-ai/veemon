@@ -41,6 +41,7 @@ fn main() {
         .version("0")
         .author("Semiotic Labs")
         .about("Validates flat files against Header Accumulators")
+        .arg_required_else_help(true)
         .subcommand(
             Command::new("era_validate")
                 .about("Validates entire ERAs of flat files against Header Accumulators")
@@ -164,6 +165,7 @@ fn main() {
                 }
                 _ => {}
             }
+
             let directory = era_validate_matches
                 .get_one::<String>("directory")
                 .expect("Directory is required");
