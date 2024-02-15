@@ -11,7 +11,7 @@ fn bench(c: &mut Criterion) {
     group.sample_size(ITERS_PER_FILE);
 
     group.bench_function("handle-flat-file", |b| {
-        let files = fs::read_dir("benchmark_files").expect("Failed to read dir");
+        let files = fs::read_dir("tests/benchmark_files").expect("Failed to read dir");
         for file in files {
             let path = file.expect("Failed to get path").path();
             match path.extension() {

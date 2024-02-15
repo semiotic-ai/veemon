@@ -20,7 +20,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
     group.sample_size(ITERS_PER_FILE);
 
     group.bench_function("read-message-stream", |b| {
-        let files = fs::read_dir("benchmark_files/pre_merge").expect("Failed to read dir");
+        let files = fs::read_dir("tests/benchmark_files/pre_merge").expect("Failed to read dir");
         for file in files {
             let path = file.expect("Failed to get path").path();
             match path.extension() {
@@ -50,7 +50,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
     });
 
     group.bench_function("decode-bstream", |b| {
-        let files = fs::read_dir("benchmark_files/pre_merge").expect("Failed to read dir");
+        let files = fs::read_dir("tests/benchmark_files/pre_merge").expect("Failed to read dir");
         for file in files {
             let path = file.expect("Failed to get path").path();
             match path.extension() {
@@ -78,7 +78,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
     });
 
     group.bench_function("decode-block", |b| {
-        let files = fs::read_dir("benchmark_files/pre_merge").expect("Failed to read dir");
+        let files = fs::read_dir("tests/benchmark_files/pre_merge").expect("Failed to read dir");
         for file in files {
             let path = file.expect("Failed to get path").path();
             match path.extension() {
@@ -110,7 +110,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
     });
 
     group.bench_function("receipts-check", |b| {
-        let files = fs::read_dir("benchmark_files/pre_merge").expect("Failed to read dir");
+        let files = fs::read_dir("tests/benchmark_files/pre_merge").expect("Failed to read dir");
         for file in files {
             let path = file.expect("Failed to get path").path();
             match path.extension() {
@@ -142,7 +142,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
     });
 
     group.bench_function("transactions-check", |b| {
-        let files = fs::read_dir("benchmark_files/pre_merge").expect("Failed to read dir");
+        let files = fs::read_dir("tests/benchmark_files/pre_merge").expect("Failed to read dir");
         for file in files {
             let path = file.expect("Failed to get path").path();
             match path.extension() {
