@@ -2,14 +2,16 @@
 
 [![CI status](https://github.com/semiotic-ai/flat-files-decoder/workflows/ci/badge.svg)][gh-ci]
 
-<!-- TODO: Seve please checkout if what I wrote makes sense -->
-this crate is designed to decompress and decode headers from [binary files, which are called flat files,](https://github.com/streamingfast/firehose-ethereum/blob/develop/proto/sf/ethereum/type/v2/type.proto) generated from Firehose. Flat files store all information necessary to reconstruct the transaction and receipt tries. It also checks the validity of 
-receipt roots and transaction roots present in the block headers by recalculating them via the block body data. Details of the implementation can be found [here](https://github.com/streamingfast/dbin?tab=readme-ov-file)
+this crate is designed to decompress and decode headers from [binary files, which are called flat files,](https://github.com/streamingfast/firehose-ethereum/blob/develop/proto/sf/ethereum/type/v2/type.proto) generated from Firehose. Flat files store all information necessary to reconstruct the transaction and receipt tries. It also checks the validity of receipt roots and transaction roots present in the block headers by recalculating them via the block body data. Details of the implementation can be found [here](https://github.com/streamingfast/dbin?tab=readme-ov-file).
+This check ensures that receipt logs and transaction data stored in the flat files are internally consistent with the block headers also stored in the flat files.
 
 This tool was first presented as a mean to enhance the performance and verifiability of The Graph protocol. However,
 it turns out it could be used as a solution for EIP-4444 problem of full nodes stopping to provide historical data over one year.
-The idea is that the flat files that this crate can decode could also be used as an archival format similar to era1 files, specially
-if they can be verified. 
+The idea is that the flat files that this crate can decode could also be used as an archival format similar to era1 files if the
+transaction and receipt data stored in the flat files can be verified to be part of the Ethereum canonical history. 
+
+For more information, read our ethresear.ch [here](https://ethresear.ch/t/using-the-graph-to-preserve-historical-data-and-enable-eip-4444/17318) and our pre-merge
+solution implementation [here](https://github.com/semiotic-ai/header_accumulator) to see how we can verify that the flat files are consistent with Ethereum's canonical chain. 
 
 ## Getting Started
 
@@ -66,17 +68,15 @@ This will store the block headers as json format in the output folder.
 By passing `--headers-dir` a folder of assumed valid block headers can be provided to compare
 with the input flat files. Valid headers can be pulled from the [sync committee subprotocol](https://github.com/ethereum/annotated-spec/blob/master/altair/sync-protocol.md) for post-merge data.
 
-<!-- TODO: once the header_accumulator is made public, link it here -->
-**NOTICE:**For pre-merge data another approach using [header accumulators](https://github.com/ethereum/portal-network-specs/blob/8ad5bc33cb0d4485d2eab73bf2decc43e7566a8f/history-network.md#the-header-accumulator) is necessary since
+**NOTICE:**For pre-merge data another approach using the [header accumulator](https://github.com/ethereum/portal-network-specs/blob/8ad5bc33cb0d4485d2eab73bf2decc43e7566a8f/history-network.md#the-header-accumulator) is necessary since
 sync committees will not provide these headers.
 
 ## Goals
-<!-- TODO: Any other goals I should add? -->
-We hope that flat files decoder will be able to handle
-both post merge and pre merge data. Post-merge can be validated 
-using the Consensus Layer via the sync committee subprotocol. Pre-merge requires
-headers accumulators and another step besides decoding the flat files is necessary.
- 
+
+Our goal is to provide The Graph's Indexers the tools to trustlessly share flat files with cryptographic guarantees 
+that the data in the flat files is part of the canonical history of the Ethereum blockchain, 
+enabling Indexers to quickly sync all historical data and begin serving data with minimal effort.
+
 ## Benchmarking
 - Run `cargo bench` in the root directory of the project
 - Benchmark results will be output to the terminal
