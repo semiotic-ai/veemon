@@ -48,6 +48,7 @@ pub enum DecodeInput {
     Path(String),
     Reader(Box<dyn Read>),
 }
+
 /**
 * Decode & verify flat files from a directory or a single file.
 * Input can be a directory or a file.
@@ -210,9 +211,8 @@ pub fn extract_blocks<R: Read>(mut reader: R) -> Result<Vec<Block>, DecodeError>
 ///
 /// # Arguments
 ///
-/// * `end_block`: Header Accumulator solution is expensive. For blocks after the merge,
-/// Ethereum consensus should be used  in this scenario. This zis why the default block
-/// for this variable is the MERGE_BLOCK (block 15537393)
+/// * `end_block`: For blocks after the merge, Ethereum sync committee should be used. This is why the default block
+/// for this param is the MERGE_BLOCK (block 15537393)
 /// * `reader`: where bytes are read from
 /// * `writer`: where bytes written to
 pub async fn stream_blocks<R: Read, W: Write>(

@@ -13,17 +13,23 @@ struct Cli {
 enum Commands {
     /// Stream data continuously
     Stream {
+        /// decompress .dibn files if they are compressed with zstd
         #[clap(short, long, default_value = "false")]
         decompress: bool,
+        /// the block to end streaming
         #[clap(short, long)]
         end_block: Option<usize>,
     },
     /// Decode files from input to output
     Decode {
+        /// input folder where flat files are stored
         #[clap(short, long)]
         input: String,
         #[clap(long)]
+        /// folder where valid headers are stored so decoded blocks can be validated against
+        /// their headers.
         headers_dir: Option<String>,
+        /// output folder where decoded headers will be stored as .json
         #[clap(short, long)]
         output: Option<String>,
     },
