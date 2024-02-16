@@ -38,8 +38,7 @@ pub fn check_receipt_root(block: &Block) -> Result<(), ReceiptError> {
 
 /// Calculates the trie receipt root of a given block recepits
 ///
-/// It uses the traces to aggregate receipts from blocks and then
-/// verifies them against the trie root present in the block header
+/// It uses the traces to aggregate receipts from blocks
 ///
 ///  # Arguments
 ///
