@@ -1,9 +1,6 @@
 use clap::{Arg, Command, Parser, Subcommand};
-use decoder::{decode_flat_files, sf::ethereum::r#type::v2::Block};
 use header_accumulator::{
-    era_validator::{era_validate, stream_validation},
-    errors::EraValidateError,
-    inclusion_proof,
+    era_validator::stream_validation, errors::EraValidateError, inclusion_proof,
 };
 use primitive_types::H256;
 use std::{io::BufReader, process};
@@ -143,83 +140,26 @@ fn main() {
         .get_matches();
 
     match matches.subcommand() {
-        Some(("era_validate", era_validate_matches)) => {
-            match era_validate_matches.subcommand() {
-                Some(("stream", stream_matches)) => {
-                    let master_accumulator_file =
-                        stream_matches.get_one::<String>("master_accumulator_file");
-                    let master_accumulator = match master_accumulator_file {
-                        Some(master_accumulator_file) => {
-                            MasterAccumulator::try_from_file(master_accumulator_file.into())
-                                .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile)
-                                .expect("Invalid master accumulator file")
-                        }
-                        None => MasterAccumulator::default(),
-                    };
-                    let reader = BufReader::with_capacity(1 << 32, std::io::stdin().lock());
-                    let writer = std::io::stdout();
-                    stream_validation(master_accumulator.clone(), reader, writer)
-                        .expect("Validation Error");
-                    process::exit(0);
-                }
-                _ => {}
-            }
-
-            // TODO: REMOVE THIS WHOLE CODE TO FLAT_HEAD ONCE FINISHED
-
-            let directory = era_validate_matches
-                .get_one::<String>("directory")
-                .expect("Directory is required");
-
-            let master_accumulator_file =
-                era_validate_matches.get_one::<String>("master_accumulator_file");
-            let start_epoch = era_validate_matches.get_one::<String>("start_epoch");
-            let end_epoch = era_validate_matches.get_one::<String>("end_epoch");
-
-            let start_epoch = match start_epoch {
-                Some(start_epoch) => start_epoch.parse::<usize>().unwrap(),
-                None => 0,
-            };
-
-            let end_epoch = match end_epoch {
-                Some(end_epoch) => Some(end_epoch.parse::<usize>().unwrap()),
-                None => None,
-            };
-
-            log::info!("Starting validation.");
-
-            pub const MAX_EPOCH_SIZE: usize = 8192;
-
-            let epoch = 0;
-            let start_100_block = epoch * MAX_EPOCH_SIZE;
-            let end_100_block = (epoch + 1) * MAX_EPOCH_SIZE;
-
-            let mut blocks: Vec<Block> = Vec::new();
-            for block_number in (start_100_block..end_100_block).step_by(100) {
-                let block_file_name = directory.to_owned() + &format!("/{:010}.dbin", block_number);
-                let block = &decode_flat_files(block_file_name, None, None)
-                    .map_err(|_| EraValidateError::FlatFileDecodeError)
-                    .unwrap();
-                blocks.extend(block.clone());
-            }
-
-            let result: Result<Vec<usize>, EraValidateError> =
-                era_validate(blocks, master_accumulator_file, start_epoch, end_epoch);
-
-            // If the result is Ok, then the era was validated successfully
-            // Log the validated era and exit with code 0
-            if result.is_ok() {
-                let validated_epoch = result.unwrap();
-                log::info!("Validated era(s): {:?}", validated_epoch);
+        Some(("era_validate", era_validate_matches)) => match era_validate_matches.subcommand() {
+            Some(("stream", stream_matches)) => {
+                let master_accumulator_file =
+                    stream_matches.get_one::<String>("master_accumulator_file");
+                let master_accumulator = match master_accumulator_file {
+                    Some(master_accumulator_file) => {
+                        MasterAccumulator::try_from_file(master_accumulator_file.into())
+                            .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile)
+                            .expect("Invalid master accumulator file")
+                    }
+                    None => MasterAccumulator::default(),
+                };
+                let reader = BufReader::with_capacity(1 << 32, std::io::stdin().lock());
+                let writer = std::io::stdout();
+                stream_validation(master_accumulator.clone(), reader, writer)
+                    .expect("Validation Error");
                 process::exit(0);
-            } else {
-                // If the result is Err, then the era failed to validate
-                // Log the error and exit with code 1
-                log::error!("Error validating era: {:?}", result.unwrap_err());
-                process::exit(1);
             }
-            // TODO: REMOVE THIS WHOLE CODE TO FLAT_HEAD ONCE FINISHED
-        }
+            _ => {}
+        },
         Some(("generate_inclusion_proof", generate_inclusion_proof_matches)) => {
             let directory = generate_inclusion_proof_matches
                 .get_one::<String>("directory")
