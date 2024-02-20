@@ -3,7 +3,10 @@ use std::{
     path::Path,
 };
 
-use decoder::headers::HeaderRecordWithNumber;
+use decoder::{
+    headers::HeaderRecordWithNumber,
+    sf::{self},
+};
 use ethportal_api::types::execution::accumulator::HeaderRecord;
 use primitive_types::{H256, U256};
 use tree_hash::TreeHash;
@@ -13,14 +16,13 @@ use crate::{
     errors::EraValidateError,
     sync::{check_sync_state, store_last_state, LockEntry},
     utils::{
-        compute_epoch_accumulator, decode_header_records, extract_100_blocks, FINAL_EPOCH,
-        MAX_EPOCH_SIZE, MERGE_BLOCK,
+        compute_epoch_accumulator, decode_header_records, FINAL_EPOCH, MAX_EPOCH_SIZE, MERGE_BLOCK,
     },
 };
 
 /// Validates an era against a header accumulator.
 pub fn era_validate(
-    directory: &String,
+    blocks: Vec<sf::ethereum::r#type::v2::Block>,
     master_accumulator_file: Option<&String>,
     start_epoch: usize,
     end_epoch: Option<usize>,
@@ -61,7 +63,8 @@ pub fn era_validate(
             Err(_) => return Err(EraValidateError::EpochAccumulatorError),
         }
 
-        let root = process_epoch_from_directory(epoch, directory, master_accumulator.clone())?;
+        // let root = process_epoch_from_directory(epoch, directory, master_accumulator.clone())?;
+        let root = process_blocks(blocks.clone(), epoch, master_accumulator.clone())?;
         validated_epochs.push(epoch);
         // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
         match store_last_state(Path::new("./lockfile.json"), LockEntry::new(&epoch, root)) {
@@ -73,16 +76,11 @@ pub fn era_validate(
     Ok(validated_epochs)
 }
 
-fn process_epoch_from_directory(
+fn process_blocks(
+    mut blocks: Vec<sf::ethereum::r#type::v2::Block>,
     epoch: usize,
-    directory: &String,
     master_accumulator: MasterAccumulator,
 ) -> Result<[u8; 32], EraValidateError> {
-    let start_100_block = epoch * MAX_EPOCH_SIZE;
-    let end_100_block = (epoch + 1) * MAX_EPOCH_SIZE;
-
-    let mut blocks = extract_100_blocks(directory, start_100_block, end_100_block)?;
-
     if epoch < FINAL_EPOCH {
         blocks = blocks[0..MAX_EPOCH_SIZE].to_vec();
     } else {
