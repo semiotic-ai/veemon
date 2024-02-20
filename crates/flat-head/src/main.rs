@@ -68,8 +68,12 @@ fn main() {
             //     println!("Printing testing lists...");
             // }
             {
-                let result =
-                    era_validate(input, master_acc_file.as_ref(), *start_epoch, *end_epoch);
+                // let result = era_validator::era_validate(
+                //     input,
+                //     master_acc_file.as_ref(),
+                //     *start_epoch,
+                //     *end_epoch,
+                // );
             }
         }
         None => {}

@@ -1493,6 +1493,8 @@ dependencies = [
  "env_logger 0.11.2",
  "header_accumulator",
  "log",
+ "tree_hash",
+ "trin-validation",
 ]
 
 [[package]]

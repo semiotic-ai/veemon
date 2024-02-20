@@ -11,4 +11,7 @@ decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", branc
 env_logger = "0.11.2"
 # TODO: if the header accumulator changes to be public instead of internal set this to https
 header_accumulator = { git = "ssh://git@github.com/semiotic-ai/header_accumulator.git", branch = "main" }
+trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0" }
+tree_hash = "0.5.2"
+
 log = "0.4.20"

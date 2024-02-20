@@ -1,6 +1,6 @@
 # Flat head
 
-Flat head is developed to be a crate that validates flat files generated from Firehose against header accumulators.
+Flat head is developed to be a crate that verifies flat files generated from Firehose against header accumulators.
 
 
 ## Getting Started
