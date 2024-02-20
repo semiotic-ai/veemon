@@ -1,4 +1,5 @@
 use clap::{Arg, Command, Parser, Subcommand};
+use decoder::{decode_flat_files, sf::ethereum::r#type::v2::Block};
 use header_accumulator::{
     era_validator::{era_validate, stream_validation},
     errors::EraValidateError,
@@ -164,6 +165,8 @@ fn main() {
                 _ => {}
             }
 
+            // TODO: REMOVE THIS WHOLE CODE TO FLAT_HEAD ONCE FINISHED
+
             let directory = era_validate_matches
                 .get_one::<String>("directory")
                 .expect("Directory is required");
@@ -184,7 +187,24 @@ fn main() {
             };
 
             log::info!("Starting validation.");
-            let result = era_validate(directory, master_accumulator_file, start_epoch, end_epoch);
+
+            pub const MAX_EPOCH_SIZE: usize = 8192;
+
+            let epoch = 0;
+            let start_100_block = epoch * MAX_EPOCH_SIZE;
+            let end_100_block = (epoch + 1) * MAX_EPOCH_SIZE;
+
+            let mut blocks: Vec<Block> = Vec::new();
+            for block_number in (start_100_block..end_100_block).step_by(100) {
+                let block_file_name = directory.to_owned() + &format!("/{:010}.dbin", block_number);
+                let block = &decode_flat_files(block_file_name, None, None)
+                    .map_err(|_| EraValidateError::FlatFileDecodeError)
+                    .unwrap();
+                blocks.extend(block.clone());
+            }
+
+            let result: Result<Vec<usize>, EraValidateError> =
+                era_validate(blocks, master_accumulator_file, start_epoch, end_epoch);
 
             // If the result is Ok, then the era was validated successfully
             // Log the validated era and exit with code 0
@@ -198,6 +218,7 @@ fn main() {
                 log::error!("Error validating era: {:?}", result.unwrap_err());
                 process::exit(1);
             }
+            // TODO: REMOVE THIS WHOLE CODE TO FLAT_HEAD ONCE FINISHED
         }
         Some(("generate_inclusion_proof", generate_inclusion_proof_matches)) => {
             let directory = generate_inclusion_proof_matches
