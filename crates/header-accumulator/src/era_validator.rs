@@ -5,8 +5,9 @@ use std::{
 
 use decoder::{
     headers::HeaderRecordWithNumber,
-    sf::{self},
+    sf::{self, ethereum::r#type::v2::Block},
 };
+
 use ethportal_api::types::execution::accumulator::HeaderRecord;
 use primitive_types::{H256, U256};
 use tree_hash::TreeHash;
@@ -20,9 +21,20 @@ use crate::{
     },
 };
 
-/// Validates an era against a header accumulator.
+/// Validates many blocks against a header accumulator
+///
+/// It also keeps a record in `lockfile.json` of the validated epochs to skip them
+///
+/// # Arguments
+///
+/// * `blocks`-  A mutable vector of blocks. The Vector can be any size, however, it must be in chunks of 8192 blocks
+/// to function without error
+/// * `master_accumulator_file`- An instance of `MasterAccumulator` which is a file that maintains a record of historical epoch
+/// it is used to verify canonical-ness of headers accumulated from the `blocks`
+/// * `start_epoch` -  The epoch number that all the first 8192 blocks are set located
+/// * `end_epoch` -  The epoch number that all the last 8192 blocks are located
 pub fn era_validate(
-    blocks: Vec<sf::ethereum::r#type::v2::Block>,
+    mut blocks: Vec<sf::ethereum::r#type::v2::Block>,
     master_accumulator_file: Option<&String>,
     start_epoch: usize,
     end_epoch: Option<usize>,
@@ -63,8 +75,8 @@ pub fn era_validate(
             Err(_) => return Err(EraValidateError::EpochAccumulatorError),
         }
 
-        // let root = process_epoch_from_directory(epoch, directory, master_accumulator.clone())?;
-        let root = process_blocks(blocks.clone(), epoch, master_accumulator.clone())?;
+        let epoch_blocks: Vec<Block> = blocks.drain(0..MAX_EPOCH_SIZE).collect();
+        let root = process_blocks(epoch_blocks, epoch, master_accumulator.clone())?;
         validated_epochs.push(epoch);
         // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
         match store_last_state(Path::new("./lockfile.json"), LockEntry::new(&epoch, root)) {
@@ -76,15 +88,18 @@ pub fn era_validate(
     Ok(validated_epochs)
 }
 
+/// takes 8192 blocks and checks if they consist in a valid epoch
 fn process_blocks(
     mut blocks: Vec<sf::ethereum::r#type::v2::Block>,
     epoch: usize,
     master_accumulator: MasterAccumulator,
 ) -> Result<[u8; 32], EraValidateError> {
-    if epoch < FINAL_EPOCH {
-        blocks = blocks[0..MAX_EPOCH_SIZE].to_vec();
-    } else {
-        blocks = blocks[0..MERGE_BLOCK].to_vec();
+    if blocks.len() != MAX_EPOCH_SIZE {
+        Err(EraValidateError::InvalidEpochLength)?;
+    }
+
+    if epoch > FINAL_EPOCH {
+        blocks.retain(|block: &Block| block.number < MERGE_BLOCK);
     }
 
     let header_records = decode_header_records(blocks)?;

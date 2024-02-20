@@ -15,6 +15,7 @@ pub enum EraValidateError {
     MergeBlockNotFound,
     JsonError,
     TotalDifficultyDecodeError,
+    InvalidEpochLength,
 }
 #[derive(Debug)]
 pub enum SyncError {
@@ -57,6 +58,9 @@ impl fmt::Display for EraValidateError {
             }
             EraValidateError::TotalDifficultyDecodeError => {
                 write!(f, "Error decoding total difficulty")
+            }
+            EraValidateError::InvalidEpochLength => {
+                write!(f, "blocks in epoch must be exactly 8192 units")
             }
         }
     }
