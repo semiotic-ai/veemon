@@ -9,8 +9,8 @@ edition = "2021"
 clap = { version = "4.3.21", features = ["derive"] }
 decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", branch = "main" }
 env_logger = "0.11.2"
-# TODO: if the header accumulator changes to be public instead of internal set this to https
-header_accumulator = { git = "ssh://git@github.com/semiotic-ai/header_accumulator.git", branch = "main" }
+# TODO: if the header accumulator changes to be public instead of internal set this to https, and also change branch to main
+header_accumulator = { git = "ssh://git@github.com/semiotic-ai/header_accumulator.git", branch = "refactor" }
 trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0" }
 tree_hash = "0.5.2"
 

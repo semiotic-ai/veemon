@@ -1792,7 +1792,7 @@ dependencies = [
 [[package]]
 name = "header_accumulator"
 version = "0.1.0"
-source = "git+ssh://git@github.com/semiotic-ai/header_accumulator.git?branch=main#cf6e7b3796124b52e8e672bdadd3137a62306428"
+source = "git+ssh://git@github.com/semiotic-ai/header_accumulator.git?branch=refactor#6ee307c5137ca1a7e7c3d9c87eb1503212a79b12"
 dependencies = [
  "base64 0.21.7",
  "bincode",
