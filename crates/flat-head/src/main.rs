@@ -2,6 +2,7 @@ use std::env;
 
 use clap::{Parser, Subcommand};
 
+use flat_head::era_verifier::verify_eras;
 use log::info;
 
 #[derive(Parser)]
@@ -54,8 +55,6 @@ fn main() {
     }
     env_logger::init();
 
-    info!("Starting validation.");
-
     match &cli.command {
         Some(Commands::EraValidate {
             headers_dir: _,
@@ -68,12 +67,9 @@ fn main() {
             //     println!("Printing testing lists...");
             // }
             {
-                // let result = era_validator::era_validate(
-                //     input,
-                //     master_acc_file.as_ref(),
-                //     *start_epoch,
-                //     *end_epoch,
-                // );
+                info!("Starting validation.");
+                let result = verify_eras(input, master_acc_file.as_ref(), *start_epoch, *end_epoch);
+                log::info!("epochs validated: {:?}", result);
             }
         }
         None => {}

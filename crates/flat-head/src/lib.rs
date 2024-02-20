@@ -1,1 +1,1 @@
-pub mod era_validator;
+pub mod era_verifier;
