@@ -30,8 +30,6 @@ enum Commands {
         input: String,
         #[clap(long)]
         headers_dir: Option<String>,
-        #[clap(short, long)]
-        output: Option<String>,
     },
 }
 
