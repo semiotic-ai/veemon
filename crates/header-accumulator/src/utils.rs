@@ -9,7 +9,7 @@ use crate::errors::EraValidateError;
 
 pub const MAX_EPOCH_SIZE: usize = 8192;
 pub const FINAL_EPOCH: usize = 01896;
-pub const MERGE_BLOCK: usize = 15537394;
+pub const MERGE_BLOCK: u64 = 15537394;
 
 // TODO: move this function to flat_head
 pub fn extract_100_blocks(
