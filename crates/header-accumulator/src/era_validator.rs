@@ -83,7 +83,9 @@ pub fn era_validate(
         // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
         match store_last_state(Path::new("./lockfile.json"), LockEntry::new(&epoch, root)) {
             Ok(_) => {}
-            Err(_) => return Err(EraValidateError::EpochAccumulatorError),
+            Err(e) =>{ 
+                log::error!("error: {}", e);
+                return Err(EraValidateError::EpochAccumulatorError)},
         }
     }
 
