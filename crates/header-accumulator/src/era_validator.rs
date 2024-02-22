@@ -52,6 +52,7 @@ pub fn era_validate(
         Some(end_epoch) => end_epoch,
         None => start_epoch + 1,
     };
+
     // Ensure start epoch is less than end epoch
     if start_epoch >= end_epoch {
         Err(EraValidateError::EndEpochLessThanStartEpoch)?;
@@ -59,7 +60,7 @@ pub fn era_validate(
 
     let mut validated_epochs = Vec::new();
     for epoch in start_epoch..=end_epoch {
-        // checkes if epoch was already synced form lockfile.
+        // checks if epoch was already synced form lockfile.
         match check_sync_state(
             Path::new("./lockfile.json"),
             epoch.to_string(),
