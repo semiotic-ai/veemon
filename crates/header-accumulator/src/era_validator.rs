@@ -59,7 +59,7 @@ pub fn era_validate(
     }
 
     let mut validated_epochs = Vec::new();
-    for epoch in start_epoch..=end_epoch {
+    for epoch in start_epoch..end_epoch {
         // checks if epoch was already synced form lockfile.
         match check_sync_state(
             Path::new("./lockfile.json"),
