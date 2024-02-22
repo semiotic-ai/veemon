@@ -72,7 +72,9 @@ pub fn era_validate(
             Ok(false) => {
                 log::info!("syncing new epoch: {}", epoch);
             }
-            Err(_) => return Err(EraValidateError::EpochAccumulatorError),
+            Err(e) => return {
+                log::error!("error: {}", e);
+                Err(EraValidateError::EpochAccumulatorError)},
         }
 
         let epoch_blocks: Vec<Block> = blocks.drain(0..MAX_EPOCH_SIZE).collect();
