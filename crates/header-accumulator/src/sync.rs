@@ -107,6 +107,11 @@ pub fn check_sync_state(
     };
 
     if macc_hash != stored_hash {
+        log::error!(
+            "the valid hash is: {:?} and the provided hash was: {:?}",
+            macc_hash,
+            stored_hash
+        );
         return Err(Box::new(EraValidateError::EraAccumulatorMismatch));
     }
 

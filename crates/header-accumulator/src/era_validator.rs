@@ -72,20 +72,24 @@ pub fn era_validate(
             Ok(false) => {
                 log::info!("syncing new epoch: {}", epoch);
             }
-            Err(e) => return {
-                log::error!("error: {}", e);
-                Err(EraValidateError::EpochAccumulatorError)},
+            Err(e) => {
+                return {
+                    log::error!("error: {}", e);
+                    Err(EraValidateError::EpochAccumulatorError)
+                }
+            }
         }
 
         let epoch_blocks: Vec<Block> = blocks.drain(0..MAX_EPOCH_SIZE).collect();
-        let root = process_blocks(epoch_blocks, epoch, master_accumulator.clone())?;
+        let root = process_blocks(epoch_blocks, epoch, &master_accumulator)?;
         validated_epochs.push(epoch);
         // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
         match store_last_state(Path::new("./lockfile.json"), LockEntry::new(&epoch, root)) {
             Ok(_) => {}
-            Err(e) =>{ 
+            Err(e) => {
                 log::error!("error: {}", e);
-                return Err(EraValidateError::EpochAccumulatorError)},
+                return Err(EraValidateError::EpochAccumulatorError);
+            }
         }
     }
 
@@ -96,7 +100,7 @@ pub fn era_validate(
 fn process_blocks(
     mut blocks: Vec<sf::ethereum::r#type::v2::Block>,
     epoch: usize,
-    master_accumulator: MasterAccumulator,
+    master_accumulator: &MasterAccumulator,
 ) -> Result<[u8; 32], EraValidateError> {
     if blocks.len() != MAX_EPOCH_SIZE {
         Err(EraValidateError::InvalidEpochLength)?;
@@ -111,7 +115,13 @@ fn process_blocks(
 
     // Return an error if the epoch accumulator does not match the master accumulator
     let root: [u8; 32] = epoch_accumulator.tree_hash_root().0;
-    if root != master_accumulator.historical_epochs[epoch].0 {
+    let valid_root = master_accumulator.historical_epochs[epoch].0;
+    if root != valid_root {
+        log::error!(
+            "the valid hash is: {:?} and the provided hash was: {:?}",
+            valid_root,
+            root
+        );
         Err(EraValidateError::EraAccumulatorMismatch)?;
     }
 
