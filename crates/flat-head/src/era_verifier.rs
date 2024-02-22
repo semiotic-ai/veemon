@@ -15,16 +15,8 @@ pub fn verify_eras(
 ) -> Result<Vec<usize>, EraValidateError> {
     let mut validated_epochs = Vec::new();
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
-        log::info!("epoch: {}", epoch);
         let blocks = get_blocks_from_dir(epoch, directory)?;
-        log::info!(
-            "first block: {}, last block: {}",
-            blocks[0].number,
-            blocks[blocks.len() - 1].number
-        );
-
         let root = era_validate(blocks, master_acc_file, epoch, Some(epoch + 1))?;
-
         validated_epochs.extend(root);
     }
 
