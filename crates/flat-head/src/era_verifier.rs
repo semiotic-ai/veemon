@@ -14,10 +14,17 @@ pub fn verify_eras(
     end_epoch: Option<usize>,
 ) -> Result<Vec<usize>, EraValidateError> {
     let mut validated_epochs = Vec::new();
-
-    for epoch in start_epoch..end_epoch.unwrap_or(start_epoch + 1) {
+    for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
+        log::info!("epoch: {}", epoch);
         let blocks = get_blocks_from_dir(epoch, directory)?;
+        log::info!(
+            "first block: {}, last block: {}",
+            blocks[0].number,
+            blocks[blocks.len() - 1].number
+        );
+
         let root = era_validate(blocks, master_acc_file, epoch, Some(epoch + 1))?;
+
         validated_epochs.extend(root);
     }
 
@@ -48,18 +55,19 @@ fn extract_100s_blocks(
     // So we need to find the 100 block file that contains the start block and the 100 block file that contains the end block
     let start_100_block = (start_block / 100) * 100;
     let end_100_block = (((end_block as f32) / 100.0).ceil() as usize) * 100;
+
     let mut blocks: Vec<Block> = Vec::new();
     for block_number in (start_100_block..end_100_block).step_by(100) {
         let block_file_name = directory.to_owned() + &format!("/{:010}.dbin", block_number);
 
-        let block = match decode_flat_files(block_file_name, None, None) {
-            Ok(block) => block,
+        let decoded_blocks = match decode_flat_files(block_file_name, None, None) {
+            Ok(blocks) => blocks,
             Err(e) => {
                 log::error!("Error decoding flat files: {:?}", e);
                 return Err(EraValidateError::FlatFileDecodeError);
             }
         };
-        blocks.extend(block.clone());
+        blocks.extend(decoded_blocks);
     }
 
     // Return only the requested blocks

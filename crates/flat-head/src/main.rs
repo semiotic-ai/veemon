@@ -3,7 +3,6 @@ use std::env;
 use clap::{Parser, Subcommand};
 
 use flat_head::era_verifier::verify_eras;
-use log::info;
 
 #[derive(Parser)]
 #[command(version, about = "A flat file decoder and validator", long_about = None)]
@@ -67,7 +66,7 @@ fn main() {
             //     println!("Printing testing lists...");
             // }
             {
-                info!("Starting validation.");
+                log::info!("Starting validation.");
                 let result = verify_eras(input, master_acc_file.as_ref(), *start_epoch, *end_epoch);
                 log::info!("epochs validated: {:?}", result);
             }
