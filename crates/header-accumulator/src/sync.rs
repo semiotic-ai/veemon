@@ -93,7 +93,7 @@ pub fn check_sync_state(
 
     let stored_hash = json_lock
         .entries
-        .get("0")
+        .get(&epoch)
         .ok_or(SyncError::LockfileReadError)?;
 
     let stored_hash = BASE64_STANDARD
