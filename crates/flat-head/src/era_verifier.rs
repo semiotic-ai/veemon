@@ -48,12 +48,17 @@ fn extract_100s_blocks(
     // So we need to find the 100 block file that contains the start block and the 100 block file that contains the end block
     let start_100_block = (start_block / 100) * 100;
     let end_100_block = (((end_block as f32) / 100.0).ceil() as usize) * 100;
-
     let mut blocks: Vec<Block> = Vec::new();
     for block_number in (start_100_block..end_100_block).step_by(100) {
         let block_file_name = directory.to_owned() + &format!("/{:010}.dbin", block_number);
-        let block = &decode_flat_files(block_file_name, None, None)
-            .map_err(|_| EraValidateError::FlatFileDecodeError)?;
+
+        let block = match decode_flat_files(block_file_name, None, None) {
+            Ok(block) => block,
+            Err(e) => {
+                log::error!("Error decoding flat files: {:?}", e);
+                return Err(EraValidateError::FlatFileDecodeError);
+            }
+        };
         blocks.extend(block.clone());
     }
 
