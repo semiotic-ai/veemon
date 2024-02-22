@@ -1,4 +1,5 @@
 use base64::prelude::*;
+use revm_primitives::bitvec::access;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
@@ -106,6 +107,11 @@ pub fn check_sync_state(
         Err(_) => panic!("Decoded hash does not fit into a 32-byte array"),
     };
 
+    println!(
+        "stored hash: {:?}, ac hash: {:?}",
+        stored_hash[0], macc_hash[0]
+    );
+
     if macc_hash != stored_hash {
         log::error!(
             "the valid hash is: {:?} and the provided hash was: {:?}",
@@ -161,6 +167,7 @@ mod tests {
 
         let mock_json = r#"{
             "entries": {
+              "1": "pTZOmpvFE8RgHw1i5rRtve3zIAu/rlTWNQ9G8segGTg=",
               "0": "XsH/uMOxRvQmBsdM7Zc9wW7FoQfANFhYw0P8lHgLQhg="
             }
           }"#;
@@ -172,29 +179,31 @@ mod tests {
 
         // Test case where epoch exists and hashes match
         let epoch = "0".to_string();
-        assert!(check_sync_state(
-            &file_path,
-            epoch,
-            mac_file.historical_epochs[0].0
-        )?);
+        assert_eq!(
+            check_sync_state(&file_path, epoch, mac_file.historical_epochs[0].0).unwrap(),
+            true
+        );
 
         // Test case where epoch does not exist
-        let epoch = "1".to_string();
-        assert!(!check_sync_state(
-            &file_path,
-            epoch.clone(),
-            mac_file.historical_epochs[0].0
-        )?);
+        let epoch = "2".to_string();
+        let result =
+            check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[2].0).unwrap();
+        assert_eq!(result, false);
 
-        // test when hashes differ but lock is present
+        // // test when hashes differ but lock is present
         let epoch = "0".to_string();
         let result = check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[1].0)
             .map_err(|error| error.to_string());
-
         assert_eq!(
             result.unwrap_err(),
             EraValidateError::EraAccumulatorMismatch.to_string()
         );
+
+        // test case for another epoch hash
+        let epoch = "1".to_string();
+        let result = check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[1].0)
+            .map_err(|error| error.to_string());
+        assert_eq!(result.unwrap(), true);
 
         Ok(())
     }
