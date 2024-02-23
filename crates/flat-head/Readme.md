@@ -58,3 +58,14 @@ cargo run --bin fetch-gcloud --bucket --fist-epoch 0 --end-epoch 1
 Our goal is to provide The Graph's Indexers the tools to trustlessly share flat files with cryptographic guarantees 
 that the data in the flat files is part of the canonical history of the Ethereum blockchain, 
 enabling Indexers to quickly sync all historical data and begin serving data with minimal effort.
+
+
+## Integration tests
+
+running some commands to fetch flat files from server might require an instance with flat files running:
+
+```
+docker run --restart always -v /absolute/path/to/flat_files/:/var/lib/dav \
+  -e AUTH_TYPE=Digest -e USERNAME=alice -e PASSWORD=secret1234 -e ANONYMOUS_METHODS=GET,POST,OPTIONS,PROPFIND \
+  --publish 80:80 -d bytemark/webdav
+```
