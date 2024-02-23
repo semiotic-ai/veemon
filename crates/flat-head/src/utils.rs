@@ -14,7 +14,7 @@ pub fn gen_dbin_filenames(start: u64, end: u64) -> Vec<String> {
     //TODO: count for the FINAL_EPOCH files, which might not be eaxctly 100 blocks named
 
     for number in (start_blocks..=end_blocks).step_by(100) {
-        let filename = format!("{:010}.dbin.zst", number);
+        let filename = format!("{:010}.dbin", number);
         filenames.push(filename);
     }
 
