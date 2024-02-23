@@ -31,17 +31,17 @@ cargo run --bin flat_head --  -d  era-validate --input  <folder>  --start-epoch 
 
 Flat files can be compressed using Zstandard (zstd). To decompress, use `zstd -d *.zst` in your flat files folder
 
-2. To fetch flat files from a FTP server and validate each file as they arrive:
+2. To fetch flat files from a Webdav server and validate each file as they arrive:
 
 ```
-cargo run --bin fetch-ftp --server <server> --fist-epoch 0 --end-epoch 1
+cargo run --bin fetch-webdav -- --url <server-url> -s 0 -e 1
 ```
 
 This command will skip the files that were already verified and written into `lockfile.json`.
 It stops abruptly if verification of any file fails. If files are compressed as `.zst` it is also capable
 of decompressing them.
 
-3. To fetch flat files from a gcloud bucket, and validate each file as they arreive:
+3. To fetch flat files from a gcloud bucket, and validate each file as they arrive:
 
 ```
 cargo run --bin fetch-gcloud --bucket --fist-epoch 0 --end-epoch 1
@@ -65,7 +65,9 @@ enabling Indexers to quickly sync all historical data and begin serving data wit
 running some commands to fetch flat files from server might require an instance with flat files running:
 
 ```
-docker run --restart always -v /absolute/path/to/flat_files/:/var/lib/dav \
+docker run --restart always -v /webdav/:/var/lib/dav \
   -e AUTH_TYPE=Digest -e USERNAME=alice -e PASSWORD=secret1234 -e ANONYMOUS_METHODS=GET,POST,OPTIONS,PROPFIND \
   --publish 80:80 -d bytemark/webdav
 ```
+
+Then files must be fed into the webdav folder, either via interacting with the server directly or storing them into the volume.
