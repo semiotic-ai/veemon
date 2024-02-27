@@ -1,3 +1,4 @@
 /target
 lockfile.json
 flat_files
+.env
