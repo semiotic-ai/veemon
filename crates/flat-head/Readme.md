@@ -41,7 +41,7 @@ This command will skip the files that were already verified and written into `lo
 It stops abruptly if verification of any file fails. If files are compressed as `.zst` it is also capable
 of decompressing them.
 
-3. To fetch flat files from a gcloud bucket, and validate each file as they arrive:
+3. To fetch flat files from a gcloud bucket, and validate each epoch as they arrive:
 
 ```
 cargo run --bin fetch-gcloud --bucket --fist-epoch 0 --end-epoch 1
@@ -49,8 +49,14 @@ cargo run --bin fetch-gcloud --bucket --fist-epoch 0 --end-epoch 1
 
 **NOTICE: fetching from gcloud has a price ($0.10/GB currently) so be careful when using this method for many files**
 
+4. To fetch flat files from a s3 bucket and validate each epoch as they arrive:
 
-<!-- 4. TODO: fetch from a webdav server -->
+```
+❯ cargo run --bin fetch-s3  --  -s 0 -e 2  --endpoint http://localhost:9000
+```
+
+An optional endpoint can be provided if running in a local environment or in another s3 compatible API.
+
 
 
 ## Goals
@@ -62,6 +68,8 @@ enabling Indexers to quickly sync all historical data and begin serving data wit
 
 ## Integration tests
 
+### with webdav
+
 running some commands to fetch flat files from server might require an instance with flat files running:
 
 ```
@@ -71,3 +79,7 @@ docker run --restart always -v /webdav/:/var/lib/dav \
 ```
 
 Then files must be fed into the webdav folder, either via interacting with the server directly or storing them into the volume.
+
+### With S3
+
+There is a minio `docker-compose` script which can be used to run a local s3 instance with [minio](https://github.com/minio/minio?tab=readme-ov-file) for development, with a mock access id and key and a bucket for development on `/dev` folder. Run `docker-compose up -d` to set it up, clone the `minio.env` to the root folder as `.env` and populate the bucket with flat files to test.
