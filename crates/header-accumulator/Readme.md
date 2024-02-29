@@ -15,12 +15,32 @@ against header accumulators. This process is used to verify the authenticity of 
 
 ### Commands
 
+- `era_validate`: Validates entire ERAs of flat files against Header Accumulators. Use this command to ensure data integrity across different ERAs.
+
+- `generate_inclusion_proof`: Generates inclusion proofs for a range of blocks. This is useful for verifying the presence of specific blocks within a dataset.
+
+- `verify_inclusion_proof`: Verifies inclusion proofs for a range of blocks. Use it to confirm the accuracy of inclusion proofs you have.
+
 
 ### Options
 
+- `-h, --help`: Display a help message that includes usage, commands, and options.
+
+<!-- ## Usage Examples
+
+1.  To validate a stream of epochs, arriving as blocks from flat files:
+
+```
+❯ cargo run era_validate stream 
+```
+
+Then feed the files into the stdin. 
+
+If there are are multiple files to feed, 
 
 
-## Usage Examples
+2. 
+ -->
 
 
 

@@ -1,5 +1,4 @@
 use base64::prelude::*;
-use revm_primitives::bitvec::access;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
