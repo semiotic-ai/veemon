@@ -3,6 +3,8 @@ use std::{
     path::Path,
 };
 
+use std::error::Error;
+
 use decoder::{
     headers::HeaderRecordWithNumber,
     sf::{self, ethereum::r#type::v2::Block},
@@ -140,6 +142,8 @@ pub fn stream_validation<R: Read + BufRead, W: StdWrite>(
 
     while let Ok(hrwn) = receive_message(&mut reader) {
         buf.clear();
+
+        log::info!("{:?}", hrwn.block_hash);
         if header_records.len() == 0 {
             if hrwn.block_number % MAX_EPOCH_SIZE as u64 == 0 {
                 let epoch = hrwn.block_number as usize / MAX_EPOCH_SIZE;
@@ -170,11 +174,12 @@ pub fn stream_validation<R: Read + BufRead, W: StdWrite>(
             header_records.clear();
         }
     }
+
     log::info!("Read {} block headers from stdin", header_records.len());
     Ok(())
 }
 
-fn receive_message<R: Read>(reader: &mut R) -> Result<HeaderRecordWithNumber, bincode::Error> {
+fn receive_message<R: Read>(reader: &mut R) -> Result<HeaderRecordWithNumber, Box<dyn Error>> {
     let mut size_buf = [0u8; 4];
     if reader.read_exact(&mut size_buf).is_err() {
         return Err(Box::new(bincode::ErrorKind::Io(std::io::Error::new(
@@ -182,9 +187,37 @@ fn receive_message<R: Read>(reader: &mut R) -> Result<HeaderRecordWithNumber, bi
             "Failed to read size",
         ))));
     }
+
     let size = u32::from_be_bytes(size_buf) as usize;
+    println!("size: {:?}", size);
 
     let mut buf = vec![0u8; size];
     reader.read_exact(&mut buf)?;
-    bincode::deserialize(&buf)
+    let hrwn: HeaderRecordWithNumber = bincode::deserialize(&buf)?;
+
+    println!(" decoding {:?}", hrwn);
+    Ok(hrwn)
+}
+
+// Test function
+#[cfg(test)]
+mod tests {
+    use std::{fs::File, io, path::PathBuf};
+
+    use super::*;
+
+    #[test]
+    fn test_receive_message_from_file() -> Result<(), Box<dyn Error>> {
+        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path.push("tests/ethereum_firehose_first_8200/0000000000.dbin"); // Adjust the path as needed
+
+        let file = File::open(path)?;
+        let mut reader = io::BufReader::new(file);
+
+        let result = receive_message(&mut reader)?;
+
+        println!("block: {:?}", result.block_hash);
+
+        Ok(())
+    }
 }
