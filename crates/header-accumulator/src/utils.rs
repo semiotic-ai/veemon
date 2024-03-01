@@ -34,22 +34,13 @@ pub fn extract_100_blocks(
     Ok(blocks[start_block - start_100_block..end_block - start_100_block].to_vec())
 }
 
-pub fn decode_header_records(blocks: Vec<Block>) -> Result<Vec<HeaderRecord>, EraValidateError> {
+pub fn decode_header_records(headers: Vec<Header>) -> Result<Vec<HeaderRecord>, EraValidateError> {
     let mut header_records = Vec::<HeaderRecord>::new();
-    for block in blocks {
+    for header in headers {
         let header_record = HeaderRecord {
-            block_hash: Hash256::from_slice(block.hash.as_slice()),
-            total_difficulty: EthereumU256::try_from(
-                block
-                    .header
-                    .ok_or(EraValidateError::HeaderDecodeError)?
-                    .total_difficulty
-                    .as_ref()
-                    .ok_or(EraValidateError::HeaderDecodeError)?
-                    .bytes
-                    .as_slice(),
-            )
-            .map_err(|_| EraValidateError::HeaderDecodeError)?,
+            block_hash: header.hash(),
+            total_difficulty: EthereumU256::try_from(header.difficulty)
+                .map_err(|_| EraValidateError::HeaderDecodeError)?,
         };
         header_records.push(header_record);
     }
