@@ -1,7 +1,5 @@
 use clap::{Arg, Command, Parser, Subcommand};
-use header_accumulator::{
-    era_validator::stream_validation, errors::EraValidateError, inclusion_proof,
-};
+use header_accumulator::{errors::EraValidateError, inclusion_proof};
 use primitive_types::H256;
 use std::{io::BufReader, process};
 use trin_validation::accumulator::MasterAccumulator;
@@ -154,8 +152,8 @@ fn main() {
                 };
                 let reader = BufReader::with_capacity(1 << 32, std::io::stdin().lock());
                 let writer = std::io::stdout();
-                stream_validation(master_accumulator.clone(), reader, writer)
-                    .expect("Validation Error");
+                // stream_validation(master_accumulator.clone(), reader, writer)
+                //     .expect("Validation Error");
                 process::exit(0);
             }
             _ => {}

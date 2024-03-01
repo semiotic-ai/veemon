@@ -1,10 +1,16 @@
 use crate::{
     errors::EraValidateError,
+    types::ExtHeaderRecord,
     utils::{
-        compute_epoch_accumulator, decode_header_records, extract_100_blocks, header_from_block,
+        compute_epoch_accumulator, decode_header_record, decode_header_records, extract_100_blocks,
+        header_from_block,
     },
 };
-use ethportal_api::{AccumulatorProof, BlockHeaderProof, HeaderWithProof};
+
+use ethportal_api::{
+    types::execution::accumulator::HeaderRecord, AccumulatorProof, BlockHeaderProof, Header,
+    HeaderWithProof,
+};
 use primitive_types::H256;
 use trin_validation::accumulator::MasterAccumulator;
 
@@ -34,13 +40,20 @@ pub fn generate_inclusion_proof(
 
         let blocks = extract_100_blocks(directory, start_block, end_block)?;
 
-        let mut blocks_headers = Vec::new();
-        for block in blocks.clone() {
+        // TODO: find a way to not have both header_records and tmp_headers at the same time
+        let mut header_records: Vec<HeaderRecord> = Vec::new();
+        let mut tmp_headers: Vec<Header> = Vec::new();
+        for block in &blocks {
+            // Iterate over references to the blocks
             let header = header_from_block(block)?;
-            blocks_headers.push(header.clone());
+            tmp_headers.push(header.clone()); // Assuming clone is needed; if `header` implements Copy, clone may not be necessary
+
+            let header = decode_header_record(block)?; // Continue borrowing `block`
+            let header_record: HeaderRecord = HeaderRecord::from(header);
+            header_records.push(header_record);
         }
-        let header_records = decode_header_records(blocks)?;
-        headers.extend(blocks_headers);
+
+        headers.extend(tmp_headers);
         epoch_accumulators.push(compute_epoch_accumulator(&header_records)?);
     }
 
@@ -84,7 +97,7 @@ pub fn verify_inclusion_proof(
             proof: inclusion_proof[block_idx].clone(),
         });
         let hwp = HeaderWithProof {
-            header: header_from_block(blocks[block_idx].clone())?,
+            header: header_from_block(&blocks[block_idx].clone())?,
             proof: bhp,
         };
         master_accumulator
