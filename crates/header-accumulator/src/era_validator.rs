@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use ethportal_api::{consensus::header, types::execution::accumulator::HeaderRecord};
+use ethportal_api::types::execution::accumulator::HeaderRecord;
 
 use tree_hash::TreeHash;
 use trin_validation::accumulator::MasterAccumulator;
@@ -12,15 +12,15 @@ use crate::{
     utils::{compute_epoch_accumulator, FINAL_EPOCH, MAX_EPOCH_SIZE, MERGE_BLOCK},
 };
 
-/// Validates many blocks against a header accumulator
+/// Validates many headers against a header accumulator
 ///
 /// It also keeps a record in `lockfile.json` of the validated epochs to skip them
 ///
 /// # Arguments
 ///
-/// * `blocks`-  A mutable vector of blocks. The Vector can be any size, however, it must be in chunks of 8192 blocks
+/// * `headers`-  A mutable vector of [`ExtHeaderRecord`]. The Vector can be any size, however, it must be in chunks of 8192 blocks to work properly
 /// to function without error
-/// * `master_accumulator_file`- An instance of `MasterAccumulator` which is a file that maintains a record of historical epoch
+/// * `master_accumulator_file`- An instance of [`MasterAccumulator`] which is a file that maintains a record of historical epoch
 /// it is used to verify canonical-ness of headers accumulated from the `blocks`
 /// * `start_epoch` -  The epoch number that all the first 8192 blocks are set located
 /// * `end_epoch` -  The epoch number that all the last 8192 blocks are located
