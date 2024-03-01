@@ -1,9 +1,7 @@
 use crate::{
     errors::EraValidateError,
-    types::ExtHeaderRecord,
     utils::{
-        compute_epoch_accumulator, decode_header_record, decode_header_records, extract_100_blocks,
-        header_from_block,
+        compute_epoch_accumulator, decode_header_record, extract_100_blocks, header_from_block,
     },
 };
 
@@ -46,9 +44,8 @@ pub fn generate_inclusion_proof(
         for block in &blocks {
             // Iterate over references to the blocks
             let header = header_from_block(block)?;
-            tmp_headers.push(header.clone()); // Assuming clone is needed; if `header` implements Copy, clone may not be necessary
-
-            let header = decode_header_record(block)?; // Continue borrowing `block`
+            tmp_headers.push(header.clone());
+            let header = decode_header_record(block)?;
             let header_record: HeaderRecord = HeaderRecord::from(header);
             header_records.push(header_record);
         }
