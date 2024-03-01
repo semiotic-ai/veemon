@@ -6,6 +6,7 @@ use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecor
 use ethportal_api::Header;
 
 use crate::errors::EraValidateError;
+use crate::types::ExtHeaderRecord;
 
 pub const MAX_EPOCH_SIZE: usize = 8192;
 pub const FINAL_EPOCH: usize = 01896;
@@ -34,13 +35,44 @@ pub fn extract_100_blocks(
     Ok(blocks[start_block - start_100_block..end_block - start_100_block].to_vec())
 }
 
-pub fn decode_header_records(headers: Vec<Header>) -> Result<Vec<HeaderRecord>, EraValidateError> {
-    let mut header_records = Vec::<HeaderRecord>::new();
-    for header in headers {
-        let header_record = HeaderRecord {
-            block_hash: header.hash(),
-            total_difficulty: EthereumU256::try_from(header.difficulty)
-                .map_err(|_| EraValidateError::HeaderDecodeError)?,
+pub fn decode_header_record(block: &Block) -> Result<ExtHeaderRecord, EraValidateError> {
+    let header_record = ExtHeaderRecord {
+        block_number: block.number,
+        block_hash: Hash256::from_slice(&block.hash),
+        total_difficulty: EthereumU256::try_from(
+            block
+                .header
+                .as_ref() // Use as_ref()
+                .ok_or(EraValidateError::HeaderDecodeError)?
+                .total_difficulty
+                .as_ref()
+                .ok_or(EraValidateError::HeaderDecodeError)?
+                .bytes
+                .as_slice(),
+        )
+        .map_err(|_| EraValidateError::HeaderDecodeError)?,
+    };
+
+    Ok(header_record)
+}
+
+pub fn decode_header_records(blocks: Vec<Block>) -> Result<Vec<ExtHeaderRecord>, EraValidateError> {
+    let mut header_records = Vec::<ExtHeaderRecord>::new();
+    for block in blocks {
+        let header_record = ExtHeaderRecord {
+            block_number: block.number,
+            block_hash: Hash256::from_slice(block.hash.as_slice()),
+            total_difficulty: EthereumU256::try_from(
+                block
+                    .header
+                    .ok_or(EraValidateError::HeaderDecodeError)?
+                    .total_difficulty
+                    .as_ref()
+                    .ok_or(EraValidateError::HeaderDecodeError)?
+                    .bytes
+                    .as_slice(),
+            )
+            .map_err(|_| EraValidateError::HeaderDecodeError)?,
         };
         header_records.push(header_record);
     }
@@ -87,8 +119,11 @@ pub fn compute_epoch_accumulator(
     Ok(epoch_accumulator)
 }
 
-pub fn header_from_block(block: Block) -> Result<Header, EraValidateError> {
-    let block_header = block.header.ok_or(EraValidateError::HeaderDecodeError)?;
+pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
+    let block_header = block
+        .header
+        .as_ref()
+        .ok_or(EraValidateError::HeaderDecodeError)?;
     let parent_hash = Hash256::from_slice(block_header.parent_hash.as_slice());
     let uncles_hash = Hash256::from_slice(block_header.uncle_hash.as_slice());
     let author = H160::from_slice(block_header.coinbase.as_slice());
