@@ -51,7 +51,7 @@ async fn main() {
                 blocks.extend(new_blocks);
                 // Handle the successfully decoded blocks
             }
-            Err(e) => {
+            Err(_e) => {
                 // Handle the decoding error
             }
         }

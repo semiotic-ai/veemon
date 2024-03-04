@@ -2,7 +2,7 @@ use decoder::{decode_flat_files, sf::ethereum::r#type::v2::Block};
 use header_accumulator::{era_validator::era_validate, errors::EraValidateError};
 
 pub const MAX_EPOCH_SIZE: usize = 8192;
-pub const FINAL_EPOCH: usize = 01896;
+pub const FINAL_EPOCH: usize = 1896;
 pub const MERGE_BLOCK: usize = 15537394;
 
 /// verifies flat flies stored in directory against a header accumulator
@@ -20,7 +20,7 @@ pub fn verify_eras(
         validated_epochs.extend(root);
     }
 
-    return Ok(validated_epochs);
+    Ok(validated_epochs)
 }
 
 fn get_blocks_from_dir(epoch: usize, directory: &String) -> Result<Vec<Block>, EraValidateError> {
