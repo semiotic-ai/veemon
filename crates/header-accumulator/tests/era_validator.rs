@@ -25,7 +25,7 @@ fn test_era_validate() -> Result<(), EraValidateError> {
     assert_eq!(headers.len(), 8300);
     assert_eq!(headers[0].block_number, 0);
 
-    let result = era_validate(headers, None, 0, None)?;
+    let result = era_validate(headers, None, 0, None, Some(false))?;
 
     assert!(result.contains(&0), "The vector does not contain 0");
     Ok(())
