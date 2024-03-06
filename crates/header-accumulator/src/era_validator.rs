@@ -24,7 +24,7 @@ use crate::{
 /// it is used to verify canonical-ness of headers accumulated from the `blocks`
 /// * `start_epoch` -  The epoch number that all the first 8192 blocks are set located
 /// * `end_epoch` -  The epoch number that all the last 8192 blocks are located
-/// * `use_lock` - if true, uses the lockfile to store already processed blocks. True by default
+/// * `use_lock` - when set to true, uses the lockfile to store already processed blocks. True by default
 pub fn era_validate(
     mut headers: Vec<ExtHeaderRecord>,
     master_accumulator_file: Option<&String>,
