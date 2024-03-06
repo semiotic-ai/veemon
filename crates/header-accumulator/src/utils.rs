@@ -51,6 +51,7 @@ pub fn decode_header_record(block: &Block) -> Result<ExtHeaderRecord, EraValidat
                 .as_slice(),
         )
         .map_err(|_| EraValidateError::HeaderDecodeError)?,
+        full_header: None,
     };
 
     Ok(header_record)
@@ -60,6 +61,7 @@ pub fn decode_header_records(blocks: Vec<Block>) -> Result<Vec<ExtHeaderRecord>,
     let mut header_records = Vec::<ExtHeaderRecord>::new();
     for block in blocks {
         let header_record = ExtHeaderRecord {
+            full_header: Some(header_from_block(&block).unwrap()),
             block_number: block.number,
             block_hash: Hash256::from_slice(block.hash.as_slice()),
             total_difficulty: EthereumU256::try_from(

@@ -1,11 +1,12 @@
 use ethereum_types::{H256, U256};
-use ethportal_api::types::execution::accumulator::HeaderRecord;
+use ethportal_api::{types::execution::accumulator::HeaderRecord, Header};
 
 #[derive(Clone)]
 pub struct ExtHeaderRecord {
     pub block_hash: H256,
     pub total_difficulty: U256,
     pub block_number: u64,
+    pub full_header: Option<Header>,
 }
 
 impl From<ExtHeaderRecord> for HeaderRecord {
@@ -23,6 +24,7 @@ impl From<HeaderRecord> for ExtHeaderRecord {
             block_hash: hr.block_hash,
             total_difficulty: hr.total_difficulty,
             block_number: 0, // Default value or decide based on context
+            full_header: None,
         }
     }
 }
