@@ -6,17 +6,19 @@ mod signature;
 mod transaction;
 mod transaction_signed;
 
-use crate::sf::ethereum::r#type::v2::{BigInt, Block};
 use crate::transactions::error::TransactionError;
 use reth_primitives::proofs::calculate_transaction_root;
 use reth_primitives::{hex, TransactionSigned, U128};
+use sf_protos::ethereum::r#type::v2::{BigInt, Block};
 use std::u128;
+
+use self::transaction_signed::trace_to_signed;
 
 pub fn check_transaction_root(block: &Block) -> Result<(), TransactionError> {
     let mut transactions: Vec<TransactionSigned> = Vec::new();
 
     for trace in &block.transaction_traces {
-        transactions.push(trace.try_into()?);
+        transactions.push(trace_to_signed(trace)?);
     }
 
     let tx_root = calculate_transaction_root(&transactions);
@@ -36,33 +38,31 @@ pub fn check_transaction_root(block: &Block) -> Result<(), TransactionError> {
     Ok(())
 }
 
-impl TryFrom<BigInt> for u128 {
-    type Error = TransactionError;
-
-    fn try_from(value: BigInt) -> Result<Self, Self::Error> {
-        let slice = value.bytes.as_slice();
-        let n = U128::try_from_be_slice(slice)
-            .ok_or(TransactionError::InvalidBigInt(hex::encode(slice)))?;
-        Ok(u128::from_le_bytes(n.to_le_bytes()))
-    }
+pub fn bigint_to_u128(value: BigInt) -> Result<u128, TransactionError> {
+    let slice = value.bytes.as_slice();
+    let n = U128::try_from_be_slice(slice)
+        .ok_or(TransactionError::InvalidBigInt(hex::encode(slice)))?;
+    Ok(u128::from_le_bytes(n.to_le_bytes()))
 }
 
 #[cfg(test)]
 mod tests {
     use crate::dbin::DbinFile;
-    use crate::sf::bstream::v1::Block as BstreamBlock;
-    use crate::sf::ethereum::r#type::v2::transaction_trace::Type;
-    use crate::sf::ethereum::r#type::v2::{BigInt, Block};
+    use crate::transactions::bigint_to_u128;
+    use crate::transactions::transaction_signed::trace_to_signed;
     use prost::Message;
-    use reth_primitives::{
-        Address, Bytes, TransactionKind, TransactionSigned, TxHash, TxType, U256,
-    };
+    use reth_primitives::{Address, Bytes, TransactionKind, TxHash, TxType, U256};
+    use sf_protos::bstream::v1::Block as BstreamBlock;
+    use sf_protos::ethereum::r#type::v2::transaction_trace::Type;
+    use sf_protos::ethereum::r#type::v2::{BigInt, Block};
     use std::fs::File;
     use std::io::BufReader;
     use std::str::FromStr;
 
+    use super::error::TransactionError;
+
     #[test]
-    fn test_bigint_to_u128() {
+    fn test_bigint_to_u128() -> Result<(), TransactionError> {
         let n_u128: u128 = 12345678910;
         let n_bytes: [u8; 16] = n_u128.to_be_bytes();
 
@@ -70,8 +70,9 @@ mod tests {
             bytes: n_bytes.to_vec(),
         };
 
-        let new_u128: u128 = bigint.try_into().unwrap();
+        let new_u128: u128 = bigint_to_u128(bigint)?;
         assert_eq!(new_u128, n_u128);
+        Ok(())
     }
 
     #[test]
@@ -88,7 +89,7 @@ mod tests {
 
         let trace = block.transaction_traces.first().unwrap();
 
-        let transaction = TransactionSigned::try_from(trace).unwrap();
+        let transaction = trace_to_signed(trace).unwrap();
 
         let tx_details = transaction.transaction;
 
@@ -160,7 +161,7 @@ mod tests {
             .next()
             .unwrap();
 
-        let transaction = TransactionSigned::try_from(trace).unwrap();
+        let transaction = trace_to_signed(trace).unwrap();
 
         let signature = transaction.signature;
 
@@ -206,7 +207,7 @@ mod tests {
             .next()
             .unwrap();
 
-        let transaction = TransactionSigned::try_from(trace).unwrap();
+        let transaction = trace_to_signed(trace).unwrap();
 
         let tx_details = transaction.transaction;
 

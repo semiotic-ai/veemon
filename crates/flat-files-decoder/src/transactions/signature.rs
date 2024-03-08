@@ -1,5 +1,5 @@
-use crate::sf::ethereum::r#type::v2::TransactionTrace;
 use reth_primitives::{hex, Signature, U256};
+use sf_protos::ethereum::r#type::v2::TransactionTrace;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -12,28 +12,24 @@ pub enum InvalidSignatureError {
     V(u8),
 }
 
-impl TryFrom<&TransactionTrace> for Signature {
-    type Error = InvalidSignatureError;
+pub fn signature_from_trace(trace: &TransactionTrace) -> Result<Signature, InvalidSignatureError> {
+    let r_bytes: [u8; 32] = trace
+        .r
+        .as_slice()
+        .try_into()
+        .map_err(|_| InvalidSignatureError::R(hex::encode(&trace.r)))?;
+    let r = U256::from_be_bytes(r_bytes);
 
-    fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
-        let r_bytes: [u8; 32] = trace
-            .r
-            .as_slice()
-            .try_into()
-            .map_err(|_| InvalidSignatureError::R(hex::encode(&trace.r)))?;
-        let r = U256::from_be_bytes(r_bytes);
+    let s_bytes: [u8; 32] = trace
+        .s
+        .as_slice()
+        .try_into()
+        .map_err(|_| InvalidSignatureError::S(hex::encode(&trace.s)))?;
+    let s = U256::from_be_bytes(s_bytes);
 
-        let s_bytes: [u8; 32] = trace
-            .s
-            .as_slice()
-            .try_into()
-            .map_err(|_| InvalidSignatureError::S(hex::encode(&trace.s)))?;
-        let s = U256::from_be_bytes(s_bytes);
+    let odd_y_parity = get_y_parity(trace)?;
 
-        let odd_y_parity = get_y_parity(trace)?;
-
-        Ok(Signature { r, s, odd_y_parity })
-    }
+    Ok(Signature { r, s, odd_y_parity })
 }
 
 fn get_y_parity(trace: &TransactionTrace) -> Result<bool, InvalidSignatureError> {

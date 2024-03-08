@@ -1,9 +1,9 @@
 pub mod error;
 
 use crate::headers::error::BlockHeaderError;
-use crate::sf::ethereum::r#type::v2::{Block, BlockHeader};
 use reth_primitives::H256;
 use serde::{Deserialize, Serialize};
+use sf_protos::ethereum::r#type::v2::{Block, BlockHeader};
 use std::fs::File;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
