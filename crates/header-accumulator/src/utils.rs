@@ -1,9 +1,9 @@
 use decoder::decode_flat_files;
-use decoder::sf::ethereum::r#type::v2::{Block, BlockHeader};
 use ethereum_types::H256 as Hash256;
 use ethereum_types::{Bloom, H160, H64, U256 as EthereumU256};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
 use ethportal_api::Header;
+use sf_protos::ethereum::r#type::v2::{Block, BlockHeader};
 
 use crate::errors::EraValidateError;
 use crate::types::ExtHeaderRecord;
@@ -26,7 +26,7 @@ pub fn extract_100_blocks(
     let mut blocks: Vec<Block> = Vec::new();
     for block_number in (start_100_block..end_100_block).step_by(100) {
         let block_file_name = directory.to_owned() + &format!("/{:010}.dbin", block_number);
-        let block = &decode_flat_files(block_file_name, None, None)
+        let block: &Vec<Block> = &decode_flat_files(block_file_name, None, None)
             .map_err(|_| EraValidateError::FlatFileDecodeError)?;
         blocks.extend(block.clone());
     }

@@ -1,5 +1,6 @@
 use crate::{
     errors::EraValidateError,
+    types::ExtHeaderRecord,
     utils::{
         compute_epoch_accumulator, decode_header_record, extract_100_blocks, header_from_block,
     },
@@ -9,8 +10,12 @@ use ethportal_api::{
     types::execution::accumulator::HeaderRecord, AccumulatorProof, BlockHeaderProof, Header,
     HeaderWithProof,
 };
+
 use primitive_types::H256;
+use sf_protos::ethereum::r#type::v2::Block;
 use trin_validation::accumulator::MasterAccumulator;
+
+pub fn generate_inclusion_proof_v2(headers: Vec<ExtHeaderRecord>) {}
 
 // function: generate_inclusion_proof
 // inputs: flat_file_directory, master_accumulator_file, start_block, end_block
@@ -36,16 +41,16 @@ pub fn generate_inclusion_proof(
         let start_block = epoch * 8192;
         let end_block = (epoch + 1) * 8192;
 
-        let blocks = extract_100_blocks(directory, start_block, end_block)?;
+        let blocks: Vec<Block> = extract_100_blocks(directory, start_block, end_block)?;
 
         // TODO: find a way to not have both header_records and tmp_headers at the same time
         let mut header_records: Vec<HeaderRecord> = Vec::new();
         let mut tmp_headers: Vec<Header> = Vec::new();
         for block in &blocks {
             // Iterate over references to the blocks
-            let header = header_from_block(block)?;
+            let header = header_from_block(&block)?;
             tmp_headers.push(header.clone());
-            let header = decode_header_record(block)?;
+            let header = decode_header_record(&block)?;
             let header_record: HeaderRecord = HeaderRecord::from(header);
             header_records.push(header_record);
         }
