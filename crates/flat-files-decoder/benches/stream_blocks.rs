@@ -7,7 +7,6 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use decoder::{
     dbin::{error::DbinFileError, DbinFile},
     receipts::check_receipt_root,
-    sf,
     transactions::check_transaction_root,
 };
 use prost::Message;
@@ -71,7 +70,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
                     }
                 };
                 b.iter(|| {
-                    black_box(sf::bstream::v1::Block::decode(message.as_slice())).unwrap();
+                    black_box(sf_protos::bstream::v1::Block::decode(message.as_slice())).unwrap();
                 });
             }
         }
@@ -98,9 +97,10 @@ fn read_decode_check_bench(c: &mut Criterion) {
                         break;
                     }
                 };
-                let block_stream = sf::bstream::v1::Block::decode(message.as_slice()).unwrap();
+                let block_stream =
+                    sf_protos::bstream::v1::Block::decode(message.as_slice()).unwrap();
                 b.iter(|| {
-                    black_box(sf::ethereum::r#type::v2::Block::decode(
+                    black_box(sf_protos::ethereum::r#type::v2::Block::decode(
                         block_stream.payload_buffer.as_slice(),
                     ))
                     .unwrap();
@@ -130,10 +130,12 @@ fn read_decode_check_bench(c: &mut Criterion) {
                         break;
                     }
                 };
-                let block_stream = sf::bstream::v1::Block::decode(message.as_slice()).unwrap();
-                let block =
-                    sf::ethereum::r#type::v2::Block::decode(block_stream.payload_buffer.as_slice())
-                        .unwrap();
+                let block_stream =
+                    sf_protos::bstream::v1::Block::decode(message.as_slice()).unwrap();
+                let block = sf_protos::ethereum::r#type::v2::Block::decode(
+                    block_stream.payload_buffer.as_slice(),
+                )
+                .unwrap();
                 b.iter(|| {
                     black_box(check_receipt_root(&block)).unwrap();
                 });
@@ -162,10 +164,12 @@ fn read_decode_check_bench(c: &mut Criterion) {
                         break;
                     }
                 };
-                let block_stream = sf::bstream::v1::Block::decode(message.as_slice()).unwrap();
-                let block =
-                    sf::ethereum::r#type::v2::Block::decode(block_stream.payload_buffer.as_slice())
-                        .unwrap();
+                let block_stream =
+                    sf_protos::bstream::v1::Block::decode(message.as_slice()).unwrap();
+                let block = sf_protos::ethereum::r#type::v2::Block::decode(
+                    block_stream.payload_buffer.as_slice(),
+                )
+                .unwrap();
                 b.iter(|| {
                     black_box(check_transaction_root(&block)).unwrap();
                 });

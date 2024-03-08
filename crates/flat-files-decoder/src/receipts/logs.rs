@@ -3,32 +3,28 @@ use reth_primitives::{hex, Address, Bytes, Log, H256};
 use std::convert::TryInto;
 
 // type BlockLog = crate::protos::block::Log;
-use crate::sf::ethereum::r#type::v2::Log as BlockLog;
+use sf_protos::ethereum::r#type::v2::Log as BlockLog;
 
-pub(crate) fn map_logs(logs: &[BlockLog]) -> Result<Vec<Log>, ReceiptError> {
-    logs.iter().map(Log::try_from).collect()
+pub fn map_logs(logs: &[BlockLog]) -> Result<Vec<Log>, ReceiptError> {
+    logs.iter().map(block_log_to_log).collect()
 }
 
-impl TryFrom<&BlockLog> for Log {
-    type Error = ReceiptError;
+pub fn block_log_to_log(log: &BlockLog) -> Result<Log, ReceiptError> {
+    let slice: [u8; 20] = log
+        .address
+        .as_slice()
+        .try_into()
+        .map_err(|_| ReceiptError::InvalidAddress(hex::encode(log.address.clone())))?;
 
-    fn try_from(log: &BlockLog) -> Result<Self, Self::Error> {
-        let slice: [u8; 20] = log
-            .address
-            .as_slice()
-            .try_into()
-            .map_err(|_| ReceiptError::InvalidAddress(hex::encode(log.address.clone())))?;
+    let address = Address::from(slice);
+    let topics = map_topics(&log.topics)?;
+    let data = Bytes::from(log.data.as_slice());
 
-        let address = Address::from(slice);
-        let topics = map_topics(&log.topics)?;
-        let data = Bytes::from(log.data.as_slice());
-
-        Ok(Self {
-            address,
-            topics,
-            data,
-        })
-    }
+    Ok(Log {
+        address,
+        topics,
+        data,
+    })
 }
 
 fn map_topics(topics: &[Vec<u8>]) -> Result<Vec<H256>, ReceiptError> {

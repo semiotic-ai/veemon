@@ -5,12 +5,12 @@ pub mod receipt;
 // use crate::protos::block::Block;
 use crate::receipts::error::ReceiptError;
 use crate::receipts::receipt::FullReceipt;
-use crate::sf::ethereum::r#type::v2::Block;
 use reth_primitives::bytes::BufMut;
 use reth_primitives::hex;
 use reth_primitives::proofs::ordered_trie_root_with_encoder;
 use reth_rlp::Encodable;
 use revm_primitives::B256;
+use sf_protos::ethereum::r#type::v2::Block;
 
 const BYZANTINUM_FORK_BLOCK: u64 = 4_370_000;
 
