@@ -19,28 +19,13 @@ use headers::HeaderRecordWithNumber;
 use prost::Message;
 use rayon::prelude::*;
 use receipts::check_receipt_root;
-use sf::ethereum::r#type::v2::Block;
+use sf_protos::ethereum::r#type::v2::Block;
 use simple_log::log;
 use std::fs;
 use std::fs::File;
 use std::io::{BufReader, Cursor, Read, Write};
 use std::path::PathBuf;
 use tokio::join;
-
-pub mod sf {
-    pub mod ethereum {
-        pub mod r#type {
-            pub mod v2 {
-                include!(concat!(env!("OUT_DIR"), "/sf.ethereum.r#type.v2.rs"));
-            }
-        }
-    }
-    pub mod bstream {
-        pub mod v1 {
-            include!(concat!(env!("OUT_DIR"), "/sf.bstream.v1.rs"));
-        }
-    }
-}
 
 const MERGE_BLOCK: usize = 15537393;
 
@@ -270,10 +255,11 @@ pub async fn stream_blocks<R: Read, W: Write>(
 }
 
 fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecodeError> {
-    let block_stream = sf::bstream::v1::Block::decode(bytes.as_slice())
+    let block_stream = sf_protos::bstream::v1::Block::decode(bytes.as_slice())
         .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
-    let block = sf::ethereum::r#type::v2::Block::decode(block_stream.payload_buffer.as_slice())
-        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+    let block =
+        sf_protos::ethereum::r#type::v2::Block::decode(block_stream.payload_buffer.as_slice())
+            .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
     Ok(block)
 }
 
@@ -297,9 +283,9 @@ mod tests {
 
     use crate::dbin::DbinFile;
     use crate::receipts::check_receipt_root;
-    use crate::sf::bstream::v1::Block as BstreamBlock;
-    use crate::sf::ethereum::r#type::v2::Block;
     use crate::{handle_file, receipts, stream_blocks};
+    use sf_protos::bstream::v1::Block as BstreamBlock;
+    use sf_protos::ethereum::r#type::v2::Block;
     use std::fs::File;
     use std::io::{self, Cursor, Write};
     use std::io::{BufReader, BufWriter};
