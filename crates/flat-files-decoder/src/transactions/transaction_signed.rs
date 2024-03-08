@@ -18,21 +18,3 @@ pub fn trace_to_signed(trace: &TransactionTrace) -> Result<TransactionSigned, Tr
     };
     Ok(tx_signed)
 }
-
-// impl TryFrom<&TransactionTrace> for TransactionSigned {
-// type Error = TransactionError;
-//
-// fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
-// let transaction = Transaction::try_from(trace)?;
-// let signature = Signature::try_from(trace)?;
-// let hash = B256::from_str(&hex::encode(trace.hash.as_slice()))
-// .map_err(|_| TransactionError::MissingCall)?;
-// let tx_signed = TransactionSigned {
-// transaction,
-// signature,
-// hash,
-// };
-// Ok(tx_signed)
-// }
-// }
-//
