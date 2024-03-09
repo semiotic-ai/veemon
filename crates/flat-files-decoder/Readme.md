@@ -87,4 +87,4 @@ For proper benchmarking of future improvements, fixes and features please compar
 Refer to [the end of this section of Criterion documentation](https://bheisler.github.io/criterion.rs/book/user_guide/command_line_options.html) for more information on creating and comparing baselines.
 
 ## Testing 
-Generate code coverage reports with `opecargo llvm-cov --html` and open them with `open ./target/llvm-cov/html/index.html`. 
+Generate code coverage reports with `ecargo llvm-cov --html` and open them with `open ./target/llvm-cov/html/index.html`. 
