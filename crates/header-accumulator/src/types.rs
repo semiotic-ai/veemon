@@ -18,6 +18,21 @@ impl From<ExtHeaderRecord> for HeaderRecord {
     }
 }
 
+impl From<ExtHeaderRecord> for Header {
+    fn from(ext: ExtHeaderRecord) -> Self {
+        ext.full_header.unwrap()
+    }
+}
+
+impl From<&ExtHeaderRecord> for HeaderRecord {
+    fn from(ext: &ExtHeaderRecord) -> Self {
+        HeaderRecord {
+            block_hash: ext.block_hash,
+            total_difficulty: ext.total_difficulty,
+        }
+    }
+}
+
 impl From<HeaderRecord> for ExtHeaderRecord {
     fn from(hr: HeaderRecord) -> Self {
         ExtHeaderRecord {
