@@ -4,7 +4,6 @@ use header_accumulator::{
     errors::EraValidateError,
     inclusion_proof::{generate_inclusion_proof, verify_inclusion_proof},
     types::ExtHeaderRecord,
-    utils::ext_header_from_block,
 };
 use sf_protos::ethereum::r#type::v2::Block;
 
@@ -23,7 +22,7 @@ fn test_inclusion_proof() -> Result<(), EraValidateError> {
                 headers.extend(
                     blocks
                         .iter()
-                        .map(|block| ext_header_from_block(block).unwrap())
+                        .map(|block| ExtHeaderRecord::try_from(block).unwrap())
                         .collect::<Vec<ExtHeaderRecord>>(),
                 );
                 all_blocks.extend(blocks); // Extend the all_blocks vector with the decoded blocks

@@ -11,30 +11,6 @@ pub const MAX_EPOCH_SIZE: usize = 8192;
 pub const FINAL_EPOCH: usize = 01896;
 pub const MERGE_BLOCK: u64 = 15537394;
 
-/// Decodes a [`ExtHeaderRecord`] from a [`Block`]. A [`BlockHeader`] must be present in the block,
-/// otherwise validating headers won't be possible
-pub fn ext_header_from_block(block: &Block) -> Result<ExtHeaderRecord, EraValidateError> {
-    let header_record = ExtHeaderRecord {
-        block_number: block.number,
-        block_hash: Hash256::from_slice(&block.hash),
-        total_difficulty: EthereumU256::try_from(
-            block
-                .header
-                .as_ref() // Use as_ref()
-                .ok_or(EraValidateError::HeaderDecodeError)?
-                .total_difficulty
-                .as_ref()
-                .ok_or(EraValidateError::HeaderDecodeError)?
-                .bytes
-                .as_slice(),
-        )
-        .map_err(|_| EraValidateError::HeaderDecodeError)?,
-        full_header: Some(header_from_block(block)?),
-    };
-
-    Ok(header_record)
-}
-
 pub fn header_record_from_header(
     block_header: &BlockHeader,
 ) -> Result<Vec<HeaderRecord>, EraValidateError> {
