@@ -1,3 +1,5 @@
+use std::fs;
+
 use decoder::decode_flat_files;
 use header_accumulator::{
     era_validator::era_validate, errors::EraValidateError, types::ExtHeaderRecord,
@@ -5,6 +7,11 @@ use header_accumulator::{
 
 #[test]
 fn test_era_validate() -> Result<(), EraValidateError> {
+    // clean up before tests
+    if let Err(e) = fs::remove_file("lockfile.json") {
+        eprintln!("Error deleting lockfile.json: {}", e);
+    }
+
     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
     for number in (0..=8200).step_by(100) {
         let file_name = format!("tests/ethereum_firehose_first_8200/{:010}.dbin", number);
@@ -37,8 +44,22 @@ fn test_era_validate() -> Result<(), EraValidateError> {
     assert_eq!(headers.len(), 8300);
     assert_eq!(headers[0].block_number, 0);
 
-    let result = era_validate(headers, None, 0, None, Some(false))?;
+    let result = era_validate(headers.clone(), None, 0, None, Some(false))?;
 
     assert!(result.contains(&0), "The vector does not contain 0");
+
+    // Test with creating a lockfile
+    let result = era_validate(headers.clone(), None, 0, None, Some(true))?;
+
+    assert!(result.contains(&0), "The vector does not contain 0");
+
+    // test with the lockfile created before.
+    era_validate(headers.clone(), None, 0, None, Some(true))?;
+
+    // clean up after tests
+    if let Err(e) = fs::remove_file("lockfile.json") {
+        eprintln!("Error deleting lockfile.json: {}", e);
+    }
+
     Ok(())
 }
