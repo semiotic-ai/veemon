@@ -8,7 +8,6 @@ use std::path::Path;
 
 use crate::errors::{EraValidateError, SyncError};
 
-#[derive(Serialize, Deserialize)]
 pub struct LockEntry {
     epoch: String,
     root: String,
@@ -20,10 +19,6 @@ impl LockEntry {
             epoch: epoch.to_string(),
             root: BASE64_STANDARD.encode(root),
         }
-    }
-
-    pub fn hash(&self) -> String {
-        self.root.clone()
     }
 }
 

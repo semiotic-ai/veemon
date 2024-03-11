@@ -39,17 +39,6 @@ impl From<&ExtHeaderRecord> for HeaderRecord {
     }
 }
 
-impl From<HeaderRecord> for ExtHeaderRecord {
-    fn from(hr: HeaderRecord) -> Self {
-        ExtHeaderRecord {
-            block_hash: hr.block_hash,
-            total_difficulty: hr.total_difficulty,
-            block_number: 0, // Default value or decide based on context
-            full_header: None,
-        }
-    }
-}
-
 /// Decodes a [`ExtHeaderRecord`] from a [`Block`]. A [`BlockHeader`] must be present in the block,
 /// otherwise validating headers won't be possible
 impl TryFrom<&Block> for ExtHeaderRecord {
