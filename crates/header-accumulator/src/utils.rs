@@ -2,35 +2,13 @@ use ethereum_types::H256 as Hash256;
 use ethereum_types::{Bloom, H160, H64, U256 as EthereumU256};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
 use ethportal_api::Header;
-use sf_protos::ethereum::r#type::v2::{Block, BlockHeader};
+use sf_protos::ethereum::r#type::v2::Block;
 
 use crate::errors::EraValidateError;
-use crate::types::ExtHeaderRecord;
 
 pub const MAX_EPOCH_SIZE: usize = 8192;
 pub const FINAL_EPOCH: usize = 01896;
 pub const MERGE_BLOCK: u64 = 15537394;
-
-pub fn header_record_from_header(
-    block_header: &BlockHeader,
-) -> Result<Vec<HeaderRecord>, EraValidateError> {
-    let mut header_records = Vec::<HeaderRecord>::new();
-    let header_record = HeaderRecord {
-        block_hash: Hash256::from_slice(block_header.hash.as_slice()),
-        total_difficulty: EthereumU256::try_from(
-            block_header
-                .total_difficulty
-                .as_ref()
-                .ok_or(EraValidateError::HeaderDecodeError)?
-                .bytes
-                .as_slice(),
-        )
-        .map_err(|_| EraValidateError::HeaderDecodeError)?,
-    };
-    header_records.push(header_record);
-
-    Ok(header_records)
-}
 
 pub fn compute_epoch_accumulator(
     header_records: &Vec<HeaderRecord>,
