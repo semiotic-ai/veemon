@@ -22,12 +22,9 @@ enum Commands {
     EraValidate {
         #[clap(short, long)]
         // directory where flat files are located
-        input: String,
+        dir: String,
 
         #[clap(long)]
-        // a directory where already valid blocks are stored for comparison
-        headers_dir: Option<String>,
-
         // #[clap(short, long)]
         // // directory where valid blocks will be stored in
         // output: Option<String>,
@@ -56,8 +53,7 @@ fn main() {
 
     match &cli.command {
         Some(Commands::EraValidate {
-            headers_dir: _,
-            input,
+            dir,
             master_acc_file,
             start_epoch,
             end_epoch,
@@ -67,7 +63,7 @@ fn main() {
             // }
             {
                 log::info!("Starting validation.");
-                let result = verify_eras(input, master_acc_file.as_ref(), *start_epoch, *end_epoch);
+                let result = verify_eras(dir, master_acc_file.as_ref(), *start_epoch, *end_epoch);
                 log::info!("epochs validated: {:?}", result);
             }
         }
