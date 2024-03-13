@@ -1,7 +1,7 @@
 use clap::Parser;
-use decoder::{handle_buf, sf::ethereum::r#type::v2::Block};
+use decoder::handle_buf;
 use flat_head::{era_verifier::MAX_EPOCH_SIZE, utils::gen_dbin_filenames};
-use header_accumulator::era_validator::era_validate;
+use header_accumulator::{era_validator::era_validate, types::ExtHeaderRecord};
 use object_store::{http::HttpBuilder, path::Path, ClientOptions, ObjectStore};
 
 /// This program is intended for fetching
@@ -37,7 +37,6 @@ async fn main() {
     // Get an `async` stream of Metadata objects:
     let file_names = gen_dbin_filenames(args.start_epoch, args.end_epoch);
 
-    let mut blocks: Vec<Block> = Vec::new();
     for file_name in file_names {
         let path_string = format!("/{}", file_name);
         let path = Path::from(path_string);
@@ -45,25 +44,42 @@ async fn main() {
 
         let bytes = result.bytes().await.unwrap();
 
+        let mut headers: Vec<ExtHeaderRecord> = Vec::new();
+
         // Use `as_ref` to get a &[u8] from `bytes` and pass it to `handle_buf`
         match handle_buf(bytes.as_ref()) {
-            Ok(new_blocks) => {
-                blocks.extend(new_blocks);
-                // Handle the successfully decoded blocks
+            Ok(blocks) => {
+                let (successful_headers, _): (Vec<_>, Vec<_>) = blocks
+                    .iter()
+                    .cloned()
+                    .map(|block| ExtHeaderRecord::try_from(&block))
+                    .fold((Vec::new(), Vec::new()), |(mut succ, mut errs), res| {
+                        match res {
+                            Ok(header) => succ.push(header),
+                            Err(e) => {
+                                // Log the error or handle it as needed
+                                eprintln!("Error converting block: {:?}", e);
+                                errs.push(e);
+                            }
+                        };
+                        (succ, errs)
+                    });
+                headers.extend(successful_headers);
             }
-            Err(e) => {
+            Err(_e) => {
                 // Handle the decoding error
             }
         }
-        if blocks.len() > 8192 {
-            let epoch_blocks: Vec<Block> = blocks.drain(0..MAX_EPOCH_SIZE).collect();
-            let valid_blocks = era_validate(
-                epoch_blocks,
+        if headers.len() > 8192 {
+            let epoch_headers: Vec<ExtHeaderRecord> = headers.drain(0..MAX_EPOCH_SIZE).collect();
+            let valid_headers = era_validate(
+                epoch_headers,
                 None,
                 args.start_epoch as usize,
                 Some(args.end_epoch as usize),
+                None,
             );
-            println!("{:?} valid epochs", valid_blocks);
+            println!("{:?} valid epochs", valid_headers);
         }
     }
 }
