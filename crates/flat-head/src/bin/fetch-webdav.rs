@@ -3,7 +3,6 @@ use decoder::handle_buf;
 use flat_head::{era_verifier::MAX_EPOCH_SIZE, utils::gen_dbin_filenames};
 use header_accumulator::{era_validator::era_validate, types::ExtHeaderRecord};
 use object_store::{http::HttpBuilder, path::Path, ClientOptions, ObjectStore};
-use sf_protos::ethereum::r#type::v2::Block;
 
 /// This program is intended for fetching
 /// flat files from a google cloud storage and verifying them. It skips fetching files
