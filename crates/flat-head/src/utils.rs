@@ -10,7 +10,7 @@ pub fn gen_dbin_filenames(start: u64, end: u64) -> Vec<String> {
     }
 
     let start_blocks = start * MAX_EPOCH_SIZE as u64;
-    let end_blocks = end * 8200 as u64;
+    let end_blocks = end * 8200_u64;
     //TODO: count for the FINAL_EPOCH files, which might not be eaxctly 100 blocks named
 
     for number in (start_blocks..=end_blocks).step_by(100) {
