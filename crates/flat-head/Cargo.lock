@@ -520,8 +520,8 @@ dependencies = [
 
 [[package]]
 name = "c-kzg"
-version = "0.1.0"
-source = "git+https://github.com/ethereum/c-kzg-4844#486b15b3058fa259a5c04cbd412c198b1642ce64"
+version = "0.4.3"
+source = "git+https://github.com/ethereum/c-kzg-4844#fb1bc6217c3ceb09d93445cd1d4681f094079e54"
 dependencies = [
  "blst",
  "cc",
@@ -931,7 +931,7 @@ dependencies = [
 [[package]]
 name = "decoder"
 version = "0.1.1"
-source = "git+https://github.com/semiotic-ai/flat-files-decoder.git?branch=main#cc4a0e817d03dff804fe90e40061d7fc3413514c"
+source = "git+https://github.com/semiotic-ai/flat-files-decoder.git?branch=main#f2186617cfdba67eb4fd8b1ab384cf5535f34352"
 dependencies = [
  "anyhow",
  "bincode",
@@ -940,9 +940,7 @@ dependencies = [
  "prost",
  "prost-build",
  "prost-types",
- "prost-wkt",
  "prost-wkt-build",
- "prost-wkt-types",
  "rand",
  "rayon",
  "reth-primitives 0.1.0-alpha.4",
@@ -950,6 +948,7 @@ dependencies = [
  "revm-primitives 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
+ "sf-protos",
  "simple-log",
  "thiserror",
  "tokio",
@@ -1262,8 +1261,7 @@ dependencies = [
 [[package]]
 name = "eth_trie"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec3aeb0284b473041df2419a28e3cdf0c64a78d2b9511af4b6e40bad3964b172"
+source = "git+https://github.com/morph-dev/eth-trie.rs.git?branch=trin#83bf198df680cde7abea9de049f4b78ab9c81309"
 dependencies = [
  "ethereum-types",
  "hashbrown 0.14.3",
@@ -1405,7 +1403,7 @@ checksum = "b90ca2580b73ab6a1f724b76ca11ab632df820fd6040c336200d2c1df7b3c82c"
 [[package]]
 name = "ethportal-api"
 version = "0.2.2"
-source = "git+https://github.com/ethereum/trin.git#e74f81710381a229ac5abcecbf3d437aef154533"
+source = "git+https://github.com/ethereum/trin.git#819f4b4719c1940a6a7cb08e647b66758aaa1241"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
@@ -1516,6 +1514,7 @@ dependencies = [
  "header_accumulator",
  "log",
  "object_store",
+ "sf-protos",
  "tokio",
  "tree_hash",
  "trin-validation",
@@ -1816,23 +1815,25 @@ dependencies = [
 [[package]]
 name = "header_accumulator"
 version = "0.1.0"
-source = "git+ssh://git@github.com/semiotic-ai/header_accumulator.git?branch=refactor#97361023ccb5857c1f8b11e45e0daad77d97b608"
+source = "git+https://git@github.com/semiotic-ai/header_accumulator.git?branch=refactor-fixes-and-tests#8f2a056cf0a2f21e01c79417fd075a190d0c724c"
 dependencies = [
  "base64 0.21.7",
  "bincode",
  "clap",
- "decoder",
  "env_logger 0.10.2",
  "ethereum-types",
  "ethportal-api",
  "log",
  "primitive-types",
+ "prost-build",
+ "prost-wkt-build",
  "protobuf",
  "protobuf-json-mapping",
  "revm-primitives 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlp",
  "serde",
  "serde_json",
+ "sf-protos",
  "tree_hash",
  "trin-validation",
 ]
@@ -3427,7 +3428,7 @@ version = "0.1.0-alpha.10"
 source = "git+https://github.com/paradigmxyz/reth.git?tag=v0.1.0-alpha.10#1b16d804ef01f4ec3c25e7986381c22739c105b9"
 dependencies = [
  "bytes",
- "c-kzg 0.1.0 (git+https://github.com/ethereum/c-kzg-4844?rev=f5f6f863d475847876a2bd5ee252058d37c3a15d)",
+ "c-kzg 0.1.0",
  "crc",
  "crunchy",
  "derive_more",
@@ -3484,7 +3485,7 @@ dependencies = [
  "arrayvec",
  "auto_impl",
  "bytes",
- "c-kzg 0.1.0 (git+https://github.com/ethereum/c-kzg-4844?rev=f5f6f863d475847876a2bd5ee252058d37c3a15d)",
+ "c-kzg 0.1.0",
  "ethereum-types",
  "reth-rlp-derive 0.1.0-alpha.10",
  "revm-primitives 1.1.2 (git+https://github.com/bluealloy/revm?rev=516f62cc)",
@@ -3555,7 +3556,7 @@ dependencies = [
  "bitflags 2.4.2",
  "bitvec",
  "bytes",
- "c-kzg 0.1.0 (git+https://github.com/ethereum/c-kzg-4844)",
+ "c-kzg 0.4.3",
  "derive_more",
  "enumn",
  "fixed-hash",
@@ -4134,6 +4135,20 @@ dependencies = [
  "ryu",
  "serde",
  "unsafe-libyaml",
+]
+
+[[package]]
+name = "sf-protos"
+version = "0.1.0"
+source = "git+https://github.com/semiotic-ai/sf-protos.git?branch=main#d9abf1b30826960efdf02cd63c5c1279c63e6700"
+dependencies = [
+ "prost",
+ "prost-build",
+ "prost-types",
+ "prost-wkt",
+ "prost-wkt-build",
+ "prost-wkt-types",
+ "serde",
 ]
 
 [[package]]
@@ -4823,10 +4838,9 @@ dependencies = [
 [[package]]
 name = "trin-validation"
 version = "0.1.0"
-source = "git+https://github.com/ethereum/trin.git#e74f81710381a229ac5abcecbf3d437aef154533"
+source = "git+https://github.com/ethereum/trin.git#819f4b4719c1940a6a7cb08e647b66758aaa1241"
 dependencies = [
  "anyhow",
- "async-trait",
  "eth2_hashing",
  "ethereum-types",
  "ethereum_ssz",

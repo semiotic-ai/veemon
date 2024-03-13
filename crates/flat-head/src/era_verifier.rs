@@ -1,6 +1,7 @@
-use decoder::{decode_flat_files, sf::ethereum::r#type::v2::Block};
+use decoder::decode_flat_files;
+use header_accumulator::types::ExtHeaderRecord;
 use header_accumulator::{era_validator::era_validate, errors::EraValidateError};
-
+use sf_protos::ethereum::r#type::v2::Block;
 pub const MAX_EPOCH_SIZE: usize = 8192;
 pub const FINAL_EPOCH: usize = 1896;
 pub const MERGE_BLOCK: usize = 15537394;
@@ -16,7 +17,28 @@ pub fn verify_eras(
     let mut validated_epochs = Vec::new();
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
         let blocks = get_blocks_from_dir(epoch, directory)?;
-        let root = era_validate(blocks, master_acc_file, epoch, Some(epoch + 1))?;
+        let (successful_headers, _): (Vec<_>, Vec<_>) = blocks
+            .iter()
+            .cloned()
+            .map(|block| ExtHeaderRecord::try_from(&block))
+            .fold((Vec::new(), Vec::new()), |(mut succ, mut errs), res| {
+                match res {
+                    Ok(header) => succ.push(header),
+                    Err(e) => {
+                        // Log the error or handle it as needed
+                        eprintln!("Error converting block: {:?}", e);
+                        errs.push(e);
+                    }
+                };
+                (succ, errs)
+            });
+        let root = era_validate(
+            successful_headers,
+            master_acc_file,
+            epoch,
+            Some(epoch + 1),
+            None,
+        )?;
         validated_epochs.extend(root);
     }
 

@@ -47,8 +47,6 @@ of decompressing them.
 cargo run --bin fetch-gcloud --bucket --fist-epoch 0 --end-epoch 1
 ```
 
-**NOTICE: fetching from gcloud has a price ($0.10/GB currently) so be careful when using this method for many files**
-
 4. To fetch flat files from a s3 bucket and validate each epoch as they arrive:
 
 ```
@@ -82,4 +80,9 @@ Then files must be fed into the webdav folder, either via interacting with the s
 
 ### With S3
 
-There is a minio `docker-compose` script which can be used to run a local s3 instance with [minio](https://github.com/minio/minio?tab=readme-ov-file) for development, with a mock access id and key and a bucket for development on `/dev` folder. Run `docker-compose up -d` to set it up, clone the `minio.env` to the root folder as `.env` and populate the bucket with flat files to test.
+There is a minio `docker-compose` script which can be used to run a local s3 instance with [minio](https://github.com/minio/minio?tab=readme-ov-file) for development, with a mock access id and key and a bucket for development on `/dev` folder. Run `docker-compose up -d` to set it up, clone the `minio.env` to the root folder as `.env` and populate the bucket with flat files to test. Populating the bucket ca be done manually by accessing the 
+
+
+### Coverage
+
+Generate code coverage reports with `cargo llvm-cov --html` and open them with `open ./target/llvm-cov/html/index.html`. 
