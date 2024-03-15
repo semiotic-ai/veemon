@@ -86,7 +86,7 @@ pub fn verify_inclusion_proof(
         };
         master_acc
             .validate_header_with_proof(&hwp)
-            .map_err(|_| EraValidateError::ProofGenerationFailure)?;
+            .map_err(|_| EraValidateError::ProofValidationFailure)?;
     }
 
     Ok(())

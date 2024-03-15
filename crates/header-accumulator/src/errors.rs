@@ -9,6 +9,7 @@ pub enum EraValidateError {
     EraAccumulatorMismatch,
     EpochAccumulatorError,
     ProofGenerationFailure,
+    ProofValidationFailure,
     IoError,
     StartEpochBlockNotFound,
     EndEpochLessThanStartEpoch,
@@ -42,6 +43,9 @@ impl fmt::Display for EraValidateError {
             }
             EraValidateError::ProofGenerationFailure => {
                 write!(f, "Error generating inclusion proof")
+            }
+            EraValidateError::ProofValidationFailure => {
+                write!(f, "Error validating inclusion proof")
             }
             EraValidateError::IoError => write!(f, "Error reading from stdin"),
             EraValidateError::StartEpochBlockNotFound => {
