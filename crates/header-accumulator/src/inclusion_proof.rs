@@ -31,7 +31,7 @@ pub fn generate_inclusion_proof(
     let epoch_start = start_block / 8192;
 
     // The epochs end on a multiple of 8192 blocks, so we need to round up to the nearest 8192
-    let epoch_end = ((end_block as f32) / 8192.0).ceil() as u64;
+    let epoch_end = ((end_block as f32) / MAX_EPOCH_SIZE as f32).ceil() as u64;
 
     // We need to load blocks from an entire epoch to be able to generate inclusion proofs
     // First compute epoch accumulators and the Merkle tree for all the epochs of interest
