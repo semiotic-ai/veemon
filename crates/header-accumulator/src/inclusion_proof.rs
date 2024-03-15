@@ -49,7 +49,7 @@ pub fn generate_inclusion_proof(
     }
 
     for block_idx in start_block..=end_block {
-        let epoch = block_idx / 8192;
+        let epoch = block_idx / MAX_EPOCH_SIZE as u64;
         let epoch_acc = epoch_accumulators[epoch as usize].clone();
         let header = headers[block_idx as usize].clone();
         inclusion_proof_vec.push(
