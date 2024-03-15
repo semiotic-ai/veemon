@@ -95,7 +95,17 @@ pub fn era_validate(
     Ok(validated_epochs)
 }
 
-/// takes 8192 block headers and checks if they consist in a valid epoch
+/// takes 8192 block headers and checks if they consist in a valid epoch.
+///
+/// An epoch must respect the order of blocks, i.e., block numbers for epoch
+/// 0 must start from block 0 to block 8191.
+///
+/// headers can only be validated for now against epochs before The Merge.
+/// All pre-merge blocks (which are numbered before [`FINAL_EPOCH`]), are validated using
+/// the [Header Accumulator](https://github.com/ethereum/portal-network-specs/blob/8ad5bc33cb0d4485d2eab73bf2decc43e7566a8f/history-network.md#the-header-accumulator)
+///
+/// For block post merge, the sync-committee should be used to validate block headers   
+/// in the canonical blockchain. So this function is not useful for those.
 fn process_headers(
     mut headers: Vec<ExtHeaderRecord>,
     epoch: usize,
@@ -104,8 +114,15 @@ fn process_headers(
     if headers.len() != MAX_EPOCH_SIZE {
         Err(EraValidateError::InvalidEpochLength)?;
     }
+    if headers[0].block_number % MAX_EPOCH_SIZE as u64 == 0 {
+        Err(EraValidateError::InvalidEpochStart)?;
+    }
 
     if epoch > FINAL_EPOCH {
+        log::warn!(
+            "the blocks from this epoch are not being validated since they are post merge.
+        For post merge blocks, use the sync-committee subprotocol"
+        );
         headers.retain(|header: &ExtHeaderRecord| header.block_number < MERGE_BLOCK);
     }
 

@@ -16,6 +16,7 @@ pub enum EraValidateError {
     MergeBlockNotFound,
     JsonError,
     TotalDifficultyDecodeError,
+    InvalidEpochStart,
     InvalidEpochLength,
 }
 #[derive(Debug)]
@@ -65,6 +66,12 @@ impl fmt::Display for EraValidateError {
             }
             EraValidateError::InvalidEpochLength => {
                 write!(f, "blocks in epoch must be exactly 8192 units")
+            }
+            EraValidateError::InvalidEpochStart => {
+                write!(
+                    f,
+                    "blocks in epoch must respect the range of blocks numbers"
+                )
             }
         }
     }
