@@ -45,16 +45,21 @@ fn test_era_validate() -> Result<(), EraValidateError> {
     assert_eq!(headers[0].block_number, 0);
 
     let result = era_validate(headers.clone(), None, 0, None, Some(false))?;
+    println!("result 1: {:?}", result);
 
     assert!(result.contains(&0), "The vector does not contain 0");
 
     // Test with creating a lockfile
     let result = era_validate(headers.clone(), None, 0, None, Some(true))?;
+    println!("result 2: {:?}", result);
 
     assert!(result.contains(&0), "The vector does not contain 0");
 
     // test with the lockfile created before.
-    era_validate(headers.clone(), None, 0, None, Some(true))?;
+    let result = era_validate(headers.clone(), None, 0, None, Some(true))?;
+
+    // already validated epochs are not included in the array.
+    assert_eq!(result.len(), 0);
 
     // clean up after tests
     if let Err(e) = fs::remove_file("lockfile.json") {
