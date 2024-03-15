@@ -114,7 +114,7 @@ fn process_headers(
     if headers.len() != MAX_EPOCH_SIZE {
         Err(EraValidateError::InvalidEpochLength)?;
     }
-    if headers[0].block_number % MAX_EPOCH_SIZE as u64 == 0 {
+    if headers[0].block_number % MAX_EPOCH_SIZE as u64 != 0 {
         Err(EraValidateError::InvalidEpochStart)?;
     }
 
