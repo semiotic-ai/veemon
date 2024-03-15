@@ -28,7 +28,7 @@ pub fn generate_inclusion_proof(
 ) -> Result<Vec<[H256; 15]>, EraValidateError> {
     // Compute the epoch accumulator for the blocks
     // The epochs start on a multiple of 8192 blocks, so we need to round down to the nearest 8192
-    let epoch_start = start_block / 8192;
+    let epoch_start = start_block / MAX_EPOCH_SIZE as u64;
 
     // The epochs end on a multiple of 8192 blocks, so we need to round up to the nearest 8192
     let epoch_end = ((end_block as f32) / MAX_EPOCH_SIZE as f32).ceil() as u64;
