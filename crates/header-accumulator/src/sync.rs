@@ -101,11 +101,6 @@ pub fn check_sync_state(
         Err(_) => panic!("Decoded hash does not fit into a 32-byte array"),
     };
 
-    println!(
-        "stored hash: {:?}, ac hash: {:?}",
-        stored_hash[0], macc_hash[0]
-    );
-
     if macc_hash != stored_hash {
         log::error!(
             "the valid hash is: {:?} and the provided hash was: {:?}",
