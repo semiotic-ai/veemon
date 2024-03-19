@@ -56,6 +56,8 @@ cargo run --bin fetch-gcloud --bucket --fist-epoch 0 --end-epoch 1
 
 An optional endpoint can be provided if running in a local environment or in another s3 compatible API.
 
+Environment variables for aws have to be set for s3 in this scenario. An example is provided in `.env.example`
+
 
 
 ## Goals
@@ -82,6 +84,8 @@ Then files must be fed into the webdav folder, either via interacting with the s
 ### With S3
 
 There is a minio `docker-compose` script which can be used to run a local s3 instance with [minio](https://github.com/minio/minio?tab=readme-ov-file) for development, with a mock access id and key and a bucket for development on `/dev` folder. Run `docker-compose up -d` to set it up, clone the `minio.env` to the root folder as `.env` and populate the bucket with flat files to test. Populating the bucket ca be done manually by accessing the 
+
+**minio does not work for large scale flat files, use it only for testing purposes.**
 
 
 ### Coverage
