@@ -13,11 +13,12 @@ Flat head is developed to be a crate that verifies flat files generated from Fir
 
 ## Running
 
-### Commands
+There are a few different binaries to run, depending on the desired functionality:
 
+`flat_head` is for general usage on flat files in a local folder. Run 
+`cargo run --bin flat_head help` for commands and options. 
 
-### Options
-
+`fetch-s3` is supposed to be used to fetch flat files from an s3-like object storage.
 
 ## Usage Examples
 
