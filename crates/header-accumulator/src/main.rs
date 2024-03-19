@@ -1,8 +1,5 @@
 use clap::{Arg, Command, Parser, Subcommand};
-use header_accumulator::{
-    era_validator::stream_validation, errors::EraValidateError, inclusion_proof,
-};
-use primitive_types::H256;
+use header_accumulator::errors::EraValidateError;
 use std::{io::BufReader, process};
 use trin_validation::accumulator::MasterAccumulator;
 
@@ -154,82 +151,83 @@ fn main() {
                 };
                 let reader = BufReader::with_capacity(1 << 32, std::io::stdin().lock());
                 let writer = std::io::stdout();
-                stream_validation(master_accumulator.clone(), reader, writer)
-                    .expect("Validation Error");
+                // stream_validation(master_accumulator.clone(), reader, writer)
+                //     .expect("Validation Error");
                 process::exit(0);
             }
             _ => {}
         },
-        Some(("generate_inclusion_proof", generate_inclusion_proof_matches)) => {
-            let directory = generate_inclusion_proof_matches
-                .get_one::<String>("directory")
-                .expect("Directory is required.");
-            let start_block = generate_inclusion_proof_matches
-                .get_one::<String>("start_block")
-                .expect("Start block is required.");
-            let end_block = generate_inclusion_proof_matches
-                .get_one::<String>("end_block")
-                .expect("End block is required.");
+        //TODO: move this functionality to flat_head
+        // Some(("generate_inclusion_proof", generate_inclusion_proof_matches)) => {
+        //     let directory = generate_inclusion_proof_matches
+        //         .get_one::<String>("directory")
+        //         .expect("Directory is required.");
+        //     let start_block = generate_inclusion_proof_matches
+        //         .get_one::<String>("start_block")
+        //         .expect("Start block is required.");
+        //     let end_block = generate_inclusion_proof_matches
+        //         .get_one::<String>("end_block")
+        //         .expect("End block is required.");
 
-            let inclusion_proof = inclusion_proof::generate_inclusion_proof(
-                &directory,
-                start_block.parse::<usize>().unwrap(),
-                end_block.parse::<usize>().unwrap(),
-            )
-            .expect("Error generating inclusion proof");
+        //     let inclusion_proof = inclusion_proof::generate_inclusion_proof(
+        //         &directory,
+        //         start_block.parse::<usize>().unwrap(),
+        //         end_block.parse::<usize>().unwrap(),
+        //     )
+        //     .expect("Error generating inclusion proof");
 
-            let inclusion_proof_serialized = serde_json::to_string(&inclusion_proof).unwrap();
-            // write the proof to a file
-            // if output_file is not provided, write to inclusion_proof.json
-            let output_file = generate_inclusion_proof_matches.get_one::<String>("output_file");
-            match output_file {
-                Some(output_file) => {
-                    std::fs::write(output_file.to_owned() + ".json", inclusion_proof_serialized)
-                        .expect("Unable to write file");
-                }
-                None => {
-                    std::fs::write("inclusion_proof.json", inclusion_proof_serialized)
-                        .expect("Unable to write file");
-                }
-            }
-            process::exit(0);
-        }
-        Some(("verify_inclusion_proof", verify_inclusion_proof_matches)) => {
-            let directory = verify_inclusion_proof_matches
-                .get_one::<String>("directory")
-                .expect("Directory is required.");
-            let start_block = verify_inclusion_proof_matches
-                .get_one::<String>("start_block")
-                .expect("Start block is required.");
-            let end_block = verify_inclusion_proof_matches
-                .get_one::<String>("end_block")
-                .expect("End block is required.");
-            let inclusion_proof_file = verify_inclusion_proof_matches
-                .get_one::<String>("inclusion_proof_file")
-                .expect("Inclusion proof is required.");
+        //     let inclusion_proof_serialized = serde_json::to_string(&inclusion_proof).unwrap();
+        //     // write the proof to a file
+        //     // if output_file is not provided, write to inclusion_proof.json
+        //     let output_file = generate_inclusion_proof_matches.get_one::<String>("output_file");
+        //     match output_file {
+        //         Some(output_file) => {
+        //             std::fs::write(output_file.to_owned() + ".json", inclusion_proof_serialized)
+        //                 .expect("Unable to write file");
+        //         }
+        //         None => {
+        //             std::fs::write("inclusion_proof.json", inclusion_proof_serialized)
+        //                 .expect("Unable to write file");
+        //         }
+        //     }
+        //     process::exit(0);
+        // }
+        // Some(("verify_inclusion_proof", verify_inclusion_proof_matches)) => {
+        //     let directory = verify_inclusion_proof_matches
+        //         .get_one::<String>("directory")
+        //         .expect("Directory is required.");
+        //     let start_block = verify_inclusion_proof_matches
+        //         .get_one::<String>("start_block")
+        //         .expect("Start block is required.");
+        //     let end_block = verify_inclusion_proof_matches
+        //         .get_one::<String>("end_block")
+        //         .expect("End block is required.");
+        //     let inclusion_proof_file = verify_inclusion_proof_matches
+        //         .get_one::<String>("inclusion_proof_file")
+        //         .expect("Inclusion proof is required.");
 
-            // Load inclusion proof
-            let inclusion_proof = std::fs::read_to_string(inclusion_proof_file)
-                .expect("Error reading inclusion proof file");
-            let inclusion_proof: Vec<[H256; 15]> =
-                serde_json::from_str(&inclusion_proof).expect("Error parsing inclusion proof");
+        //     // Load inclusion proof
+        //     let inclusion_proof = std::fs::read_to_string(inclusion_proof_file)
+        //         .expect("Error reading inclusion proof file");
+        //     let inclusion_proof: Vec<[H256; 15]> =
+        //         serde_json::from_str(&inclusion_proof).expect("Error parsing inclusion proof");
 
-            let result = inclusion_proof::verify_inclusion_proof(
-                &directory,
-                None,
-                start_block.parse::<usize>().unwrap(),
-                end_block.parse::<usize>().unwrap(),
-                inclusion_proof,
-            );
+        //     let result = inclusion_proof::verify_inclusion_proof(
+        //         &directory,
+        //         None,
+        //         start_block.parse::<usize>().unwrap(),
+        //         end_block.parse::<usize>().unwrap(),
+        //         inclusion_proof,
+        //     );
 
-            if result.is_ok() {
-                println!("Inclusion proof verified!");
-                process::exit(0);
-            } else {
-                println!("Inclusion proof failed to verify");
-                process::exit(1);
-            }
-        }
+        //     if result.is_ok() {
+        //         println!("Inclusion proof verified!");
+        //         process::exit(0);
+        //     } else {
+        //         println!("Inclusion proof failed to verify");
+        //         process::exit(1);
+        //     }
+        // }
         _ => {
             println!("No subcommand was used");
         }

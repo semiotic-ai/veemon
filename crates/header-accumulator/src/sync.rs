@@ -8,7 +8,6 @@ use std::path::Path;
 
 use crate::errors::{EraValidateError, SyncError};
 
-#[derive(Serialize, Deserialize)]
 pub struct LockEntry {
     epoch: String,
     root: String,
@@ -20,10 +19,6 @@ impl LockEntry {
             epoch: epoch.to_string(),
             root: BASE64_STANDARD.encode(root),
         }
-    }
-
-    pub fn hash(&self) -> String {
-        self.root.clone()
     }
 }
 
@@ -105,11 +100,6 @@ pub fn check_sync_state(
         Ok(b) => b,
         Err(_) => panic!("Decoded hash does not fit into a 32-byte array"),
     };
-
-    println!(
-        "stored hash: {:?}, ac hash: {:?}",
-        stored_hash[0], macc_hash[0]
-    );
 
     if macc_hash != stored_hash {
         log::error!(
