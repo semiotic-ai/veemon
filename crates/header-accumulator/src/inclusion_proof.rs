@@ -1,53 +1,57 @@
 use crate::{
     errors::EraValidateError,
-    utils::{
-        compute_epoch_accumulator, decode_header_records, extract_100_blocks, header_from_block,
-    },
+    types::ExtHeaderRecord,
+    utils::{compute_epoch_accumulator, header_from_block, MAX_EPOCH_SIZE},
 };
-use ethportal_api::{AccumulatorProof, BlockHeaderProof, HeaderWithProof};
+
+use ethportal_api::{
+    types::execution::accumulator::HeaderRecord, AccumulatorProof, BlockHeaderProof, Header,
+    HeaderWithProof,
+};
+
 use primitive_types::H256;
+use sf_protos::ethereum::r#type::v2::Block;
 use trin_validation::accumulator::MasterAccumulator;
 
-// function: generate_inclusion_proof
-// inputs: flat_file_directory, master_accumulator_file, start_block, end_block
-// outputs: inclusion_proof
+/// generates an inclusion proof over headers, given blocks between `start_block` and `end_block`
+///
+/// # Arguments
+///
+/// * `ext_headers`-  A mutable [`Vec<ExtHeaderRecord>`]. The Vector can be any size, however, it must be in chunks of 8192 blocks to work properly
+/// to function without error
+/// * `start_block` -  The starting point of blocks that are to be included in the proofs. This interval is inclusive.
+/// * `end_epoch` -  The ending point of blocks that are to be included in the proofs. This interval is inclusive.
 pub fn generate_inclusion_proof(
-    directory: &String,
-    start_block: usize,
-    end_block: usize,
+    mut ext_headers: Vec<ExtHeaderRecord>,
+    start_block: u64,
+    end_block: u64,
 ) -> Result<Vec<[H256; 15]>, EraValidateError> {
     // Compute the epoch accumulator for the blocks
     // The epochs start on a multiple of 8192 blocks, so we need to round down to the nearest 8192
-    let epoch_start = start_block / 8192;
+    let epoch_start = start_block / MAX_EPOCH_SIZE as u64;
 
     // The epochs end on a multiple of 8192 blocks, so we need to round up to the nearest 8192
-    let epoch_end = ((end_block as f32) / 8192.0).ceil() as usize;
+    let epoch_end = ((end_block as f32) / MAX_EPOCH_SIZE as f32).ceil() as u64;
 
     // We need to load blocks from an entire epoch to be able to generate inclusion proofs
     // First compute epoch accumulators and the Merkle tree for all the epochs of interest
+    // let mut epoch_accumulators: Vec<_> = Vec::new();
     let mut epoch_accumulators = Vec::new();
-    let mut inclusion_proof_vec = Vec::new();
-    let mut headers = Vec::new();
-    for epoch in epoch_start..epoch_end {
-        let start_block = epoch * 8192;
-        let end_block = (epoch + 1) * 8192;
+    let mut inclusion_proof_vec: Vec<[H256; 15]> = Vec::new();
+    let mut headers: Vec<Header> = Vec::new();
 
-        let blocks = extract_100_blocks(directory, start_block, end_block)?;
-
-        let mut blocks_headers = Vec::new();
-        for block in blocks.clone() {
-            let header = header_from_block(block)?;
-            blocks_headers.push(header.clone());
-        }
-        let header_records = decode_header_records(blocks)?;
-        headers.extend(blocks_headers);
+    for _ in epoch_start..epoch_end {
+        let epoch_headers: Vec<ExtHeaderRecord> = ext_headers.drain(0..MAX_EPOCH_SIZE).collect();
+        let header_records: Vec<HeaderRecord> = epoch_headers.iter().map(Into::into).collect();
+        let tmp_headers: Vec<Header> = epoch_headers.into_iter().map(Into::into).collect();
+        headers.extend(tmp_headers);
         epoch_accumulators.push(compute_epoch_accumulator(&header_records)?);
     }
 
-    for block_idx in start_block..end_block {
-        let epoch = block_idx / 8192;
-        let epoch_acc = epoch_accumulators[epoch].clone();
-        let header = headers[block_idx].clone();
+    for block_idx in start_block..=end_block {
+        let epoch = block_idx / MAX_EPOCH_SIZE as u64;
+        let epoch_acc = epoch_accumulators[epoch as usize].clone();
+        let header = headers[block_idx as usize].clone();
         inclusion_proof_vec.push(
             MasterAccumulator::construct_proof(&header, &epoch_acc)
                 .map_err(|_| EraValidateError::ProofGenerationFailure)?,
@@ -56,40 +60,33 @@ pub fn generate_inclusion_proof(
     Ok(inclusion_proof_vec)
 }
 
-// function: verify_inclusion_proof
-// inputs: flat_file_directory, block_range, inclusion_proof
-// outputs: result
+/// verifies an inclusion proof generate by [`generate_inclusion_proof`]
+///
+/// * `blocks`-  A [`Vec<Block>`]. The blocks included in the inclusion proof interval, set in `start_block` and `end_block` of [`generate_inclusion_proof`]
+/// * `master_accumulator_file`- An instance of [`MasterAccumulator`] which is a file that maintains a record of historical epoch
+/// it is used to verify canonical-ness of headers accumulated from the `blocks`
+/// * `inclusion_proof` -  The inclusion proof generated from [`generate_inclusion_proof`].
 pub fn verify_inclusion_proof(
-    directory: &String,
-    master_accumulator_file: Option<&String>,
-    start_block: usize,
-    end_block: usize,
+    blocks: Vec<Block>,
+    master_accumulator_file: Option<MasterAccumulator>,
     inclusion_proof: Vec<[H256; 15]>,
 ) -> Result<(), EraValidateError> {
-    let num_blocks = end_block - start_block;
-
-    // Load master accumulator
-    let master_accumulator = match master_accumulator_file {
-        Some(master_accumulator_file) => {
-            MasterAccumulator::try_from_file(master_accumulator_file.into())
-                .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile)?
-        }
+    let master_acc = match master_accumulator_file {
+        Some(master_acc) => master_acc,
         None => MasterAccumulator::default(),
     };
 
-    // Verify inclusion proof
-    let blocks = extract_100_blocks(&directory, start_block, end_block)?;
-    for block_idx in 0..num_blocks {
+    for (block_idx, _) in blocks.iter().enumerate() {
         let bhp = BlockHeaderProof::AccumulatorProof(AccumulatorProof {
-            proof: inclusion_proof[block_idx].clone(),
+            proof: inclusion_proof[block_idx as usize].clone(),
         });
         let hwp = HeaderWithProof {
-            header: header_from_block(blocks[block_idx].clone())?,
+            header: header_from_block(&blocks[block_idx as usize].clone())?,
             proof: bhp,
         };
-        master_accumulator
+        master_acc
             .validate_header_with_proof(&hwp)
-            .map_err(|_| EraValidateError::ProofGenerationFailure)?;
+            .map_err(|_| EraValidateError::ProofValidationFailure)?;
     }
 
     Ok(())

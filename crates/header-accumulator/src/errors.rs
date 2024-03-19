@@ -9,12 +9,15 @@ pub enum EraValidateError {
     EraAccumulatorMismatch,
     EpochAccumulatorError,
     ProofGenerationFailure,
+    ProofValidationFailure,
     IoError,
     StartEpochBlockNotFound,
     EndEpochLessThanStartEpoch,
     MergeBlockNotFound,
     JsonError,
     TotalDifficultyDecodeError,
+    InvalidEpochStart,
+    InvalidEpochLength,
 }
 #[derive(Debug)]
 pub enum SyncError {
@@ -42,6 +45,9 @@ impl fmt::Display for EraValidateError {
             EraValidateError::ProofGenerationFailure => {
                 write!(f, "Error generating inclusion proof")
             }
+            EraValidateError::ProofValidationFailure => {
+                write!(f, "Error validating inclusion proof")
+            }
             EraValidateError::IoError => write!(f, "Error reading from stdin"),
             EraValidateError::StartEpochBlockNotFound => {
                 write!(f, "Start epoch block not found")
@@ -57,6 +63,15 @@ impl fmt::Display for EraValidateError {
             }
             EraValidateError::TotalDifficultyDecodeError => {
                 write!(f, "Error decoding total difficulty")
+            }
+            EraValidateError::InvalidEpochLength => {
+                write!(f, "blocks in epoch must be exactly 8192 units")
+            }
+            EraValidateError::InvalidEpochStart => {
+                write!(
+                    f,
+                    "blocks in epoch must respect the range of blocks numbers"
+                )
             }
         }
     }
