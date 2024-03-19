@@ -932,7 +932,7 @@ dependencies = [
 [[package]]
 name = "decoder"
 version = "0.1.1"
-source = "git+https://github.com/semiotic-ai/flat-files-decoder.git?branch=main#cc68ee059b02d0a23f52908e76ef147b9d4c7fe6"
+source = "git+https://github.com/semiotic-ai/flat-files-decoder.git?tag=v0.1.2#d15fe6c65f2c27c85811de40d1e0f57ceac8b6de"
 dependencies = [
  "anyhow",
  "bincode",
@@ -1764,8 +1764,6 @@ dependencies = [
  "ethportal-api",
  "log",
  "primitive-types",
- "prost-build",
- "prost-wkt-build",
  "protobuf",
  "protobuf-json-mapping",
  "revm-primitives 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3963,7 +3961,7 @@ dependencies = [
 [[package]]
 name = "sf-protos"
 version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/sf-protos.git?branch=main#d9abf1b30826960efdf02cd63c5c1279c63e6700"
+source = "git+https://github.com/semiotic-ai/sf-protos.git#d9abf1b30826960efdf02cd63c5c1279c63e6700"
 dependencies = [
  "prost",
  "prost-build",
