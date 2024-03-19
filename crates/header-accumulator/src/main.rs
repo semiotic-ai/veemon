@@ -137,6 +137,7 @@ fn main() {
         .get_matches();
 
     match matches.subcommand() {
+        // TODO: move this functionality to flat_head
         Some(("era_validate", era_validate_matches)) => match era_validate_matches.subcommand() {
             Some(("stream", stream_matches)) => {
                 let master_accumulator_file =
