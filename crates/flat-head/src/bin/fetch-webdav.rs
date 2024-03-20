@@ -22,6 +22,10 @@ struct Args {
     /// Number of times to greet
     #[arg(short, long)]
     end_epoch: u64,
+
+    #[clap(short = 'c', long, default_value = "true")]
+    // Where to decompress files from zstd or not.
+    decompress: Option<bool>,
 }
 
 #[tokio::main]
@@ -35,7 +39,7 @@ async fn main() {
         .expect("server errors");
 
     // Get an `async` stream of Metadata objects:
-    let file_names = gen_dbin_filenames(args.start_epoch, args.end_epoch);
+    let file_names = gen_dbin_filenames(args.start_epoch, args.end_epoch, args.decompress);
 
     for file_name in file_names {
         let path_string = format!("/{}", file_name);
