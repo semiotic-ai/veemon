@@ -26,6 +26,7 @@ use std::fs::File;
 use std::io::{BufReader, Cursor, Read, Write};
 use std::path::PathBuf;
 use tokio::join;
+use zstd::stream::decode_all;
 
 const MERGE_BLOCK: usize = 15537393;
 
@@ -34,20 +35,26 @@ pub enum DecodeInput {
     Reader(Box<dyn Read>),
 }
 
-/**
-* Decode & verify flat files from a directory or a single file.
-* Input can be a directory or a file.
-* headers_dir is optional but must be a directory if provided.
-* If headers_dir is provided, the block headers will be verified against the files in the directory.
-* Header files must be named after the block number they represent and be in json format (e.g. 123.json).
-* If input is a directory, all files with the extension .dbin will be processed.
-* If output is provided, the decoded blocks will be written to the directory.
-* If output is not provided, the decoded blocks will not be written to disk.
-**/
+/// Decodes and optionally verifies block flat files from a given directory or single file.
+///
+/// This function processes input which can be a file or a directory containing multiple `.dbin` files.
+/// If `headers_dir` is provided, it verifies the block headers against the files found in this directory.
+/// These header files must be in JSON format and named after the block number they represent (e.g., `block-<block number>.json`).
+/// it can also handle `zstd` compressed flat files.
+///
+/// # Arguments
+///
+/// * `input`: A [`String`] specifying the path to the input directory or file.
+/// * `output`: An [`Option<&str>`] specifying the directory where decoded blocks should be written.
+///             If `None`, decoded blocks are not written to disk.
+/// * `headers_dir`: An [`Option<&str>`] specifying the directory containing header files for verification.
+///                  Must be a directory if provided.
+/// * `decompress`: An [`Option<bool>`] specifying if it is necessary to decompress from zstd.
 pub fn decode_flat_files(
     input: String,
     output: Option<&str>,
     headers_dir: Option<&str>,
+    decompress: Option<bool>,
 ) -> Result<Vec<Block>, DecodeError> {
     let metadata = fs::metadata(&input).map_err(DecodeError::IoError)?;
 
@@ -56,9 +63,9 @@ pub fn decode_flat_files(
     }
 
     if metadata.is_dir() {
-        decode_flat_files_dir(&input, output, headers_dir)
+        decode_flat_files_dir(&input, output, headers_dir, decompress)
     } else if metadata.is_file() {
-        handle_file(&PathBuf::from(input), output, headers_dir)
+        handle_file(&PathBuf::from(input), output, headers_dir, decompress)
     } else {
         Err(DecodeError::InvalidInput)
     }
@@ -68,6 +75,7 @@ fn decode_flat_files_dir(
     input: &str,
     output: Option<&str>,
     headers_dir: Option<&str>,
+    decompress: Option<bool>,
 ) -> Result<Vec<Block>, DecodeError> {
     let paths = fs::read_dir(input).map_err(DecodeError::IoError)?;
 
@@ -84,7 +92,7 @@ fn decode_flat_files_dir(
         };
 
         println!("Processing file: {}", path.path().display());
-        match handle_file(&path.path(), output, headers_dir) {
+        match handle_file(&path.path(), output, headers_dir, decompress) {
             Ok(file_blocks) => {
                 blocks.extend(file_blocks);
             }
@@ -97,21 +105,40 @@ fn decode_flat_files_dir(
     Ok(blocks)
 }
 
-/**
-* Decode & verify a single flat file.
-* If output is provided, the decoded blocks will be written to the directory.
-* If output is not provided, the decoded blocks will not be written to disk.
-* headers_dir is optional but must be a directory if provided.
-* If headers_dir is provided, the block headers will be verified against the files in the directory.
-* Header files must be named after the block number they represent and be in json format. (e.g. 123.json)
-**/
+/// Decodes and optionally verifies block flat files from a single file.
+///
+/// This function decodes flat files and, if an `output` directory is provided, writes the decoded blocks to this directory.
+/// If no `output` is specified, the decoded blocks are not written to disk. The function can also verify block headers
+/// against header files found in an optional `headers_dir`. These header files must be in JSON format and named after
+/// the block number they represent (e.g., `block-<block number>.json`). Additionally, the function supports handling `zstd` compressed
+/// flat files if decompression is required.
+///
+/// # Arguments
+///
+/// * `input`: A [`String`] specifying the path to the file.
+/// * `output`: An [`Option<&str>`] specifying the directory where decoded blocks should be written.
+///             If `None`, decoded blocks are not written to disk.
+/// * `headers_dir`: An [`Option<&str>`] specifying the directory containing header files for verification.
+///                  Must be a directory if provided.
+/// * `decompress`: An [`Option<bool>`] indicating whether decompression from `zstd` format is necessary.
+
 pub fn handle_file(
     path: &PathBuf,
     output: Option<&str>,
     headers_dir: Option<&str>,
+    decompress: Option<bool>,
 ) -> Result<Vec<Block>, DecodeError> {
-    let mut input_file = BufReader::new(File::open(path).map_err(DecodeError::IoError)?);
-    let dbin_file = DbinFile::try_from_read(&mut input_file)?;
+    let input_file = BufReader::new(File::open(path).map_err(DecodeError::IoError)?);
+    // Check if decompression is required and read the file accordingly.
+    let mut file_contents: Box<dyn Read> = if decompress == Some(true) {
+        let decompressed_data = decode_all(input_file)
+            .map_err(|e| DecodeError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e)))?;
+        Box::new(Cursor::new(decompressed_data))
+    } else {
+        Box::new(input_file)
+    };
+
+    let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
     if dbin_file.header.content_type != "ETH" {
         return Err(DecodeError::InvalidContentType(
             dbin_file.header.content_type,
@@ -295,9 +322,20 @@ mod tests {
     fn test_handle_file() {
         let path = PathBuf::from("example0017686312.dbin");
 
-        let result = handle_file(&path, None, None);
+        let result = handle_file(&path, None, None, None);
 
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_handle_file_zstd() {
+        let path = PathBuf::from("./tests/0000000000.dbin.zst");
+
+        let result = handle_file(&path, None, None, Some(true));
+
+        assert!(result.is_ok());
+        let blocks: Vec<Block> = result.unwrap();
+        assert_eq!(blocks[0].number, 0);
     }
 
     #[test]

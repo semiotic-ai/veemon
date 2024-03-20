@@ -32,6 +32,9 @@ enum Commands {
         /// output folder where decoded headers will be stored as .json
         #[clap(short, long)]
         output: Option<String>,
+        #[clap(short, long)]
+        /// optionally decompress zstd compressed flat files
+        decompress: Option<bool>,
     },
 }
 #[tokio::main]
@@ -44,7 +47,6 @@ async fn main() {
             end_block,
         } => {
             if decompress {
-                // zst decompress first
                 let reader =
                     zstd::stream::Decoder::new(io::stdin()).expect("Failed to create zstd decoder");
                 let writer = BufWriter::new(io::stdout().lock());
@@ -63,9 +65,11 @@ async fn main() {
             input,
             headers_dir,
             output,
+            decompress,
         } => {
-            let blocks = decode_flat_files(input, output.as_deref(), headers_dir.as_deref())
-                .expect("Failed to decode files");
+            let blocks =
+                decode_flat_files(input, output.as_deref(), headers_dir.as_deref(), decompress)
+                    .expect("Failed to decode files");
 
             println!("Total blocks: {}", blocks.len());
         }
