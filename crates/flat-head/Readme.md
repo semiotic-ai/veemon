@@ -27,7 +27,7 @@ Here are some examples of how to use the commands:
 1.  To validate flat files in a folder, a start epoch and a end epoch must be provided. `-d` flag can be used for debugging or log information.
 
 ```
-cargo run --bin flat_head -- -d era-validate --dir ~/Desktop/firehose/sf-data/storage/merged-blocks/ --start-epoch 0 
+cargo run --bin flat_head -- -d era-validate --dir ~/firehose/sf-data/storage/merged-blocks/ --start-epoch 0 
 ```
 
 Flat files should come compressed with Zstandard (zstd) from Firehose. Flat_head handles decompression by default, but if it is necessary to disable it pass to the args: `-c false`. This is the same for all other binaries.
