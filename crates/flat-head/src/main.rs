@@ -34,6 +34,10 @@ enum Commands {
         // epoch to end in. The interval is inclusive
         #[clap(short, long, default_value = "0")]
         end_epoch: Option<usize>,
+
+        #[clap(short = 'c', long, default_value = "true")]
+        // directory where flat files are located
+        decompress: Option<bool>,
     },
 }
 
@@ -50,13 +54,19 @@ fn main() {
 
     match &cli.command {
         Some(Commands::EraValidate {
+            decompress,
             dir,
             master_acc_file,
             start_epoch,
             end_epoch,
         }) => {
-            log::info!("Starting validation.");
-            let result = verify_eras(dir, master_acc_file.as_ref(), *start_epoch, *end_epoch);
+            let result = verify_eras(
+                dir,
+                master_acc_file.as_ref(),
+                *start_epoch,
+                *end_epoch,
+                *decompress,
+            );
             log::info!("epochs validated: {:?}", result);
         }
         None => {}

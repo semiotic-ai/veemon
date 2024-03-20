@@ -12,10 +12,11 @@ tokio = { version = "1.0", features = ["full"] }
 futures = "0.3"
 env_logger = "0.11.2"
 header_accumulator = { git = "https://git@github.com/semiotic-ai/header_accumulator.git", tag = "v0.1.1-alpha" }
-decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", tag = "v0.1.2"}
+decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", tag = "v0.2.0"}
 sf-protos = { git = "https://github.com/semiotic-ai/sf-protos.git", version = "0.1.0"}
 trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0" }
 tree_hash = "0.5.2"
 object_store = { version = "0.9.0", features = ["gcp", "http", "aws"] }
 log = "0.4.20"
 dotenv = "0.15.0"
+zstd = "0.13.0"
