@@ -17,7 +17,7 @@ fn test_inclusion_proof() -> Result<(), EraValidateError> {
             "tests/ethereum_firehose_first_8200/{:010}.dbin",
             flat_file_number
         );
-        match decode_flat_files(file_name, None, None) {
+        match decode_flat_files(file_name, None, None, Some(false)) {
             Ok(blocks) => {
                 headers.extend(
                     blocks

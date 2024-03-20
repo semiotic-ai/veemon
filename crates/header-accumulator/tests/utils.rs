@@ -7,6 +7,7 @@ fn test_header_from_block() {
         "tests/ethereum_firehose_first_8200/0000008200.dbin".to_string(),
         None,
         None,
+        Some(false),
     )
     .unwrap();
 
