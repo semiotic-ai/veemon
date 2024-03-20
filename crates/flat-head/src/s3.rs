@@ -21,7 +21,12 @@ fn handle_var(var_name: &str) -> String {
     }
 }
 
-pub async fn s3_fetch(start_epoch: u64, end_epoch: u64, endpoint: Option<String>) {
+pub async fn s3_fetch(
+    start_epoch: u64,
+    end_epoch: u64,
+    endpoint: Option<String>,
+    decompress: Option<bool>,
+) {
     dotenv().ok();
 
     let aws_region = handle_var("AWS_REGION");
@@ -42,7 +47,7 @@ pub async fn s3_fetch(start_epoch: u64, end_epoch: u64, endpoint: Option<String>
 
     let s3 = builder.build().unwrap();
 
-    let file_names = gen_dbin_filenames(start_epoch, end_epoch);
+    let file_names = gen_dbin_filenames(start_epoch, end_epoch, decompress);
 
     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
     for file_name in file_names {

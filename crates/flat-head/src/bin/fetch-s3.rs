@@ -19,10 +19,20 @@ struct Args {
     /// for local development or another s3 compatible API
     #[arg(short = 'p', long)]
     endpoint: Option<String>,
+
+    #[clap(short = 'c', long, default_value = "true")]
+    // Where to decompress files from zstd or not.
+    decompress: Option<bool>,
 }
 
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    s3_fetch(args.start_epoch, args.end_epoch, args.endpoint).await;
+    s3_fetch(
+        args.start_epoch,
+        args.end_epoch,
+        args.endpoint,
+        args.decompress,
+    )
+    .await;
 }

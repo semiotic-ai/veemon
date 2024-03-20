@@ -36,7 +36,7 @@ enum Commands {
         end_epoch: Option<usize>,
 
         #[clap(short = 'c', long, default_value = "true")]
-        // directory where flat files are located
+        // Where to decompress files from zstd or not.
         decompress: Option<bool>,
     },
 }
