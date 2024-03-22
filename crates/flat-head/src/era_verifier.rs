@@ -1,4 +1,3 @@
-use decoder::decode_flat_files;
 use header_accumulator::types::ExtHeaderRecord;
 use header_accumulator::{era_validator::era_validate, errors::EraValidateError};
 use sf_protos::ethereum::r#type::v2::Block;
@@ -16,7 +15,7 @@ pub async fn verify_eras(
     start_epoch: usize,
     end_epoch: Option<usize>,
     decompress: Option<bool>,
-) -> Result<Vec<usize>, EraValidateError> {
+) -> Result<Vec<usize>, anyhow::Error> {
     let mut validated_epochs = Vec::new();
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
         let blocks = get_blocks_from_dir(epoch, store_url, decompress).await?;
@@ -52,7 +51,7 @@ async fn get_blocks_from_dir(
     epoch: usize,
     store_url: &String,
     decompress: Option<bool>,
-) -> Result<Vec<Block>, EraValidateError> {
+) -> Result<Vec<Block>, anyhow::Error> {
     let start_100_block = epoch * MAX_EPOCH_SIZE;
     let end_100_block = (epoch + 1) * MAX_EPOCH_SIZE;
 
@@ -73,7 +72,7 @@ async fn extract_100s_blocks(
     start_block: usize,
     end_block: usize,
     decompress: Option<bool>,
-) -> Result<Vec<Block>, EraValidateError> {
+) -> Result<Vec<Block>, anyhow::Error> {
     // Flat files are stored in 100 block files
     // So we need to find the 100 block file that contains the start block and the 100 block file that contains the end block
     let start_100_block = (start_block / 100) * 100;
@@ -88,22 +87,14 @@ async fn extract_100s_blocks(
 
     for block_number in (start_100_block..end_100_block).step_by(100) {
         let block_file_name = format!("{:010}.dbin{}", block_number, zst_extension);
-        let blocks_store = store::new(store_url).map_err(anyhow_error_to_era)?;
+        let blocks_store = store::new(store_url)?;
         let decoded_blocks = blocks_store
             .read_blocks(&block_file_name, store::ReadOptions { decompress })
-            .await
-            .map_err(|err| {
-                log::error!("Error decoding flat files: {:?}", err);
-                EraValidateError::FlatFileDecodeError
-            })?;
+            .await?;
 
         blocks.extend(decoded_blocks);
     }
 
     // Return only the requested blocks
     Ok(blocks[start_block - start_100_block..end_block - start_100_block].to_vec())
-}
-
-fn anyhow_error_to_era(_: anyhow::Error) -> EraValidateError {
-    EraValidateError::IoError
 }

@@ -61,15 +61,28 @@ async fn main() {
             start_epoch,
             end_epoch,
         }) => {
-            let result = verify_eras(
+            println!(
+                "Starting era validation {} - {}",
+                start_epoch,
+                end_epoch.map(|x| x.to_string()).unwrap_or("".to_string())
+            );
+
+            match verify_eras(
                 store_url,
                 master_acc_file.as_ref(),
                 *start_epoch,
                 *end_epoch,
                 *decompress,
             )
-            .await;
-            log::info!("epochs validated: {:?}", result);
+            .await
+            {
+                Ok(result) => {
+                    println!("Epochs validated: {:?}", result);
+                }
+                Err(e) => {
+                    log::error!("error: {:#}", e);
+                }
+            }
         }
         None => {}
     }
