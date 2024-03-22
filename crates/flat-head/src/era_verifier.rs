@@ -1,5 +1,5 @@
+use header_accumulator::era_validator::era_validate;
 use header_accumulator::types::ExtHeaderRecord;
-use header_accumulator::{era_validator::era_validate, errors::EraValidateError};
 use sf_protos::ethereum::r#type::v2::Block;
 
 use crate::store;

@@ -118,6 +118,11 @@ async fn fake_handle_from_stream(
             .expect("demo code, unable to write to temp file");
     }
 
+    file.sync_all()
+        .await
+        .expect("demo code, unable to sync temp file");
+    drop(file);
+
     Ok(decode_flat_files(
         "/tmp/temp_block.dbin.zst".to_string(),
         None,
