@@ -85,6 +85,7 @@ async fn extract_100s_blocks(
     if decompress.unwrap() {
         zst_extension = ".zst";
     }
+
     for block_number in (start_100_block..end_100_block).step_by(100) {
         let block_file_name = format!("{:010}.dbin{}", block_number, zst_extension);
         let blocks_store = store::new(store_url).map_err(anyhow_error_to_era)?;

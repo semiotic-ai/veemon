@@ -1,8 +1,13 @@
-use bytes::Bytes;
+use bytes::{Buf, Bytes, BytesMut};
+use decoder::{decode_flat_files, handle_file};
 use futures::stream::BoxStream;
 use object_store::{aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, path::Path, ObjectStore};
-use std::{io, sync::Arc};
+use std::{
+    io::{self, Read},
+    sync::Arc,
+};
 use thiserror::Error;
+use tokio::io::AsyncWriteExt;
 use url::Url;
 
 use sf_protos::ethereum::r#type::v2::Block;
@@ -77,12 +82,25 @@ async fn fake_handle_from_stream(
     decompress: bool,
 ) -> Result<Vec<Block>, ReadError> {
     use futures::stream::TryStreamExt; // for `try_next`
-    let mut sum = 0;
+
+    let mut file = tokio::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open("/tmp/temp_block.dbin.zst")
+        .await
+        .expect("demo code, no file would be use when flat_file_decoders will be updated");
+
     while let Some(item) = stream.try_next().await? {
-        sum += item.len();
+        file.write_all(&item)
+            .await
+            .expect("demo code, unable to write to temp file");
     }
 
-    println!("Bytes read: {}", sum);
-
-    Ok(vec![])
+    Ok(decode_flat_files(
+        "/tmp/temp_block.dbin.zst".to_string(),
+        None,
+        None,
+        Some(decompress),
+    )
+    .expect("demo code, deal with error nicely"))
 }
