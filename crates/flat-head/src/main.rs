@@ -46,9 +46,8 @@ async fn main() {
     let cli = Cli::parse();
 
     match cli.debug {
-        0 => {}
-        1 => env::set_var("RUST_LOG", "info"),
-        2 => env::set_var("RUST_LOG", "debug"),
+        0 => env::set_var("RUST_LOG", "info"),
+        1 => env::set_var("RUST_LOG", "debug"),
         _ => {}
     }
     env_logger::init();
