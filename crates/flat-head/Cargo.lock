@@ -1506,7 +1506,9 @@ checksum = "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80"
 name = "flat_head"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bincode",
+ "bytes",
  "clap",
  "decoder",
  "dotenv",
@@ -1516,9 +1518,11 @@ dependencies = [
  "log",
  "object_store",
  "sf-protos",
+ "thiserror",
  "tokio",
  "tree_hash",
  "trin-validation",
+ "url",
  "zstd 0.13.0",
 ]
 

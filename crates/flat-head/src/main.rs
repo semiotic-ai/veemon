@@ -19,9 +19,9 @@ struct Cli {
 enum Commands {
     /// Decode and validates flat files from a directory.
     EraValidate {
-        #[clap(short, long)]
+        #[clap(short = 'b', long)]
         // directory where flat files are located
-        dir: String,
+        store_url: String,
 
         #[clap(short, long)]
         // master accumulator file. default Portal Network file will be used if none provided
@@ -41,7 +41,8 @@ enum Commands {
     },
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
     match cli.debug {
@@ -55,18 +56,19 @@ fn main() {
     match &cli.command {
         Some(Commands::EraValidate {
             decompress,
-            dir,
+            store_url,
             master_acc_file,
             start_epoch,
             end_epoch,
         }) => {
             let result = verify_eras(
-                dir,
+                store_url,
                 master_acc_file.as_ref(),
                 *start_epoch,
                 *end_epoch,
                 *decompress,
-            );
+            )
+            .await;
             log::info!("epochs validated: {:?}", result);
         }
         None => {}
