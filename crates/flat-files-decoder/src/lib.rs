@@ -121,7 +121,7 @@ fn decode_flat_files_dir(
 /// * `headers_dir`: An [`Option<&str>`] specifying the directory containing header files for verification.
 ///                  Must be a directory if provided.
 /// * `decompress`: An [`Option<bool>`] indicating whether decompression from `zstd` format is necessary.
-
+///
 pub fn handle_file(
     path: &PathBuf,
     output: Option<&str>,
@@ -154,13 +154,25 @@ pub fn handle_file(
     Ok(blocks)
 }
 
-/**
-* Decode & verify a single flat file from a buffer with its contents.
-* This is useful for decoding a file that is already in memory.
-* Returns a vector of all the blocks in the flat file
-* (it can be a single block or 100 blocks depending on format).
-**/
-pub fn handle_buf(buf: &[u8]) -> Result<Vec<Block>, DecodeError> {
+/// Decodes a flat file from a buffer containing its contents and optionally decompresses it.
+///
+/// Decodes flat files that are already loaded into memory, without direct file system ac   cess.
+/// It can handle both compressed (if `zstd` decompression is specified) and uncompressed data. Upon successful
+/// decoding, it returns a vector of all the blocks contained within the flat file. The actual number of blocks
+/// returned depends on the format and content of the flat file—ranging from a single block to multiple blocks.
+///
+/// # Arguments
+///
+/// * `buf`: A byte slice referencing the in-memory content of the flat file to be decoded.
+/// * `decompress`: A boolean indicating whether the input buffer should be decompressed.
+///
+pub fn handle_buf(buf: &[u8], decompress: Option<bool>) -> Result<Vec<Block>, DecodeError> {
+    let buf = if decompress.unwrap_or(false) {
+        zstd::decode_all(buf).map_err(|_| DecodeError::DecompressError)?
+    } else {
+        buf.to_vec()
+    };
+
     let dbin_file = DbinFile::try_from_read(&mut Cursor::new(buf))?;
 
     let mut blocks: Vec<Block> = vec![];
@@ -310,11 +322,11 @@ mod tests {
 
     use crate::dbin::DbinFile;
     use crate::receipts::check_receipt_root;
-    use crate::{handle_file, receipts, stream_blocks};
+    use crate::{handle_buf, handle_file, receipts, stream_blocks};
     use sf_protos::bstream::v1::Block as BstreamBlock;
     use sf_protos::ethereum::r#type::v2::Block;
     use std::fs::File;
-    use std::io::{self, Cursor, Write};
+    use std::io::{self, Cursor, Read, Write};
     use std::io::{BufReader, BufWriter};
     use std::path::PathBuf;
 
@@ -383,6 +395,41 @@ mod tests {
         matches!(
             tokio_test::block_on(stream_blocks(reader, writer, None)),
             Ok(())
+        );
+    }
+
+    #[test]
+    fn test_handle_buff() {
+        let path = PathBuf::from("example0017686312.dbin");
+        let file = BufReader::new(File::open(path).expect("Failed to open file"));
+        let mut reader = BufReader::new(file);
+
+        let mut buffer = Vec::new();
+
+        reader
+            .read_to_end(&mut buffer)
+            .expect("Failed to read file");
+
+        let result = handle_buf(&buffer, Some(false));
+        assert!(result.is_ok(), "handle_buf should complete successfully");
+    }
+
+    #[test]
+    fn test_handle_buff_decompress() {
+        let path = PathBuf::from("tests/0000000000.dbin.zst");
+        let file = BufReader::new(File::open(path).expect("Failed to open file"));
+        let mut reader = BufReader::new(file);
+
+        let mut buffer = Vec::new();
+
+        reader
+            .read_to_end(&mut buffer)
+            .expect("Failed to read file");
+
+        let result = handle_buf(&buffer, Some(true));
+        assert!(
+            result.is_ok(),
+            "handle_buf should complete successfully with decompression"
         );
     }
 }

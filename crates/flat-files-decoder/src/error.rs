@@ -9,6 +9,8 @@ use tokio::task::JoinError;
 pub enum DecodeError {
     #[error("Invalid input")]
     InvalidInput,
+    #[error("error decompressing")]
+    DecompressError,
     #[error("Dbin File Error: {0}")]
     DbinFileError(#[from] DbinFileError),
     #[error("Invalid Block Header: {0}")]
