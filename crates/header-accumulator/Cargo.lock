@@ -932,7 +932,7 @@ dependencies = [
 [[package]]
 name = "decoder"
 version = "0.1.1"
-source = "git+https://github.com/semiotic-ai/flat-files-decoder.git?tag=v0.2.0#7a30d1d52b80a62ef446bf53dc3daf490c228d61"
+source = "git+https://github.com/semiotic-ai/flat-files-decoder.git?branch=main#780707ed7dc2d0c1bd4d9f5fbfbb3cdaeb29ae98"
 dependencies = [
  "anyhow",
  "bincode",
