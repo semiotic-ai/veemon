@@ -1,13 +1,11 @@
 use anyhow::Context;
 use bytes::Bytes;
-use decoder::decode_flat_files;
-use futures::stream::BoxStream;
+use decoder::handle_buf;
 use object_store::{
     gcp::GoogleCloudStorageBuilder, local::LocalFileSystem, path::Path, ObjectStore,
 };
 use std::sync::Arc;
 use thiserror::Error;
-use tokio::io::AsyncWriteExt;
 use url::Url;
 
 use sf_protos::ethereum::r#type::v2::Block;
@@ -58,6 +56,7 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
     }
 }
 
+#[derive(Clone)]
 pub struct Store {
     store: Arc<dyn ObjectStore>,
     base: String,
@@ -66,16 +65,16 @@ pub struct Store {
 impl Store {
     pub async fn read_blocks(
         &self,
-        path: &String,
+        path: String,
         options: ReadOptions,
     ) -> Result<Vec<Block>, ReadError> {
         let content = self.store.get(&self.join_path(path)).await?;
+        let bytes: Bytes = content.bytes().await.unwrap();
 
-        // FIXME: Use a version appropriate, we could use `content.into_store` and support async reader API.
-        fake_handle_from_stream(content.into_stream(), options.decompress()).await
+        handle_from_bytes(bytes, options.decompress()).await
     }
 
-    fn join_path(&self, path: &String) -> Path {
+    fn join_path(&self, path: String) -> Path {
         Path::from(format!("{}/{}", self.base, path.trim_start_matches('/')))
     }
 }
@@ -86,6 +85,8 @@ pub enum ReadError {
     NotFound(String),
     #[error("Storage error: {0}")]
     Storage(#[from] object_store::Error),
+    #[error("Decode error: {0}")]
+    DecodeError(String), // Or directly use DecodeError if it implements `std::error::Error`
 }
 
 pub struct ReadOptions {
@@ -98,36 +99,40 @@ impl ReadOptions {
     }
 }
 
-async fn fake_handle_from_stream(
-    mut stream: BoxStream<'static, Result<Bytes, object_store::Error>>,
-    decompress: bool,
-) -> Result<Vec<Block>, ReadError> {
-    use futures::stream::TryStreamExt; // for `try_next`
-
-    let mut file = tokio::fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open("/tmp/temp_block.dbin.zst")
-        .await
-        .expect("demo code, no file would be use when flat_file_decoders will be updated");
-
-    while let Some(item) = stream.try_next().await? {
-        file.write_all(&item)
-            .await
-            .expect("demo code, unable to write to temp file");
-    }
-
-    file.sync_all()
-        .await
-        .expect("demo code, unable to sync temp file");
-    drop(file);
-
-    Ok(decode_flat_files(
-        "/tmp/temp_block.dbin.zst".to_string(),
-        None,
-        None,
-        Some(decompress),
-    )
-    .expect("demo code, deal with error nicely"))
+async fn handle_from_bytes(bytes: Bytes, decompress: bool) -> Result<Vec<Block>, ReadError> {
+    handle_buf(bytes.as_ref(), Some(decompress)).map_err(|e| ReadError::DecodeError(e.to_string()))
 }
+
+// async fn fake_handle_from_stream(
+//     mut stream: BoxStream<'static, Result<Bytes, object_store::Error>>,
+//     decompress: bool,
+// ) -> Result<Vec<Block>, ReadError> {
+//     use futures::stream::TryStreamExt; // for `try_next`
+
+//     let mut file = tokio::fs::OpenOptions::new()
+//         .write(true)
+//         .create(true)
+//         .truncate(true)
+//         .open("/tmp/temp_block.dbin.zst")
+//         .await
+//         .expect("demo code, no file would be use when flat_file_decoders will be updated");
+
+//     while let Some(item) = stream.try_next().await? {
+//         file.write_all(&item)
+//             .await
+//             .expect("demo code, unable to write to temp file");
+//     }
+
+//     file.sync_all()
+//         .await
+//         .expect("demo code, unable to sync temp file");
+//     drop(file);
+
+//     Ok(decode_flat_files(
+//         "/tmp/temp_block.dbin.zst".to_string(),
+//         None,
+//         None,
+//         Some(decompress),
+//     )
+//     .expect("demo code, deal with error nicely"))
+// }

@@ -51,7 +51,7 @@ async fn main() {
         let mut headers: Vec<ExtHeaderRecord> = Vec::new();
 
         // Use `as_ref` to get a &[u8] from `bytes` and pass it to `handle_buf`
-        match handle_buf(bytes.as_ref()) {
+        match handle_buf(bytes.as_ref(), Some(false)) {
             Ok(blocks) => {
                 let (successful_headers, _): (Vec<_>, Vec<_>) = blocks
                     .iter()
