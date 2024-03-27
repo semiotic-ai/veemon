@@ -27,7 +27,6 @@ pub async fn verify_eras(
                 match res {
                     Ok(header) => succ.push(header),
                     Err(e) => {
-                        // Log the error or handle it as needed
                         eprintln!("Error converting block: {:?}", e);
                         errs.push(e);
                     }
