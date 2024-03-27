@@ -58,7 +58,7 @@ pub async fn s3_fetch(
         let bytes = result.bytes().await.unwrap();
 
         // Use `as_ref` to get a &[u8] from `bytes` and pass it to `handle_buf`
-        match handle_buf(bytes.as_ref()) {
+        match handle_buf(bytes.as_ref(), Some(false)) {
             Ok(blocks) => {
                 let (successful_headers, _): (Vec<_>, Vec<_>) = blocks
                     .iter()
