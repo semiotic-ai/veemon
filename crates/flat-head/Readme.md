@@ -27,7 +27,7 @@ Here are some examples of how to use the commands:
 1.  To validate flat files in a folder, a start epoch and a end epoch must be provided. `-d` flag can be used for debugging or log information.
 
 ```
-cargo run --bin flat_head -- -d era-validate --dir ~/firehose/sf-data/storage/merged-blocks/ --start-epoch 0 
+ cargo run --bin flat_head -- era-validate --store-url file:///<full-path-to-folder> -s 0   
 ```
 
 Flat files should come compressed with Zstandard (zstd) from Firehose. Flat_head handles decompression by default, but if it is necessary to disable it pass to the args: `-c false`. This is the same for all other binaries.
@@ -37,29 +37,30 @@ Passing `--end-epoch` is not necessary, although without it, `flat_head` will on
 2. To fetch flat files from a Webdav server and validate each file as they arrive:
 
 ```
-cargo run --bin fetch-webdav -- --url <server-url> -s 0 -e 1
+ cargo run --bin flat_head -- era-validate --store-url http:///<full-path-to-folder> -s 0   
 ```
 
-This command will skip the files that were already verified and written into `lockfile.json`.
-It stops abruptly if verification of any file fails. If files are compressed as `.zst` it is also capable
-of decompressing them.
 
 3. To fetch flat files from a gcloud bucket, and validate each epoch as they arrive:
 
 ```
-cargo run --bin fetch-gcloud --bucket --fist-epoch 0 --end-epoch 1
+ cargo run --bin flat_head -- era-validate --store-url gs:///<full-path-to-folder> -s 0   
 ```
 
 4. To fetch flat files from a s3 bucket and validate each epoch as they arrive:
 
 ```
-❯ cargo run --bin fetch-s3  --  -s 0 -e 2  --endpoint http://localhost:9000
+ cargo run --bin flat_head -- era-validate --store-url s3:///<full-path-to-folder> -s 0   
+
 ```
+
+`era-validate` will skip the files that were already verified and written into `lockfile.json`.
+It stops abruptly if verification of any file fails. If files are compressed as `.zst` it is also capable
+of decompressing them.
 
 An optional endpoint can be provided if running in a local environment or in another s3 compatible API.
 
 Environment variables for aws have to be set for s3 in this scenario. An example is provided in `.env.example`
-
 
 
 ## Goals

@@ -2,7 +2,8 @@ use anyhow::Context;
 use bytes::Bytes;
 use decoder::handle_buf;
 use object_store::{
-    gcp::GoogleCloudStorageBuilder, local::LocalFileSystem, path::Path, ObjectStore,
+    aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, local::LocalFileSystem, path::Path,
+    ObjectStore,
 };
 use std::sync::Arc;
 use thiserror::Error;
@@ -26,7 +27,20 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
 
     match url.scheme() {
         "s3" => {
-            unimplemented!("s3://... support not implemented yet")
+            let bucket = url.host_str().ok_or_else(|| anyhow::anyhow!("No bucket"))?;
+            let path = url.path();
+
+            let store = AmazonS3Builder::new()
+                .with_bucket_name(bucket.to_string())
+                .build()?;
+
+            Ok(Store {
+                store: Arc::new(store),
+                base: match path.starts_with("/") {
+                    false => path.to_string(),
+                    true => path[1..].to_string(),
+                },
+            })
         }
         "gs" => {
             let bucket = url.host_str().ok_or_else(|| anyhow::anyhow!("No bucket"))?;

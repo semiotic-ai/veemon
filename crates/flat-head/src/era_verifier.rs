@@ -19,7 +19,7 @@ pub async fn verify_eras(
 ) -> Result<Vec<usize>, anyhow::Error> {
     let mut validated_epochs = Vec::new();
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
-        let blocks = get_blocks_from_dir(epoch, store_url, decompress).await?;
+        let blocks = get_blocks_from_store(epoch, store_url, decompress).await?;
         let (successful_headers, _): (Vec<_>, Vec<_>) = blocks
             .iter()
             .cloned()
@@ -48,7 +48,7 @@ pub async fn verify_eras(
     Ok(validated_epochs)
 }
 
-async fn get_blocks_from_dir(
+async fn get_blocks_from_store(
     epoch: usize,
     store_url: &String,
     decompress: Option<bool>,
