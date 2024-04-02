@@ -5,6 +5,7 @@ use tokio::task;
 use header_accumulator::types::ExtHeaderRecord;
 use sf_protos::ethereum::r#type::v2::Block;
 use tokio::sync::mpsc;
+use trin_validation::accumulator::MasterAccumulator;
 
 use crate::store;
 pub const MAX_EPOCH_SIZE: usize = 8192;
@@ -15,18 +16,19 @@ pub const MERGE_BLOCK: usize = 15537394;
 ///
 pub async fn verify_eras(
     store_url: &String,
-    master_acc_file: Option<&String>,
+    macc: MasterAccumulator,
     start_epoch: usize,
     end_epoch: Option<usize>,
     decompress: Option<bool>,
 ) -> Result<Vec<usize>, anyhow::Error> {
     let mut validated_epochs = Vec::new();
     let (tx, mut rx) = mpsc::unbounded_channel();
+
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
         let tx = tx.clone();
         let store_url = store_url.clone();
         let decompress = decompress.clone();
-        let master_acc_file = Some(master_acc_file.unwrap().clone());
+        let macc = macc.clone();
 
         task::spawn(async move {
             match get_blocks_from_store(epoch, &store_url, decompress).await {
@@ -45,14 +47,10 @@ pub async fn verify_eras(
                             };
                             (succ, errs)
                         });
-                    let valid_epochs = era_validate(
-                        successful_headers,
-                        master_acc_file.as_ref(),
-                        epoch,
-                        Some(epoch + 1),
-                        None,
-                    )
-                    .unwrap();
+
+                    let valid_epochs =
+                        era_validate(successful_headers, macc, epoch, Some(epoch + 1), None)
+                            .unwrap();
 
                     let _ = tx.send(valid_epochs);
                 }
@@ -65,7 +63,7 @@ pub async fn verify_eras(
     drop(tx);
 
     // Process blocks as they arrive
-    while let Some((epochs)) = rx.recv().await {
+    while let Some(epochs) = rx.recv().await {
         validated_epochs.extend(epochs);
     }
 

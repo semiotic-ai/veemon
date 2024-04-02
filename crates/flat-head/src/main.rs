@@ -3,6 +3,7 @@ use std::env;
 use clap::{Parser, Subcommand};
 
 use flat_head::era_verifier::verify_eras;
+use trin_validation::accumulator::MasterAccumulator;
 
 #[derive(Parser)]
 #[command(version, about = "A flat file decoder and validator", long_about = None)]
@@ -66,9 +67,17 @@ async fn main() {
                 end_epoch.map(|x| x.to_string()).unwrap_or("".to_string())
             );
 
+            let macc = match master_acc_file {
+                Some(master_accumulator_file) => {
+                    MasterAccumulator::try_from_file(master_accumulator_file.into())
+                        .map_err(|_| panic!("failed to parse master accumulator file"))
+                }
+                None => Ok(MasterAccumulator::default()),
+            };
+
             match verify_eras(
                 store_url,
-                master_acc_file.as_ref(),
+                macc.unwrap(),
                 *start_epoch,
                 *end_epoch,
                 *decompress,
