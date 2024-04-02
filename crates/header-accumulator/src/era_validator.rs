@@ -20,28 +20,19 @@ use crate::{
 ///
 /// * `headers`-  A mutable vector of [`ExtHeaderRecord`]. The Vector can be any size, however, it must be in chunks of 8192 blocks to work properly
 /// to function without error
-/// * `master_accumulator_file`- An instance of [`MasterAccumulator`] which is a file that maintains a record of historical epoch
+/// * `macc`- An instance of [`MasterAccumulator`] which is a representation of a file that maintains a record of historical epoch
 /// it is used to verify canonical-ness of headers accumulated from the `blocks`
 /// * `start_epoch` -  The epoch number that all the first 8192 blocks are set located
 /// * `end_epoch` -  The epoch number that all the last 8192 blocks are located
 /// * `use_lock` - when set to true, uses the lockfile to store already processed blocks. True by default
 pub fn era_validate(
     mut headers: Vec<ExtHeaderRecord>,
-    master_accumulator_file: Option<&String>,
+    macc: MasterAccumulator,
     start_epoch: usize,
     end_epoch: Option<usize>,
     use_lock: Option<bool>, // Changed to Option<bool>
 ) -> Result<Vec<usize>, EraValidateError> {
     let use_lock = use_lock.unwrap_or(true);
-
-    // Load master accumulator if available, otherwise use default from Portal Network
-    let master_accumulator = match master_accumulator_file {
-        Some(master_accumulator_file) => {
-            MasterAccumulator::try_from_file(master_accumulator_file.into())
-                .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile)?
-        }
-        None => MasterAccumulator::default(),
-    };
 
     let end_epoch = match end_epoch {
         Some(end_epoch) => end_epoch,
@@ -60,7 +51,7 @@ pub fn era_validate(
             match check_sync_state(
                 Path::new("./lockfile.json"),
                 epoch.to_string(),
-                master_accumulator.historical_epochs[epoch].0,
+                macc.historical_epochs[epoch].0,
             ) {
                 Ok(true) => {
                     log::info!("Skipping, epoch already synced: {}", epoch);
@@ -78,7 +69,7 @@ pub fn era_validate(
             }
         }
         let epoch_headers: Vec<ExtHeaderRecord> = headers.drain(0..MAX_EPOCH_SIZE).collect();
-        let root = process_headers(epoch_headers, epoch, &master_accumulator)?;
+        let root = process_headers(epoch_headers, epoch, &macc)?;
         validated_epochs.push(epoch);
         // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
         if use_lock {
