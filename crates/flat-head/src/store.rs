@@ -36,7 +36,7 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
 
             Ok(Store {
                 store: Arc::new(store),
-                base: match path.starts_with("/") {
+                base: match path.starts_with('/') {
                     false => path.to_string(),
                     true => path[1..].to_string(),
                 },
@@ -52,7 +52,7 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
 
             Ok(Store {
                 store: Arc::new(store),
-                base: match path.starts_with("/") {
+                base: match path.starts_with('/') {
                     false => path.to_string(),
                     true => path[1..].to_string(),
                 },

@@ -15,7 +15,7 @@ pub const MERGE_BLOCK: usize = 15537394;
 /// verifies flat flies stored in directory against a header accumulator
 ///
 pub async fn verify_eras(
-    store_url: &String,
+    store_url: String,
     macc: MasterAccumulator,
     start_epoch: usize,
     end_epoch: Option<usize>,
@@ -27,7 +27,7 @@ pub async fn verify_eras(
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
         let tx = tx.clone();
         let store_url = store_url.clone();
-        let decompress = decompress.clone();
+        let decompress = decompress;
         let macc = macc.clone();
 
         task::spawn(async move {
@@ -72,7 +72,7 @@ pub async fn verify_eras(
 
 async fn get_blocks_from_store(
     epoch: usize,
-    store_url: &String,
+    store_url: &str,
     decompress: Option<bool>,
 ) -> Result<Vec<Block>, anyhow::Error> {
     let start_100_block = epoch * MAX_EPOCH_SIZE;
@@ -91,7 +91,7 @@ async fn get_blocks_from_store(
 }
 
 async fn extract_100s_blocks(
-    store_url: &String,
+    store_url: &str,
     start_block: usize,
     end_block: usize,
     decompress: Option<bool>,

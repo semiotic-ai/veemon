@@ -76,7 +76,7 @@ async fn main() {
             };
 
             match verify_eras(
-                store_url,
+                store_url.to_string(),
                 macc.unwrap(),
                 *start_epoch,
                 *end_epoch,
