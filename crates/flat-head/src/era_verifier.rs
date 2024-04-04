@@ -27,7 +27,6 @@ pub async fn verify_eras(
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
         let tx = tx.clone();
         let store_url = store_url.clone();
-        let decompress = decompress;
         let macc = macc.clone();
 
         task::spawn(async move {
