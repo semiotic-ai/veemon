@@ -2,8 +2,8 @@ use anyhow::Context;
 use bytes::Bytes;
 use decoder::handle_buf;
 use object_store::{
-    aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, local::LocalFileSystem, path::Path,
-    ObjectStore,
+    aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, http::HttpBuilder,
+    local::LocalFileSystem, path::Path, ObjectStore,
 };
 use std::sync::Arc;
 use thiserror::Error;
@@ -25,10 +25,39 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
         Err(e) => Err(e).with_context(|| format!("Invalid store URL: {}", store_url))?,
     };
 
+    let path = url.path();
+
+    let base_path = match path.starts_with('/') {
+        false => path.to_string(),
+        true => path[1..].to_string(),
+    };
+
     match url.scheme() {
+        "http" => {
+            //TODO: setup a flag for s3 compatible http APIs such as seaweed fs.
+            // TODO: setup scheme such as https so it handles the same.
+            let endpoint = match url.host_str() {
+                Some(host) => {
+                    let port = url.port_or_known_default();
+                    format!("http://{}:{}", host, port.unwrap())
+                }
+                None => return Err(anyhow::anyhow!("invalid url format")),
+            };
+            let store = AmazonS3Builder::new()
+                .with_endpoint(endpoint)
+                .with_allow_http(true)
+                .with_bucket_name(url.path()[1..].to_string())
+                .with_access_key_id("any")
+                .with_secret_access_key("any")
+                .build()?;
+
+            Ok(Store {
+                store: Arc::new(store),
+                base: "".to_string(),
+            })
+        }
         "s3" => {
-            let bucket = url.host_str().ok_or_else(|| anyhow::anyhow!("No bucket"))?;
-            let path = url.path();
+            let bucket: &str = url.host_str().ok_or_else(|| anyhow::anyhow!("No bucket"))?;
 
             let store = AmazonS3Builder::new()
                 .with_bucket_name(bucket.to_string())
@@ -36,15 +65,11 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
 
             Ok(Store {
                 store: Arc::new(store),
-                base: match path.starts_with('/') {
-                    false => path.to_string(),
-                    true => path[1..].to_string(),
-                },
+                base: base_path,
             })
         }
         "gs" => {
             let bucket = url.host_str().ok_or_else(|| anyhow::anyhow!("No bucket"))?;
-            let path = url.path();
 
             let store = GoogleCloudStorageBuilder::new()
                 .with_bucket_name(bucket.to_string())
@@ -52,10 +77,7 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
 
             Ok(Store {
                 store: Arc::new(store),
-                base: match path.starts_with('/') {
-                    false => path.to_string(),
-                    true => path[1..].to_string(),
-                },
+                base: base_path,
             })
         }
         "file" => {
@@ -82,9 +104,8 @@ impl Store {
         path: String,
         options: ReadOptions,
     ) -> Result<Vec<Block>, ReadError> {
-        let content = self.store.get(&self.join_path(path)).await?;
+        let content = self.store.get(&Path::from(path)).await?;
         let bytes: Bytes = content.bytes().await.unwrap();
-
         handle_from_bytes(bytes, options.decompress()).await
     }
 
