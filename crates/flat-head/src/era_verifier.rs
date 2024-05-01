@@ -22,7 +22,7 @@ pub async fn verify_eras(
     decompress: Option<bool>,
 ) -> Result<Vec<usize>, anyhow::Error> {
     let mut validated_epochs = Vec::new();
-    let (tx, mut rx) = mpsc::unbounded_channel();
+    let (tx, mut rx) = mpsc::channel(5);
 
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
         let tx = tx.clone();
@@ -51,7 +51,7 @@ pub async fn verify_eras(
                         era_validate(successful_headers, macc, epoch, Some(epoch + 1), None)
                             .unwrap();
 
-                    let _ = tx.send(valid_epochs);
+                    let _ = tx.send(valid_epochs).await;
                 }
                 Err(e) => eprintln!("Error fetching blocks for epoch {}: {:?}", epoch, e),
             }
