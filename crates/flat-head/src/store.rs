@@ -2,8 +2,8 @@ use anyhow::Context;
 use bytes::Bytes;
 use decoder::handle_buf;
 use object_store::{
-    aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, http::HttpBuilder,
-    local::LocalFileSystem, path::Path, ObjectStore,
+    aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, local::LocalFileSystem, path::Path,
+    ObjectStore,
 };
 use std::sync::Arc;
 use thiserror::Error;
@@ -33,19 +33,19 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
     };
 
     match url.scheme() {
-        "http" => {
+        "http" | "https" => {
             //TODO: setup a flag for s3 compatible http APIs such as seaweed fs.
-            // TODO: setup scheme such as https so it handles the same.
+            let scheme = url.scheme();
             let endpoint = match url.host_str() {
                 Some(host) => {
                     let port = url.port_or_known_default();
-                    format!("http://{}:{}", host, port.unwrap())
+                    format!("{}://{}:{}", scheme, host, port.unwrap())
                 }
                 None => return Err(anyhow::anyhow!("invalid url format")),
             };
             let store = AmazonS3Builder::new()
                 .with_endpoint(endpoint)
-                .with_allow_http(true)
+                .with_allow_http(scheme == "http") // Allow HTTP only if the scheme is "http"
                 .with_bucket_name(url.path()[1..].to_string())
                 .with_access_key_id("any")
                 .with_secret_access_key("any")
@@ -104,7 +104,7 @@ impl Store {
         path: String,
         options: ReadOptions,
     ) -> Result<Vec<Block>, ReadError> {
-        let content = self.store.get(&Path::from(path)).await?;
+        let content = self.store.get(&self.join_path(path)).await?;
         let bytes: Bytes = content.bytes().await.unwrap();
         handle_from_bytes(bytes, options.decompress()).await
     }
