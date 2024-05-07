@@ -42,9 +42,11 @@ Here are some examples of how to use the commands:
 
 
 ```
-cargo run --bin flat_head -- era-validate --store-url http://localhost:8333/newbucket3  -s 0 -e 1      
+cargo run --bin flat_head -- era-validate --store-url http://localhost:8333/newbucket3  -s 0 -e 1 --compatible s3
 
  ```
+
+Note that in this case it is using seaweed-fs s3 compatible API.
 
 4. To fetch flat files from a Webdav server and validate each file as they arrive:
 

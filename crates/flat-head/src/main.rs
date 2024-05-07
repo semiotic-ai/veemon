@@ -28,17 +28,22 @@ enum Commands {
         // master accumulator file. default Portal Network file will be used if none provided
         master_acc_file: Option<String>,
 
-        // epoch to start from.
         #[clap(short, long, default_value = "0")]
+        // epoch to start from.
         start_epoch: usize,
 
-        // epoch to end in. The interval is inclusive
         #[clap(short, long, default_value = "0")]
+        // epoch to end in. The interval is inclusive
         end_epoch: Option<usize>,
 
         #[clap(short = 'c', long, default_value = "true")]
         // Where to decompress files from zstd or not.
         decompress: Option<bool>,
+
+        #[clap(short = 'p', long)]
+        // indicates if the store_url is compatible with some API. E.g., if `--compatible s3` is used,
+        // then the store_url can point to seaweed-fs with S3 compatibility enabled and work as intended.
+        compatible: Option<String>,
     },
 }
 
@@ -60,6 +65,7 @@ async fn main() {
             master_acc_file,
             start_epoch,
             end_epoch,
+            compatible,
         }) => {
             println!(
                 "Starting era validation {} - {}",
@@ -78,6 +84,7 @@ async fn main() {
             match verify_eras(
                 store_url.to_string(),
                 macc.unwrap(),
+                compatible.clone(),
                 *start_epoch,
                 *end_epoch,
                 *decompress,

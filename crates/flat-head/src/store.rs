@@ -2,8 +2,8 @@ use anyhow::Context;
 use bytes::Bytes;
 use decoder::handle_buf;
 use object_store::{
-    aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, local::LocalFileSystem, path::Path,
-    ObjectStore,
+    aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, http::HttpBuilder,
+    local::LocalFileSystem, path::Path, ClientOptions, ObjectStore,
 };
 use std::sync::Arc;
 use thiserror::Error;
@@ -11,7 +11,11 @@ use url::Url;
 
 use sf_protos::ethereum::r#type::v2::Block;
 
-pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
+pub fn new<S: AsRef<str>>(
+    store_url: S,
+    decompress: bool,
+    compatible: Option<String>,
+) -> Result<Store, anyhow::Error> {
     let store_url = store_url.as_ref();
     let url = match Url::parse(store_url) {
         Ok(url) => url,
@@ -36,6 +40,7 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
         "http" | "https" => {
             //TODO: setup a flag for s3 compatible http APIs such as seaweed fs.
             let scheme = url.scheme();
+
             let endpoint = match url.host_str() {
                 Some(host) => {
                     let port = url.port_or_known_default();
@@ -43,17 +48,36 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
                 }
                 None => return Err(anyhow::anyhow!("invalid url format")),
             };
-            let store = AmazonS3Builder::new()
-                .with_endpoint(endpoint)
-                .with_allow_http(scheme == "http") // Allow HTTP only if the scheme is "http"
-                .with_bucket_name(url.path()[1..].to_string())
-                .with_access_key_id("any")
-                .with_secret_access_key("any")
-                .build()?;
+
+            let store: Arc<dyn ObjectStore> = match compatible.as_deref() {
+                Some("s3") => {
+                    let s3_store = AmazonS3Builder::new()
+                        .with_endpoint(endpoint.to_string())
+                        .with_bucket_name(url.path()[1..].to_string())
+                        .with_allow_http(scheme == "http")
+                        .with_access_key_id("any")
+                        .with_secret_access_key("any")
+                        .build()
+                        .context("Failed to build S3 store")?;
+
+                    Arc::new(s3_store) as Arc<dyn ObjectStore>
+                }
+                _ => {
+                    // Fallback to the HttpBuilder
+                    let http_store = HttpBuilder::new()
+                        .with_url(endpoint.to_string())
+                        .with_client_options(ClientOptions::new().with_allow_http(scheme == "http"))
+                        .build()
+                        .context("Failed to build HTTP store")?;
+
+                    Arc::new(http_store) as Arc<dyn ObjectStore>
+                }
+            };
 
             Ok(Store {
                 store: Arc::new(store),
                 base: "".to_string(),
+                decompress,
             })
         }
         "s3" => {
@@ -66,6 +90,7 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
             Ok(Store {
                 store: Arc::new(store),
                 base: base_path,
+                decompress,
             })
         }
         "gs" => {
@@ -78,6 +103,7 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
             Ok(Store {
                 store: Arc::new(store),
                 base: base_path,
+                decompress,
             })
         }
         "file" => {
@@ -86,6 +112,7 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
             Ok(Store {
                 store: Arc::new(store),
                 base: "".to_string(),
+                decompress,
             })
         }
         _ => Err(anyhow::anyhow!("Unsupported scheme: {}", url.scheme()))?,
@@ -96,17 +123,14 @@ pub fn new<S: AsRef<str>>(store_url: S) -> Result<Store, anyhow::Error> {
 pub struct Store {
     store: Arc<dyn ObjectStore>,
     base: String,
+    decompress: bool,
 }
 
 impl Store {
-    pub async fn read_blocks(
-        &self,
-        path: String,
-        options: ReadOptions,
-    ) -> Result<Vec<Block>, ReadError> {
+    pub async fn read_blocks(&self, path: String) -> Result<Vec<Block>, ReadError> {
         let content = self.store.get(&self.join_path(path)).await?;
         let bytes: Bytes = content.bytes().await.unwrap();
-        handle_from_bytes(bytes, options.decompress()).await
+        handle_from_bytes(bytes, self.decompress).await
     }
 
     fn join_path(&self, path: String) -> Path {

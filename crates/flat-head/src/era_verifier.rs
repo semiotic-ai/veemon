@@ -7,7 +7,7 @@ use sf_protos::ethereum::r#type::v2::Block;
 use tokio::sync::mpsc;
 use trin_validation::accumulator::MasterAccumulator;
 
-use crate::store;
+use crate::store::{self, Store};
 pub const MAX_EPOCH_SIZE: usize = 8192;
 pub const FINAL_EPOCH: usize = 1896;
 pub const MERGE_BLOCK: usize = 15537394;
@@ -17,6 +17,7 @@ pub const MERGE_BLOCK: usize = 15537394;
 pub async fn verify_eras(
     store_url: String,
     macc: MasterAccumulator,
+    compatible: Option<String>,
     start_epoch: usize,
     end_epoch: Option<usize>,
     decompress: Option<bool>,
@@ -24,13 +25,16 @@ pub async fn verify_eras(
     let mut validated_epochs = Vec::new();
     let (tx, mut rx) = mpsc::channel(5);
 
+    let blocks_store: store::Store = store::new(store_url, decompress.unwrap_or(false), compatible)
+        .expect("failed to create blocks store");
+
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
         let tx = tx.clone();
-        let store_url = store_url.clone();
         let macc = macc.clone();
+        let store = blocks_store.clone();
 
         task::spawn(async move {
-            match get_blocks_from_store(epoch, &store_url, decompress).await {
+            match get_blocks_from_store(epoch, &store, decompress).await {
                 Ok(blocks) => {
                     let (successful_headers, _): (Vec<_>, Vec<_>) = blocks
                         .iter()
@@ -71,14 +75,13 @@ pub async fn verify_eras(
 
 async fn get_blocks_from_store(
     epoch: usize,
-    store_url: &str,
+    store: &Store,
     decompress: Option<bool>,
 ) -> Result<Vec<Block>, anyhow::Error> {
     let start_100_block = epoch * MAX_EPOCH_SIZE;
     let end_100_block = (epoch + 1) * MAX_EPOCH_SIZE;
 
-    let mut blocks =
-        extract_100s_blocks(store_url, start_100_block, end_100_block, decompress).await?;
+    let mut blocks = extract_100s_blocks(store, start_100_block, end_100_block, decompress).await?;
 
     if epoch < FINAL_EPOCH {
         blocks = blocks[0..MAX_EPOCH_SIZE].to_vec();
@@ -90,7 +93,7 @@ async fn get_blocks_from_store(
 }
 
 async fn extract_100s_blocks(
-    store_url: &str,
+    store: &Store,
     start_block: usize,
     end_block: usize,
     decompress: Option<bool>,
@@ -101,13 +104,12 @@ async fn extract_100s_blocks(
     let end_100_block = (((end_block as f32) / 100.0).ceil() as usize) * 100;
 
     let zst_extension = if decompress.unwrap() { ".zst" } else { "" };
-    let blocks_store = store::new(store_url).expect("failed to create blocks store");
 
     let mut futs = FuturesOrdered::new();
 
     for block_number in (start_100_block..end_100_block).step_by(100) {
         let block_file_name = format!("{:010}.dbin{}", block_number, zst_extension);
-        futs.push_back(blocks_store.read_blocks(block_file_name, store::ReadOptions { decompress }))
+        futs.push_back(store.read_blocks(block_file_name))
     }
 
     let mut blocks_join = Vec::new();
