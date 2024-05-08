@@ -3,6 +3,7 @@ use std::env;
 use clap::{Parser, Subcommand};
 
 use flat_head::era_verifier::verify_eras;
+use trin_validation::accumulator::MasterAccumulator;
 
 #[derive(Parser)]
 #[command(version, about = "A flat file decoder and validator", long_about = None)]
@@ -19,35 +20,40 @@ struct Cli {
 enum Commands {
     /// Decode and validates flat files from a directory.
     EraValidate {
-        #[clap(short, long)]
+        #[clap(short = 'b', long)]
         // directory where flat files are located
-        dir: String,
+        store_url: String,
 
         #[clap(short, long)]
         // master accumulator file. default Portal Network file will be used if none provided
         master_acc_file: Option<String>,
 
-        // epoch to start from.
         #[clap(short, long, default_value = "0")]
+        // epoch to start from.
         start_epoch: usize,
 
-        // epoch to end in. The interval is inclusive
         #[clap(short, long, default_value = "0")]
+        // epoch to end in. The interval is inclusive
         end_epoch: Option<usize>,
 
         #[clap(short = 'c', long, default_value = "true")]
         // Where to decompress files from zstd or not.
         decompress: Option<bool>,
+
+        #[clap(short = 'p', long)]
+        // indicates if the store_url is compatible with some API. E.g., if `--compatible s3` is used,
+        // then the store_url can point to seaweed-fs with S3 compatibility enabled and work as intended.
+        compatible: Option<String>,
     },
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
     match cli.debug {
-        0 => {}
-        1 => env::set_var("RUST_LOG", "info"),
-        2 => env::set_var("RUST_LOG", "debug"),
+        0 => env::set_var("RUST_LOG", "info"),
+        1 => env::set_var("RUST_LOG", "debug"),
         _ => {}
     }
     env_logger::init();
@@ -55,22 +61,44 @@ fn main() {
     match &cli.command {
         Some(Commands::EraValidate {
             decompress,
-            dir,
+            store_url,
             master_acc_file,
             start_epoch,
             end_epoch,
+            compatible,
         }) => {
-            let result = verify_eras(
-                dir,
-                master_acc_file.as_ref(),
+            println!(
+                "Starting era validation {} - {}",
+                start_epoch,
+                end_epoch.map(|x| x.to_string()).unwrap_or("".to_string())
+            );
+
+            let macc = match master_acc_file {
+                Some(master_accumulator_file) => {
+                    MasterAccumulator::try_from_file(master_accumulator_file.into())
+                        .map_err(|_| panic!("failed to parse master accumulator file"))
+                }
+                None => Ok(MasterAccumulator::default()),
+            };
+
+            match verify_eras(
+                store_url.to_string(),
+                macc.unwrap(),
+                compatible.clone(),
                 *start_epoch,
                 *end_epoch,
                 *decompress,
-            );
-            log::info!("epochs validated: {:?}", result);
+            )
+            .await
+            {
+                Ok(result) => {
+                    println!("Epochs validated: {:?}", result);
+                }
+                Err(e) => {
+                    log::error!("error: {:#}", e);
+                }
+            }
         }
         None => {}
     }
-
-    // Continued program logic goes here...
 }

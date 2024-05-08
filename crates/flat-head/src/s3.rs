@@ -3,6 +3,7 @@ use header_accumulator::{
     era_validator::era_validate, types::ExtHeaderRecord, utils::MAX_EPOCH_SIZE,
 };
 use std::env;
+use trin_validation::accumulator::MasterAccumulator;
 
 use decoder::handle_buf;
 // use ::{era_verifier::MAX_EPOCH_SIZE, utils::gen_dbin_filenames};
@@ -58,7 +59,7 @@ pub async fn s3_fetch(
         let bytes = result.bytes().await.unwrap();
 
         // Use `as_ref` to get a &[u8] from `bytes` and pass it to `handle_buf`
-        match handle_buf(bytes.as_ref()) {
+        match handle_buf(bytes.as_ref(), Some(false)) {
             Ok(blocks) => {
                 let (successful_headers, _): (Vec<_>, Vec<_>) = blocks
                     .iter()
@@ -88,7 +89,7 @@ pub async fn s3_fetch(
             let epoch_headers: Vec<ExtHeaderRecord> = headers.drain(0..MAX_EPOCH_SIZE).collect();
             let valid_blocks = era_validate(
                 epoch_headers,
-                None,
+                MasterAccumulator::default(),
                 start_epoch as usize,
                 Some(end_epoch as usize),
                 None,
