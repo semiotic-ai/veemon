@@ -1,6 +1,7 @@
 use crate::receipts::error::ReceiptError;
 use crate::receipts::logs::map_logs;
 use crate::transactions::tx_type::map_tx_type;
+use alloy_primitives::FixedBytes;
 use reth_primitives::{hex, Bloom, Log, Receipt, ReceiptWithBloom};
 use sf_protos::ethereum::r#type::v2::TransactionTrace;
 
@@ -51,7 +52,7 @@ fn map_bloom(slice: &[u8]) -> Result<Bloom, ReceiptError> {
         let array: [u8; 256] = slice
             .try_into()
             .expect("Slice length doesn't match array length");
-        Ok(Bloom(array))
+        Ok(Bloom(FixedBytes(array)))
     } else {
         Err(ReceiptError::InvalidBloom(hex::encode(slice)))
     }

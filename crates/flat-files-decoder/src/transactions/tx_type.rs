@@ -1,4 +1,3 @@
-// use crate::protos::block::transaction_trace::Type;
 use reth_primitives::TxType;
 use sf_protos::ethereum::r#type::v2::transaction_trace::Type;
 use thiserror::Error;
@@ -12,8 +11,8 @@ pub enum TransactionTypeError {
 fn tx_to_reth_tx(tx_type: Type) -> TxType {
     match tx_type {
         Type::TrxTypeLegacy => TxType::Legacy,
-        Type::TrxTypeAccessList => TxType::EIP2930,
-        Type::TrxTypeDynamicFee => TxType::EIP1559,
+        Type::TrxTypeAccessList => TxType::Eip2930,
+        Type::TrxTypeDynamicFee => TxType::Eip1559,
     }
 }
 

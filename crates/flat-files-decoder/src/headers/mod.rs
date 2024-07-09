@@ -1,15 +1,15 @@
 pub mod error;
 
 use crate::headers::error::BlockHeaderError;
-use reth_primitives::H256;
+use reth_primitives::B256;
 use serde::{Deserialize, Serialize};
 use sf_protos::ethereum::r#type::v2::{Block, BlockHeader};
 use std::fs::File;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BlockHeaderRoots {
-    pub receipt_root: H256,
-    pub transactions_root: H256,
+    pub receipt_root: B256,
+    pub transactions_root: B256,
 }
 
 impl TryFrom<BlockHeader> for BlockHeaderRoots {

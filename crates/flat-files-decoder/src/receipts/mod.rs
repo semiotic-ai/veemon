@@ -2,14 +2,11 @@ pub mod error;
 pub mod logs;
 pub mod receipt;
 
-// use crate::protos::block::Block;
 use crate::receipts::error::ReceiptError;
 use crate::receipts::receipt::FullReceipt;
-use reth_primitives::bytes::BufMut;
-use reth_primitives::hex;
-use reth_primitives::proofs::ordered_trie_root_with_encoder;
-use reth_rlp::Encodable;
-use revm_primitives::B256;
+use alloy_rlp::{Encodable, Header};
+use reth_primitives::{hex, B256};
+use reth_trie_common::root::ordered_trie_root_with_encoder;
 use sf_protos::ethereum::r#type::v2::Block;
 
 const BYZANTINUM_FORK_BLOCK: u64 = 4_370_000;
@@ -26,9 +23,9 @@ pub fn check_receipt_root(block: &Block) -> Result<(), ReceiptError> {
         Some(ref header) => header.receipt_root.as_slice(),
         None => return Err(ReceiptError::MissingRoot),
     };
-    if computed_root.as_bytes() != receipt_root {
+    if computed_root.as_slice() != receipt_root {
         return Err(ReceiptError::MismatchedRoot(
-            hex::encode(computed_root.as_bytes()),
+            hex::encode(computed_root.as_slice()),
             hex::encode(receipt_root),
         ));
     }
@@ -73,11 +70,11 @@ fn calc_receipt_root(block: &Block) -> Result<B256, ReceiptError> {
 /// and a mutable reference to a type implementing the [`BufMut`].
 /// All the data from the receipts in written into the `BufMut` buffer
 
-fn get_encoder(block: &Block) -> fn(&FullReceipt, &mut dyn BufMut) {
+fn get_encoder(block: &Block) -> fn(&FullReceipt, &mut Vec<u8>) {
     if block.number >= BYZANTINUM_FORK_BLOCK {
-        |r: &FullReceipt, out: &mut dyn BufMut| r.receipt.encode_inner(out, false)
+        |r: &FullReceipt, out: &mut Vec<u8>| r.receipt.encode_inner(out, false)
     } else {
-        |r: &FullReceipt, out: &mut dyn BufMut| {
+        |r: &FullReceipt, out: &mut Vec<u8>| {
             receipt_rlp_header(r).encode(out);
             r.state_root.as_slice().encode(out);
             r.receipt.receipt.cumulative_gas_used.encode(out);
@@ -88,13 +85,13 @@ fn get_encoder(block: &Block) -> fn(&FullReceipt, &mut dyn BufMut) {
 }
 
 /// Encodes receipt header using [RLP serialization](https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp)
-fn receipt_rlp_header(receipt: &FullReceipt) -> reth_rlp::Header {
+fn receipt_rlp_header(receipt: &FullReceipt) -> Header {
     let payload_length = receipt.state_root.as_slice().length()
         + receipt.receipt.receipt.cumulative_gas_used.length()
         + receipt.receipt.bloom.length()
         + receipt.receipt.receipt.logs.length();
 
-    reth_rlp::Header {
+    Header {
         list: true,
         payload_length,
     }
