@@ -949,7 +949,7 @@ dependencies = [
  "rayon",
  "reth-primitives",
  "reth-trie-common",
- "revm-primitives 1.1.2",
+ "revm-primitives",
  "serde",
  "serde_json",
  "sf-protos",
@@ -1266,15 +1266,6 @@ checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 
 [[package]]
 name = "hashbrown"
-version = "0.13.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
-dependencies = [
- "ahash",
-]
-
-[[package]]
-name = "hashbrown"
 version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
@@ -1516,15 +1507,6 @@ dependencies = [
  "elliptic-curve",
  "once_cell",
  "sha2",
-]
-
-[[package]]
-name = "keccak"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ecc2af9a1119c51f12a14607e783cb977bde58bc069ff0c3da1095e635d70654"
-dependencies = [
- "cpufeatures",
 ]
 
 [[package]]
@@ -2310,7 +2292,7 @@ dependencies = [
  "reth-primitives-traits",
  "reth-static-file-types",
  "reth-trie-common",
- "revm-primitives 6.0.0",
+ "revm-primitives",
  "secp256k1",
  "serde",
  "tempfile",
@@ -2334,7 +2316,7 @@ dependencies = [
  "derive_more",
  "modular-bitfield",
  "reth-codecs",
- "revm-primitives 6.0.0",
+ "revm-primitives",
  "roaring",
  "serde",
  "thiserror-no-std",
@@ -2367,29 +2349,8 @@ dependencies = [
  "nybbles",
  "reth-codecs",
  "reth-primitives-traits",
- "revm-primitives 6.0.0",
+ "revm-primitives",
  "serde",
-]
-
-[[package]]
-name = "revm-primitives"
-version = "1.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "304d998f466ffef72d76c7f20b05bf08a96801736a6fb1fdef47d49a292618df"
-dependencies = [
- "auto_impl",
- "bitvec",
- "bytes",
- "derive_more",
- "enumn",
- "fixed-hash",
- "hashbrown 0.13.2",
- "hex",
- "hex-literal",
- "primitive-types",
- "rlp",
- "ruint",
- "sha3",
 ]
 
 [[package]]
@@ -2695,16 +2656,6 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest 0.10.7",
-]
-
-[[package]]
-name = "sha3"
-version = "0.10.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75872d278a8f37ef87fa0ddbda7802605cb18344497949862c0d4dcb291eba60"
-dependencies = [
- "digest 0.10.7",
- "keccak",
 ]
 
 [[package]]
