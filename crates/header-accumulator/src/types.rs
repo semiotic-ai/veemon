@@ -57,9 +57,8 @@ impl TryFrom<&Block> for ExtHeaderRecord {
         Ok(ExtHeaderRecord {
             block_number: block.number,
             block_hash: Hash256::from_slice(&block.hash),
-            total_difficulty: EthereumU256::try_from(total_difficulty.bytes.as_slice())
-                .map_err(|_| EraValidateError::HeaderDecodeError)?,
-            full_header: Some(header_from_block(&block)?), // Assuming header_from_block returns Result<_, EraValidateError>
+            total_difficulty: EthereumU256::from(total_difficulty.bytes.as_slice()),
+            full_header: Some(header_from_block(block)?), // Assuming header_from_block returns Result<_, EraValidateError>
         })
     }
 }

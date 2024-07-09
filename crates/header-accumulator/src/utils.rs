@@ -7,7 +7,7 @@ use sf_protos::ethereum::r#type::v2::Block;
 use crate::errors::EraValidateError;
 
 pub const MAX_EPOCH_SIZE: usize = 8192;
-pub const FINAL_EPOCH: usize = 01896;
+pub const FINAL_EPOCH: usize = 1896;
 pub const MERGE_BLOCK: u64 = 15537394;
 
 pub fn compute_epoch_accumulator(
@@ -37,20 +37,17 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
     let transactions_root = Hash256::from_slice(block_header.transactions_root.as_slice());
     let receipts_root = Hash256::from_slice(block_header.receipt_root.as_slice());
     let logs_bloom = Bloom::from_slice(block_header.logs_bloom.as_slice());
-    let difficulty = EthereumU256::try_from(
+    let difficulty = EthereumU256::from(
         block_header
             .difficulty
             .as_ref()
             .ok_or(EraValidateError::HeaderDecodeError)?
             .bytes
             .as_slice(),
-    )
-    .map_err(|_| EraValidateError::HeaderDecodeError)?;
+    );
     let number = block_header.number;
-    let gas_limit = EthereumU256::try_from(block_header.gas_limit)
-        .map_err(|_| EraValidateError::HeaderDecodeError)?;
-    let gas_used = EthereumU256::try_from(block_header.gas_used)
-        .map_err(|_| EraValidateError::HeaderDecodeError)?;
+    let gas_limit = EthereumU256::from(block_header.gas_limit);
+    let gas_used = EthereumU256::from(block_header.gas_used);
     let timestamp = block_header
         .timestamp
         .as_ref()
@@ -59,12 +56,10 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
     let extra_data = block_header.extra_data.clone();
     let mix_hash = Some(Hash256::from_slice(block_header.mix_hash.as_slice()));
     let nonce = Some(H64::from_slice(&block_header.nonce.to_be_bytes()));
-    let base_fee_per_gas = match block_header.base_fee_per_gas.as_ref() {
-        Some(base_fee_per_gas) => Some(EthereumU256::from_big_endian(
-            base_fee_per_gas.bytes.as_slice(),
-        )),
-        None => None,
-    };
+    let base_fee_per_gas = block_header
+        .base_fee_per_gas
+        .as_ref()
+        .map(|base_fee_per_gas| EthereumU256::from_big_endian(base_fee_per_gas.bytes.as_slice()));
     let withdrawals_root = match block_header.withdrawals_root.is_empty() {
         true => None,
         false => Some(Hash256::from_slice(

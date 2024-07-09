@@ -71,17 +71,14 @@ pub fn verify_inclusion_proof(
     master_accumulator_file: Option<MasterAccumulator>,
     inclusion_proof: Vec<[H256; 15]>,
 ) -> Result<(), EraValidateError> {
-    let master_acc = match master_accumulator_file {
-        Some(master_acc) => master_acc,
-        None => MasterAccumulator::default(),
-    };
+    let master_acc = master_accumulator_file.unwrap_or_default();
 
     for (block_idx, _) in blocks.iter().enumerate() {
         let bhp = BlockHeaderProof::AccumulatorProof(AccumulatorProof {
-            proof: inclusion_proof[block_idx as usize].clone(),
+            proof: inclusion_proof[block_idx],
         });
         let hwp = HeaderWithProof {
-            header: header_from_block(&blocks[block_idx as usize].clone())?,
+            header: header_from_block(&blocks[block_idx].clone())?,
             proof: bhp,
         };
         master_acc

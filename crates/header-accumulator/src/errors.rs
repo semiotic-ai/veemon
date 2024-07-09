@@ -79,8 +79,6 @@ impl fmt::Display for EraValidateError {
 
 impl fmt::Display for SyncError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            _ => write!(f, "Error handling lockfile sync"),
-        }
+        write!(f, "Error handling lockfile sync")
     }
 }

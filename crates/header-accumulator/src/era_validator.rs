@@ -117,10 +117,7 @@ fn process_headers(
         headers.retain(|header: &ExtHeaderRecord| header.block_number < MERGE_BLOCK);
     }
 
-    let header_records: Vec<HeaderRecord> = headers
-        .into_iter()
-        .map(|ext_record| HeaderRecord::from(ext_record))
-        .collect();
+    let header_records: Vec<HeaderRecord> = headers.into_iter().map(HeaderRecord::from).collect();
     let epoch_accumulator = compute_epoch_accumulator(&header_records)?;
 
     // Return an error if the epoch accumulator does not match the master accumulator
