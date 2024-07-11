@@ -1478,18 +1478,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ethereum_hashing"
-version = "1.0.0-beta.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "233dc6f434ce680dbabf4451ee3380cec46cb3c45d66660445a435619710dd35"
-dependencies = [
- "cpufeatures 0.2.12",
- "lazy_static",
- "ring 0.16.20",
- "sha2 0.10.8",
-]
-
-[[package]]
 name = "ethereum_serde_utils"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1574,7 +1562,7 @@ dependencies = [
  "const_format",
  "discv5",
  "eth_trie",
- "ethereum_hashing 0.6.0",
+ "ethereum_hashing",
  "ethereum_serde_utils",
  "ethereum_ssz",
  "ethereum_ssz_derive",
@@ -1602,7 +1590,7 @@ dependencies = [
  "superstruct",
  "thiserror",
  "tokio",
- "tree_hash 0.6.0",
+ "tree_hash",
  "tree_hash_derive",
  "trin-utils",
  "ureq",
@@ -1993,7 +1981,7 @@ dependencies = [
  "serde_json",
  "sf-protos",
  "tempfile",
- "tree_hash 0.5.2",
+ "tree_hash",
  "trin-validation",
 ]
 
@@ -4384,7 +4372,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "smallvec",
- "tree_hash 0.6.0",
+ "tree_hash",
  "typenum",
 ]
 
@@ -4832,22 +4820,11 @@ dependencies = [
 
 [[package]]
 name = "tree_hash"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c998ac5fe2b07c025444bdd522e6258110b63861c6698eedc610c071980238d"
-dependencies = [
- "ethereum-types",
- "ethereum_hashing 1.0.0-beta.2",
- "smallvec",
-]
-
-[[package]]
-name = "tree_hash"
 version = "0.6.0"
 source = "git+https://github.com/KolbyML/tree_hash.git?rev=8aaf8bb4184148768d48e2cfbbdd0b95d1da8730#8aaf8bb4184148768d48e2cfbbdd0b95d1da8730"
 dependencies = [
  "alloy-primitives",
- "ethereum_hashing 0.6.0",
+ "ethereum_hashing",
  "smallvec",
 ]
 
@@ -4900,7 +4877,7 @@ dependencies = [
  "serde_yaml 0.9.34+deprecated",
  "ssz_types",
  "tokio",
- "tree_hash 0.6.0",
+ "tree_hash",
  "tree_hash_derive",
 ]
 
