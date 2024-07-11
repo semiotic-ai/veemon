@@ -1,4 +1,4 @@
-use alloy_primitives::{Bloom, FixedBytes, Uint};
+use alloy_primitives::{Address, Bloom, FixedBytes, Uint};
 use ethereum_types::H256 as Hash256;
 use ethereum_types::{H160, H64, U256 as EthereumU256};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
@@ -33,7 +33,7 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
         .ok_or(EraValidateError::HeaderDecodeError)?;
     let parent_hash = Hash256::from_slice(block_header.parent_hash.as_slice());
     let uncles_hash = Hash256::from_slice(block_header.uncle_hash.as_slice());
-    let author = H160::from_slice(block_header.coinbase.as_slice());
+    let author = Address::from_slice(block_header.coinbase.as_slice());
     let state_root = FixedBytes::from_slice(block_header.state_root.as_slice());
     let transactions_root = FixedBytes::from_slice(block_header.transactions_root.as_slice());
     let receipts_root = FixedBytes::from_slice(block_header.receipt_root.as_slice());
