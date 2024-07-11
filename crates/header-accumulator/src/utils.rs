@@ -56,7 +56,7 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
         .seconds as u64;
     let extra_data = block_header.extra_data.clone();
     let mix_hash = Some(Hash256::from_slice(block_header.mix_hash.as_slice()));
-    let nonce = Some(H64::from_slice(&block_header.nonce.to_be_bytes()));
+    let nonce = Some(FixedBytes::from_slice(&block_header.nonce.to_be_bytes()));
     let base_fee_per_gas = block_header
         .base_fee_per_gas
         .as_ref()
