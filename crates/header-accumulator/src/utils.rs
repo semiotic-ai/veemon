@@ -1,6 +1,6 @@
-use alloy_primitives::{FixedBytes, Uint};
+use alloy_primitives::{Bloom, FixedBytes, Uint};
 use ethereum_types::H256 as Hash256;
-use ethereum_types::{Bloom, H160, H64, U256 as EthereumU256};
+use ethereum_types::{H160, H64, U256 as EthereumU256};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
 use ethportal_api::Header;
 use sf_protos::ethereum::r#type::v2::Block;
