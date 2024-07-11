@@ -27,7 +27,7 @@ tree_hash = { git = "https://github.com/KolbyML/tree_hash.git", rev = "8aaf8bb41
 trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0", tag = "v0.1.0-alpha.35" }
 
 [dev-dependencies]
-decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", branch = "main"}
+decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", branch = "joseph/tru-199-update-dependencies-on-reth" }
 tempfile = "3.0"
 
 [profile.release]
