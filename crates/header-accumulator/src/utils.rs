@@ -48,7 +48,7 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
     );
     let number = block_header.number;
     let gas_limit = EthereumU256::from(block_header.gas_limit);
-    let gas_used = EthereumU256::from(block_header.gas_used);
+    let gas_used = Uint::from(block_header.gas_used);
     let timestamp = block_header
         .timestamp
         .as_ref()
