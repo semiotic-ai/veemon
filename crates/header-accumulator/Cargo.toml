@@ -11,7 +11,7 @@ bincode = "1.3.3"
 clap = { version = "4.4.10", features = ["derive"] }
 env_logger = "0.10.1"
 ethereum-types = "=0.14.1"
-ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.2.2" }
+ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.2.2", tag = "v0.1.0-alpha.35" }
 log = "0.4.20"
 primitive-types = "=0.12.2"
 protobuf = "=3.2.0"
@@ -22,7 +22,7 @@ serde = "1.0.196"
 serde_json = "1.0.108"
 sf-protos = { git = "https://github.com/semiotic-ai/sf-protos.git", version = "0.1.0" }
 tree_hash = "0.5.2"
-trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0" }
+trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0", tag = "v0.1.0-alpha.35" }
 
 [dev-dependencies]
 decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", branch = "main"}
