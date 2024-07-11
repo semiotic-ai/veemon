@@ -34,8 +34,8 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
     let parent_hash = Hash256::from_slice(block_header.parent_hash.as_slice());
     let uncles_hash = Hash256::from_slice(block_header.uncle_hash.as_slice());
     let author = H160::from_slice(block_header.coinbase.as_slice());
-    let state_root = Hash256::from_slice(block_header.state_root.as_slice());
-    let transactions_root = Hash256::from_slice(block_header.transactions_root.as_slice());
+    let state_root = FixedBytes::from_slice(block_header.state_root.as_slice());
+    let transactions_root = FixedBytes::from_slice(block_header.transactions_root.as_slice());
     let receipts_root = FixedBytes::from_slice(block_header.receipt_root.as_slice());
     let logs_bloom = Bloom::from_slice(block_header.logs_bloom.as_slice());
     let difficulty = Uint::from_be_slice(
