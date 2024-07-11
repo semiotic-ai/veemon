@@ -72,7 +72,7 @@ pub fn store_last_state(file_path: &Path, entry: LockEntry) -> Result<(), Box<dy
 pub fn check_sync_state(
     file_path: &Path,
     epoch: String,
-    macc_hash: [u8; 32],
+    premerge_accumulator_hash: [u8; 32],
 ) -> Result<bool, Box<dyn Error>> {
     if metadata(file_path).is_err() {
         log::info!("The lockfile did not exist and was created");
@@ -99,10 +99,10 @@ pub fn check_sync_state(
         Err(_) => panic!("Decoded hash does not fit into a 32-byte array"),
     };
 
-    if macc_hash != stored_hash {
+    if premerge_accumulator_hash != stored_hash {
         log::error!(
             "the valid hash is: {:?} and the provided hash was: {:?}",
-            macc_hash,
+            premerge_accumulator_hash,
             stored_hash
         );
         return Err(Box::new(EraValidateError::EraAccumulatorMismatch));
@@ -117,7 +117,7 @@ mod tests {
     use std::fs::File;
     use std::io::Write;
     use tempfile::tempdir;
-    use trin_validation::accumulator::MasterAccumulator;
+    use trin_validation::accumulator::PreMergeAccumulator;
 
     #[test]
     fn test_store_last_state() -> Result<(), Box<dyn Error>> {
@@ -162,7 +162,7 @@ mod tests {
         let mut file = File::create(&file_path)?;
         writeln!(file, "{}", mock_json)?;
 
-        let mac_file: MasterAccumulator = MasterAccumulator::default();
+        let mac_file: PreMergeAccumulator = PreMergeAccumulator::default();
 
         // Test case where epoch exists and hashes match
         let epoch = "0".to_string();

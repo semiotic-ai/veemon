@@ -3,7 +3,7 @@ use std::fmt;
 #[derive(Debug)]
 pub enum EraValidateError {
     TooManyHeaderRecords,
-    InvalidMasterAccumulatorFile,
+    InvalidPreMergeAccumulatorFile,
     HeaderDecodeError,
     FlatFileDecodeError,
     EraAccumulatorMismatch,
@@ -31,7 +31,7 @@ impl fmt::Display for EraValidateError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             EraValidateError::TooManyHeaderRecords => write!(f, "Too many header records"),
-            EraValidateError::InvalidMasterAccumulatorFile => {
+            EraValidateError::InvalidPreMergeAccumulatorFile => {
                 write!(f, "Invalid master accumulator file")
             }
             EraValidateError::HeaderDecodeError => {

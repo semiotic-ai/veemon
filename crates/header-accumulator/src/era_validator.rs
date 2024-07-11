@@ -1,9 +1,8 @@
 use std::path::Path;
 
 use ethportal_api::types::execution::accumulator::HeaderRecord;
-
 use tree_hash::TreeHash;
-use trin_validation::accumulator::MasterAccumulator;
+use trin_validation::accumulator::PreMergeAccumulator;
 
 use crate::{
     errors::EraValidateError,
@@ -20,14 +19,14 @@ use crate::{
 ///
 /// * `headers`-  A mutable vector of [`ExtHeaderRecord`]. The Vector can be any size, however, it must be in chunks of 8192 blocks to work properly
 /// to function without error
-/// * `macc`- An instance of [`MasterAccumulator`] which is a representation of a file that maintains a record of historical epoch
+/// * `premerge_accumulator`- An instance of [`PreMergeAccumulator`] which is a representation of a file that maintains a record of historical epoch
 /// it is used to verify canonical-ness of headers accumulated from the `blocks`
 /// * `start_epoch` -  The epoch number that all the first 8192 blocks are set located
 /// * `end_epoch` -  The epoch number that all the last 8192 blocks are located
 /// * `use_lock` - when set to true, uses the lockfile to store already processed blocks. True by default
 pub fn era_validate(
     mut headers: Vec<ExtHeaderRecord>,
-    macc: MasterAccumulator,
+    premerge_accumulator: PreMergeAccumulator,
     start_epoch: usize,
     end_epoch: Option<usize>,
     use_lock: Option<bool>, // Changed to Option<bool>
@@ -51,7 +50,7 @@ pub fn era_validate(
             match check_sync_state(
                 Path::new("./lockfile.json"),
                 epoch.to_string(),
-                macc.historical_epochs[epoch].0,
+                premerge_accumulator.historical_epochs[epoch].0,
             ) {
                 Ok(true) => {
                     log::info!("Skipping, epoch already synced: {}", epoch);
@@ -69,7 +68,7 @@ pub fn era_validate(
             }
         }
         let epoch_headers: Vec<ExtHeaderRecord> = headers.drain(0..MAX_EPOCH_SIZE).collect();
-        let root = process_headers(epoch_headers, epoch, &macc)?;
+        let root = process_headers(epoch_headers, epoch, &premerge_accumulator)?;
         validated_epochs.push(epoch);
         // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
         if use_lock {
@@ -100,7 +99,7 @@ pub fn era_validate(
 fn process_headers(
     mut headers: Vec<ExtHeaderRecord>,
     epoch: usize,
-    master_accumulator: &MasterAccumulator,
+    pre_merge_accumulator: &PreMergeAccumulator,
 ) -> Result<[u8; 32], EraValidateError> {
     if headers.len() != MAX_EPOCH_SIZE {
         Err(EraValidateError::InvalidEpochLength)?;
@@ -120,9 +119,9 @@ fn process_headers(
     let header_records: Vec<HeaderRecord> = headers.into_iter().map(HeaderRecord::from).collect();
     let epoch_accumulator = compute_epoch_accumulator(&header_records)?;
 
-    // Return an error if the epoch accumulator does not match the master accumulator
+    // Return an error if the epoch accumulator does not match the pre-merge accumulator
     let root: [u8; 32] = epoch_accumulator.tree_hash_root().0;
-    let valid_root = master_accumulator.historical_epochs[epoch].0;
+    let valid_root = pre_merge_accumulator.historical_epochs[epoch].0;
     if root != valid_root {
         log::error!(
             "the valid hash is: {:?} and the provided hash was: {:?}",
@@ -137,7 +136,7 @@ fn process_headers(
 
 // TODO: move stream validation to be a functionality of flat_head
 // pub fn stream_validation<R: Read + BufRead, W: StdWrite>(
-//     master_accumulator: MasterAccumulator,
+//     master_accumulator: PreMergeAccumulator,
 //     mut reader: R,
 //     mut writer: W,
 // ) -> Result<(), EraValidateError> {
