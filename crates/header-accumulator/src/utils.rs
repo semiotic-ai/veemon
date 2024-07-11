@@ -31,8 +31,8 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
         .header
         .as_ref()
         .ok_or(EraValidateError::HeaderDecodeError)?;
-    let parent_hash = Hash256::from_slice(block_header.parent_hash.as_slice());
-    let uncles_hash = Hash256::from_slice(block_header.uncle_hash.as_slice());
+    let parent_hash = FixedBytes::from_slice(block_header.parent_hash.as_slice());
+    let uncles_hash = FixedBytes::from_slice(block_header.uncle_hash.as_slice());
     let author = Address::from_slice(block_header.coinbase.as_slice());
     let state_root = FixedBytes::from_slice(block_header.state_root.as_slice());
     let transactions_root = FixedBytes::from_slice(block_header.transactions_root.as_slice());
