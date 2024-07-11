@@ -62,7 +62,7 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
         .map(|base_fee_per_gas| EthereumU256::from_big_endian(base_fee_per_gas.bytes.as_slice()));
     let withdrawals_root = match block_header.withdrawals_root.is_empty() {
         true => None,
-        false => Some(Hash256::from_slice(
+        false => Some(FixedBytes::from_slice(
             block_header.withdrawals_root.as_slice(),
         )),
     };
