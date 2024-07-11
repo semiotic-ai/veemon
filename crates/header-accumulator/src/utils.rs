@@ -38,7 +38,7 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
     let transactions_root = Hash256::from_slice(block_header.transactions_root.as_slice());
     let receipts_root = Hash256::from_slice(block_header.receipt_root.as_slice());
     let logs_bloom = Bloom::from_slice(block_header.logs_bloom.as_slice());
-    let difficulty = EthereumU256::from(
+    let difficulty = Uint::from_be_slice(
         block_header
             .difficulty
             .as_ref()
