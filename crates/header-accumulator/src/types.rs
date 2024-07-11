@@ -1,6 +1,5 @@
-use ethereum_types::H256 as Hash256;
-use ethereum_types::U256 as EthereumU256;
-use ethereum_types::{H256, U256};
+use alloy_primitives::Uint;
+use alloy_primitives::B256;
 use ethportal_api::{types::execution::accumulator::HeaderRecord, Header};
 use sf_protos::ethereum::r#type::v2::Block;
 
@@ -9,8 +8,8 @@ use crate::utils::header_from_block;
 
 #[derive(Clone)]
 pub struct ExtHeaderRecord {
-    pub block_hash: H256,
-    pub total_difficulty: U256,
+    pub block_hash: B256,
+    pub total_difficulty: Uint<256, 4>,
     pub block_number: u64,
     pub full_header: Option<Header>,
 }
@@ -56,8 +55,8 @@ impl TryFrom<&Block> for ExtHeaderRecord {
 
         Ok(ExtHeaderRecord {
             block_number: block.number,
-            block_hash: Hash256::from_slice(&block.hash),
-            total_difficulty: EthereumU256::from(total_difficulty.bytes.as_slice()),
+            block_hash: B256::from_slice(&block.hash),
+            total_difficulty: Uint::from_be_slice(total_difficulty.bytes.as_slice()),
             full_header: Some(header_from_block(block)?), // Assuming header_from_block returns Result<_, EraValidateError>
         })
     }
