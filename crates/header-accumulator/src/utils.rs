@@ -1,3 +1,4 @@
+use alloy_primitives::{FixedBytes, Uint};
 use ethereum_types::H256 as Hash256;
 use ethereum_types::{Bloom, H160, H64, U256 as EthereumU256};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
@@ -59,7 +60,7 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
     let base_fee_per_gas = block_header
         .base_fee_per_gas
         .as_ref()
-        .map(|base_fee_per_gas| EthereumU256::from_big_endian(base_fee_per_gas.bytes.as_slice()));
+        .map(|base_fee_per_gas| Uint::from_be_slice(base_fee_per_gas.bytes.as_slice()));
     let withdrawals_root = match block_header.withdrawals_root.is_empty() {
         true => None,
         false => Some(FixedBytes::from_slice(
@@ -87,7 +88,7 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
         withdrawals_root,
         blob_gas_used: None,
         excess_blob_gas: None,
-        parent_beacon_block_root: None
+        parent_beacon_block_root: None,
     };
 
     Ok(header)
