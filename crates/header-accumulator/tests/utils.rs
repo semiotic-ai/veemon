@@ -12,5 +12,5 @@ fn test_header_from_block() {
     .unwrap();
 
     let header = header_from_block(&blocks[0].clone()).unwrap();
-    assert_eq!(header.hash().as_bytes(), blocks[0].hash)
+    assert_eq!(header.hash().as_slice(), blocks[0].hash)
 }
