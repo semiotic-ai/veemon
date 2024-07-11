@@ -85,6 +85,9 @@ pub fn header_from_block(block: &Block) -> Result<Header, EraValidateError> {
         nonce,
         base_fee_per_gas,
         withdrawals_root,
+        blob_gas_used: None,
+        excess_blob_gas: None,
+        parent_beacon_block_root: None
     };
 
     Ok(header)
