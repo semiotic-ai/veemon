@@ -4,11 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+alloy-primitives = "=0.7.7"
+ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.2.2", tag = "v0.1.0-alpha.35" }
 prost = "0.12.3"
 prost-types = "0.12.3"
 prost-wkt = "0.5.0"
 prost-wkt-types = "0.5.0"
 serde = "1.0.196"
+thiserror = "1.0.62"
 
 [build-dependencies]
 prost-build = "0.12.3"
