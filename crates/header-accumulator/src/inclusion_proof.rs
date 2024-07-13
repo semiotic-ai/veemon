@@ -47,7 +47,7 @@ pub fn generate_inclusion_proof(
     for _ in epoch_start..epoch_end {
         let epoch_headers: Vec<ExtHeaderRecord> = ext_headers.drain(0..MAX_EPOCH_SIZE).collect();
         let header_records: Vec<HeaderRecord> = epoch_headers.iter().map(Into::into).collect();
-        let tmp_headers: Vec<Header> = epoch_headers.into_iter().map(Into::into).collect();
+        let tmp_headers: Vec<Header> = epoch_headers.into_iter().map(ExtHeaderRecord::try_into).collect::<Result<_, _>>()?;
         headers.extend(tmp_headers);
         epoch_accumulators.push(compute_epoch_accumulator(&header_records)?);
     }

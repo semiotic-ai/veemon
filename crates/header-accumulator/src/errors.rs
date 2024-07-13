@@ -18,6 +18,7 @@ pub enum EraValidateError {
     TotalDifficultyDecodeError,
     InvalidEpochStart,
     InvalidEpochLength,
+    ExtHeaderRecordError,
 }
 #[derive(Debug)]
 pub enum SyncError {
@@ -72,6 +73,9 @@ impl fmt::Display for EraValidateError {
                     f,
                     "blocks in epoch must respect the range of blocks numbers"
                 )
+            }
+            EraValidateError::ExtHeaderRecordError => {
+                write!(f, "Error converting ExtHeaderRecord to header")
             }
         }
     }

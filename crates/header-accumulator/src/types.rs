@@ -29,9 +29,12 @@ impl From<ExtHeaderRecord> for HeaderRecord {
     }
 }
 
-impl From<ExtHeaderRecord> for Header {
-    fn from(ext: ExtHeaderRecord) -> Self {
-        ext.full_header.unwrap()
+impl TryFrom<ExtHeaderRecord> for Header {
+    type Error = EraValidateError;
+
+    fn try_from(ext: ExtHeaderRecord) -> Result<Self, Self::Error> {
+        ext.full_header
+            .ok_or(EraValidateError::ExtHeaderRecordError)
     }
 }
 
