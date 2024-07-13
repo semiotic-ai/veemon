@@ -29,14 +29,9 @@ pub fn era_validate(
     premerge_accumulator: PreMergeAccumulator,
     start_epoch: usize,
     end_epoch: Option<usize>,
-    use_lock: Option<bool>, // Changed to Option<bool>
+    use_lock: bool,
 ) -> Result<Vec<usize>, EraValidateError> {
-    let use_lock = use_lock.unwrap_or(true);
-
-    let end_epoch = match end_epoch {
-        Some(end_epoch) => end_epoch,
-        None => start_epoch + 1,
-    };
+    let end_epoch = end_epoch.unwrap_or(start_epoch + 1);
 
     // Ensure start epoch is less than end epoch
     if start_epoch >= end_epoch {

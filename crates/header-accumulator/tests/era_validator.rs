@@ -51,32 +51,20 @@ fn test_era_validate() -> Result<(), EraValidateError> {
         premerge_accumulator.clone(),
         0,
         None,
-        Some(false),
+        false,
     )?;
     println!("result 1: {:?}", result);
 
     assert!(result.contains(&0), "The vector does not contain 0");
 
     // Test with creating a lockfile
-    let result = era_validate(
-        headers.clone(),
-        premerge_accumulator.clone(),
-        0,
-        None,
-        Some(true),
-    )?;
+    let result = era_validate(headers.clone(), premerge_accumulator.clone(), 0, None, true)?;
     println!("result 2: {:?}", result);
 
     assert!(result.contains(&0), "The vector does not contain 0");
 
     // test with the lockfile created before.
-    let result = era_validate(
-        headers.clone(),
-        premerge_accumulator.clone(),
-        0,
-        None,
-        Some(true),
-    )?;
+    let result = era_validate(headers.clone(), premerge_accumulator.clone(), 0, None, true)?;
 
     // already validated epochs are not included in the array.
     assert_eq!(result.len(), 0);
@@ -137,33 +125,21 @@ fn test_era_validate_compressed() -> Result<(), EraValidateError> {
         premerge_accumulator.clone(),
         0,
         None,
-        Some(false),
+        false,
     )?;
     println!("result 1: {:?}", result);
 
     assert!(result.contains(&0), "The vector does not contain 0");
 
     // Test with creating a lockfile
-    let result = era_validate(
-        headers.clone(),
-        premerge_accumulator.clone(),
-        0,
-        None,
-        Some(true),
-    )?;
+    let result = era_validate(headers.clone(), premerge_accumulator.clone(), 0, None, true)?;
     println!("result 2: {:?}", result);
 
     assert!(result.contains(&0), "The vector does not contain 0");
 
     // test with the lockfile created before.
 
-    let result = era_validate(
-        headers.clone(),
-        premerge_accumulator.clone(),
-        0,
-        None,
-        Some(true),
-    )?;
+    let result = era_validate(headers.clone(), premerge_accumulator.clone(), 0, None, true)?;
 
     // already validated epochs are not included in the array.
     assert_eq!(result.len(), 0);

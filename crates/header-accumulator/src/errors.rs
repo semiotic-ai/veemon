@@ -1,5 +1,7 @@
 use std::fmt;
 
+use sf_protos::StreamingFastProtosError;
+
 #[derive(Debug)]
 pub enum EraValidateError {
     TooManyHeaderRecords,
@@ -84,5 +86,13 @@ impl fmt::Display for EraValidateError {
 impl fmt::Display for SyncError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Error handling lockfile sync")
+    }
+}
+
+impl From<StreamingFastProtosError> for EraValidateError {
+    fn from(error: StreamingFastProtosError) -> Self {
+        match error {
+            StreamingFastProtosError::BlockConversionError => Self::HeaderDecodeError,
+        }
     }
 }

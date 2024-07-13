@@ -5,7 +5,6 @@ use sf_protos::ethereum::r#type::v2::Block;
 use sf_protos::ethereum::r#type::v2::BlockHeader;
 
 use crate::errors::EraValidateError;
-use crate::utils::header_from_block;
 
 #[derive(Clone)]
 pub struct ExtHeaderRecord {
@@ -68,7 +67,7 @@ impl TryFrom<&Block> for ExtHeaderRecord {
             block_number: block.number,
             block_hash: B256::from_slice(&block.hash),
             total_difficulty: Uint::from_be_slice(total_difficulty.bytes.as_slice()),
-            full_header: Some(header_from_block(block)?), // Assuming header_from_block returns Result<_, EraValidateError>
+            full_header: Some(block.try_into()?),
         })
     }
 }

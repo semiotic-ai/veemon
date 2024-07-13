@@ -1,5 +1,5 @@
 use decoder::decode_flat_files;
-use header_accumulator::utils::header_from_block;
+use ethportal_api::Header;
 
 #[test]
 fn test_header_from_block() {
@@ -11,6 +11,6 @@ fn test_header_from_block() {
     )
     .unwrap();
 
-    let header = header_from_block(&blocks[0].clone()).unwrap();
+    let header = Header::try_from(&blocks[0].clone()).unwrap();
     assert_eq!(header.hash().as_slice(), blocks[0].hash)
 }

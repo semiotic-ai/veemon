@@ -18,13 +18,13 @@ primitive-types = "=0.12.2"
 rlp = "0.5.2"
 serde = "1.0.196"
 serde_json = "1.0.108"
-sf-protos = { git = "https://github.com/semiotic-ai/sf-protos.git", version = "0.1.0" }
+sf-protos = { git = "https://github.com/suchapalaver/sf-protos.git", branch = "main" }
 # Needs to match that transitively depended on by trin-validation
 tree_hash = { git = "https://github.com/KolbyML/tree_hash.git", rev = "8aaf8bb4184148768d48e2cfbbdd0b95d1da8730" }
 trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0", tag = "v0.1.0-alpha.35" }
 
 [dev-dependencies]
-decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", branch = "joseph/tru-199-update-dependencies-on-reth" }
+decoder = { git = "https://github.com/suchapalaver/flat-files-decoder.git", branch = "joseph/tru-199-update-dependencies-on-reth" }
 tempfile = "3.0"
 
 [profile.release]
