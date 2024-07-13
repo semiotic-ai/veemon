@@ -15,10 +15,16 @@ pub struct ExtHeaderRecord {
 }
 
 impl From<ExtHeaderRecord> for HeaderRecord {
-    fn from(ext: ExtHeaderRecord) -> Self {
+    fn from(
+        ExtHeaderRecord {
+            block_hash,
+            total_difficulty,
+            ..
+        }: ExtHeaderRecord,
+    ) -> Self {
         HeaderRecord {
-            block_hash: ext.block_hash,
-            total_difficulty: ext.total_difficulty,
+            block_hash,
+            total_difficulty,
         }
     }
 }
