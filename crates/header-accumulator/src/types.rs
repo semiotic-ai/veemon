@@ -2,6 +2,7 @@ use alloy_primitives::Uint;
 use alloy_primitives::B256;
 use ethportal_api::{types::execution::accumulator::HeaderRecord, Header};
 use sf_protos::ethereum::r#type::v2::Block;
+use sf_protos::ethereum::r#type::v2::BlockHeader;
 
 use crate::errors::EraValidateError;
 use crate::utils::header_from_block;
@@ -50,13 +51,14 @@ impl From<&ExtHeaderRecord> for HeaderRecord {
 /// Decodes a [`ExtHeaderRecord`] from a [`Block`]. A [`BlockHeader`] must be present in the block,
 /// otherwise validating headers won't be possible
 impl TryFrom<&Block> for ExtHeaderRecord {
-    type Error = EraValidateError; // Ensure this matches your error type
+    type Error = EraValidateError;
 
     fn try_from(block: &Block) -> Result<Self, Self::Error> {
-        let header = block
+        let header: &BlockHeader = block
             .header
             .as_ref()
             .ok_or(EraValidateError::HeaderDecodeError)?;
+
         let total_difficulty = header
             .total_difficulty
             .as_ref()
