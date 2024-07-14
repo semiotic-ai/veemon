@@ -2010,7 +2010,6 @@ version = "0.1.0"
 dependencies = [
  "alloy-primitives",
  "base64 0.21.7",
- "bincode",
  "clap",
  "decoder",
  "env_logger 0.10.2",
