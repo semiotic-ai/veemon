@@ -1,14 +1,14 @@
 use std::path::Path;
 
-use ethportal_api::types::execution::accumulator::HeaderRecord;
+use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
 use tree_hash::TreeHash;
 use trin_validation::accumulator::PreMergeAccumulator;
 
 use crate::{
+    epoch::{FINAL_EPOCH, MAX_EPOCH_SIZE, MERGE_BLOCK},
     errors::EraValidateError,
     sync::{check_sync_state, store_last_state, LockEntry},
     types::ExtHeaderRecord,
-    epoch::{compute_epoch_accumulator, FINAL_EPOCH, MAX_EPOCH_SIZE, MERGE_BLOCK},
 };
 
 /// Validates many headers against a header accumulator
@@ -111,8 +111,8 @@ fn process_headers(
         headers.retain(|header: &ExtHeaderRecord| header.block_number < MERGE_BLOCK);
     }
 
-    let header_records: Vec<HeaderRecord> = headers.into_iter().map(HeaderRecord::from).collect();
-    let epoch_accumulator = compute_epoch_accumulator(&header_records)?;
+    let header_records: Vec<_> = headers.into_iter().map(HeaderRecord::from).collect();
+    let epoch_accumulator = EpochAccumulator::from(header_records);
 
     // Return an error if the epoch accumulator does not match the pre-merge accumulator
     let root: [u8; 32] = epoch_accumulator.tree_hash_root().0;
