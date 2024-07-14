@@ -7,7 +7,7 @@ use trin_validation::accumulator::PreMergeAccumulator;
 use crate::{
     epoch::{FINAL_EPOCH, MAX_EPOCH_SIZE, MERGE_BLOCK},
     errors::{EraValidateError, HeaderAccumulatorError},
-    sync::{check_sync_state, Lock, LockEntry},
+    sync::{Lock, LockEntry},
     types::ExtHeaderRecord,
 };
 
@@ -72,11 +72,11 @@ impl EraValidator for PreMergeAccumulator {
         for epoch in start_epoch..end_epoch {
             // checks if epoch was already synced form lockfile.
             if use_lock {
-                match check_sync_state(
-                    Path::new("./lockfile.json"),
-                    epoch,
-                    self.historical_epochs[epoch].0,
-                ) {
+                let file_path = Path::new("./lockfile.json");
+                let lock_file = Lock::from_file(file_path)?;
+
+                match lock_file.check_sync_state(file_path, epoch, self.historical_epochs[epoch].0)
+                {
                     Ok(true) => {
                         log::info!("Skipping, epoch already synced: {}", epoch);
                         continue;
