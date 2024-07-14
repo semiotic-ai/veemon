@@ -8,7 +8,7 @@ use crate::{
     errors::EraValidateError,
     sync::{check_sync_state, store_last_state, LockEntry},
     types::ExtHeaderRecord,
-    utils::{compute_epoch_accumulator, FINAL_EPOCH, MAX_EPOCH_SIZE, MERGE_BLOCK},
+    epoch::{compute_epoch_accumulator, FINAL_EPOCH, MAX_EPOCH_SIZE, MERGE_BLOCK},
 };
 
 /// Validates many headers against a header accumulator

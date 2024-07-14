@@ -1,7 +1,7 @@
 use crate::{
     errors::EraValidateError,
     types::ExtHeaderRecord,
-    utils::{compute_epoch_accumulator, MAX_EPOCH_SIZE},
+    epoch::{compute_epoch_accumulator, MAX_EPOCH_SIZE},
 };
 
 use alloy_primitives::FixedBytes;
