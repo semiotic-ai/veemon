@@ -44,7 +44,7 @@ pub fn era_validate(
         if use_lock {
             match check_sync_state(
                 Path::new("./lockfile.json"),
-                epoch.to_string(),
+                epoch,
                 premerge_accumulator.historical_epochs[epoch].0,
             ) {
                 Ok(true) => {

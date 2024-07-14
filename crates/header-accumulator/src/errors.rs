@@ -3,6 +3,35 @@ use std::fmt;
 use sf_protos::StreamingFastProtosError;
 
 #[derive(Debug)]
+pub enum HeaderAccumulatorError {
+    EraValidateError(EraValidateError),
+    SyncError(SyncError),
+}
+
+impl std::error::Error for HeaderAccumulatorError {}
+
+impl fmt::Display for HeaderAccumulatorError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            HeaderAccumulatorError::EraValidateError(ref e) => write!(f, "{}", e),
+            HeaderAccumulatorError::SyncError(ref e) => write!(f, "{}", e),
+        }
+    }
+}
+
+impl From<EraValidateError> for HeaderAccumulatorError {
+    fn from(error: EraValidateError) -> Self {
+        HeaderAccumulatorError::EraValidateError(error)
+    }
+}
+
+impl From<SyncError> for HeaderAccumulatorError {
+    fn from(error: SyncError) -> Self {
+        HeaderAccumulatorError::SyncError(error)
+    }
+}
+
+#[derive(Debug)]
 pub enum EraValidateError {
     TooManyHeaderRecords,
     InvalidPreMergeAccumulatorFile,
@@ -22,8 +51,10 @@ pub enum EraValidateError {
     InvalidEpochLength,
     ExtHeaderRecordError,
 }
+
 #[derive(Debug)]
 pub enum SyncError {
+    LockfileIoError(std::io::Error),
     LockfileReadError,
 }
 
@@ -85,7 +116,16 @@ impl fmt::Display for EraValidateError {
 
 impl fmt::Display for SyncError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Error handling lockfile sync")
+        match self {
+            Self::LockfileIoError(e) => write!(f, "Error reading lockfile: {e}"),
+            Self::LockfileReadError => write!(f, "Epoch not found"),
+        }
+    }
+}
+
+impl From<std::io::Error> for SyncError {
+    fn from(error: std::io::Error) -> Self {
+        SyncError::LockfileIoError(error)
     }
 }
 

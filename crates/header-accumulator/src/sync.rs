@@ -6,7 +6,7 @@ use std::fs::{metadata, OpenOptions};
 use std::io::{Read, Write};
 use std::path::Path;
 
-use crate::errors::{EraValidateError, SyncError};
+use crate::errors::{EraValidateError, HeaderAccumulatorError, SyncError};
 
 pub struct LockEntry {
     epoch: String,
@@ -32,7 +32,7 @@ impl Lock {
         Lock::default()
     }
 
-    fn from_file(file_path: &Path) -> Result<Self, Box<dyn Error>> {
+    fn from_file(file_path: &Path) -> Result<Self, SyncError> {
         let mut file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -71,14 +71,16 @@ pub fn store_last_state(file_path: &Path, entry: LockEntry) -> Result<(), Box<dy
 
 pub fn check_sync_state(
     file_path: &Path,
-    epoch: String,
+    epoch: usize,
     premerge_accumulator_hash: [u8; 32],
-) -> Result<bool, Box<dyn Error>> {
+) -> Result<bool, HeaderAccumulatorError> {
     if metadata(file_path).is_err() {
         log::info!("The lockfile did not exist and was created");
     }
 
     let json_lock = Lock::from_file(file_path)?;
+
+    let epoch = epoch.to_string();
 
     if !json_lock.entries.contains_key(&epoch) {
         return Ok(false);
@@ -105,7 +107,7 @@ pub fn check_sync_state(
             premerge_accumulator_hash,
             stored_hash
         );
-        return Err(Box::new(EraValidateError::EraAccumulatorMismatch));
+        return Err(EraValidateError::EraAccumulatorMismatch.into());
     }
 
     Ok(true)
@@ -165,20 +167,20 @@ mod tests {
         let mac_file: PreMergeAccumulator = PreMergeAccumulator::default();
 
         // Test case where epoch exists and hashes match
-        let epoch = "0".to_string();
+        let epoch = 0;
         assert_eq!(
             check_sync_state(&file_path, epoch, mac_file.historical_epochs[0].0).unwrap(),
             true
         );
 
         // Test case where epoch does not exist
-        let epoch = "2".to_string();
+        let epoch = 2;
         let result =
             check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[2].0).unwrap();
         assert_eq!(result, false);
 
         // // test when hashes differ but lock is present
-        let epoch = "0".to_string();
+        let epoch = 0;
         let result = check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[1].0)
             .map_err(|error| error.to_string());
         assert_eq!(
@@ -187,7 +189,7 @@ mod tests {
         );
 
         // test case for another epoch hash
-        let epoch = "1".to_string();
+        let epoch = 1;
         let result = check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[1].0)
             .map_err(|error| error.to_string());
         assert_eq!(result.unwrap(), true);
