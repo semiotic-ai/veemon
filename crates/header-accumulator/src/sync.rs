@@ -32,7 +32,7 @@ impl Lock {
         Lock::default()
     }
 
-    fn from_file(file_path: &Path) -> Result<Self, SyncError> {
+    pub fn from_file(file_path: &Path) -> Result<Self, SyncError> {
         let mut file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -50,23 +50,27 @@ impl Lock {
             serde_json::from_str(&contents).unwrap_or_default()
         })
     }
-}
 
-pub fn store_last_state(file_path: &Path, entry: LockEntry) -> Result<(), Box<dyn Error>> {
-    let mut json_lock = Lock::from_file(file_path)?;
+    pub fn store_last_state(&self, file_path: &Path) -> Result<(), Box<dyn Error>> {
+        let json_string = self.to_json()?;
 
-    json_lock.entries.insert(entry.epoch, entry.root);
+        let mut file = OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .open(file_path)?;
 
-    let json_string = serde_json::to_string_pretty(&json_lock)?;
+        file.write_all(json_string.as_bytes())?;
 
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(file_path)?;
+        Ok(())
+    }
 
-    file.write_all(json_string.as_bytes())?;
+    fn to_json(&self) -> Result<String, Box<dyn Error>> {
+        Ok(serde_json::to_string_pretty(self)?)
+    }
 
-    Ok(())
+    pub fn update(&mut self, entry: LockEntry) {
+        self.entries.insert(entry.epoch, entry.root);
+    }
 }
 
 pub fn check_sync_state(
@@ -131,7 +135,9 @@ mod tests {
             root: "XsH/uMOxRvQmBsdM7Zc9wW7FoQfANFhYw0P8lHgLQhg=".into(),
         };
 
-        store_last_state(&file_path, entry)?;
+        let mut lock_file = Lock::from_file(&file_path).unwrap();
+        lock_file.update(entry);
+        lock_file.store_last_state(&file_path)?;
 
         let mut file = File::open(file_path)?;
         let mut contents = String::new();

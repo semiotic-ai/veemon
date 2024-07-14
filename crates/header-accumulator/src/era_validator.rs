@@ -6,8 +6,8 @@ use trin_validation::accumulator::PreMergeAccumulator;
 
 use crate::{
     epoch::{FINAL_EPOCH, MAX_EPOCH_SIZE, MERGE_BLOCK},
-    errors::EraValidateError,
-    sync::{check_sync_state, store_last_state, LockEntry},
+    errors::{EraValidateError, HeaderAccumulatorError},
+    sync::{check_sync_state, Lock, LockEntry},
     types::ExtHeaderRecord,
 };
 
@@ -52,7 +52,7 @@ pub trait EraValidator {
 }
 
 impl EraValidator for PreMergeAccumulator {
-    type Error = EraValidateError;
+    type Error = HeaderAccumulatorError;
 
     fn era_validate(
         &self,
@@ -87,7 +87,7 @@ impl EraValidator for PreMergeAccumulator {
                     Err(e) => {
                         return {
                             log::error!("error: {}", e);
-                            Err(EraValidateError::EpochAccumulatorError)
+                            Err(EraValidateError::EpochAccumulatorError.into())
                         }
                     }
                 }
@@ -95,13 +95,18 @@ impl EraValidator for PreMergeAccumulator {
             let epoch_headers: Vec<ExtHeaderRecord> = headers.drain(0..MAX_EPOCH_SIZE).collect();
             let root = self.process_headers(epoch_headers, epoch)?;
             validated_epochs.push(epoch);
+
             // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
             if use_lock {
-                match store_last_state(Path::new("./lockfile.json"), LockEntry::new(&epoch, root)) {
+                let path = Path::new("./lockfile.json");
+                let mut lock_file = Lock::from_file(path)?;
+                lock_file.update(LockEntry::new(&epoch, root));
+
+                match lock_file.store_last_state(path) {
                     Ok(_) => {}
                     Err(e) => {
                         log::error!("error: {}", e);
-                        return Err(EraValidateError::EpochAccumulatorError);
+                        return Err(EraValidateError::EpochAccumulatorError.into());
                     }
                 }
             }

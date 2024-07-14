@@ -2,12 +2,12 @@ use std::fs;
 
 use decoder::decode_flat_files;
 use header_accumulator::{
-    era_validator::EraValidator, errors::EraValidateError, types::ExtHeaderRecord,
+    era_validator::EraValidator, errors::HeaderAccumulatorError, types::ExtHeaderRecord,
 };
 use trin_validation::accumulator::PreMergeAccumulator;
 
 #[test]
-fn test_era_validate() -> Result<(), EraValidateError> {
+fn test_era_validate() -> Result<(), HeaderAccumulatorError> {
     // clean up before tests
     if let Err(e) = fs::remove_file("lockfile.json") {
         eprintln!("Error deleting lockfile.json: {}", e);
@@ -73,7 +73,7 @@ fn test_era_validate() -> Result<(), EraValidateError> {
 
 #[test]
 
-fn test_era_validate_compressed() -> Result<(), EraValidateError> {
+fn test_era_validate_compressed() -> Result<(), HeaderAccumulatorError> {
     // clean up before tests
     if let Err(e) = fs::remove_file("lockfile.json") {
         eprintln!("Error deleting lockfile.json: {}", e);
