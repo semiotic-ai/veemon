@@ -50,6 +50,7 @@ pub enum EraValidateError {
     InvalidEpochStart,
     InvalidEpochLength,
     ExtHeaderRecordError,
+    InvalidBlockRange(u64, u64),
 }
 
 #[derive(Debug)]
@@ -63,52 +64,56 @@ impl std::error::Error for SyncError {}
 
 impl fmt::Display for EraValidateError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use EraValidateError::*;
         match *self {
             EraValidateError::TooManyHeaderRecords => write!(f, "Too many header records"),
             EraValidateError::InvalidPreMergeAccumulatorFile => {
-                write!(f, "Invalid pre-merger accumulator file")
+                write!(f, "Invalid pre-merge accumulator file")
             }
-            EraValidateError::HeaderDecodeError => {
+            HeaderDecodeError => {
                 write!(f, "Error decoding header from flat files")
             }
-            EraValidateError::FlatFileDecodeError => write!(f, "Error decoding flat files"),
-            EraValidateError::EraAccumulatorMismatch => write!(f, "Era accumulator mismatch"),
-            EraValidateError::EpochAccumulatorError => {
+            FlatFileDecodeError => write!(f, "Error decoding flat files"),
+            EraAccumulatorMismatch => write!(f, "Era accumulator mismatch"),
+            EpochAccumulatorError => {
                 write!(f, "Error creating epoch accumulator")
             }
-            EraValidateError::ProofGenerationFailure => {
+            ProofGenerationFailure => {
                 write!(f, "Error generating inclusion proof")
             }
-            EraValidateError::ProofValidationFailure => {
+            ProofValidationFailure => {
                 write!(f, "Error validating inclusion proof")
             }
-            EraValidateError::IoError => write!(f, "Error reading from stdin"),
-            EraValidateError::StartEpochBlockNotFound => {
+            IoError => write!(f, "Error reading from stdin"),
+            StartEpochBlockNotFound => {
                 write!(f, "Start epoch block not found")
             }
-            EraValidateError::EndEpochLessThanStartEpoch => {
+            EndEpochLessThanStartEpoch => {
                 write!(f, "Start epoch must be less than end epoch")
             }
-            EraValidateError::MergeBlockNotFound => {
+            MergeBlockNotFound => {
                 write!(f, "Merge block not found")
             }
-            EraValidateError::JsonError => {
+            JsonError => {
                 write!(f, "Error reading json from stdin")
             }
-            EraValidateError::TotalDifficultyDecodeError => {
+            TotalDifficultyDecodeError => {
                 write!(f, "Error decoding total difficulty")
             }
-            EraValidateError::InvalidEpochLength => {
+            InvalidEpochLength => {
                 write!(f, "blocks in epoch must be exactly 8192 units")
             }
-            EraValidateError::InvalidEpochStart => {
+            InvalidEpochStart => {
                 write!(
                     f,
                     "blocks in epoch must respect the range of blocks numbers"
                 )
             }
-            EraValidateError::ExtHeaderRecordError => {
+            ExtHeaderRecordError => {
                 write!(f, "Error converting ExtHeaderRecord to header")
+            }
+            InvalidBlockRange(start, end) => {
+                write!(f, "Invalid block range: {} - {}", start, end)
             }
         }
     }

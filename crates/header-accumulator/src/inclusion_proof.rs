@@ -27,6 +27,10 @@ pub fn generate_inclusion_proof(
     start_block: u64,
     end_block: u64,
 ) -> Result<Vec<[FixedBytes<32>; 15]>, EraValidateError> {
+    if start_block > end_block {
+        return Err(EraValidateError::InvalidBlockRange(start_block, end_block));
+    }
+
     // Compute the epoch accumulator for the blocks
     // The epochs start on a multiple of 8192 blocks, so we need to round down to the nearest 8192
     let epoch_start = start_block / MAX_EPOCH_SIZE as u64;
