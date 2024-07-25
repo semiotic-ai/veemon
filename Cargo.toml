@@ -4,3 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+beacon_node = { git = "https://github.com/sigp/lighthouse.git", branch = "stable" }
+types = { git = "https://github.com/sigp/lighthouse.git", branch = "stable" }
+insta = "1.39.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
