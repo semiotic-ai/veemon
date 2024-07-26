@@ -5,7 +5,7 @@ version = 3
 [[package]]
 name = "account_utils"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "directory",
  "eth2_keystore",
@@ -671,7 +671,7 @@ checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 [[package]]
 name = "beacon_chain"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "bitvec 1.0.1",
  "bls",
@@ -731,7 +731,7 @@ dependencies = [
 [[package]]
 name = "beacon_node"
 version = "5.2.1"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "beacon_chain",
  "clap",
@@ -762,7 +762,7 @@ dependencies = [
 [[package]]
 name = "beacon_processor"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "fnv",
  "futures",
@@ -880,7 +880,7 @@ checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 [[package]]
 name = "bls"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "arbitrary",
  "blst",
@@ -925,7 +925,7 @@ dependencies = [
 [[package]]
 name = "builder_client"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "eth2",
  "lighthouse_version",
@@ -998,7 +998,7 @@ dependencies = [
 [[package]]
 name = "cached_tree_hash"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "ethereum-types 0.14.1",
  "ethereum_hashing",
@@ -1118,7 +1118,7 @@ checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 [[package]]
 name = "clap_utils"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "clap",
  "dirs",
@@ -1135,7 +1135,7 @@ dependencies = [
 [[package]]
 name = "client"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "beacon_chain",
  "beacon_processor",
@@ -1189,7 +1189,7 @@ checksum = "d3fd119d74b830634cea2a0f58bbd0d54540518a14397557951e79340abc28c0"
 [[package]]
 name = "compare_fields"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "itertools",
 ]
@@ -1197,7 +1197,7 @@ dependencies = [
 [[package]]
 name = "compare_fields_derive"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -1563,7 +1563,7 @@ dependencies = [
 [[package]]
 name = "deposit_contract"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "ethabi 16.0.0",
  "ethereum_ssz",
@@ -1678,7 +1678,7 @@ dependencies = [
 [[package]]
 name = "directory"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "clap",
  "clap_utils",
@@ -1919,7 +1919,7 @@ dependencies = [
 [[package]]
 name = "environment"
 version = "0.1.2"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "async-channel",
  "ctrlc",
@@ -1976,7 +1976,7 @@ dependencies = [
 [[package]]
 name = "eth1"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "eth2",
  "ethereum_ssz",
@@ -2001,7 +2001,7 @@ dependencies = [
 [[package]]
 name = "eth2"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "account_utils",
  "bytes",
@@ -2032,7 +2032,7 @@ dependencies = [
 [[package]]
 name = "eth2_config"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "paste",
  "types",
@@ -2041,7 +2041,7 @@ dependencies = [
 [[package]]
 name = "eth2_interop_keypairs"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "bls",
  "ethereum_hashing",
@@ -2055,7 +2055,7 @@ dependencies = [
 [[package]]
 name = "eth2_key_derivation"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "bls",
  "num-bigint-dig",
@@ -2067,7 +2067,7 @@ dependencies = [
 [[package]]
 name = "eth2_keystore"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "aes 0.7.5",
  "bls",
@@ -2089,7 +2089,7 @@ dependencies = [
 [[package]]
 name = "eth2_network_config"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "bytes",
  "discv5",
@@ -2109,7 +2109,7 @@ dependencies = [
 [[package]]
 name = "eth2_wallet"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "eth2_key_derivation",
  "eth2_keystore",
@@ -2315,7 +2315,7 @@ dependencies = [
 [[package]]
 name = "execution_layer"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "alloy-consensus",
  "alloy-rlp",
@@ -2438,7 +2438,7 @@ dependencies = [
 [[package]]
 name = "filesystem"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "winapi",
  "windows-acl",
@@ -2504,7 +2504,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 [[package]]
 name = "fork_choice"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "ethereum_ssz",
  "ethereum_ssz_derive",
@@ -2697,7 +2697,7 @@ dependencies = [
 [[package]]
 name = "genesis"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "environment",
  "eth1",
@@ -2780,7 +2780,7 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 [[package]]
 name = "gossipsub"
 version = "0.5.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "async-channel",
  "asynchronous-codec 0.7.0",
@@ -3113,7 +3113,7 @@ dependencies = [
 [[package]]
 name = "http_api"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "beacon_chain",
  "beacon_processor",
@@ -3157,7 +3157,7 @@ dependencies = [
 [[package]]
 name = "http_metrics"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "beacon_chain",
  "lighthouse_metrics",
@@ -3443,7 +3443,7 @@ dependencies = [
 [[package]]
 name = "int_to_bytes"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "bytes",
 ]
@@ -3609,7 +3609,7 @@ dependencies = [
 [[package]]
 name = "kzg"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "arbitrary",
  "c-kzg",
@@ -4146,7 +4146,7 @@ dependencies = [
 [[package]]
 name = "lighthouse_metrics"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "prometheus",
 ]
@@ -4154,7 +4154,7 @@ dependencies = [
 [[package]]
 name = "lighthouse_network"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "bytes",
  "delay_map",
@@ -4202,7 +4202,7 @@ dependencies = [
 [[package]]
 name = "lighthouse_version"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "git-version",
  "target_info",
@@ -4260,7 +4260,7 @@ dependencies = [
 [[package]]
 name = "lockfile"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "fs2",
 ]
@@ -4274,7 +4274,7 @@ checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 [[package]]
 name = "logging"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "chrono",
  "lazy_static",
@@ -4315,7 +4315,7 @@ dependencies = [
 [[package]]
 name = "lru_cache"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "fnv",
 ]
@@ -4332,7 +4332,7 @@ dependencies = [
 [[package]]
 name = "malloc_utils"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "lazy_static",
  "libc",
@@ -4385,7 +4385,7 @@ dependencies = [
 [[package]]
 name = "merkle_proof"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "ethereum-types 0.14.1",
  "ethereum_hashing",
@@ -4485,7 +4485,7 @@ dependencies = [
 [[package]]
 name = "monitoring_api"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "eth2",
  "lazy_static",
@@ -4648,7 +4648,7 @@ dependencies = [
 [[package]]
 name = "network"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "anyhow",
  "async-channel",
@@ -4844,7 +4844,7 @@ checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 [[package]]
 name = "oneshot_broadcast"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "parking_lot 0.12.3",
 ]
@@ -4937,7 +4937,7 @@ dependencies = [
 [[package]]
 name = "operation_pool"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "bitvec 1.0.1",
  "derivative",
@@ -5291,7 +5291,7 @@ checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 [[package]]
 name = "pretty_reqwest_error"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "reqwest",
  "sensitive_url",
@@ -5437,7 +5437,7 @@ dependencies = [
 [[package]]
 name = "proto_array"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "ethereum_ssz",
  "ethereum_ssz_derive",
@@ -6155,7 +6155,7 @@ checksum = "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f"
 [[package]]
 name = "safe_arith"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 
 [[package]]
 name = "salsa20"
@@ -6320,7 +6320,7 @@ dependencies = [
 [[package]]
 name = "sensitive_url"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "serde",
  "url",
@@ -6538,7 +6538,7 @@ dependencies = [
 [[package]]
 name = "slasher"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "bincode",
  "byteorder",
@@ -6565,7 +6565,7 @@ dependencies = [
 [[package]]
 name = "slasher_service"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "beacon_chain",
  "directory",
@@ -6583,7 +6583,7 @@ dependencies = [
 [[package]]
 name = "slashing_protection"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "arbitrary",
  "ethereum_serde_utils",
@@ -6702,7 +6702,7 @@ dependencies = [
 [[package]]
 name = "slot_clock"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "lazy_static",
  "lighthouse_metrics",
@@ -6818,7 +6818,7 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 [[package]]
 name = "state_processing"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "arbitrary",
  "bls",
@@ -6849,7 +6849,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "store"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "db-key",
  "directory",
@@ -6926,7 +6926,7 @@ dependencies = [
 [[package]]
 name = "swap_or_not_shuffle"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "ethereum-types 0.14.1",
  "ethereum_hashing",
@@ -7010,7 +7010,7 @@ dependencies = [
 [[package]]
 name = "system_health"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "lighthouse_network",
  "parking_lot 0.12.3",
@@ -7040,7 +7040,7 @@ checksum = "c63f48baada5c52e65a29eef93ab4f8982681b67f9e8d29c7b05abcfec2b9ffe"
 [[package]]
 name = "task_executor"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "async-channel",
  "futures",
@@ -7088,7 +7088,7 @@ dependencies = [
 [[package]]
 name = "test_random_derive"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -7167,7 +7167,7 @@ dependencies = [
 [[package]]
 name = "timer"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "beacon_chain",
  "slog",
@@ -7499,7 +7499,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 [[package]]
 name = "types"
 version = "0.2.1"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "arbitrary",
  "bls",
@@ -7673,7 +7673,7 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 [[package]]
 name = "unused_port"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "lazy_static",
  "lru_cache",
@@ -7710,7 +7710,7 @@ dependencies = [
 [[package]]
 name = "validator_dir"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "bls",
  "deposit_contract",
@@ -7805,7 +7805,7 @@ dependencies = [
 [[package]]
 name = "warp_utils"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#9e12c21f268c80a3f002ae0ca27477f9f512eb6f"
+source = "git+https://github.com/suchapalaver/lighthouse.git?branch=stable#29116c80596feb6290e4c73ba05dc73a81988237"
 dependencies = [
  "beacon_chain",
  "bytes",
