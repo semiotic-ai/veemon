@@ -1,1 +1,7 @@
 /target
+
+# https://doc.rust-lang.org/cargo/faq.html#why-have-cargolock-in-version-control
+Cargo.lock
+
+# Use example Beacon head state file for testing, too large for version control
+*/head-state.json

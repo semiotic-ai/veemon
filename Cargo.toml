@@ -3,9 +3,15 @@ name = "headstate-proof-spike"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "headstate_proof_spike"
+path = "src/lib.rs"
+
 [dependencies]
-beacon_node = { git = "https://github.com/suchapalaver/lighthouse.git", branch = "stable" }
 types = { git = "https://github.com/suchapalaver/lighthouse.git", branch = "stable" }
-insta = "1.39.0"
+primitive-types = "0.12.2"
 serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+insta = "1.39.0"
 serde_json = "1.0"
