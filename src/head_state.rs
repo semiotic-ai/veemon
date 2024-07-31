@@ -40,16 +40,22 @@ impl HeadState<MainnetEthSpec> {
 mod tests {
     use super::*;
 
+    use lazy_static::lazy_static;
     use merkle_proof::verify_merkle_proof;
-
     use types::light_client_update::{CURRENT_SYNC_COMMITTEE_PROOF_LEN, HISTORICAL_ROOTS_INDEX};
 
     const HEAD_STATE_JSON: &str = include_str!("../head-state.json");
     const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
 
+    lazy_static! {
+        static ref STATE: HeadState<MainnetEthSpec> = serde_json::from_str(HEAD_STATE_JSON).expect(
+            "For this spike we are using a 'head-state.json' file that has been shared among contributors"
+        );
+    }
+
     #[test]
     fn test_inclusion_proofs_with_historical_and_state_roots() {
-        let state: HeadState<MainnetEthSpec> = serde_json::from_str(HEAD_STATE_JSON).unwrap();
+        let state = &STATE;
 
         let proof = state.compute_merkle_proof(HISTORICAL_ROOTS_INDEX).unwrap();
 
