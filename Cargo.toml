@@ -3,9 +3,17 @@ name = "headstate-proof-spike"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "headstate_proof_spike"
+path = "src/lib.rs"
+
 [dependencies]
-beacon_node = { git = "https://github.com/sigp/lighthouse.git", branch = "stable" }
-types = { git = "https://github.com/sigp/lighthouse.git", branch = "stable" }
-insta = "1.39.0"
+types = { git = "https://github.com/suchapalaver/lighthouse.git", branch = "stable" }
+primitive-types = "0.12.2"
 serde = { version = "1.0", features = ["derive"] }
+tree_hash = "0.6.0"
+
+[dev-dependencies]
+insta = "1.39.0"
+merkle_proof = { git = "https://github.com/suchapalaver/lighthouse.git" }
 serde_json = "1.0"
