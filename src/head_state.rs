@@ -48,7 +48,7 @@ mod tests {
     const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
 
     #[test]
-    fn spike_deserialize_head_state_and_compute_merkle_proof() {
+    fn test_inclusion_proofs_with_historical_and_state_roots() {
         let state: HeadState<MainnetEthSpec> = serde_json::from_str(HEAD_STATE_JSON).unwrap();
 
         let proof = state.compute_merkle_proof(HISTORICAL_ROOTS_INDEX).unwrap();
