@@ -14,6 +14,10 @@ impl HeadState<MainnetEthSpec> {
         self.data.compute_merkle_proof(index)
     }
 
+    pub fn data(&self) -> &BeaconState<MainnetEthSpec> {
+        &self.data
+    }
+
     pub fn execution_optimistic(&self) -> bool {
         self.execution_optimistic
     }
@@ -27,9 +31,12 @@ impl HeadState<MainnetEthSpec> {
 mod tests {
     use super::*;
 
-    use types::light_client_update::HISTORICAL_ROOTS_INDEX;
+    use merkle_proof::verify_merkle_proof;
+    use tree_hash::TreeHash;
+    use types::light_client_update::{CURRENT_SYNC_COMMITTEE_PROOF_LEN, HISTORICAL_ROOTS_INDEX};
 
     const HEAD_STATE_JSON: &str = include_str!("../head-state.json");
+    const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
 
     #[test]
     fn spike_deserialize_head_state_and_compute_merkle_proof() {
@@ -46,5 +53,22 @@ mod tests {
             0x53b107024e402f616f8f348d900e0d62f4b6f0558d2bfbd09200e68620a5b9c2,
         ]
         "###);
+
+        let historical_roots_tree_hash_root = state.data().historical_roots().tree_hash_root();
+
+        let state_root = state.data().tree_hash_root();
+
+        let depth = CURRENT_SYNC_COMMITTEE_PROOF_LEN;
+
+        assert!(
+            verify_merkle_proof(
+                historical_roots_tree_hash_root,
+                &proof,
+                depth,
+                HISTORICAL_ROOTS_FIELD_INDEX,
+                state_root
+            ),
+            "Merkle proof verification failed"
+        );
     }
 }
