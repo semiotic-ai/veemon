@@ -4,4 +4,4 @@
 Cargo.lock
 
 # Use example Beacon head state file for testing, too large for version control
-*/head-state.json
+head-state.json
