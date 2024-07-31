@@ -1,5 +1,6 @@
 use primitive_types::H256;
 use serde::{Deserialize, Serialize};
+use tree_hash::TreeHash;
 use types::{BeaconState, Error, EthSpec, MainnetEthSpec};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -22,6 +23,14 @@ impl HeadState<MainnetEthSpec> {
         self.execution_optimistic
     }
 
+    pub fn historical_roots_tree_hash_root(&self) -> H256 {
+        self.data.historical_roots().tree_hash_root()
+    }
+
+    pub fn state_root(&self) -> H256 {
+        self.data.tree_hash_root()
+    }
+
     pub fn version(&self) -> &str {
         &self.version
     }
@@ -32,7 +41,7 @@ mod tests {
     use super::*;
 
     use merkle_proof::verify_merkle_proof;
-    use tree_hash::TreeHash;
+
     use types::light_client_update::{CURRENT_SYNC_COMMITTEE_PROOF_LEN, HISTORICAL_ROOTS_INDEX};
 
     const HEAD_STATE_JSON: &str = include_str!("../head-state.json");
@@ -54,9 +63,9 @@ mod tests {
         ]
         "###);
 
-        let historical_roots_tree_hash_root = state.data().historical_roots().tree_hash_root();
+        let historical_roots_tree_hash_root = state.historical_roots_tree_hash_root();
 
-        let state_root = state.data().tree_hash_root();
+        let state_root = state.state_root();
 
         let depth = CURRENT_SYNC_COMMITTEE_PROOF_LEN;
 
