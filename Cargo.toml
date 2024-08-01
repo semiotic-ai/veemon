@@ -2,6 +2,7 @@
 name = "headstate-proof-spike"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.80"
 
 [lib]
 name = "headstate_proof_spike"
