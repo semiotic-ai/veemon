@@ -27,6 +27,10 @@ impl HeadState<MainnetEthSpec> {
         self.data.historical_roots().tree_hash_root()
     }
 
+    pub fn historical_summaries_tree_hash_root(&self) -> Result<H256, Error> {
+        Ok(self.data.historical_summaries()?.tree_hash_root())
+    }
+
     pub fn state_root(&self) -> H256 {
         self.data.tree_hash_root()
     }
@@ -42,10 +46,13 @@ mod tests {
 
     use lazy_static::lazy_static;
     use merkle_proof::verify_merkle_proof;
-    use types::light_client_update::{CURRENT_SYNC_COMMITTEE_PROOF_LEN, HISTORICAL_ROOTS_INDEX};
+    use types::light_client_update::{
+        CURRENT_SYNC_COMMITTEE_PROOF_LEN, HISTORICAL_ROOTS_INDEX, HISTORICAL_SUMMARIES_INDEX,
+    };
 
     const HEAD_STATE_JSON: &str = include_str!("../head-state.json");
     const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
+    const HISTORICAL_SUMMARIES_FIELD_INDEX: usize = 27;
 
     lazy_static! {
         static ref STATE: HeadState<MainnetEthSpec> = serde_json::from_str(HEAD_STATE_JSON).expect(
@@ -81,6 +88,43 @@ mod tests {
                 &proof,
                 depth,
                 HISTORICAL_ROOTS_FIELD_INDEX,
+                state_root
+            ),
+            "Merkle proof verification failed"
+        );
+    }
+
+    #[test]
+    fn test_inclusion_proofs_for_historical_summary_given_historical_summaries_root() {
+        let state = &STATE;
+
+        let proof = state
+            .compute_merkle_proof(HISTORICAL_SUMMARIES_INDEX)
+            .unwrap();
+
+        insta::assert_debug_snapshot!(proof, @r###"
+        [
+            0x053a090000000000000000000000000000000000000000000000000000000000,
+            0x455a0d1e0a3b5660d74b6520062c9c3cead986928686e535451ca6e61aeb291f,
+            0xdb56114e00fdd4c1f85c892bf35ac9a89289aaecb1ebd0a96cde606a748b5d71,
+            0xc204e43766c4e9d43da1a54c3053024eef28d407bcca7936900ffd2e7aa165b2,
+            0x2150a88f205759c59817f42dc307620c67d3d23417959286928d186c639a0948,
+        ]
+        "###);
+
+        let historical_summaries_tree_hash_root =
+            state.historical_summaries_tree_hash_root().unwrap();
+
+        let state_root = state.state_root();
+
+        let depth = CURRENT_SYNC_COMMITTEE_PROOF_LEN;
+
+        assert!(
+            verify_merkle_proof(
+                historical_summaries_tree_hash_root,
+                &proof,
+                depth,
+                HISTORICAL_SUMMARIES_FIELD_INDEX,
                 state_root
             ),
             "Merkle proof verification failed"
