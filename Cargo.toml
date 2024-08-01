@@ -15,6 +15,5 @@ tree_hash = "0.6.0"
 
 [dev-dependencies]
 insta = "1.39.0"
-lazy_static = "1.5.0"
 merkle_proof = { git = "https://github.com/suchapalaver/lighthouse.git" }
 serde_json = "1.0"

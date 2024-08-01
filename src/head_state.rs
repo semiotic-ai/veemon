@@ -42,23 +42,25 @@ impl HeadState<MainnetEthSpec> {
 
 #[cfg(test)]
 mod tests {
+    use std::cell::LazyCell;
+
     use super::*;
 
-    use lazy_static::lazy_static;
     use merkle_proof::verify_merkle_proof;
     use types::light_client_update::{
         CURRENT_SYNC_COMMITTEE_PROOF_LEN, HISTORICAL_ROOTS_INDEX, HISTORICAL_SUMMARIES_INDEX,
     };
 
     const HEAD_STATE_JSON: &str = include_str!("../head-state.json");
+
     const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
     const HISTORICAL_SUMMARIES_FIELD_INDEX: usize = 27;
 
-    lazy_static! {
-        static ref STATE: HeadState<MainnetEthSpec> = serde_json::from_str(HEAD_STATE_JSON).expect(
-            "For this spike we are using a 'head-state.json' file that has been shared among contributors"
-        );
-    }
+    const STATE: LazyCell<HeadState<MainnetEthSpec>> = LazyCell::new(|| {
+        serde_json::from_str(HEAD_STATE_JSON).expect(
+            "For this spike we are using a 'head-state.json' file that has been shared among contributors",
+        )
+    });
 
     #[test]
     fn test_inclusion_proofs_with_historical_and_state_roots() {
