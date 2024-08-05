@@ -1,10 +1,7 @@
-use merkle_proof::{MerkleTree, MerkleTreeError};
 use primitive_types::H256;
 use serde::{Deserialize, Serialize};
 use tree_hash::TreeHash;
 use types::{BeaconState, Error, EthSpec, MainnetEthSpec};
-
-const HISTORY_TREE_DEPTH: usize = 13;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct HeadState<E: EthSpec> {
@@ -40,14 +37,6 @@ impl HeadState<MainnetEthSpec> {
 
     pub fn version(&self) -> &str {
         &self.version
-    }
-
-    pub fn compute_block_roots_proof(&self, index: usize) -> Result<Vec<H256>, MerkleTreeError> {
-        let leaves = self.data.block_roots().to_vec();
-        let tree = MerkleTree::create(&leaves, HISTORY_TREE_DEPTH);
-        let (_, proof) = tree.generate_proof(index, HISTORY_TREE_DEPTH)?;
-
-        Ok(proof)
     }
 }
 
@@ -139,26 +128,6 @@ mod tests {
                 depth,
                 HISTORICAL_SUMMARIES_FIELD_INDEX,
                 state_root
-            ),
-            "Merkle proof verification failed"
-        );
-    }
-
-    #[test]
-    fn test_inclusion_proofs_for_block_roots() {
-        let state = &STATE;
-        let index = 4096usize;
-        let block_root_at_index = state.data().block_roots().to_vec()[index];
-        let block_roots_root = state.data().block_roots().tree_hash_root();
-        let proof = state.compute_block_roots_proof(index).unwrap();
-
-        assert!(
-            verify_merkle_proof(
-                block_root_at_index,
-                &proof,
-                HISTORY_TREE_DEPTH,
-                index,
-                block_roots_root
             ),
             "Merkle proof verification failed"
         );
