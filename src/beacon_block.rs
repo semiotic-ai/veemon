@@ -69,4 +69,18 @@ mod tests {
             block_body_hash
         ));
     }
+
+    #[test]
+    fn test_beacon_block_header_root_and_beacon_block_root_match() {
+        let block_wrapper = &BLOCK_WRAPPER;
+        let block = &block_wrapper.data.message;
+
+        // `BeaconBlock::canonical_root` calls `tree_hash_root` on the block.
+        let block_root = block.canonical_root();
+
+        let block_header = block.block_header();
+        let block_header_root = block_header.tree_hash_root();
+
+        assert_eq!(block_root, block_header_root);
+    }
 }
