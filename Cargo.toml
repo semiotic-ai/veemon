@@ -9,12 +9,12 @@ name = "headstate_proof_spike"
 path = "src/lib.rs"
 
 [dependencies]
-types = { git = "https://github.com/suchapalaver/lighthouse.git", branch = "stable" }
+types = { git = "https://github.com/semiotic-ai/lighthouse.git", branch = "stable" }
 primitive-types = "0.12.2"
 serde = { version = "1.0", features = ["derive"] }
 tree_hash = "0.6.0"
 
 [dev-dependencies]
 insta = "1.39.0"
-merkle_proof = { git = "https://github.com/suchapalaver/lighthouse.git" }
+merkle_proof = { git = "https://github.com/semiotic-ai/lighthouse.git" }
 serde_json = "1.0"
