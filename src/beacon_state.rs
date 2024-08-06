@@ -3,6 +3,9 @@ use serde::{Deserialize, Serialize};
 use tree_hash::TreeHash;
 use types::{BeaconState, Error, EthSpec, MainnetEthSpec};
 
+pub const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
+pub const HISTORICAL_SUMMARIES_FIELD_INDEX: usize = 27;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct HeadState<E: EthSpec> {
     version: String,
@@ -52,9 +55,6 @@ mod tests {
     };
 
     const HEAD_STATE_JSON: &str = include_str!("../head-state.json");
-
-    const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
-    const HISTORICAL_SUMMARIES_FIELD_INDEX: usize = 27;
 
     const STATE: LazyCell<HeadState<MainnetEthSpec>> = LazyCell::new(|| {
         serde_json::from_str(HEAD_STATE_JSON).expect(
