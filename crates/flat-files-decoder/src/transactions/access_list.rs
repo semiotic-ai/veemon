@@ -1,6 +1,5 @@
-// use crate::protos::block::AccessTuple;
 use crate::transactions::error::TransactionError;
-use reth_primitives::{hex, AccessList, AccessListItem, Address, H256};
+use reth_primitives::{hex, AccessList, AccessListItem, Address, B256};
 use sf_protos::ethereum::r#type::v2::AccessTuple;
 
 pub(crate) fn compute_access_list(
@@ -25,9 +24,9 @@ pub fn atuple_to_alist_item(tuple: &AccessTuple) -> Result<AccessListItem, Trans
                 .as_slice()
                 .try_into()
                 .map_err(|_| TransactionError::InvalidStorageKey(hex::encode(key.clone())))?;
-            Ok(H256::from(key_bytes))
+            Ok(B256::from(key_bytes))
         })
-        .collect::<Result<Vec<H256>, TransactionError>>()?;
+        .collect::<Result<Vec<B256>, TransactionError>>()?;
 
     Ok(AccessListItem {
         address,

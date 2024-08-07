@@ -7,10 +7,8 @@ mod transaction;
 mod transaction_signed;
 
 use crate::transactions::error::TransactionError;
-use reth_primitives::proofs::calculate_transaction_root;
-use reth_primitives::{hex, TransactionSigned, U128};
+use reth_primitives::{hex, proofs::calculate_transaction_root, TransactionSigned, U128};
 use sf_protos::ethereum::r#type::v2::{BigInt, Block};
-use std::u128;
 
 use self::transaction_signed::trace_to_signed;
 
@@ -28,9 +26,9 @@ pub fn check_transaction_root(block: &Block) -> Result<(), TransactionError> {
         None => return Err(TransactionError::MissingHeader),
     };
 
-    if tx_root.as_bytes() != block_header.transactions_root.as_slice() {
+    if tx_root.as_slice() != block_header.transactions_root.as_slice() {
         return Err(TransactionError::MismatchedRoot(
-            hex::encode(tx_root.as_bytes()),
+            hex::encode(tx_root.as_slice()),
             hex::encode(block_header.transactions_root.as_slice()),
         ));
     }
@@ -51,7 +49,7 @@ mod tests {
     use crate::transactions::bigint_to_u128;
     use crate::transactions::transaction_signed::trace_to_signed;
     use prost::Message;
-    use reth_primitives::{Address, Bytes, TransactionKind, TxHash, TxType, U256};
+    use reth_primitives::{Address, Bytes, TxHash, TxKind, TxType, U256};
     use sf_protos::bstream::v1::Block as BstreamBlock;
     use sf_protos::ethereum::r#type::v2::transaction_trace::Type;
     use sf_protos::ethereum::r#type::v2::{BigInt, Block};
@@ -93,7 +91,7 @@ mod tests {
 
         let tx_details = transaction.transaction;
 
-        assert_eq!(tx_details.value(), 0);
+        assert_eq!(tx_details.value(), U256::from(0));
         assert_eq!(tx_details.nonce(), 3807);
 
         assert_eq!(tx_details.max_fee_per_gas(), 141_363_047_052);
@@ -111,14 +109,12 @@ mod tests {
 
         assert_eq!(*tx_details.input(), Bytes::from_str("0x38ed1739000000000000000000000000000000000000000000000000482a1c73000800000000000000000000000000000000000000000009c14e785bf4910843948926c200000000000000000000000000000000000000000000000000000000000000a00000000000000000000000006b4b968dcecfd3d197ce04dc8925f919308153660000000000000000000000000000000000000000000000000000000064b040870000000000000000000000000000000000000000000000000000000000000002000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000370a366f402e2e41cdbbe54ecec12aae0cce1955").unwrap());
 
-        assert_eq!(tx_details.tx_type(), TxType::EIP1559);
+        assert_eq!(tx_details.tx_type(), TxType::Eip1559);
         assert_eq!(tx_details.chain_id(), Some(1));
 
         assert_eq!(
-            *tx_details.kind(),
-            TransactionKind::Call(
-                Address::from_str("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D").unwrap()
-            )
+            tx_details.kind(),
+            TxKind::Call(Address::from_str("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D").unwrap())
         );
 
         let signature = transaction.signature;
@@ -211,7 +207,7 @@ mod tests {
 
         let tx_details = transaction.transaction;
 
-        assert_eq!(*tx_details.kind(), TransactionKind::Create);
+        assert_eq!(tx_details.kind(), TxKind::Create);
         assert_eq!(transaction.hash.as_slice(), trace.hash.as_slice());
     }
 }

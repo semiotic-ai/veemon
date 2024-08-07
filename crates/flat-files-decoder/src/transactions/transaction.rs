@@ -1,9 +1,9 @@
-// use crate::protos::block::{CallType, TransactionTrace};
 use crate::transactions::access_list::compute_access_list;
 use crate::transactions::error::TransactionError;
 use crate::transactions::tx_type::map_tx_type;
+use alloy_primitives::{TxKind, Uint};
 use reth_primitives::{
-    Address, Bytes, ChainId, Transaction, TransactionKind, TxEip1559, TxEip2930, TxLegacy, TxType,
+    Address, Bytes, ChainId, Transaction, TxEip1559, TxEip2930, TxLegacy, TxType,
 };
 use sf_protos::ethereum::r#type::v2::{BigInt, CallType, TransactionTrace};
 
@@ -30,8 +30,8 @@ pub fn trace_to_transaction(trace: &TransactionTrace) -> Result<Transaction, Tra
         Some(value) => value,
         None => BigInt { bytes: vec![0] },
     };
-    let value = bigint_to_u128(trace_value)?;
-    let input = Bytes::from(trace.input.as_slice());
+    let value = Uint::from(bigint_to_u128(trace_value)?);
+    let input = Bytes::copy_from_slice(trace.input.as_slice());
 
     let transaction: Transaction = match tx_type {
         TxType::Legacy => {
@@ -53,7 +53,7 @@ pub fn trace_to_transaction(trace: &TransactionTrace) -> Result<Transaction, Tra
                 input,
             })
         }
-        TxType::EIP2930 => {
+        TxType::Eip2930 => {
             let access_list = compute_access_list(&trace.access_list)?;
 
             Transaction::Eip2930(TxEip2930 {
@@ -67,7 +67,7 @@ pub fn trace_to_transaction(trace: &TransactionTrace) -> Result<Transaction, Tra
                 input,
             })
         }
-        TxType::EIP1559 => {
+        TxType::Eip1559 => {
             let access_list = compute_access_list(&trace.access_list)?;
 
             let trace_max_fee_per_gas = match trace.max_fee_per_gas.clone() {
@@ -94,20 +94,21 @@ pub fn trace_to_transaction(trace: &TransactionTrace) -> Result<Transaction, Tra
                 input,
             })
         }
+        TxType::Eip4844 => unimplemented!(),
     };
 
     Ok(transaction)
 }
 
-pub fn get_tx_kind(trace: &TransactionTrace) -> Result<TransactionKind, TransactionError> {
+pub fn get_tx_kind(trace: &TransactionTrace) -> Result<TxKind, TransactionError> {
     let first_call = trace.calls.first().ok_or(TransactionError::MissingCall)?;
 
     let call_type = first_call.call_type();
 
     if call_type == CallType::Create {
-        Ok(TransactionKind::Create)
+        Ok(TxKind::Create)
     } else {
         let address = Address::from_slice(trace.to.as_slice());
-        Ok(TransactionKind::Call(address))
+        Ok(TxKind::Call(address))
     }
 }
