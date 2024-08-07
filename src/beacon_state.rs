@@ -7,6 +7,9 @@ use types::{BeaconState, BeaconStateError as Error, EthSpec, MainnetEthSpec, his
 const HISTORY_TREE_DEPTH: usize = 13;
 const HISTORICAL_SUMMARY_TREE_DEPTH: usize = 14;
 
+pub const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
+pub const HISTORICAL_SUMMARIES_FIELD_INDEX: usize = 27;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct HeadState<E: EthSpec> {
     version: String,
@@ -82,7 +85,6 @@ mod tests {
     };
 
     const HEAD_STATE_JSON: &str = include_str!("../head-state.json");
-    
     const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
     const HISTORICAL_SUMMARIES_FIELD_INDEX: usize = 27;
 
