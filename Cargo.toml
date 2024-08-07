@@ -13,9 +13,10 @@ types = { git = "https://github.com/suchapalaver/lighthouse.git", branch = "stab
 primitive-types = "0.12.2"
 serde = { version = "1.0", features = ["derive"] }
 tree_hash = "0.6.0"
-merkle_proof = { git = "https://github.com/suchapalaver/lighthouse.git" }
+merkle_proof = { git = "https://github.com/suchapalaver/lighthouse.git", branch = "stable" }
 
 [dev-dependencies]
 insta = "1.39.0"
-merkle_proof = { git = "https://github.com/suchapalaver/lighthouse.git" }
+merkle_proof = { git = "https://github.com/suchapalaver/lighthouse.git", branch = "stable" }
 serde_json = "1.0"
+
