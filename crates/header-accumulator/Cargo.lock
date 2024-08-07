@@ -1215,7 +1215,7 @@ dependencies = [
 [[package]]
 name = "decoder"
 version = "0.1.1"
-source = "git+https://github.com/suchapalaver/flat-files-decoder.git?branch=joseph/tru-199-update-dependencies-on-reth#d4585380891a79d1cca5c6305725b3e24e27f7ef"
+source = "git+https://github.com/semiotic-ai/flat-files-decoder.git?branch=main#f512c9a8f31482637ade6f1916ac93402037c2f5"
 dependencies = [
  "alloy-primitives",
  "alloy-rlp",
@@ -4143,7 +4143,7 @@ dependencies = [
 [[package]]
 name = "sf-protos"
 version = "0.1.0"
-source = "git+https://github.com/suchapalaver/sf-protos.git?branch=main#e341fca16db99129e7028491721c4995dfb0458e"
+source = "git+https://github.com/semiotic-ai/sf-protos.git?branch=main#f216efa2c4d1e6282a54d377a817eaf7094e6dd1"
 dependencies = [
  "alloy-primitives",
  "ethportal-api",
