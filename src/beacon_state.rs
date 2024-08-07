@@ -1,4 +1,4 @@
-use merkle_proof::{MerkleTree, MerkleTreeError};
+use merkle_proof::MerkleTree;
 use primitive_types::H256;
 use serde::{Deserialize, Serialize};
 use tree_hash::TreeHash;
