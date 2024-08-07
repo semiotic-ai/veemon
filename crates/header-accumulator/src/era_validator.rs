@@ -20,8 +20,8 @@ pub trait EraValidator {
     ///
     /// # Arguments
     ///
-    /// * `headers`-  A mutable vector of [`ExtHeaderRecord`]. The Vector can be any size, however, it must be in chunks of 8192 blocks to work properly
-    /// to function without error
+    /// * `headers`-  A mutable vector of [`ExtHeaderRecord`]. The Vector can be any size,
+    ///   however, it must be in chunks of 8192 blocks to work properly to function without error
     /// * `start_epoch` -  The epoch number that all the first 8192 blocks are set located
     /// * `end_epoch` -  The epoch number that all the last 8192 blocks are located
     /// * `use_lock` - when set to true, uses the lockfile to store already processed blocks. True by default

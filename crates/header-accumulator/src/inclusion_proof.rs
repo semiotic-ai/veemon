@@ -19,7 +19,7 @@ use trin_validation::{
 /// # Arguments
 ///
 /// * `ext_headers`-  A mutable [`Vec<ExtHeaderRecord>`]. The Vector can be any size, however, it must be in chunks of 8192 blocks to work properly
-/// to function without error
+///   to function without error
 /// * `start_block` -  The starting point of blocks that are to be included in the proofs. This interval is inclusive.
 /// * `end_epoch` -  The ending point of blocks that are to be included in the proofs. This interval is inclusive.
 pub fn generate_inclusion_proof(
@@ -68,7 +68,7 @@ pub fn generate_inclusion_proof(
 ///
 /// * `blocks`-  A [`Vec<Block>`]. The blocks included in the inclusion proof interval, set in `start_block` and `end_block` of [`generate_inclusion_proof`]
 /// * `pre_merge_accumulator_file`- An instance of [`PreMergeAccumulator`] which is a file that maintains a record of historical epoch
-/// it is used to verify canonical-ness of headers accumulated from the `blocks`
+///   it is used to verify canonical-ness of headers accumulated from the `blocks`
 /// * `inclusion_proof` -  The inclusion proof generated from [`generate_inclusion_proof`].
 pub fn verify_inclusion_proof(
     blocks: Vec<Block>,
