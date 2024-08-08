@@ -13,8 +13,9 @@ types = { git = "https://github.com/semiotic-ai/lighthouse.git", branch = "stabl
 primitive-types = "0.12.2"
 serde = { version = "1.0", features = ["derive"] }
 tree_hash = "0.6.0"
+merkle_proof = { git = "https://github.com/semiotic-ai/lighthouse.git", branch = "stable" }
 
 [dev-dependencies]
 insta = "1.39.0"
-merkle_proof = { git = "https://github.com/semiotic-ai/lighthouse.git" }
 serde_json = "1.0"
+
