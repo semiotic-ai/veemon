@@ -12,7 +12,10 @@ pub const HISTORY_TREE_DEPTH: usize = 13;
 /// Both tree's root has the block_roots tree root and the state_roots tree root as childen and so has one more layer than each of these trees.
 pub const HISTORICAL_SUMMARY_TREE_DEPTH: usize = 14;
 
+/// Index of `historical_roots` field in the BeaconState [struct](https://github.com/ethereum/annotated-spec/blob/master/phase0/beacon-chain.md#beaconstate). 
 pub const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
+
+/// Index of `historical_summaries` field in the (post-Capella) BeaconState [struct](https://github.com/ethereum/annotated-spec/blob/master/capella/beacon-chain.md#beaconstate).
 pub const HISTORICAL_SUMMARIES_FIELD_INDEX: usize = 27;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -90,8 +93,6 @@ mod tests {
     };
 
     const HEAD_STATE_JSON: &str = include_str!("../head-state.json");
-    const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
-    const HISTORICAL_SUMMARIES_FIELD_INDEX: usize = 27;
 
     const STATE: LazyCell<HeadState<MainnetEthSpec>> = LazyCell::new(|| {
         serde_json::from_str(HEAD_STATE_JSON).expect(
