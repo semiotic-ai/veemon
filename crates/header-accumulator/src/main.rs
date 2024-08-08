@@ -1,7 +1,7 @@
 use clap::{Arg, Command, Parser, Subcommand};
 use header_accumulator::errors::EraValidateError;
 use std::{io::BufReader, process};
-use trin_validation::accumulator::MasterAccumulator;
+use trin_validation::accumulator::PreMergeAccumulator;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -59,21 +59,21 @@ fn main() {
                         .long("end_epoch"),
                 )
                 .arg(
-                    Arg::new("master_accumulator_file")
-                        .help("Master accumulator file (optional)")
+                    Arg::new("pre_merge_accumulator_file")
+                        .help("pre-merge accumulator file (optional)")
                         .required(false)
                         .short('m')
-                        .long("master_accumulator_file"),
+                        .long("pre_merge_accumulator_file"),
                 )
                 .subcommand(
                     Command::new("stream")
                         .about("Validates streams ERAs of flat files against Header Accumulators")
                         .arg(
-                            Arg::new("master_accumulator_file")
-                                .help("Master accumulator file (optional)")
+                            Arg::new("pre_merge_accumulator_file")
+                                .help("pre-merge accumulator file (optional)")
                                 .required(false)
                                 .short('m')
-                                .long("master_accumulator_file"),
+                                .long("pre_merge_accumulator_file"),
                         ),
                 ),
         )
@@ -140,15 +140,15 @@ fn main() {
         // TODO: move this functionality to flat_head
         Some(("era_validate", era_validate_matches)) => {
             if let Some(("stream", stream_matches)) = era_validate_matches.subcommand() {
-                let master_accumulator_file =
-                    stream_matches.get_one::<String>("master_accumulator_file");
-                let _master_accumulator = match master_accumulator_file {
-                    Some(master_accumulator_file) => {
-                        MasterAccumulator::try_from_file(master_accumulator_file.into())
-                            .map_err(|_| EraValidateError::InvalidMasterAccumulatorFile)
-                            .expect("Invalid master accumulator file")
+                let pre_merge_accumulator_file =
+                    stream_matches.get_one::<String>("pre_merge_accumulator_file");
+                let _pre_merge_accumulator = match pre_merge_accumulator_file {
+                    Some(pre_merge_accumulator_file) => {
+                        PreMergeAccumulator::try_from_file(pre_merge_accumulator_file.into())
+                            .map_err(|_| EraValidateError::InvalidPreMergeAccumulatorFile)
+                            .expect("Invalid pre-merge accumulator file")
                     }
-                    None => MasterAccumulator::default(),
+                    None => PreMergeAccumulator::default(),
                 };
                 let _reader = BufReader::with_capacity(1 << 32, std::io::stdin().lock());
                 let _writer = std::io::stdout();

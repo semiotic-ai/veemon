@@ -6,7 +6,7 @@ use std::fs::{metadata, OpenOptions};
 use std::io::{Read, Write};
 use std::path::Path;
 
-use crate::errors::{EraValidateError, SyncError};
+use crate::errors::{EraValidateError, HeaderAccumulatorError, SyncError};
 
 pub struct LockEntry {
     epoch: String,
@@ -32,7 +32,50 @@ impl Lock {
         Lock::default()
     }
 
-    fn from_file(file_path: &Path) -> Result<Self, Box<dyn Error>> {
+    pub fn check_sync_state(
+        &self,
+        file_path: &Path,
+        epoch: usize,
+        premerge_accumulator_hash: [u8; 32],
+    ) -> Result<bool, HeaderAccumulatorError> {
+        if metadata(file_path).is_err() {
+            log::info!("The lockfile did not exist and was created");
+        }
+
+        let epoch = epoch.to_string();
+
+        if !self.entries.contains_key(&epoch) {
+            return Ok(false);
+        }
+
+        let stored_hash = self
+            .entries
+            .get(&epoch)
+            .ok_or(SyncError::LockfileReadError)?;
+
+        let stored_hash = BASE64_STANDARD
+            .decode(stored_hash)
+            .expect("Failed to decode Base64");
+
+        // this ensures the decoded bytes fit into a `[u8; 32]` array, which is the hash type
+        let stored_hash: [u8; 32] = match stored_hash.try_into() {
+            Ok(b) => b,
+            Err(_) => panic!("Decoded hash does not fit into a 32-byte array"),
+        };
+
+        if premerge_accumulator_hash != stored_hash {
+            log::error!(
+                "the valid hash is: {:?} and the provided hash was: {:?}",
+                premerge_accumulator_hash,
+                stored_hash
+            );
+            return Err(EraValidateError::EraAccumulatorMismatch.into());
+        }
+
+        Ok(true)
+    }
+
+    pub fn from_file(file_path: &Path) -> Result<Self, SyncError> {
         let mut file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -50,65 +93,27 @@ impl Lock {
             serde_json::from_str(&contents).unwrap_or_default()
         })
     }
-}
 
-pub fn store_last_state(file_path: &Path, entry: LockEntry) -> Result<(), Box<dyn Error>> {
-    let mut json_lock = Lock::from_file(file_path)?;
+    pub fn store_last_state(&self, file_path: &Path) -> Result<(), Box<dyn Error>> {
+        let json_string = self.to_json()?;
 
-    json_lock.entries.insert(entry.epoch, entry.root);
+        let mut file = OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .open(file_path)?;
 
-    let json_string = serde_json::to_string_pretty(&json_lock)?;
+        file.write_all(json_string.as_bytes())?;
 
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(file_path)?;
-
-    file.write_all(json_string.as_bytes())?;
-
-    Ok(())
-}
-
-pub fn check_sync_state(
-    file_path: &Path,
-    epoch: String,
-    macc_hash: [u8; 32],
-) -> Result<bool, Box<dyn Error>> {
-    if metadata(file_path).is_err() {
-        log::info!("The lockfile did not exist and was created");
+        Ok(())
     }
 
-    let json_lock = Lock::from_file(file_path)?;
-
-    if !json_lock.entries.contains_key(&epoch) {
-        return Ok(false);
+    fn to_json(&self) -> Result<String, Box<dyn Error>> {
+        Ok(serde_json::to_string_pretty(self)?)
     }
 
-    let stored_hash = json_lock
-        .entries
-        .get(&epoch)
-        .ok_or(SyncError::LockfileReadError)?;
-
-    let stored_hash = BASE64_STANDARD
-        .decode(stored_hash)
-        .expect("Failed to decode Base64");
-
-    // this ensures the decoded bytes fit into a `[u8; 32]` array, which is the hash type
-    let stored_hash: [u8; 32] = match stored_hash.try_into() {
-        Ok(b) => b,
-        Err(_) => panic!("Decoded hash does not fit into a 32-byte array"),
-    };
-
-    if macc_hash != stored_hash {
-        log::error!(
-            "the valid hash is: {:?} and the provided hash was: {:?}",
-            macc_hash,
-            stored_hash
-        );
-        return Err(Box::new(EraValidateError::EraAccumulatorMismatch));
+    pub fn update(&mut self, entry: LockEntry) {
+        self.entries.insert(entry.epoch, entry.root);
     }
-
-    Ok(true)
 }
 
 #[cfg(test)]
@@ -117,7 +122,7 @@ mod tests {
     use std::fs::File;
     use std::io::Write;
     use tempfile::tempdir;
-    use trin_validation::accumulator::MasterAccumulator;
+    use trin_validation::accumulator::PreMergeAccumulator;
 
     #[test]
     fn test_store_last_state() -> Result<(), Box<dyn Error>> {
@@ -129,7 +134,9 @@ mod tests {
             root: "XsH/uMOxRvQmBsdM7Zc9wW7FoQfANFhYw0P8lHgLQhg=".into(),
         };
 
-        store_last_state(&file_path, entry)?;
+        let mut lock_file = Lock::from_file(&file_path).unwrap();
+        lock_file.update(entry);
+        lock_file.store_last_state(&file_path)?;
 
         let mut file = File::open(file_path)?;
         let mut contents = String::new();
@@ -162,24 +169,30 @@ mod tests {
         let mut file = File::create(&file_path)?;
         writeln!(file, "{}", mock_json)?;
 
-        let mac_file: MasterAccumulator = MasterAccumulator::default();
+        let mac_file: PreMergeAccumulator = PreMergeAccumulator::default();
+
+        let json_lock = Lock::from_file(&file_path)?;
 
         // Test case where epoch exists and hashes match
-        let epoch = "0".to_string();
+        let epoch = 0;
         assert_eq!(
-            check_sync_state(&file_path, epoch, mac_file.historical_epochs[0].0).unwrap(),
+            json_lock
+                .check_sync_state(&file_path, epoch, mac_file.historical_epochs[0].0)
+                .unwrap(),
             true
         );
 
         // Test case where epoch does not exist
-        let epoch = "2".to_string();
-        let result =
-            check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[2].0).unwrap();
+        let epoch = 2;
+        let result = json_lock
+            .check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[2].0)
+            .unwrap();
         assert_eq!(result, false);
 
         // // test when hashes differ but lock is present
-        let epoch = "0".to_string();
-        let result = check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[1].0)
+        let epoch = 0;
+        let result = json_lock
+            .check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[1].0)
             .map_err(|error| error.to_string());
         assert_eq!(
             result.unwrap_err(),
@@ -187,8 +200,9 @@ mod tests {
         );
 
         // test case for another epoch hash
-        let epoch = "1".to_string();
-        let result = check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[1].0)
+        let epoch = 1;
+        let result = json_lock
+            .check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[1].0)
             .map_err(|error| error.to_string());
         assert_eq!(result.unwrap(), true);
 
