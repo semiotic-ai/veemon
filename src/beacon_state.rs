@@ -2,7 +2,10 @@ use merkle_proof::MerkleTree;
 use primitive_types::H256;
 use serde::{Deserialize, Serialize};
 use tree_hash::TreeHash;
-use types::{BeaconState, BeaconStateError as Error, EthSpec, MainnetEthSpec, historical_summary::HistoricalSummary};
+use types::{
+    historical_summary::HistoricalSummary, BeaconState, BeaconStateError as Error, EthSpec,
+    MainnetEthSpec,
+};
 
 /// [`BeaconState`] `block_roots` vector has length `SLOTS_PER_HISTORICAL_ROOT` (See <https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate>),
 /// the value of which is calculated uint64(2**13) (= 8,192) (See <https://eth2book.info/capella/part3/config/preset/#time-parameters>)
@@ -12,7 +15,7 @@ pub const HISTORY_TREE_DEPTH: usize = 13;
 /// Both tree's root has the block_roots tree root and the state_roots tree root as childen and so has one more layer than each of these trees.
 pub const HISTORICAL_SUMMARY_TREE_DEPTH: usize = 14;
 
-/// Index of `historical_roots` field in the BeaconState [struct](https://github.com/ethereum/annotated-spec/blob/master/phase0/beacon-chain.md#beaconstate). 
+/// Index of `historical_roots` field in the BeaconState [struct](https://github.com/ethereum/annotated-spec/blob/master/phase0/beacon-chain.md#beaconstate).
 pub const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
 
 /// Index of `historical_summaries` field in the (post-Capella) BeaconState [struct](https://github.com/ethereum/annotated-spec/blob/master/capella/beacon-chain.md#beaconstate).
@@ -59,7 +62,7 @@ impl HeadState<MainnetEthSpec> {
         // So we construct a new HistoricalSummary from the state and check that the tree root is in historical_summaries.
         // This will only be true if the state is in the last slot of an era.
         let historical_summary = HistoricalSummary::new(&self.data);
-        let historical_summaries= self.data.historical_summaries()?.to_vec();
+        let historical_summaries = self.data.historical_summaries()?.to_vec();
         let latest_historical_summary = historical_summaries.last();
         if latest_historical_summary != Some(&historical_summary) {
             return Err(Error::SlotOutOfBounds);
@@ -74,12 +77,10 @@ impl HeadState<MainnetEthSpec> {
         // So we append the state_roots tree root to the proof.
         let state_roots_root = self.data.state_roots().tree_hash_root();
         proof.extend(vec![state_roots_root]);
-        
+
         Ok(proof)
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -185,13 +186,13 @@ mod tests {
     /// A HistoricalSummary contains the roots of two Merkle trees, block_summary_root and state_summary root.
     /// We are interested in the block_summary tree, whose leaves consists of the BeaconBlockHeader roots for one epoch (8192 consecutive slots).  
     /// For this test, we are using the state at slot 8790016, which is the last slot of epoch 1073, to build the proof.
-    /// We chose this slot because it is the last slot of an epoch, and all of the BeaconBlockHeader roots needed to construct the HistoricalSummary for this epoch are available in state.block_roots. 
+    /// We chose this slot because it is the last slot of an epoch, and all of the BeaconBlockHeader roots needed to construct the HistoricalSummary for this epoch are available in state.block_roots.
     fn test_inclusion_proofs_for_block_roots() {
         let transition_state = &TRANSITION_STATE;
-        
+
         // There are 8192 slots in an era.
-        let proof_era= transition_state.data().slot().as_usize() / 8192usize;
-        
+        let proof_era = transition_state.data().slot().as_usize() / 8192usize;
+
         // In this test we are using the historical_summaries (introduced in Capella) for verification, so we need to subtract the Capella start era to get the correct index.
         let proof_era_index = proof_era - CAPELLA_START_ERA - 1;
 
@@ -200,11 +201,11 @@ mod tests {
         let index = 4096usize;
         let block_root_at_index = match transition_state.data().block_roots().get(index) {
             Some(block_root) => block_root,
-            None => panic!("Block root not found")
+            None => panic!("Block root not found"),
         };
         let proof = match transition_state.compute_block_roots_proof(index) {
             Ok(proof) => proof,
-            Err(e) => panic!("Error generating block_roots proof: {:?}", e)
+            Err(e) => panic!("Error generating block_roots proof: {:?}", e),
         };
 
         // To verify the proof, we use the state from a later slot.
@@ -212,9 +213,14 @@ mod tests {
         let state = &STATE;
 
         // The verifier retrieves the block_summary_root for the historical_summary and verifies the proof against it.
-        let historical_summary= match state.data().historical_summaries().unwrap().get(proof_era_index){
+        let historical_summary = match state
+            .data()
+            .historical_summaries()
+            .unwrap()
+            .get(proof_era_index)
+        {
             Some(historical_summary) => historical_summary,
-            None => panic!("HistoricalSummary not found")
+            None => panic!("HistoricalSummary not found"),
         };
         let historical_summary_root = historical_summary.tree_hash_root();
         assert!(
@@ -223,7 +229,7 @@ mod tests {
                 &proof,
                 HISTORICAL_SUMMARY_TREE_DEPTH,
                 index,
-                historical_summary_root 
+                historical_summary_root
             ),
             "Merkle proof verification failed"
         );
