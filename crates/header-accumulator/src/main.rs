@@ -60,7 +60,7 @@ fn main() {
                 )
                 .arg(
                     Arg::new("pre_merge_accumulator_file")
-                        .help("Master accumulator file (optional)")
+                        .help("pre-merge accumulator file (optional)")
                         .required(false)
                         .short('m')
                         .long("pre_merge_accumulator_file"),
@@ -70,7 +70,7 @@ fn main() {
                         .about("Validates streams ERAs of flat files against Header Accumulators")
                         .arg(
                             Arg::new("pre_merge_accumulator_file")
-                                .help("Master accumulator file (optional)")
+                                .help("pre-merge accumulator file (optional)")
                                 .required(false)
                                 .short('m')
                                 .long("pre_merge_accumulator_file"),
@@ -142,11 +142,11 @@ fn main() {
             if let Some(("stream", stream_matches)) = era_validate_matches.subcommand() {
                 let pre_merge_accumulator_file =
                     stream_matches.get_one::<String>("pre_merge_accumulator_file");
-                let _master_accumulator = match pre_merge_accumulator_file {
+                let _pre_merge_accumulator = match pre_merge_accumulator_file {
                     Some(pre_merge_accumulator_file) => {
                         PreMergeAccumulator::try_from_file(pre_merge_accumulator_file.into())
                             .map_err(|_| EraValidateError::InvalidPreMergeAccumulatorFile)
-                            .expect("Invalid master accumulator file")
+                            .expect("Invalid pre-merge accumulator file")
                     }
                     None => PreMergeAccumulator::default(),
                 };

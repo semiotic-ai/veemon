@@ -66,7 +66,7 @@ impl fmt::Display for EraValidateError {
         match *self {
             EraValidateError::TooManyHeaderRecords => write!(f, "Too many header records"),
             EraValidateError::InvalidPreMergeAccumulatorFile => {
-                write!(f, "Invalid master accumulator file")
+                write!(f, "Invalid pre-merger accumulator file")
             }
             EraValidateError::HeaderDecodeError => {
                 write!(f, "Error decoding header from flat files")
