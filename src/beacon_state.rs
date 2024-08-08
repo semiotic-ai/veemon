@@ -6,7 +6,7 @@ use types::{BeaconState, BeaconStateError as Error, EthSpec, MainnetEthSpec, his
 
 /// [`BeaconState`] `block_roots` vector has length `SLOTS_PER_HISTORICAL_ROOT` (See <https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate>),
 /// the value of which is calculated uint64(2**13) (= 8,192) (See <https://eth2book.info/capella/part3/config/preset/#time-parameters>)
-const HISTORY_TREE_DEPTH: usize = 13;
+pub const HISTORY_TREE_DEPTH: usize = 13;
 
 /// The historical roots tree (pre-Capella) and the historical summaries tree (post-Capella) have the same depth.
 /// Both tree's root has the block_roots tree root and the state_roots tree root as childen and so has one more layer than each of these trees.
