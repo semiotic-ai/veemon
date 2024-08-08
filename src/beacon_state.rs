@@ -50,9 +50,9 @@ impl HeadState<MainnetEthSpec> {
     pub fn version(&self) -> &str {
         &self.version
     }
-    /// Computes a Merkle inclusion proof of a `BeaconBlock` root using Merkle trees from either the [`historical_roots`](https://github.com/ethereum/annotated-spec/blob/master/phase0/beacon-chain.md#beaconstate) or [`historical_summaries`](https://github.com/ethereum/annotated-spec/blob/master/capella/beacon-chain.md#beaconstate) list. See the discusion [here](https://github.com/ethereum/annotated-spec/blob/master/phase0/beacon-chain.md#slots_per_historical_root) for more details about the `historical_roots` and [here](https://github.com/ethereum/annotated-spec/blob/master/capella/beacon-chain.md#historicalsummary) about `historical_summaries`.
+    /// Computes a Merkle inclusion proof of a `BeaconBlock` root using Merkle trees from either the [`historical_roots`](https://github.com/ethereum/annotated-spec/blob/master/phase0/beacon-chain.md#beaconstate) or [`historical_summaries`](https://github.com/ethereum/annotated-spec/blob/master/capella/beacon-chain.md#beaconstate) list. See the discussion [here](https://github.com/ethereum/annotated-spec/blob/master/phase0/beacon-chain.md#slots_per_historical_root) for more details about the `historical_roots` and [here](https://github.com/ethereum/annotated-spec/blob/master/capella/beacon-chain.md#historicalsummary) about `historical_summaries`.
     pub fn compute_block_roots_proof(&self, index: usize) -> Result<Vec<H256>, Error> {
-        // This computation only makes sense if we have all of the leaves (BeaconBlock roots) to construct the HisoricalSummary Merkle tree.
+        // This computation only makes sense if we have all of the leaves (BeaconBlock roots) to construct the HistoricalSummary Merkle tree.
         // So we construct a new HistoricalSummary from the state and check that the tree root is in historical_summaries.
         // This will only be true if the state is in the last slot of an era.
         let historical_summary = HistoricalSummary::new(&self.data);
