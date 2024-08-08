@@ -4,7 +4,12 @@ use serde::{Deserialize, Serialize};
 use tree_hash::TreeHash;
 use types::{BeaconState, BeaconStateError as Error, EthSpec, MainnetEthSpec, historical_summary::HistoricalSummary};
 
+/// [`BeaconState`] `block_roots` vector has length `SLOTS_PER_HISTORICAL_ROOT` (See <https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate>),
+/// the value of which is calculated uint64(2**13) (= 8,192) (See <https://eth2book.info/capella/part3/config/preset/#time-parameters>)
 const HISTORY_TREE_DEPTH: usize = 13;
+
+/// The historical roots tree (pre-Capella) and the historical summaries tree (post-Capella) have the same depth.
+/// Both tree's root has the block_roots tree root and the state_roots tree root as childen and so has one more layer than each of these trees.
 const HISTORICAL_SUMMARY_TREE_DEPTH: usize = 14;
 
 pub const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
@@ -45,7 +50,7 @@ impl HeadState<MainnetEthSpec> {
     pub fn version(&self) -> &str {
         &self.version
     }
-
+    /// Computes a Merkle inclusion proof of a `BeaconBlock` root using Merkle trees from either the [`historical_roots`](https://github.com/ethereum/annotated-spec/blob/master/phase0/beacon-chain.md#beaconstate) or [`historical_summaries`](https://github.com/ethereum/annotated-spec/blob/master/capella/beacon-chain.md#beaconstate) list. See the discusion [here](https://github.com/ethereum/annotated-spec/blob/master/phase0/beacon-chain.md#slots_per_historical_root) for more details about the `historical_roots` and [here](https://github.com/ethereum/annotated-spec/blob/master/capella/beacon-chain.md#historicalsummary) about `historical_summaries`.
     pub fn compute_block_roots_proof(&self, index: usize) -> Result<Vec<H256>, Error> {
         // This computation only makes sense if we have all of the leaves (BeaconBlock roots) to construct the HisoricalSummary Merkle tree.
         // So we construct a new HistoricalSummary from the state and check that the tree root is in historical_summaries.
