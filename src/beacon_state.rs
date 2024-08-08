@@ -10,7 +10,7 @@ const HISTORY_TREE_DEPTH: usize = 13;
 
 /// The historical roots tree (pre-Capella) and the historical summaries tree (post-Capella) have the same depth.
 /// Both tree's root has the block_roots tree root and the state_roots tree root as childen and so has one more layer than each of these trees.
-const HISTORICAL_SUMMARY_TREE_DEPTH: usize = 14;
+pub const HISTORICAL_SUMMARY_TREE_DEPTH: usize = 14;
 
 pub const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
 pub const HISTORICAL_SUMMARIES_FIELD_INDEX: usize = 27;
