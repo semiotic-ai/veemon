@@ -181,12 +181,12 @@ mod tests {
     }
 
     #[test]
+    /// For this test, we want to prove that a block_root is included in a HistoricalSummary from the BeaconState historical_summaries List.
+    /// A HistoricalSummary contains the roots of two Merkle trees, block_summary_root and state_summary root.
+    /// We are interested in the block_summary tree, whose leaves consists of the BeaconBlockHeader roots for one epoch (8192 consecutive slots).  
+    /// For this test, we are using the state at slot 8790016, which is the last slot of epoch 1073, to build the proof.
+    /// We chose this slot because it is the last slot of an epoch, and all of the BeaconBlockHeader roots needed to construct the HistoricalSummary for this epoch are available in state.block_roots. 
     fn test_inclusion_proofs_for_block_roots() {
-        // For this test, we want to prove that a block_root is included in a HistoricalSummary from the BeaconState historical_summaries List.
-        // A HistoricalSummary contains the roots of two Merkle trees, block_summary_root and state_summary root.
-        // We are interested in the block_summary tree, whose leaves consists of the BeaconBlockHeader roots for one epoch (8192 consecutive slots).  
-        // For this test, we are using the state at slot 8790016, which is the last slot of epoch 1073, to build the proof.
-        // We chose this slot because it is the last slot of an epoch, and all of the BeaconBlockHeader roots needed to construct the HistoricalSummary for this epoch are available in state.block_roots. 
         let transition_state = &TRANSITION_STATE;
         
         // There are 8192 slots in an era.
