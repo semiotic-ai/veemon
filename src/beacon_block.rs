@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
-use types::{BeaconBlock, MainnetEthSpec};
+use tree_hash::TreeHash;
+use types::{
+    beacon_block_body::NUM_BEACON_BLOCK_BODY_HASH_TREE_ROOT_LEAVES, light_client_update,
+    BeaconBlock, BeaconBlockBody, Error, EthSpec, ForkName, Hash256, MainnetEthSpec,
+};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct BlockWrapper {
@@ -21,9 +25,75 @@ pub struct Data {
 /// fields is 12, which is between 8 (2^3) and 16 (2^4).
 pub const BEACON_BLOCK_BODY_PROOF_DEPTH: usize = 4;
 
+// Eth1Data is a [`BeaconBlockBody`] top-level field, subtract off the generalized indices
+// for the internal nodes. Result should be 1, the field offset of the execution
+// payload in the `BeaconBlockBody`:
+// https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/beacon-chain.md#beaconblockbody
+pub const ETH1_DATA_INDEX: usize = 17;
+
 /// The field corresponds to the index of the `eth1_data` field in the [`BeaconBlockBody`] struct:
 /// <https://github.com/ethereum/annotated-spec/blob/master/deneb/beacon-chain.md#beaconblockbody>.
 pub const ETH1_DATA_FIELD_INDEX: usize = 1;
+
+pub trait HistoricalDataProofs {
+    fn compute_merkle_proof(&self, index: usize) -> Result<Vec<Hash256>, Error>;
+}
+
+impl<E: EthSpec> HistoricalDataProofs for BeaconBlockBody<E> {
+    fn compute_merkle_proof(&self, index: usize) -> Result<Vec<Hash256>, Error> {
+        let field_index = match index {
+            ETH1_DATA_INDEX => index
+                .checked_sub(NUM_BEACON_BLOCK_BODY_HASH_TREE_ROOT_LEAVES)
+                .ok_or(Error::IndexNotSupported(index))?,
+            _ => return Err(Error::IndexNotSupported(index)),
+        };
+
+        let attestations_root = if self.fork_name() > ForkName::Electra {
+            self.attestations_electra()?.tree_hash_root()
+        } else {
+            self.attestations_base()?.tree_hash_root()
+        };
+
+        let attester_slashings_root = if self.fork_name() > ForkName::Electra {
+            self.attester_slashings_electra()?.tree_hash_root()
+        } else {
+            self.attester_slashings_base()?.tree_hash_root()
+        };
+
+        let mut leaves = vec![
+            self.randao_reveal().tree_hash_root(),
+            self.eth1_data().tree_hash_root(),
+            self.graffiti().tree_hash_root(),
+            self.proposer_slashings().tree_hash_root(),
+            attester_slashings_root,
+            attestations_root,
+            self.deposits().tree_hash_root(),
+            self.voluntary_exits().tree_hash_root(),
+        ];
+
+        if let Ok(sync_aggregate) = self.sync_aggregate() {
+            leaves.push(sync_aggregate.tree_hash_root())
+        }
+
+        if let Ok(execution_payload) = self.execution_payload() {
+            leaves.push(execution_payload.tree_hash_root())
+        }
+
+        if let Ok(bls_to_execution_changes) = self.bls_to_execution_changes() {
+            leaves.push(bls_to_execution_changes.tree_hash_root())
+        }
+
+        if let Ok(blob_kzg_commitments) = self.blob_kzg_commitments() {
+            leaves.push(blob_kzg_commitments.tree_hash_root())
+        }
+
+        let depth = light_client_update::EXECUTION_PAYLOAD_PROOF_LEN;
+        let tree = merkle_proof::MerkleTree::create(&leaves, depth);
+        let (_, proof) = tree.generate_proof(field_index, depth)?;
+
+        Ok(proof)
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -32,8 +102,6 @@ mod tests {
     use super::*;
 
     use merkle_proof::verify_merkle_proof;
-    use tree_hash::TreeHash;
-    use types::{light_client_update::ETH1_DATA_INDEX, BeaconBlockBody};
 
     const DENEB_BLOCK_JSON: &str = include_str!("../bb-8786333.json");
 
@@ -55,7 +123,7 @@ mod tests {
         let block_body_hash = block_body.tree_hash_root();
 
         let body = BeaconBlockBody::from(block_body.clone());
-        let proof = body.block_body_merkle_proof(ETH1_DATA_INDEX).unwrap();
+        let proof = body.compute_merkle_proof(ETH1_DATA_INDEX).unwrap();
 
         let depth = BEACON_BLOCK_BODY_PROOF_DEPTH;
 
