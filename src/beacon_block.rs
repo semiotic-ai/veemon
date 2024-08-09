@@ -103,6 +103,8 @@ mod tests {
 
     use merkle_proof::verify_merkle_proof;
 
+    /// Deneb block JSON file shared among contributors.
+    /// The block hash is `0x5dde05ab1da7f768ed3ea2d53c6fa0d79c0c2283e52bb0d00842a4bdbf14c0ab`.
     const DENEB_BLOCK_JSON: &str = include_str!("../bb-8786333.json");
 
     const BLOCK_WRAPPER: LazyCell<BlockWrapper> = LazyCell::new(|| {
