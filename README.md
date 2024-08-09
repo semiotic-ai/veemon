@@ -1,8 +1,8 @@
-# Head State Proof Computation Spike
+# Forrestrie
 
 ## Overview
 
-Blackboxing validating post-merge Ethereum data in practice to figure out the next step.
+Validating post-merge Ethereum data.
 
 ## Documentation
 
