@@ -4,6 +4,7 @@ use std::{env, io::Result, path::PathBuf};
 fn main() -> Result<()> {
     let out = PathBuf::from(env::var("OUT_DIR").unwrap());
     let descriptor_file = out.join("descriptors.bin");
+
     let mut prost_build = prost_build::Config::new();
     prost_build
         .type_attribute(".", "#[derive(serde::Serialize,serde::Deserialize)]")
@@ -14,14 +15,12 @@ fn main() -> Result<()> {
         .compile_protos(
             &["src/protos/block.proto", "src/protos/bstream.proto"],
             &["src/"],
-        )
-        .unwrap();
+        )?;
 
-    let descriptor_bytes = std::fs::read(descriptor_file).unwrap();
-
-    let descriptor = FileDescriptorSet::decode(&descriptor_bytes[..]).unwrap();
+    let descriptor_bytes = std::fs::read(descriptor_file)?;
+    let descriptor = FileDescriptorSet::decode(&descriptor_bytes[..])?;
 
     prost_wkt_build::add_serde(out, descriptor);
-    
+
     Ok(())
 }
