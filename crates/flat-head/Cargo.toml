@@ -14,13 +14,13 @@ decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", branc
 dotenv = "0.15.0"
 env_logger = "0.11.2"
 futures = "0.3"
-header_accumulator = { git = "https://git@github.com/semiotic-ai/header_accumulator.git", tag = "v0.2.0-alpha" }
+header_accumulator = { git = "https://git@github.com/semiotic-ai/header_accumulator.git", branch = "main" }
 log = "0.4.20"
 object_store = { version = "0.9.0", features = ["gcp", "http", "aws"] }
-sf-protos = { git = "https://github.com/semiotic-ai/sf-protos.git", version = "0.1.0" }
+sf-protos = { git = "https://github.com/semiotic-ai/sf-protos.git", branch = "main" }
 thiserror = "1"
 tokio = { version = "1.0", features = ["full"] }
-tree_hash = "0.5.2"
-trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0" }
+tree_hash = { git = "https://github.com/KolbyML/tree_hash.git", rev = "8aaf8bb4184148768d48e2cfbbdd0b95d1da8730" }
+trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0", tag = "v0.1.0-alpha.35" }
 url = "2.5"
 zstd = "0.13.0"

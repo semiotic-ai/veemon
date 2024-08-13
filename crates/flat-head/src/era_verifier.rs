@@ -1,11 +1,10 @@
 use futures::stream::{FuturesOrdered, StreamExt};
-use header_accumulator::era_validator::era_validate;
 use tokio::task;
 
-use header_accumulator::types::ExtHeaderRecord;
+use header_accumulator::{era_validator::EraValidator, types::ExtHeaderRecord};
 use sf_protos::ethereum::r#type::v2::Block;
 use tokio::sync::mpsc;
-use trin_validation::accumulator::MasterAccumulator;
+use trin_validation::accumulator::PreMergeAccumulator;
 
 use crate::store::{self, Store};
 pub const MAX_EPOCH_SIZE: usize = 8192;
@@ -16,7 +15,7 @@ pub const MERGE_BLOCK: usize = 15537394;
 ///
 pub async fn verify_eras(
     store_url: String,
-    macc: MasterAccumulator,
+    macc: PreMergeAccumulator,
     compatible: Option<String>,
     start_epoch: usize,
     end_epoch: Option<usize>,
@@ -51,9 +50,9 @@ pub async fn verify_eras(
                             (succ, errs)
                         });
 
-                    let valid_epochs =
-                        era_validate(successful_headers, macc, epoch, Some(epoch + 1), None)
-                            .unwrap();
+                    let valid_epochs = macc
+                        .era_validate(successful_headers, epoch, Some(epoch + 1), true)
+                        .unwrap();
 
                     let _ = tx.send(valid_epochs).await;
                 }
