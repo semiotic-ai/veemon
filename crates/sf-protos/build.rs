@@ -11,7 +11,10 @@ fn main() -> Result<()> {
         .extern_path(".google.protobuf.Timestamp", "::prost_wkt_types::Timestamp")
         .extern_path(".google.protobuf.Value", "::prost_wkt_types::Value")
         .file_descriptor_set_path(&descriptor_file)
-        .compile_protos(&["src/protos/block.proto"], &["src/"])
+        .compile_protos(
+            &["src/protos/block.proto", "src/protos/bstream.proto"],
+            &["src/"],
+        )
         .unwrap();
 
     let descriptor_bytes = std::fs::read(descriptor_file).unwrap();
@@ -19,7 +22,6 @@ fn main() -> Result<()> {
     let descriptor = FileDescriptorSet::decode(&descriptor_bytes[..]).unwrap();
 
     prost_wkt_build::add_serde(out, descriptor);
-    // prost_build::compile_protos(&["src/protos/block.proto"], &["src/"])?;
-    prost_build::compile_protos(&["src/protos/bstream.proto"], &["src/"])?;
+    
     Ok(())
 }
