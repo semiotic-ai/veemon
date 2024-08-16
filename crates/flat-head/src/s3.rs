@@ -1,12 +1,11 @@
 use dotenv::dotenv;
 use header_accumulator::{
-    era_validator::era_validate, types::ExtHeaderRecord, utils::MAX_EPOCH_SIZE,
+    epoch::MAX_EPOCH_SIZE, era_validator::EraValidator, types::ExtHeaderRecord,
 };
 use std::env;
-use trin_validation::accumulator::MasterAccumulator;
+use trin_validation::accumulator::PreMergeAccumulator;
 
 use decoder::handle_buf;
-// use ::{era_verifier::MAX_EPOCH_SIZE, utils::gen_dbin_filenames};
 
 use object_store::{aws::AmazonS3Builder, path::Path, ObjectStore};
 
@@ -87,12 +86,11 @@ pub async fn s3_fetch(
         }
         if headers.len() >= 8192 {
             let epoch_headers: Vec<ExtHeaderRecord> = headers.drain(0..MAX_EPOCH_SIZE).collect();
-            let valid_blocks = era_validate(
+            let valid_blocks = PreMergeAccumulator::default().era_validate(
                 epoch_headers,
-                MasterAccumulator::default(),
                 start_epoch as usize,
                 Some(end_epoch as usize),
-                None,
+                true,
             );
             println!("{:?} valid epochs", valid_blocks);
         }
