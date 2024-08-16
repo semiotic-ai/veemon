@@ -168,7 +168,7 @@ mod tests {
     use merkle_proof::verify_merkle_proof;
     use types::{light_client_update::CURRENT_SYNC_COMMITTEE_PROOF_LEN, MainnetEthSpec};
 
-    const HEAD_STATE_JSON: &str = include_str!("../head-state.json");
+    const HEAD_STATE_JSON: &str = include_str!("../../../head-state.json");
     const STATE: LazyCell<Mutex<HeadState<MainnetEthSpec>>> = LazyCell::new(|| {
         Mutex::new({
             serde_json::from_str(HEAD_STATE_JSON).expect(
@@ -177,7 +177,7 @@ mod tests {
         })
     });
 
-    const TRANSITION_STATE_JSON: &str = include_str!("../8790016-state.json");
+    const TRANSITION_STATE_JSON: &str = include_str!("../../../8790016-state.json");
     const TRANSITION_STATE: LazyCell<HeadState<MainnetEthSpec>> = LazyCell::new(|| {
         serde_json::from_str(TRANSITION_STATE_JSON).expect(
             "For this spike we are using a '8790016-state.json' file that has been shared among contributors",
