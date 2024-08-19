@@ -15,8 +15,8 @@ Flat head is developed to be a crate that verifies flat files generated from Fir
 
 There are a few different binaries to run, depending on the desired functionality:
 
-`flat_head` is for general usage on flat files in a local folder. Run 
-`cargo run --bin flat_head help` for commands and options. 
+`flat-head` is for general usage on flat files in a local folder. Run 
+`cargo run --bin flat-head help` for commands and options. 
 
 `fetch-s3` is supposed to be used to fetch flat files from an s3-like object storage.
 
@@ -27,14 +27,14 @@ Here are some examples of how to use the commands:
 1.  To validate flat files in a folder, a start epoch and a end epoch must be provided. `-d` flag can be used for debugging or log information.
 
 ```
- cargo run --bin flat_head -- era-validate --store-url file:///<full-path-to-folder> -s 0   
+ cargo run --bin flat-head -- era-validate --store-url file:///<full-path-to-folder> -s 0   
 ```
 
 
 2. To fetch flat files from a s3 bucket and validate each epoch as they arrive:
 
 ```
- cargo run --bin flat_head -- era-validate --store-url s3:///<full-path-to-folder> -s 0   
+ cargo run --bin flat-head -- era-validate --store-url s3:///<full-path-to-folder> -s 0   
 
 ```
 
@@ -42,7 +42,7 @@ Here are some examples of how to use the commands:
 
 
 ```
-cargo run --bin flat_head -- era-validate --store-url http://localhost:8333/newbucket3  -s 0 -e 1 --compatible s3
+cargo run --bin flat-head -- era-validate --store-url http://localhost:8333/newbucket3  -s 0 -e 1 --compatible s3
 
  ```
 
@@ -51,22 +51,22 @@ Note that in this case it is using seaweed-fs s3 compatible API.
 4. To fetch flat files from a Webdav server and validate each file as they arrive:
 
 ```
- cargo run --bin flat_head -- era-validate --store-url http:///<full-path-to-folder> -s 0   
+ cargo run --bin flat-head -- era-validate --store-url http:///<full-path-to-folder> -s 0   
 ```
 
 
 5. To fetch flat files from a gcloud bucket, and validate each epoch as they arrive:
 
 ```
- cargo run --bin flat_head -- era-validate --store-url gs:///<full-path-to-folder> -s 0   
+ cargo run --bin flat-head -- era-validate --store-url gs:///<full-path-to-folder> -s 0   
 ```
 
 
 ### notice about usage
 
-Flat files should come compressed with Zstandard (zstd) from Firehose. Flat_head handles decompression by default, but if it is necessary to disable it pass to the args: `-c false`. This is the same for all other binaries.
+Flat files should come compressed with Zstandard (zstd) from Firehose. Flat head handles decompression by default, but if it is necessary to disable it pass to the args: `-c false`. This is the same for all other binaries.
 
-Passing `--end-epoch` is not necessary, although without it, `flat_head` will only validate the start epoch passed as param.
+Passing `--end-epoch` is not necessary, although without it, `flat-head` will only validate the start epoch passed as param.
 
 `era-validate` will skip the files that were already verified and written into `lockfile.json`.
 It stops abruptly if verification of any file fails. If files are compressed as `.zst` it is also capable
