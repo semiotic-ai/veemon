@@ -5,7 +5,7 @@
 ### proto files
 
 - [`streamingfast/proto/sf/firehose/v2/firehose.proto`](https://github.com/streamingfast/proto/blob/develop/sf/firehose/v2/firehose.proto)
-- [`streamingfast/firehose-ethereum/proto/sf/ethereum/type/v2/type.proto`](https://github.com/streamingfast/firehose-ethereum/blob/237381c7dc99d0b038b213fec11026be1f7d0bc3/proto/sf/ethereum/type/v2/type.proto)
+- [`streamingfast/firehose-ethereum/proto/sf/ethereum/type/v2/type.proto`](https://github.com/streamingfast/firehose-ethereum/blob/335607aac766f9f3c6946d8b1ad3c8e36ab70930/proto/sf/ethereum/type/v2/type.proto)
 
 ### gRPC service examples
 
