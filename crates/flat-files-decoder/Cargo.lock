@@ -4165,7 +4165,7 @@ dependencies = [
 [[package]]
 name = "sf-protos"
 version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/sf-protos.git?branch=main#15062016c30ad0fc3f77c29aa2a1cb6016ece4d7"
+source = "git+https://github.com/semiotic-ai/sf-protos.git?branch=main#ed8887e1631ea882c448b3d9cfa9cd7bac85d6a3"
 dependencies = [
  "alloy-primitives",
  "ethportal-api",
@@ -4174,6 +4174,7 @@ dependencies = [
  "prost-wkt",
  "prost-wkt-build",
  "prost-wkt-types",
+ "reth-primitives",
  "serde",
  "thiserror",
 ]
