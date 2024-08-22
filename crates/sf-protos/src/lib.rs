@@ -104,7 +104,7 @@ pub mod ethereum {
                         TrxTypeLegacy => Legacy,
                         TrxTypeAccessList => Eip2930,
                         TrxTypeDynamicFee => Eip1559,
-                        TrxTypeBlob => todo!(),
+                        TrxTypeBlob => Eip4844,
                         TrxTypeArbitrumDeposit => unimplemented!(),
                         TrxTypeArbitrumUnsigned => unimplemented!(),
                         TrxTypeArbitrumContract => unimplemented!(),
