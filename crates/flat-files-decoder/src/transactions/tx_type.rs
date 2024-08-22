@@ -9,10 +9,22 @@ pub enum TransactionTypeError {
 }
 
 fn tx_to_reth_tx(tx_type: Type) -> TxType {
+    use TxType::*;
+    use Type::*;
+
     match tx_type {
-        Type::TrxTypeLegacy => TxType::Legacy,
-        Type::TrxTypeAccessList => TxType::Eip2930,
-        Type::TrxTypeDynamicFee => TxType::Eip1559,
+        TrxTypeLegacy => Legacy,
+        TrxTypeAccessList => Eip2930,
+        TrxTypeDynamicFee => Eip1559,
+        TrxTypeBlob => todo!(),
+        TrxTypeArbitrumDeposit => unimplemented!(),
+        TrxTypeArbitrumUnsigned => unimplemented!(),
+        TrxTypeArbitrumContract => unimplemented!(),
+        TrxTypeArbitrumRetry => unimplemented!(),
+        TrxTypeArbitrumSubmitRetryable => unimplemented!(),
+        TrxTypeArbitrumInternal => unimplemented!(),
+        TrxTypeArbitrumLegacy => unimplemented!(),
+        TrxTypeOptimismDeposit => unimplemented!(),
     }
 }
 
