@@ -12,6 +12,8 @@ pub mod ethereum {
         pub mod v2 {
             use alloy_primitives::{Address, Bloom, FixedBytes, Uint};
             use ethportal_api::types::execution::header::Header;
+            use reth_primitives::TxType;
+            use transaction_trace::Type;
 
             use crate::StreamingFastProtosError;
 
@@ -25,7 +27,7 @@ pub mod ethereum {
                         .header
                         .as_ref()
                         .ok_or(StreamingFastProtosError::BlockConversionError)?;
-                    
+
                     let parent_hash = FixedBytes::from_slice(block_header.parent_hash.as_slice());
                     let uncles_hash = FixedBytes::from_slice(block_header.uncle_hash.as_slice());
                     let author = Address::from_slice(block_header.coinbase.as_slice());
@@ -90,6 +92,28 @@ pub mod ethereum {
                         excess_blob_gas: None,
                         parent_beacon_block_root: None,
                     })
+                }
+            }
+
+            impl From<Type> for TxType {
+                fn from(tx_type: Type) -> Self {
+                    use TxType::*;
+                    use Type::*;
+
+                    match tx_type {
+                        TrxTypeLegacy => Legacy,
+                        TrxTypeAccessList => Eip2930,
+                        TrxTypeDynamicFee => Eip1559,
+                        TrxTypeBlob => todo!(),
+                        TrxTypeArbitrumDeposit => unimplemented!(),
+                        TrxTypeArbitrumUnsigned => unimplemented!(),
+                        TrxTypeArbitrumContract => unimplemented!(),
+                        TrxTypeArbitrumRetry => unimplemented!(),
+                        TrxTypeArbitrumSubmitRetryable => unimplemented!(),
+                        TrxTypeArbitrumInternal => unimplemented!(),
+                        TrxTypeArbitrumLegacy => unimplemented!(),
+                        TrxTypeOptimismDeposit => unimplemented!(),
+                    }
                 }
             }
         }
