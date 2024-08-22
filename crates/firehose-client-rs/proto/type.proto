@@ -6,6 +6,48 @@ option go_package = "github.com/streamingfast/firehose-ethereum/types/pb/sf/ethe
 
 import "google/protobuf/timestamp.proto";
 
+// Block is the representation of the tracing of a block in the Ethereum
+// blockchain. A block is a collection of [TransactionTrace] that are grouped
+// together and processed as an atomic unit. Each [TransactionTrace] is composed
+// of a series of [Call] (a.k.a internal transactions) and there is also at
+// least one call per transaction a.k.a the root call which essentially has the
+// same parameters as the transaction itself (e.g. `from`, `to`, `gas`, `value`,
+// etc.).
+//
+// The exact tracing method used to build the block must be checked against
+// [DetailLevel] field. There is two levels of details available, `BASE` and
+// `EXTENDED`. The `BASE` level has been extracted using archive node RPC calls
+// and will contain only the block header, transaction receipts and event logs.
+// Refers to the Firehose service provider to know which blocks are offered on
+// each network.
+//
+// The `EXTENDED` level has been extracted using the Firehose tracer and all
+// fields are available in this Protobuf.
+//
+// The Ethereum block model is used across many chains which means that it
+// happen that certain fields are not available in one chain but are available
+// in another. Each field should be documented when necesssary if it's available
+// on a subset of chains.
+//
+// One major concept to get about the Block is the concept of 'ordinal'. The
+// ordinal is a number that is used to globally order every element of execution
+// that happened throughout the processing of the block like
+// [TransactionTracer], [Call], [Log], [BalanceChange], [StateChange], etc.
+// Element that have a start and end interval, [Transaction] and [Call], will
+// have two ordinals: `begin_ordinal` and `end_ordinal`. Element that are
+// executed as "point in time" [Log], [BalanceChange], [StateChange], etc. will
+// have only one ordinal named `ordinal`. If you take all of the message in the
+// Block that have an 'ordinal' field in an array and you sort each element
+// against the `ordinal` field, you will get the exact order of execution of
+// each element in the block.
+//
+// All the 'ordinal' fields in a block are globally unique for the given block,
+// it is **not** a chain-wide global ordering. Furthermore, caution must be take
+// with reverted elements due to execution failure. For anything attached to a
+// [Call] that has a `state_reverted` field set to `true`, the `ordinal` field
+// is not reliable and should not be used to order the element against other
+// elements in the block as those element might have 0 as the ordinal. Only
+// successful calls have a reliable `ordinal` field.
 message Block {
   // Hash is the block's hash.
   bytes hash = 2;
@@ -27,6 +69,8 @@ message Block {
 
   // TransactionTraces hold the execute trace of all the transactions that were executed
   // in this block. In in there that you will find most of the Ethereum data model.
+  //
+  // They are ordered by the order of execution of the transaction in the block.
   repeated TransactionTrace transaction_traces = 10;
 
   // BalanceChanges here is the array of ETH transfer that happened at the block level
@@ -46,9 +90,20 @@ message Block {
 
   // DetailLevel affects the data available in this block.
   //
-  // EXTENDED describes the most complete block, with traces, balance changes, storage changes. It is extracted during the execution of the block.
-  // BASE describes a block that contains only the block header, transaction receipts and event logs: everything that can be extracted using the base JSON-RPC interface (https://ethereum.org/en/developers/docs/apis/json-rpc/#json-rpc-methods) 
-  //      Furthermore, the eth_getTransactionReceipt call has been avoided because it brings only minimal improvements at the cost of requiring an archive node or a full node with complete transaction index.
+  // ## DetailLevel_EXTENDED
+  //
+  // Describes the most complete block, with traces, balance changes, storage
+  // changes. It is extracted during the execution of the block.
+  //
+  // ## DetailLevel_BASE
+  //
+  // Describes a block that contains only the block header, transaction receipts
+  // and event logs: everything that can be extracted using the base JSON-RPC
+  // interface
+  // (https://ethereum.org/en/developers/docs/apis/json-rpc/#json-rpc-methods)
+  // Furthermore, the eth_getTransactionReceipt call has been avoided because it
+  // brings only minimal improvements at the cost of requiring an archive node
+  // or a full node with complete transaction index.
   DetailLevel detail_level = 12;
 
   // CodeChanges here is the array of smart code change that happened that happened at the block level
@@ -59,8 +114,14 @@ message Block {
   // On hard fork, some procedure runs to upgrade the smart contract code to a new version. In those
   // network, a `CodeChange` for each modified smart contract on upgrade would be present here. Note
   // that this happen rarely, so the vast majority of block will have an empty list here.
+  //
   // Only available in DetailLevel: EXTENDED
   repeated CodeChange code_changes = 20;
+
+  // System calls are introduced in Cancun, along with blobs. They are executed outside of transactions but affect the state.
+  //
+  // Only available in DetailLevel: EXTENDED
+  repeated Call system_calls = 21;
 
   reserved 40; // bool filtering_applied = 40 [deprecated = true];
   reserved 41; // string filtering_include_filter_expr = 41 [deprecated = true];
@@ -143,8 +204,11 @@ message BlockHeader {
   //    extra_data,
   //    mix_hash,
   //    nonce,
-  //    base_fee_per_gas (to be included, only if London Fork is active)
-  //    withdrawals_root (to be included, only if Shangai Fork is active)
+  //    base_fee_per_gas (to be included only if London fork is active)
+  //    withdrawals_root (to be included only if Shangai fork is active)
+  //    blob_gas_used (to be included only if Cancun fork is active)
+  //    excess_blob_gas (to be included only if Cancun fork is active)
+  //    parent_beacon_root (to be included only if Cancun fork is active)
   //  ]))
   //
   bytes hash = 16;
@@ -157,8 +221,24 @@ message BlockHeader {
   // Only available in DetailLevel: EXTENDED
   bytes withdrawals_root = 19;
 
+  // TxDependency is list of transaction indexes that are dependent on each other in the block
+  // header. This is metadata only that was used by the internal Polygon parallel execution engine.
+  //
+  // This field was available in a few versions on Polygon Mainnet and Polygon Mumbai chains. It was actually
+  // removed and is not populated anymore. It's now embeded in the `extraData` field, refer to Polygon source
+  // code to determine how to extract it if you need it.
+  //
   // Only available in DetailLevel: EXTENDED
   Uint64NestedArray tx_dependency = 20;
+
+	// BlobGasUsed was added by EIP-4844 and is ignored in legacy headers.
+	optional uint64 blob_gas_used = 22;
+
+	// ExcessBlobGas was added by EIP-4844 and is ignored in legacy headers.
+	optional uint64 excess_blob_gas = 23;
+
+	// ParentBeaconRoot was added by EIP-4788 and is ignored in legacy headers.
+	bytes parent_beacon_root = 24;
 }
 
 message Uint64NestedArray {
@@ -173,6 +253,31 @@ message BigInt {
   bytes bytes = 1;
 }
 
+// TransactionTrace is full trace of execution of the transaction when the
+// it actually executed on chain.
+//
+// It contains all the transaction details like `from`, `to`, `gas`, etc.
+// as well as all the internal calls that were made during the transaction.
+//
+// The `calls` vector contains Call objects which have balance changes, events
+// storage changes, etc.
+//
+// If ordering is important between elements, almost each message like `Log`,
+// `Call`, `StorageChange`, etc. have an ordinal field that is represents "execution"
+// order of the said element against all other elements in this block.
+//
+// Due to how the call tree works doing "naively", looping through all calls then
+// through a Call's element like `logs` while not yielding the elements in the order
+// they were executed on chain. A log in call could have been done before or after
+// another in another call depending on the actual call tree.
+//
+// The `calls` are ordered by creation order and the call tree can be re-computing
+// using fields found in `Call` object (parent/child relationship).
+//
+// Another important thing to note is that even if a transaction succeed, some calls
+// within it could have been reverted internally, if this is important to you, you must
+// check the field `state_reverted` on the `Call` to determine if it was fully committed
+// to the chain or not.
 message TransactionTrace {
   // consensus
   bytes to = 1;
@@ -208,14 +313,10 @@ message TransactionTrace {
   bytes s = 9;
 
   // GasUsed is the total amount of gas unit used for the whole execution of the transaction.
-  //
-  // Only available in DetailLevel: EXTENDED
   uint64 gas_used = 10;
 
   // Type represents the Ethereum transaction type, available only since EIP-2718 & EIP-2930 activation which happened on Berlin fork.
   // The value is always set even for transaction before Berlin fork because those before the fork are still legacy transactions.
-  //
-  // Only available in DetailLevel: EXTENDED
   Type type = 12;
 
   enum Type {
@@ -233,6 +334,16 @@ message TransactionTrace {
     // executed against EIP-1559 rules which dictates a dynamic gas cost based on the congestion of the network.
     TRX_TYPE_DYNAMIC_FEE = 2;
 
+    // Transaction which contain a large amount of data that cannot be accessed by EVM execution, but whose commitment
+    // can be accessed. The format is intended to be fully compatible with the format that will be used in full sharding.
+    //
+    // Transaction that defines specifis an access list just like TRX_TYPE_ACCESS_LIST and enables dynamic fee just like
+    // TRX_TYPE_DYNAMIC_FEE but in addition defines the fields 'max_fee_per_data_gas' of type 'uint256' and the fields
+    // 'blob_versioned_hashes' field represents a list of hash outputs from 'kzg_to_versioned_hash'.
+    //
+    // Activated in Dencun
+    TRX_TYPE_BLOB = 3;
+
     // Arbitrum-specific transactions
     TRX_TYPE_ARBITRUM_DEPOSIT = 100;
     TRX_TYPE_ARBITRUM_UNSIGNED	= 101;
@@ -241,6 +352,9 @@ message TransactionTrace {
     TRX_TYPE_ARBITRUM_SUBMIT_RETRYABLE	= 105;
     TRX_TYPE_ARBITRUM_INTERNAL	= 106;
     TRX_TYPE_ARBITRUM_LEGACY	= 120;
+
+    // OPTIMISM-specific transactions
+    TRX_TYPE_OPTIMISM_DEPOSIT = 126;
 
   }
 
@@ -276,11 +390,19 @@ message TransactionTrace {
   bytes return_data = 23;
   // Only available in DetailLevel: EXTENDED
   bytes public_key = 24;
+
+  // The block's global ordinal when the transaction started executing, refer to
+  // [Block] documentation for further information about ordinals and total ordering.
   uint64 begin_ordinal = 25;
+
+  // The block's global ordinal when the transaction finished executing, refer to
+  // [Block] documentation for further information about ordinals and total ordering.
   uint64 end_ordinal = 26;
 
   // TransactionTraceStatus is the status of the transaction execution and will let you know if the transaction
   // was successful or not.
+  //
+  // ## Explanation relevant only for blocks with `DetailLevel: EXTENDED`
   //
   // A successful transaction has been recorded to the blockchain's state for calls in it that were successful.
   // This means it's possible only a subset of the calls were properly recorded, refer to [calls[].state_reverted] field
@@ -303,14 +425,39 @@ message TransactionTrace {
   // balance changes you process those where `reason` is either `REASON_GAS_BUY`, `REASON_GAS_REFUND` or
   // `REASON_REWARD_TRANSACTION_FEE` and for nonce change, still on the root call, you pick the nonce change which the
   // smallest ordinal (if more than one).
-  //
-  // Only available in DetailLevel: EXTENDED
   TransactionTraceStatus status = 30;
 
   TransactionReceipt receipt = 31;
 
   // Only available in DetailLevel: EXTENDED
   repeated Call calls = 32;
+
+  // BlobGas is the amount of gas the transaction is going to pay for the blobs, this is a computed value
+  // equivalent to `self.blob_gas_fee_cap * len(self.blob_hashes)` and provided in the model for convenience.
+  //
+  // This is specified by https://eips.ethereum.org/EIPS/eip-4844
+  //
+  // This will is populated only if `TransactionTrace.Type == TRX_TYPE_BLOB` which is possible only
+  // if Cancun fork is active on the chain.
+  optional uint64 blob_gas = 33;
+
+  // BlobGasFeeCap is the maximum fee per data gas the user is willing to pay for the data gas used.
+  //
+  // This is specified by https://eips.ethereum.org/EIPS/eip-4844
+  //
+  // This will is populated only if `TransactionTrace.Type == TRX_TYPE_BLOB` which is possible only
+  // if Cancun fork is active on the chain.
+  optional BigInt blob_gas_fee_cap = 34;
+
+  // BlobHashes field represents a list of hash outputs from 'kzg_to_versioned_hash' which
+  // essentially is a version byte + the sha256 hash of the blob commitment (e.g.
+  // `BLOB_COMMITMENT_VERSION_KZG + sha256(commitment)[1:]`.
+  //
+  // This is specified by https://eips.ethereum.org/EIPS/eip-4844
+  //
+  // This will is populated only if `TransactionTrace.Type == TRX_TYPE_BLOB` which is possible only
+  // if Cancun fork is active on the chain.
+  repeated bytes blob_hashes = 35;
 }
 
 // AccessTuple represents a list of storage keys for a given contract's address and is used
@@ -339,16 +486,27 @@ message TransactionReceipt {
   // field, following `EIP-658`.
   //
   // Before Byzantinium hard fork, this field is always empty.
-  //
-  // Only available in DetailLevel: EXTENDED
   bytes state_root = 1;
-  //
-  // Only available in DetailLevel: EXTENDED
   uint64 cumulative_gas_used = 2;
-  //
-  // Only available in DetailLevel: EXTENDED
   bytes logs_bloom = 3;
   repeated Log logs = 4;
+
+  // BlobGasUsed is the amount of blob gas that has been used within this transaction. At time
+  // of writing, this is equal to `self.blob_gas_fee_cap * len(self.blob_hashes)`.
+  //
+  // This is specified by https://eips.ethereum.org/EIPS/eip-4844
+  //
+  // This will is populated only if `TransactionTrace.Type == TRX_TYPE_BLOB` which is possible only
+  // if Cancun fork is active on the chain.
+  optional uint64 blob_gas_used = 5;
+
+  // BlobGasPrice is the amount to pay per blob item in the transaction.
+  //
+  // This is specified by https://eips.ethereum.org/EIPS/eip-4844
+  //
+  // This will is populated only if `TransactionTrace.Type == TRX_TYPE_BLOB` which is possible only
+  // if Cancun fork is active on the chain.
+  optional BigInt blob_gas_price = 6;
 }
 
 message Log {
@@ -380,6 +538,8 @@ message Log {
   // the `blockIndex` value will always be 0.
   uint32 blockIndex = 6;
 
+  // The block's global ordinal when the log was recorded, refer to [Block]
+  // documentation for further information about ordinals and total ordering.
   uint64 ordinal = 7;
 }
 
@@ -460,7 +620,12 @@ message Call {
   // perform.
   bool state_reverted = 30;
 
+  // The block's global ordinal when the call started executing, refer to
+  // [Block] documentation for further information about ordinals and total ordering.
   uint64 begin_ordinal = 31;
+
+  // The block's global ordinal when the call finished executing, refer to
+  // [Block] documentation for further information about ordinals and total ordering.
   uint64 end_ordinal = 32;
 
   repeated AccountCreation account_creations = 33;
@@ -485,13 +650,38 @@ message StorageChange {
   bytes old_value = 3;
   bytes new_value = 4;
 
+  // The block's global ordinal when the storage change was recorded, refer to [Block]
+  // documentation for further information about ordinals and total ordering.
   uint64 ordinal = 5;
 }
 
 message BalanceChange {
+  // Address is the address of the account that has changed balance.
   bytes address = 1;
+
+  // OldValue is the balance of the address before the change. This value
+  // can be **nil/null/None** if there was no previous balance for the address.
+  // It is safe in those case(s) to consider the balance as being 0.
+  //
+  // If you consume this from a Substreams, you can safely use:
+  //
+  //     let old_value = old_value.unwrap_or_default();
+  //
   BigInt old_value = 2;
+
+  // NewValue is the balance of the address after the change. This value
+  // can be **nil/null/None** if there was no previous balance for the address
+  // after the change. It is safe in those case(s) to consider the balance as being
+  // 0.
+  //
+  // If you consume this from a Substreams, you can safely use:
+  //
+  //     let new_value = new_value.unwrap_or_default();
+  //
   BigInt new_value = 3;
+
+  // Reason is the reason why the balance has changed. This is useful to determine
+  // why the balance has changed and what is the context of the change.
   Reason reason = 4;
 
   // Obtain all balanche change reasons under deep mind repository:
@@ -518,8 +708,18 @@ message BalanceChange {
     // Used on chain(s) where some Ether burning happens
     REASON_BURN = 15;
     REASON_WITHDRAWAL = 16;
+
+    // Rewards for Blob processing on BNB chain added in Tycho hard-fork, refers
+    // to BNB documentation to check the timestamp at which it was activated.
+    REASON_REWARD_BLOB_FEE = 17;
+
+    //USE on optimism chan
+    REASON_INCREASE_MINT = 18;
+
   }
 
+  // The block's global ordinal when the balance change was recorded, refer to [Block]
+  // documentation for further information about ordinals and total ordering.
   uint64 ordinal = 5;
 }
 
@@ -527,11 +727,17 @@ message NonceChange {
   bytes address = 1;
   uint64 old_value = 2;
   uint64 new_value = 3;
+
+  // The block's global ordinal when the nonce change was recorded, refer to [Block]
+  // documentation for further information about ordinals and total ordering.
   uint64 ordinal = 4;
 }
 
 message AccountCreation {
   bytes account = 1;
+
+  // The block's global ordinal when the account creation was recorded, refer to [Block]
+  // documentation for further information about ordinals and total ordering.
   uint64 ordinal = 2;
 }
 
@@ -542,6 +748,8 @@ message CodeChange {
   bytes new_hash = 4;
   bytes new_code = 5;
 
+  // The block's global ordinal when the code change was recorded, refer to [Block]
+  // documentation for further information about ordinals and total ordering.
   uint64 ordinal = 6;
 }
 
@@ -639,6 +847,8 @@ message GasChange {
     REASON_CALL_LEFT_OVER_RETURNED = 25;
   }
 
+  // The block's global ordinal when the gas change was recorded, refer to [Block]
+  // documentation for further information about ordinals and total ordering.
   uint64 ordinal = 4;
 }
 
