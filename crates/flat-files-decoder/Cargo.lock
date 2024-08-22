@@ -4165,7 +4165,7 @@ dependencies = [
 [[package]]
 name = "sf-protos"
 version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/sf-protos.git?branch=main#6fa0346d21c26e83bc73c4f37dc26efe92b45fcc"
+source = "git+https://github.com/semiotic-ai/sf-protos.git?branch=main#15062016c30ad0fc3f77c29aa2a1cb6016ece4d7"
 dependencies = [
  "alloy-primitives",
  "ethportal-api",
