@@ -9,6 +9,7 @@ ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.2.2
 prost = "0.13.1"
 prost-wkt = "0.6.0"
 prost-wkt-types = "0.6.0"
+reth-primitives = { git = "https://github.com/paradigmxyz/reth", version = "1.0.1", tag = "v1.0.1" }
 serde = "1.0.196"
 thiserror = "1.0.62"
 
