@@ -17,7 +17,7 @@ pub mod ethereum {
 
             use crate::StreamingFastProtosError;
 
-            include!(concat!(env!("OUT_DIR"), "/sf.ethereum.r#type.v2.rs"));
+            tonic::include_proto!("sf.ethereum.r#type.v2");
 
             impl TryFrom<&Block> for Header {
                 type Error = StreamingFastProtosError;
@@ -121,7 +121,37 @@ pub mod ethereum {
 }
 pub mod bstream {
     pub mod v1 {
-        include!(concat!(env!("OUT_DIR"), "/sf.bstream.v1.rs"));
+        tonic::include_proto!("sf.bstream.v1");
+    }
+}
+
+pub mod firehose {
+    pub mod v2 {
+        use prost::Message;
+
+        use crate::{ethereum::r#type::v2::Block, StreamingFastProtosError};
+
+        tonic::include_proto!("sf.firehose.v2");
+
+        impl TryFrom<SingleBlockResponse> for Block {
+            type Error = StreamingFastProtosError;
+
+            fn try_from(response: SingleBlockResponse) -> Result<Self, Self::Error> {
+                let any = response.block.ok_or(StreamingFastProtosError::NullBlock)?;
+                let block = Block::decode(any.value.as_ref())?;
+                Ok(block)
+            }
+        }
+
+        impl TryFrom<Response> for Block {
+            type Error = StreamingFastProtosError;
+
+            fn try_from(response: Response) -> Result<Self, Self::Error> {
+                let any = response.block.ok_or(StreamingFastProtosError::NullBlock)?;
+                let block = Block::decode(any.value.as_ref())?;
+                Ok(block)
+            }
+        }
     }
 }
 
@@ -129,4 +159,10 @@ pub mod bstream {
 pub enum StreamingFastProtosError {
     #[error("Block conversion error")]
     BlockConversionError,
+
+    #[error("Error in decoding block: {0}")]
+    DecodeError(#[from] prost::DecodeError),
+
+    #[error("Null block field in block response")]
+    NullBlock,
 }

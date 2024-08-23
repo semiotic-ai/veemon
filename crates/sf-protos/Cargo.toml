@@ -12,7 +12,8 @@ prost-wkt-types = "0.6.0"
 reth-primitives = { git = "https://github.com/paradigmxyz/reth", version = "1.0.1", tag = "v1.0.1" }
 serde = "1.0.196"
 thiserror = "1.0.62"
+tonic = "0.12.0"
 
 [build-dependencies]
 prost-build = "0.13.1"
-prost-wkt-build = "0.6.0"
+tonic-build = "0.12.0"
