@@ -1,14 +1,8 @@
-use prost::Message;
-use tonic::transport::{Channel, Uri};
-
-use crate::{
-    error::ClientError,
-    execution_layer_firehose::{
-        single_block_request::{BlockNumber, Reference},
-        Request, Response, SingleBlockRequest, SingleBlockResponse,
-    },
-    execution_layer_types::Block,
+use sf_protos::firehose::v2::{
+    single_block_request::{BlockNumber, Reference},
+    Request, SingleBlockRequest,
 };
+use tonic::transport::{Channel, Uri};
 
 pub async fn build_and_connect_channel(endpoint: Uri) -> Result<Channel, tonic::transport::Error> {
     Channel::builder(endpoint).connect().await
@@ -30,31 +24,12 @@ pub fn create_blocks_request(start_block_num: i64, stop_block_num: u64) -> Reque
     }
 }
 
-impl TryFrom<SingleBlockResponse> for Block {
-    type Error = ClientError;
-
-    fn try_from(response: SingleBlockResponse) -> Result<Self, Self::Error> {
-        let any = response.block.ok_or(ClientError::NullBlock)?;
-        let block = Block::decode(any.value.as_ref())?;
-        Ok(block)
-    }
-}
-
-impl TryFrom<Response> for Block {
-    type Error = ClientError;
-
-    fn try_from(response: Response) -> Result<Self, Self::Error> {
-        let any = response.block.ok_or(ClientError::NullBlock)?;
-        let block = Block::decode(any.value.as_ref())?;
-        Ok(block)
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use tonic::transport::Uri;
-
-    use crate::execution_layer_firehose::{fetch_client::FetchClient, stream_client::StreamClient};
+    use sf_protos::{
+        ethereum::r#type::v2::Block,
+        firehose::v2::{fetch_client::FetchClient, stream_client::StreamClient},
+    };
 
     use super::*;
 
