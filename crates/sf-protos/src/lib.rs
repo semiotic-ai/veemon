@@ -69,6 +69,15 @@ pub mod ethereum {
                             block_header.withdrawals_root.as_slice(),
                         )),
                     };
+                    let blob_gas_used = block_header.blob_gas_used.map(Uint::from);
+                    let excess_blob_gas = block_header.excess_blob_gas.map(Uint::from);
+                    let parent_beacon_block_root = match block_header.parent_beacon_root.is_empty()
+                    {
+                        true => None,
+                        false => Some(FixedBytes::from_slice(
+                            block_header.parent_beacon_root.as_slice(),
+                        )),
+                    };
 
                     Ok(Header {
                         parent_hash,
@@ -88,9 +97,9 @@ pub mod ethereum {
                         nonce,
                         base_fee_per_gas,
                         withdrawals_root,
-                        blob_gas_used: None,
-                        excess_blob_gas: None,
-                        parent_beacon_block_root: None,
+                        blob_gas_used,
+                        excess_blob_gas,
+                        parent_beacon_block_root,
                     })
                 }
             }
