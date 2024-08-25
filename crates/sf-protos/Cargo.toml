@@ -3,6 +3,9 @@ name = "sf-protos"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+doctest = false
+
 [dependencies]
 alloy-primitives = "=0.7.7"
 ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.2.2", tag = "v0.1.0-alpha.35" }
