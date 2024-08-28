@@ -5,6 +5,7 @@ resolver = "2"
 [workspace.dependencies]
 dotenvy = "0.15.7"
 hex = "0.4.3"
+http = "1.1.0"
 insta = "1.39.0"
 merkle_proof = { git = "https://github.com/sigp/lighthouse.git", branch = "stable" }
 primitive-types = "0.12.2"
