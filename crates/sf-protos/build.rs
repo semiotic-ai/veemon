@@ -21,6 +21,7 @@ fn main() {
                 "src/protos/block.proto",
                 "src/protos/bstream.proto",
                 "src/protos/firehose.proto",
+                "src/protos/type.proto",
             ],
             &["src/protos/"],
         )

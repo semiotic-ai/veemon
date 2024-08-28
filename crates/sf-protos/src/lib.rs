@@ -159,6 +159,7 @@ pub mod ethereum {
         }
     }
 }
+
 pub mod bstream {
     pub mod v1 {
         tonic::include_proto!("sf.bstream.v1");
@@ -190,6 +191,27 @@ pub mod firehose {
                 let any = response.block.ok_or(StreamingFastProtosError::NullBlock)?;
                 let block = Block::decode(any.value.as_ref())?;
                 Ok(block)
+            }
+        }
+    }
+}
+
+pub mod beacon {
+    pub mod r#type {
+        pub mod v1 {
+            use crate::{firehose::v2::SingleBlockResponse, StreamingFastProtosError};
+            use prost::Message;
+
+            tonic::include_proto!("sf.beacon.r#type.v1");
+
+            impl TryFrom<SingleBlockResponse> for Block {
+                type Error = StreamingFastProtosError;
+
+                fn try_from(response: SingleBlockResponse) -> Result<Self, Self::Error> {
+                    let any = response.block.ok_or(StreamingFastProtosError::NullBlock)?;
+                    let block = Block::decode(any.value.as_ref())?;
+                    Ok(block)
+                }
             }
         }
     }
