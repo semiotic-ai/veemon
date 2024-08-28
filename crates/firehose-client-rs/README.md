@@ -4,8 +4,15 @@
 
 ### proto files
 
+We use the following protobuffers developed by Streamingfast via our
+[`semiotic-ai/sf-protos` crate](https://github.com/semiotic-ai/sf-protos):
+
 - [`streamingfast/proto/sf/firehose/v2/firehose.proto`](https://github.com/streamingfast/proto/blob/develop/sf/firehose/v2/firehose.proto)
 - [`streamingfast/firehose-ethereum/proto/sf/ethereum/type/v2/type.proto`](https://github.com/streamingfast/firehose-ethereum/blob/335607aac766f9f3c6946d8b1ad3c8e36ab70930/proto/sf/ethereum/type/v2/type.proto)
+
+See
+[`streamingfast/substreams-ethereum`](https://github.com/streamingfast/substreams-ethereum/blob/c925dfa58675c4284884b3fdec9c2b3c4047ce7c/core/src/pb/generated.rs)
+for more on how Streamingfast use these protobuffers.
 
 ### gRPC service examples
 
