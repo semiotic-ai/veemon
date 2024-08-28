@@ -1,27 +1,7 @@
-use sf_protos::firehose::v2::{
-    single_block_request::{BlockNumber, Reference},
-    Request, SingleBlockRequest,
-};
 use tonic::transport::{Channel, Uri};
 
 pub async fn build_and_connect_channel(endpoint: Uri) -> Result<Channel, tonic::transport::Error> {
     Channel::builder(endpoint).connect().await
-}
-
-pub fn create_block_request(num: u64) -> SingleBlockRequest {
-    SingleBlockRequest {
-        reference: Some(Reference::BlockNumber(BlockNumber { num })),
-        ..Default::default()
-    }
-}
-
-pub fn create_blocks_request(start_block_num: i64, stop_block_num: u64) -> Request {
-    Request {
-        start_block_num,
-        stop_block_num,
-        final_blocks_only: true,
-        ..Default::default()
-    }
 }
 
 #[cfg(test)]
@@ -31,27 +11,20 @@ mod tests {
         firehose::v2::{fetch_client::FetchClient, stream_client::StreamClient},
     };
 
+    use crate::{
+        config::firehose_ethereum_uri,
+        request::{create_block_request, create_blocks_request, BlocksRequested},
+    };
+
     use super::*;
 
-    fn firehose_ethereum_uri() -> Uri {
-        dotenvy::dotenv().unwrap();
-
-        let url = dotenvy::var("FIREHOSE_ETHEREUM_URL").unwrap();
-        let port = dotenvy::var("FIREHOSE_ETHEREUM_PORT").unwrap();
-
-        format!("{}:{}", url, port).parse::<Uri>().unwrap()
-    }
-
-    /// Temporary test to demonstrate how to fetch a single block from the Ethereum firehose
+    /// Demonstrates how to fetch a single block from Ethereum firehose, using the `FetchClient`.
     #[tokio::test]
     async fn test_grpc_fetch_block() {
-        let uri = firehose_ethereum_uri();
+        let uri = firehose_ethereum_uri().unwrap();
 
-        let channel = build_and_connect_channel(uri)
-            .await
-            .expect("Failed to connect to endpoint");
+        let channel = build_and_connect_channel(uri).await.unwrap();
 
-        // Use FetchClient to retrieve a single block
         let mut client = FetchClient::new(channel);
 
         let request = create_block_request(20562650);
@@ -73,17 +46,16 @@ mod tests {
         const TOTAL_BLOCKS: u64 = 8192;
         const START_BLOCK: u64 = 19581798;
 
-        let uri = firehose_ethereum_uri();
+        let uri = firehose_ethereum_uri().unwrap();
 
-        let channel = build_and_connect_channel(uri)
-            .await
-            .expect("Failed to connect to endpoint");
+        let channel = build_and_connect_channel(uri).await.unwrap();
 
         let mut client = StreamClient::new(channel);
 
         let end_block = START_BLOCK + TOTAL_BLOCKS - 1;
 
-        let request = create_blocks_request(START_BLOCK as i64, end_block);
+        let request =
+            create_blocks_request(START_BLOCK as i64, end_block, BlocksRequested::FinalOnly);
 
         let response = client.blocks(request).await.unwrap();
         let mut stream_inner = response.into_inner();
