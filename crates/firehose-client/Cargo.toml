@@ -1,5 +1,5 @@
 [package]
-name = "firehose-client-rs"
+name = "firehose-client"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.80"
@@ -8,19 +8,19 @@ rust-version = "1.80"
 name = "firehose_client"
 path = "src/lib.rs"
 
-[[bin]]
-name = "firehose-client-rs"
-path = "src/main.rs"
-
 [dependencies]
 dotenvy.workspace = true
 http.workspace = true
+rustls.workspace = true
 serde.workspace = true
 serde_derive.workspace = true
 sf-protos.workspace = true
 thiserror.workspace = true
-tonic.workspace = true
+tonic = { workspace = true, features = [
+    "tls-roots",
+] }
 
 [dev-dependencies]
 hex.workspace = true
+insta.workspace = true
 tokio.workspace = true

@@ -9,14 +9,16 @@ name = "forrestrie"
 path = "src/lib.rs"
 
 [dependencies]
+ethportal-api.workspace = true
+firehose-client = { path = "../firehose-client" }
 merkle_proof.workspace = true
-types.workspace = true
-
 primitive-types.workspace = true
 serde.workspace = true
 tree_hash.workspace = true
+types.workspace = true
 
 [dev-dependencies]
 insta.workspace = true
 serde_json.workspace = true
-
+sf-protos.workspace = true
+tokio.workspace = true

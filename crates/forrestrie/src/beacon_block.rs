@@ -101,7 +101,14 @@ mod tests {
 
     use super::*;
 
+    use ethportal_api::Header;
+    use firehose_client::{
+        client::{channel::build_and_connect_channel, endpoint::Firehose},
+        request::{create_request, FirehoseRequest},
+    };
     use merkle_proof::verify_merkle_proof;
+    use sf_protos::{ethereum::r#type::v2::Block, firehose::v2::fetch_client::FetchClient};
+    use types::ExecPayload;
 
     /// Deneb block JSON file shared among contributors.
     /// The block hash is `0x5dde05ab1da7f768ed3ea2d53c6fa0d79c0c2283e52bb0d00842a4bdbf14c0ab`.
@@ -152,5 +159,46 @@ mod tests {
         let block_header_root = block_header.tree_hash_root();
 
         assert_eq!(block_root, block_header_root);
+    }
+
+    #[tokio::test]
+    async fn validate_single_execution_block_proof() {
+        const BLOCK_NUMBER: u64 = 19_584_570;
+
+        let mut eth1_client = FetchClient::new({
+            let execution_firehose_uri = Firehose::Ethereum.uri_from_env().unwrap();
+            build_and_connect_channel(execution_firehose_uri)
+                .await
+                .unwrap()
+        });
+
+        let mut request = create_request(BLOCK_NUMBER);
+
+        request.insert_api_key_if_provided(Firehose::Ethereum);
+
+        let response = eth1_client.block(request).await.unwrap();
+
+        let block = Block::try_from(response.into_inner()).unwrap();
+
+        let block_header = Header::try_from(&block).unwrap();
+        let block_hash = block_header.hash();
+
+        assert_eq!(block_hash.as_slice(), &block.hash);
+
+        let consensus_block = &BLOCK_WRAPPER.data.message;
+        let block_body = consensus_block.body_deneb().unwrap();
+        let consensus_block_body = BeaconBlockBody::from(block_body.clone());
+        let execution_payload = consensus_block_body
+            .execution_payload_deneb()
+            .expect("Failed to get execution payload");
+        let execution_block_hash = execution_payload.block_hash();
+
+        let block_num = execution_payload.block_number();
+        assert_eq!(block_num, BLOCK_NUMBER);
+
+        assert_eq!(
+            block_hash.as_slice(),
+            execution_block_hash.into_root().as_bytes()
+        );
     }
 }

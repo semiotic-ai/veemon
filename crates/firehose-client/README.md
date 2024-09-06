@@ -1,5 +1,24 @@
 # Firehose Ethereum Rust Client
 
+## gRPC Endpoints
+
+### Env Vars
+
+Use environment variables to provide Firehose Ethereum and Firehose Beacon providers of
+your choice.
+
+To do so, place a `.env` file in the root of this crate, alongside this `README.md`. 
+Your `.env` file should look like something this, depending on your requirements:
+
+```shell
+FIREHOSE_ETHEREUM_URL=https://firehose-ethereum.tail15dec.ts.net
+FIREHOSE_ETHEREUM_PORT=80
+FIREHOSE_BEACON_URL=https://eth-cl.firehose.pinax.network
+FIREHOSE_BEACON_PORT=443
+BEACON_API_KEY=<YOUR-API-KEY>
+ETHEREUM_API_KEY=<YOUR-API-KEY>
+```
+
 ## firehose-ethereum Execution Layer gRPC
 
 ### proto files
