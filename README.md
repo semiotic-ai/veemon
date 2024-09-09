@@ -4,6 +4,19 @@
 
 Validating post-merge Ethereum data.
 
+### Crates
+
+#### Forrestrie
+
+Library of types and methods for verifying post-merge Ethereum data.
+
+#### Firehose Client
+
+Support for interfacing programmatically with Firehose gRPC endpoints.
+
+For more information see the
+[`firehose-client/README`](./crates/firehose-client/README.md).
+
 ## Documentation
 
 - Notion doc on
