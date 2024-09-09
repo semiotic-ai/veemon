@@ -72,18 +72,14 @@ pub mod tls {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
+    use crate::{
+        client::{channel::build_and_connect_channel, endpoint::Firehose},
+        request::{create_blocks_request, create_request, BlocksRequested, FirehoseRequest},
+    };
     use sf_protos::{
         beacon::r#type::v1::block::Body,
         ethereum::r#type::v2::Block,
         firehose::v2::{fetch_client::FetchClient, stream_client::StreamClient},
-    };
-    use tonic::metadata::MetadataValue;
-
-    use crate::{
-        client::{channel::build_and_connect_channel, endpoint::Firehose},
-        request::{create_blocks_request, create_request, BlocksRequested},
     };
 
     /// Demonstrates how to fetch a single block from Beacon Firehose, using the `Fetch` API.
@@ -99,10 +95,7 @@ mod tests {
         // This is the block number for the execution block we want to fetch
         let mut request = create_request(20672593);
 
-        if let Ok(api_key) = std::env::var("ETHEREUM_API_KEY") {
-            let api_key_header = MetadataValue::from_str(&api_key).expect("Invalid API key format");
-            request.metadata_mut().insert("x-api-key", api_key_header);
-        }
+        request.insert_api_key_if_provided(Firehose::Ethereum);
 
         let response = client.block(request).await.unwrap();
 
@@ -125,10 +118,7 @@ mod tests {
         // of the Beacon block.
         let mut request = create_request(9881091);
 
-        if let Ok(api_key) = std::env::var("BEACON_API_KEY") {
-            let api_key_header = MetadataValue::from_str(&api_key).expect("Invalid API key format");
-            request.metadata_mut().insert("x-api-key", api_key_header);
-        }
+        request.insert_api_key_if_provided(Firehose::Beacon);
 
         let response = client.block(request).await.unwrap();
 
@@ -168,10 +158,7 @@ mod tests {
 
         let mut request = create_request(20672593);
 
-        if let Ok(api_key) = std::env::var("ETHEREUM_API_KEY") {
-            let api_key_header = MetadataValue::from_str(&api_key).expect("Invalid API key format");
-            request.metadata_mut().insert("x-api-key", api_key_header);
-        }
+        request.insert_api_key_if_provided(Firehose::Ethereum);
 
         let response = client.block(request).await.unwrap();
 
@@ -203,10 +190,7 @@ mod tests {
         let mut request =
             create_blocks_request(START_BLOCK as i64, end_block, BlocksRequested::FinalOnly);
 
-        if let Ok(api_key) = std::env::var("ETHEREUM_API_KEY") {
-            let api_key_header = MetadataValue::from_str(&api_key).expect("Invalid API key format");
-            request.metadata_mut().insert("x-api-key", api_key_header);
-        }
+        request.insert_api_key_if_provided(Firehose::Ethereum);
 
         let response = client.blocks(request).await.unwrap();
         let mut stream_inner = response.into_inner();
