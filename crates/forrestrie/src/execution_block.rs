@@ -1,7 +1,7 @@
 use alloy_rlp::Encodable;
 use ethers::prelude::*;
-use reth::primitives::{Bloom, Log, Receipt, ReceiptWithBloom, TxType, B256};
-use reth_trie::{root::adjust_index_for_rlp, HashBuilder, Nibbles};
+use reth::primitives::{Bloom, Log, Receipt, ReceiptWithBloom, TxType};
+use reth_trie_common::{proof::ProofRetainer, root::adjust_index_for_rlp, HashBuilder, Nibbles};
 use serde::{Deserialize, Deserializer, Serialize};
 
 // reth::primitives::proofs::calculate_receipt_root;
@@ -81,24 +81,48 @@ where
     TxType::try_from(tx_type_value).map_err(|_| serde::de::Error::custom("Invalid tx_type value"))
 }
 
-pub fn hash_builder_root(receipts: &[ReceiptWithBloom]) -> B256 {
+// builds the trie to generate proofs from the Receipts
+// generate a different root. Make sure that the source of receipts sorts them by `logIndex`
+pub fn build_trie_with_proofs(
+    receipts: &[ReceiptWithBloom],
+    receipts_idx: &[usize],
+) -> HashBuilder {
     let mut index_buffer = Vec::new();
     let mut value_buffer = Vec::new();
 
-    let mut hb = HashBuilder::default();
+    // Initialize ProofRetainer with the target nibbles (the keys for which we want proofs)
+    let targets: Vec<Nibbles> = receipts_idx
+        .iter()
+        .map(|&i| {
+            let index = adjust_index_for_rlp(i, receipts.len());
+            index.encode(&mut index_buffer);
+            Nibbles::unpack(&index_buffer)
+        })
+        .collect();
+
+    let proof_retainer: ProofRetainer = ProofRetainer::new(targets);
+    let mut hb = HashBuilder::default().with_proof_retainer(proof_retainer);
+
     let receipts_len = receipts.len();
+
     for i in 0..receipts_len {
         let index = adjust_index_for_rlp(i, receipts_len);
 
         index_buffer.clear();
+        let nibbles = Nibbles::unpack(&index_buffer);
         index.encode(&mut index_buffer);
 
         value_buffer.clear();
         receipts[index].encode_inner(&mut value_buffer, false);
         hb.add_leaf(Nibbles::unpack(&index_buffer), &value_buffer);
+        // Safely mutate the ProofRetainer if it exists
+        if let Some(ref mut proof_retainer) = hb.proof_retainer {
+            // Retain the proof if the current nibbles match any target
+            proof_retainer.retain(&nibbles, &value_buffer);
+        }
     }
 
-    hb.root()
+    hb
 }
 
 #[cfg(test)]
@@ -144,7 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn test_compute_receipts_trie() {
+    fn test_compute_receipts_trie_root_and_proof() {
         let block_wrapper: &LazyCell<BlockWrapper> = &BLOCK_WRAPPER;
         let block: &::types::BeaconBlock<::types::MainnetEthSpec> = &block_wrapper.data.message;
         let block_body: &::types::BeaconBlockBodyDeneb<::types::MainnetEthSpec> =
@@ -159,9 +183,12 @@ mod tests {
             .map(|receipt_json| ReceiptWithBloom::try_from(receipt_json))
             .collect::<Result<Vec<_>, _>>();
 
+        // computes the root and verify against existing data
+        let mut hb: HashBuilder;
         match receipts_with_bloom {
             Ok(receipts) => {
-                let root: reth::revm::primitives::FixedBytes<32> = hash_builder_root(&receipts);
+                hb = build_trie_with_proofs(&receipts, &[0, 1, 2]);
+                let root: reth::revm::primitives::FixedBytes<32> = hb.root();
                 let root_h256 = H256::from(root.0);
                 assert_eq!(root_h256, receipts_root, "Roots do not match!");
             }
@@ -170,5 +197,7 @@ mod tests {
                 panic!("Failed to convert receipts: {}", e);
             }
         }
+
+        // verify the proofs
     }
 }
