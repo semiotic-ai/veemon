@@ -103,11 +103,11 @@ mod tests {
 
     use ethportal_api::Header;
     use firehose_client::{
-        client::{channel::build_and_connect_channel, endpoint::Firehose},
+        client::{channel::fetch_client, endpoint::Firehose},
         request::{create_request, FirehoseRequest},
     };
     use merkle_proof::verify_merkle_proof;
-    use sf_protos::{ethereum::r#type::v2::Block, firehose::v2::fetch_client::FetchClient};
+    use sf_protos::ethereum::r#type::v2::Block;
     use types::ExecPayload;
 
     /// Deneb block JSON file shared among contributors.
@@ -165,12 +165,7 @@ mod tests {
     async fn validate_single_execution_block_proof() {
         const BLOCK_NUMBER: u64 = 19_584_570;
 
-        let mut eth1_client = FetchClient::new({
-            let execution_firehose_uri = Firehose::Ethereum.uri_from_env().unwrap();
-            build_and_connect_channel(execution_firehose_uri)
-                .await
-                .unwrap()
-        });
+        let mut eth1_client = fetch_client(Firehose::Ethereum).await.unwrap();
 
         let mut request = create_request(BLOCK_NUMBER);
 
