@@ -1,5 +1,8 @@
 pub mod channel {
+    use sf_protos::firehose::v2::fetch_client::FetchClient;
     use tonic::transport::{Channel, Uri};
+
+    use super::{endpoint::Firehose, error::ClientError};
 
     pub async fn build_and_connect_channel(uri: Uri) -> Result<Channel, tonic::transport::Error> {
         if uri.scheme_str() != Some("https") {
@@ -10,12 +13,19 @@ pub mod channel {
 
         Channel::builder(uri).tls_config(config)?.connect().await
     }
+
+    pub async fn fetch_client(firehose: Firehose) -> Result<FetchClient<Channel>, ClientError> {
+        Ok(FetchClient::new({
+            let execution_firehose_uri = firehose.uri_from_env()?;
+            build_and_connect_channel(execution_firehose_uri).await?
+        }))
+    }
 }
 
 pub mod endpoint {
     use tonic::transport::Uri;
 
-    use super::error::ConfigError;
+    use super::error::ClientError;
 
     pub enum Firehose {
         Ethereum,
@@ -23,7 +33,7 @@ pub mod endpoint {
     }
 
     impl Firehose {
-        pub fn uri_from_env(&self) -> Result<Uri, ConfigError> {
+        pub fn uri_from_env(&self) -> Result<Uri, ClientError> {
             dotenvy::dotenv()?;
 
             let (url, port) = match self {
@@ -47,7 +57,10 @@ pub mod error {
     use thiserror::Error;
 
     #[derive(Debug, Error)]
-    pub enum ConfigError {
+    pub enum ClientError {
+        #[error("gRPC error: {0}")]
+        GRpc(#[from] tonic::transport::Error),
+
         #[error("Invalid URI: {0}")]
         InvalidUri(#[from] InvalidUri),
 
@@ -73,7 +86,10 @@ pub mod tls {
 #[cfg(test)]
 mod tests {
     use crate::{
-        client::{channel::build_and_connect_channel, endpoint::Firehose},
+        client::{
+            channel::{build_and_connect_channel, fetch_client},
+            endpoint::Firehose,
+        },
         request::{create_blocks_request, create_request, BlocksRequested, FirehoseRequest},
     };
     use sf_protos::{
@@ -107,11 +123,7 @@ mod tests {
             "0xea48ba1c8e38ea586239e9c5ec62949ddd79404c6006c099bb02a8b22ddd18e4"
         );
 
-        let uri = Firehose::Beacon.uri_from_env().unwrap();
-
-        let channel = build_and_connect_channel(uri).await.unwrap();
-
-        let mut client = FetchClient::new(channel);
+        let mut client = fetch_client(Firehose::Beacon).await.unwrap();
 
         // This is the slot number for the Beacon block we want to fetch, but right now
         // we don't have a way to map the block number of the execution block to the slot number
