@@ -35,6 +35,16 @@ pub const ETH1_DATA_INDEX: usize = 17;
 /// <https://github.com/ethereum/annotated-spec/blob/master/deneb/beacon-chain.md#beaconblockbody>.
 pub const ETH1_DATA_FIELD_INDEX: usize = 1;
 
+// ExecutionPayload is a [`BeaconBlockBody`] top-level field, subtract off the generalized indices
+// for the internal nodes. Result should be 9, the field offset of the execution
+// payload in the `BeaconBlockBody`:
+// https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/beacon-chain.md#beaconblockbody
+pub const EXECUTION_PAYLOAD_INDEX: usize = 25;
+
+/// The field corresponds to the index of the `execution_payload` field in the [`BeaconBlockBody`] struct:
+/// <https://github.com/ethereum/annotated-spec/blob/master/deneb/beacon-chain.md#beaconblockbody>.
+pub const EXECUTION_PAYLOAD_FIELD_INDEX: usize = 9;
+
 pub trait HistoricalDataProofs {
     fn compute_merkle_proof(&self, index: usize) -> Result<Vec<Hash256>, Error>;
 }
@@ -43,6 +53,9 @@ impl<E: EthSpec> HistoricalDataProofs for BeaconBlockBody<E> {
     fn compute_merkle_proof(&self, index: usize) -> Result<Vec<Hash256>, Error> {
         let field_index = match index {
             ETH1_DATA_INDEX => index
+                .checked_sub(NUM_BEACON_BLOCK_BODY_HASH_TREE_ROOT_LEAVES)
+                .ok_or(Error::IndexNotSupported(index))?,
+            EXECUTION_PAYLOAD_INDEX => index
                 .checked_sub(NUM_BEACON_BLOCK_BODY_HASH_TREE_ROOT_LEAVES)
                 .ok_or(Error::IndexNotSupported(index))?,
             _ => return Err(Error::IndexNotSupported(index)),
@@ -143,6 +156,35 @@ mod tests {
             &proof,
             depth,
             ETH1_DATA_FIELD_INDEX,
+            block_body_hash
+        ));
+    }
+
+    /// Demonstrate that we can verify the inclusion proof for the execution payload field in the block body.
+    /// The execution payload block hash should match the block hash of the execution block.
+    #[test]
+    fn test_inclusion_proof_for_block_body_given_execution_payload() {
+        let block_wrapper = &BLOCK_WRAPPER;
+        let block = &block_wrapper.data.message;
+
+        let execution_payload = block.body().execution_payload().unwrap();
+        let execution_payload_root = execution_payload.tree_hash_root();
+
+        let block_body = block.body_deneb().unwrap();
+        let block_body_hash = block_body.tree_hash_root();
+
+        let body = BeaconBlockBody::from(block_body.clone());
+        let proof = body.compute_merkle_proof(EXECUTION_PAYLOAD_INDEX).unwrap();
+
+        let depth = BEACON_BLOCK_BODY_PROOF_DEPTH;
+
+        assert_eq!(proof.len(), depth, "proof length should equal depth");
+
+        assert!(verify_merkle_proof(
+            execution_payload_root,
+            &proof,
+            depth,
+            EXECUTION_PAYLOAD_FIELD_INDEX,
             block_body_hash
         ));
     }
