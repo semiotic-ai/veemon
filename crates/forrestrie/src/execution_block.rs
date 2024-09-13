@@ -4,8 +4,6 @@ use reth::primitives::{Bloom, Log, Receipt, ReceiptWithBloom, TxType};
 use reth_trie_common::{proof::ProofRetainer, root::adjust_index_for_rlp, HashBuilder, Nibbles};
 use serde::{Deserialize, Deserializer, Serialize};
 
-// reth::primitives::proofs::calculate_receipt_root;
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ReceiptJson {
     #[serde(rename = "type")]
@@ -169,7 +167,7 @@ mod tests {
         let receipts_with_bloom: Result<Vec<ReceiptWithBloom>, String> = block_receipts
             .result
             .iter()
-            .map(|receipt_json| ReceiptWithBloom::try_from(receipt_json))
+            .map(ReceiptWithBloom::try_from)
             .collect::<Result<Vec<_>, _>>();
 
         // Check that the conversion was successful
