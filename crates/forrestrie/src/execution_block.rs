@@ -245,14 +245,14 @@ mod tests {
         }
 
         // check for exclusion proof
-        // let mut index_buffer = Vec::new();
-        // let index = adjust_index_for_rlp(6, receipts_len);
-        // index.encode(&mut index_buffer);
-        // let target = Nibbles::unpack(index_buffer);
-        // println!("target nibble for exclusion: {:?}", target);
-        // assert_eq!(
-        //     verify_proof(hb.root(), target, None, proof.values()),
-        //     Ok(())
-        // );
+        let mut index_buffer = Vec::new();
+        let index = adjust_index_for_rlp(6, receipts_len);
+        index.encode(&mut index_buffer);
+        let target = Nibbles::unpack(index_buffer);
+        println!("target nibble for exclusion: {:?}", target);
+        assert_eq!(
+            verify_proof(hb.root(), target, None, proof.values()),
+            Ok(())
+        );
     }
 }
