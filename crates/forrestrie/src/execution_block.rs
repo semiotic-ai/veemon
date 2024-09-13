@@ -123,6 +123,7 @@ pub fn build_trie_with_proofs(receipts: &[ReceiptWithBloom], target_idxs: &[usiz
 
         receipts[index].encode_inner(&mut value_buffer, false);
         // NOTICE: if the ProofRetainer is set, add_leaf automatically retains the proofs for the targets
+        print!("{:?}", Nibbles::unpack(&index_buffer));
         hb.add_leaf(Nibbles::unpack(&index_buffer), &value_buffer);
     }
 
@@ -193,6 +194,7 @@ mod tests {
         let mut hb: HashBuilder;
         let target_idxs = &[0, 1, 2];
         let mut targets: Vec<Target> = Vec::new();
+        let receipts_len;
 
         match receipts_with_bloom {
             Ok(receipts) => {
@@ -204,7 +206,7 @@ mod tests {
                 let mut value_buffer = Vec::new();
 
                 // build some of the targets to get proofs for them
-                let receipts_len = receipts.len();
+                receipts_len = receipts.len();
                 for i in target_idxs {
                     index_buffer.clear();
                     value_buffer.clear();
@@ -212,10 +214,9 @@ mod tests {
                     let index = adjust_index_for_rlp(*i, receipts_len);
                     index.encode(&mut index_buffer);
 
-                    println!("index_buffer (raw bytes): {:?}", &index_buffer);
-
                     receipts[index].encode_inner(&mut value_buffer, false);
                     let nibble = Nibbles::unpack(&index_buffer);
+                    println!("{:?} targets added", nibble);
                     targets.push(Target::new(nibble, value_buffer.clone()));
                 }
             }
@@ -225,25 +226,30 @@ mod tests {
             }
         }
 
-        let proof = hb.take_proofs();
-        let proof1 = proof
-            .iter()
-            .filter_map(|(k, v)| targets[0].nibbles.starts_with(k).then_some(v));
-
         // verifies proof for retained targets
-        assert_eq!(
-            verify_proof(
-                hb.root(),
-                targets[0].nibbles.clone(),
-                Some(targets[0].value.to_vec()),
-                proof1.clone(),
-            ),
-            Ok(())
-        );
+        let proof = hb.take_proofs();
+        for target in targets.iter() {
+            let proof1 = proof
+                .iter()
+                .filter_map(|(k, v)| target.nibbles.starts_with(k).then_some(v));
 
-        // checks for non existent proof
-        // let index = adjust_index_for_rlp(*i, receipts_len);
-        // let target = Nibbles::unpack(0x);
+            assert_eq!(
+                verify_proof(
+                    hb.root(),
+                    target.nibbles.clone(),
+                    Some(target.value.to_vec()),
+                    proof1.clone(),
+                ),
+                Ok(())
+            );
+        }
+
+        // check for exclusion proof
+        // let mut index_buffer = Vec::new();
+        // let index = adjust_index_for_rlp(6, receipts_len);
+        // index.encode(&mut index_buffer);
+        // let target = Nibbles::unpack(index_buffer);
+        // println!("target nibble for exclusion: {:?}", target);
         // assert_eq!(
         //     verify_proof(hb.root(), target, None, proof.values()),
         //     Ok(())
