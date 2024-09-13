@@ -18,12 +18,12 @@ fn main() {
         .compile_with_config(
             config,
             &[
-                "src/protos/block.proto",
-                "src/protos/bstream.proto",
-                "src/protos/firehose.proto",
-                "src/protos/type.proto",
+                "protos/block.proto",
+                "protos/bstream.proto",
+                "protos/firehose.proto",
+                "protos/type.proto",
             ],
-            &["src/protos/"],
+            &["protos/"],
         )
         .unwrap();
 }
