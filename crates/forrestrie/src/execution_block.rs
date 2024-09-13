@@ -94,15 +94,12 @@ where
 
 // builds the trie to generate proofs from the Receipts
 // generate a different root. Make sure that the source of receipts sorts them by `logIndex`
-pub fn build_trie_with_proofs(
-    receipts: &[ReceiptWithBloom],
-    receipts_idx: &[usize],
-) -> HashBuilder {
+pub fn build_trie_with_proofs(receipts: &[ReceiptWithBloom], target_idxs: &[usize]) -> HashBuilder {
     let mut index_buffer = Vec::new();
     let mut value_buffer = Vec::new();
 
     // Initialize ProofRetainer with the target nibbles (the keys for which we want proofs)
-    let targets: Vec<Nibbles> = receipts_idx
+    let targets: Vec<Nibbles> = target_idxs
         .iter()
         .map(|&i| {
             let index = adjust_index_for_rlp(i, receipts.len());
@@ -135,8 +132,6 @@ pub fn build_trie_with_proofs(
 #[cfg(test)]
 mod tests {
 
-    use k256::pkcs8::der::Encode;
-    use reth::primitives::B256;
     use reth_trie_common::proof::verify_proof;
 
     use crate::beacon_block::BlockWrapper;
@@ -196,22 +191,21 @@ mod tests {
 
         // computes the root and verify against existing data
         let mut hb: HashBuilder;
-        let receipts_idx = &[0, 1, 2];
+        let target_idxs = &[0, 1, 2];
         let mut targets: Vec<Target> = Vec::new();
 
         match receipts_with_bloom {
             Ok(receipts) => {
-                hb = build_trie_with_proofs(&receipts, receipts_idx);
-                let root: reth::revm::primitives::FixedBytes<32> = hb.root();
-                let root_h256 = H256::from(root.0);
-                assert_eq!(root_h256, receipts_root, "Roots do not match!");
+                hb = build_trie_with_proofs(&receipts, target_idxs);
+                let calculated_root = H256::from(hb.root().0);
+                assert_eq!(calculated_root, receipts_root, "Roots do not match!");
 
                 let mut index_buffer = Vec::new();
                 let mut value_buffer = Vec::new();
 
                 // build some of the targets to get proofs for them
                 let receipts_len = receipts.len();
-                for i in receipts_idx {
+                for i in target_idxs {
                     index_buffer.clear();
                     value_buffer.clear();
 
