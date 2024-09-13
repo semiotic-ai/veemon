@@ -25,6 +25,19 @@ pub struct ReceiptJson {
     pub logs_bloom: Bloom,
 }
 
+// represents leafs that are being generated proofs on
+pub struct Target {
+    pub nibbles: Nibbles,
+    pub value: Vec<u8>,
+}
+
+impl Target {
+    // Constructor to create a new Target
+    pub fn new(nibbles: Nibbles, value: Vec<u8>) -> Self {
+        Target { nibbles, value }
+    }
+}
+
 impl TryFrom<&ReceiptJson> for ReceiptWithBloom {
     type Error = String;
 
@@ -95,6 +108,7 @@ pub fn build_trie_with_proofs(
         .iter()
         .map(|&i| {
             let index = adjust_index_for_rlp(i, receipts.len());
+            index_buffer.clear();
             index.encode(&mut index_buffer);
             Nibbles::unpack(&index_buffer)
         })
@@ -106,20 +120,15 @@ pub fn build_trie_with_proofs(
     let receipts_len = receipts.len();
 
     for i in 0..receipts_len {
-        let index = adjust_index_for_rlp(i, receipts_len);
-
         index_buffer.clear();
-        let nibbles = Nibbles::unpack(&index_buffer);
+        value_buffer.clear();
+
+        let index = adjust_index_for_rlp(i, receipts_len);
         index.encode(&mut index_buffer);
 
-        value_buffer.clear();
         receipts[index].encode_inner(&mut value_buffer, false);
+        // NOTICE: if the ProofRetainer is set, add_leaf automatically retains the proofs for the targets
         hb.add_leaf(Nibbles::unpack(&index_buffer), &value_buffer);
-        // Safely mutate the ProofRetainer if it exists
-        if let Some(ref mut proof_retainer) = hb.proof_retainer {
-            // Retain the proof if the current nibbles match any target
-            proof_retainer.retain(&nibbles, &value_buffer);
-        }
     }
 
     hb
@@ -127,6 +136,10 @@ pub fn build_trie_with_proofs(
 
 #[cfg(test)]
 mod tests {
+
+    use k256::pkcs8::der::Encode;
+    use reth::primitives::B256;
+    use reth_trie_common::proof::verify_proof;
 
     use crate::beacon_block::BlockWrapper;
     use std::cell::LazyCell;
@@ -180,17 +193,39 @@ mod tests {
         let receipts_with_bloom: Result<Vec<ReceiptWithBloom>, String> = block_receipts
             .result
             .iter()
-            .map(|receipt_json| ReceiptWithBloom::try_from(receipt_json))
+            .map(ReceiptWithBloom::try_from)
             .collect::<Result<Vec<_>, _>>();
 
         // computes the root and verify against existing data
         let mut hb: HashBuilder;
+        let receipts_idx = &[0, 1, 2];
+        let mut targets: Vec<Target> = Vec::new();
+
         match receipts_with_bloom {
             Ok(receipts) => {
-                hb = build_trie_with_proofs(&receipts, &[0, 1, 2]);
+                hb = build_trie_with_proofs(&receipts, receipts_idx);
                 let root: reth::revm::primitives::FixedBytes<32> = hb.root();
                 let root_h256 = H256::from(root.0);
                 assert_eq!(root_h256, receipts_root, "Roots do not match!");
+
+                let mut index_buffer = Vec::new();
+                let mut value_buffer = Vec::new();
+
+                // build some of the targets to get proofs for them
+                let receipts_len = receipts.len();
+                for i in receipts_idx {
+                    index_buffer.clear();
+                    value_buffer.clear();
+
+                    let index = adjust_index_for_rlp(*i, receipts_len);
+                    index.encode(&mut index_buffer);
+
+                    println!("index_buffer (raw bytes): {:?}", &index_buffer);
+
+                    receipts[index].encode_inner(&mut value_buffer, false);
+                    let nibble = Nibbles::unpack(&index_buffer);
+                    targets.push(Target::new(nibble, value_buffer.clone()));
+                }
             }
             Err(e) => {
                 // Handle the error (e.g., by logging or panicking)
@@ -198,6 +233,28 @@ mod tests {
             }
         }
 
-        // verify the proofs
+        let proof = hb.take_proofs();
+        let proof1 = proof
+            .iter()
+            .filter_map(|(k, v)| targets[0].nibbles.starts_with(k).then_some(v));
+
+        // verifies proof for retained targets
+        assert_eq!(
+            verify_proof(
+                hb.root(),
+                targets[0].nibbles.clone(),
+                Some(targets[0].value.to_vec()),
+                proof1.clone(),
+            ),
+            Ok(())
+        );
+
+        // checks for non existent proof
+        // let index = adjust_index_for_rlp(*i, receipts_len);
+        // let target = Nibbles::unpack(0x);
+        // assert_eq!(
+        //     verify_proof(hb.root(), target, None, proof.values()),
+        //     Ok(())
+        // );
     }
 }
