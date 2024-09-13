@@ -15,18 +15,18 @@ pub mod ethereum {
             use reth_primitives::TxType;
             use transaction_trace::Type;
 
-            use crate::StreamingFastProtosError;
+            use crate::ProtosError;
 
             tonic::include_proto!("sf.ethereum.r#type.v2");
 
             impl TryFrom<&Block> for Header {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(block: &Block) -> Result<Self, Self::Error> {
                     let block_header = block
                         .header
                         .as_ref()
-                        .ok_or(StreamingFastProtosError::BlockConversionError)?;
+                        .ok_or(ProtosError::BlockConversionError)?;
 
                     let parent_hash = FixedBytes::from_slice(block_header.parent_hash.as_slice());
                     let uncles_hash = FixedBytes::from_slice(block_header.uncle_hash.as_slice());
@@ -41,7 +41,7 @@ pub mod ethereum {
                         block_header
                             .difficulty
                             .as_ref()
-                            .ok_or(StreamingFastProtosError::BlockConversionError)?
+                            .ok_or(ProtosError::BlockConversionError)?
                             .bytes
                             .as_slice(),
                     );
@@ -51,7 +51,7 @@ pub mod ethereum {
                     let timestamp = block_header
                         .timestamp
                         .as_ref()
-                        .ok_or(StreamingFastProtosError::BlockConversionError)?
+                        .ok_or(ProtosError::BlockConversionError)?
                         .seconds as u64;
                     let extra_data = block_header.extra_data.clone();
                     let mix_hash = Some(FixedBytes::from_slice(block_header.mix_hash.as_slice()));
@@ -169,25 +169,25 @@ pub mod firehose {
     pub mod v2 {
         use prost::Message;
 
-        use crate::{ethereum::r#type::v2::Block, StreamingFastProtosError};
+        use crate::{ethereum::r#type::v2::Block, ProtosError};
 
         tonic::include_proto!("sf.firehose.v2");
 
         impl TryFrom<SingleBlockResponse> for Block {
-            type Error = StreamingFastProtosError;
+            type Error = ProtosError;
 
             fn try_from(response: SingleBlockResponse) -> Result<Self, Self::Error> {
-                let any = response.block.ok_or(StreamingFastProtosError::NullBlock)?;
+                let any = response.block.ok_or(ProtosError::NullBlock)?;
                 let block = Block::decode(any.value.as_ref())?;
                 Ok(block)
             }
         }
 
         impl TryFrom<Response> for Block {
-            type Error = StreamingFastProtosError;
+            type Error = ProtosError;
 
             fn try_from(response: Response) -> Result<Self, Self::Error> {
-                let any = response.block.ok_or(StreamingFastProtosError::NullBlock)?;
+                let any = response.block.ok_or(ProtosError::NullBlock)?;
                 let block = Block::decode(any.value.as_ref())?;
                 Ok(block)
             }
@@ -198,7 +198,7 @@ pub mod firehose {
 pub mod beacon {
     pub mod r#type {
         pub mod v1 {
-            use crate::{firehose::v2::SingleBlockResponse, StreamingFastProtosError};
+            use crate::{firehose::v2::SingleBlockResponse, ProtosError};
             use primitive_types::{H256, U256};
             use prost::Message;
             use ssz_types::{length::Fixed, Bitfield, FixedVector};
@@ -210,7 +210,7 @@ pub mod beacon {
             tonic::include_proto!("sf.beacon.r#type.v1");
 
             impl<E: EthSpec> TryFrom<Attestation> for types::AttestationBase<E> {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     Attestation {
@@ -222,21 +222,19 @@ pub mod beacon {
                     Ok(Self {
                         aggregation_bits: BitList::from_bytes(aggregation_bits.as_slice().into())
                             .map_err(|e| {
-                            StreamingFastProtosError::SszTypesError(format!("{:?}", e))
+                            ProtosError::SszTypesError(format!("{:?}", e))
                         })?,
-                        data: data
-                            .ok_or(StreamingFastProtosError::NullAttestationData)?
-                            .try_into()?,
+                        data: data.ok_or(ProtosError::NullAttestationData)?.try_into()?,
                         signature: bls::generics::GenericAggregateSignature::deserialize(
                             signature.as_slice(),
                         )
-                        .map_err(|e| StreamingFastProtosError::Bls(format!("{:?}", e)))?,
+                        .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
                     })
                 }
             }
 
             impl TryFrom<AttestationData> for types::AttestationData {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     AttestationData {
@@ -251,18 +249,14 @@ pub mod beacon {
                         slot: slot.into(),
                         index: committee_index,
                         beacon_block_root: H256::from_slice(beacon_block_root.as_slice()),
-                        source: source
-                            .ok_or(StreamingFastProtosError::NullCheckpoint)?
-                            .into(),
-                        target: target
-                            .ok_or(StreamingFastProtosError::NullCheckpoint)?
-                            .into(),
+                        source: source.ok_or(ProtosError::NullCheckpoint)?.into(),
+                        target: target.ok_or(ProtosError::NullCheckpoint)?.into(),
                     })
                 }
             }
 
             impl<E: EthSpec> TryFrom<AttesterSlashing> for types::AttesterSlashingBase<E> {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     AttesterSlashing {
@@ -270,10 +264,8 @@ pub mod beacon {
                         attestation_2,
                     }: AttesterSlashing,
                 ) -> Result<Self, Self::Error> {
-                    let attestation_1 =
-                        attestation_1.ok_or(StreamingFastProtosError::NullSigner)?;
-                    let attestation_2 =
-                        attestation_2.ok_or(StreamingFastProtosError::NullSigner)?;
+                    let attestation_1 = attestation_1.ok_or(ProtosError::NullSigner)?;
+                    let attestation_2 = attestation_2.ok_or(ProtosError::NullSigner)?;
 
                     Ok(Self {
                         attestation_1: attestation_1.try_into()?,
@@ -303,7 +295,7 @@ pub mod beacon {
             }
 
             impl TryFrom<BlsToExecutionChange> for types::BlsToExecutionChange {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     BlsToExecutionChange {
@@ -317,7 +309,7 @@ pub mod beacon {
                         from_bls_pubkey: bls::generics::GenericPublicKeyBytes::deserialize(
                             from_bls_pub_key.as_slice(),
                         )
-                        .map_err(|e| StreamingFastProtosError::Bls(format!("{e:?}")))?,
+                        .map_err(|e| ProtosError::Bls(format!("{e:?}")))?,
                         to_execution_address: Address::from_slice(to_execution_address.as_slice()),
                     })
                 }
@@ -333,7 +325,7 @@ pub mod beacon {
             }
 
             impl<E: EthSpec> TryFrom<DenebExecutionPayload> for types::ExecutionPayloadDeneb<E> {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     DenebExecutionPayload {
@@ -391,7 +383,7 @@ pub mod beacon {
             }
 
             impl TryFrom<Deposit> for types::Deposit {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(Deposit { proof, data }: Deposit) -> Result<Self, Self::Error> {
                     Ok(Self {
@@ -400,15 +392,13 @@ pub mod beacon {
                             .map(|v| H256::from_slice(v.as_slice()))
                             .collect::<Vec<_>>()
                             .into(),
-                        data: data
-                            .ok_or(StreamingFastProtosError::NullDepositData)?
-                            .try_into()?,
+                        data: data.ok_or(ProtosError::NullDepositData)?.try_into()?,
                     })
                 }
             }
 
             impl TryFrom<DepositData> for types::DepositData {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     DepositData {
@@ -422,13 +412,13 @@ pub mod beacon {
                         pubkey: bls::generics::GenericPublicKeyBytes::deserialize(
                             public_key.as_slice(),
                         )
-                        .map_err(|e| StreamingFastProtosError::Bls(format!("{:?}", e)))?,
+                        .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
                         withdrawal_credentials: H256::from_slice(withdrawal_credentials.as_slice()),
                         amount: gwei,
                         signature: bls::generics::GenericSignatureBytes::deserialize(
                             signature.as_slice(),
                         )
-                        .map_err(|e| StreamingFastProtosError::Bls(format!("{:?}", e)))?,
+                        .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
                     })
                 }
             }
@@ -450,7 +440,7 @@ pub mod beacon {
             }
 
             impl<E: EthSpec> TryFrom<IndexedAttestation> for types::IndexedAttestationBase<E> {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     IndexedAttestation {
@@ -465,13 +455,13 @@ pub mod beacon {
                         signature: bls::generics::GenericAggregateSignature::deserialize(
                             signature.as_slice(),
                         )
-                        .map_err(|e| StreamingFastProtosError::Bls(format!("{:?}", e)))?,
+                        .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
                     })
                 }
             }
 
             impl TryFrom<ProposerSlashing> for types::ProposerSlashing {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     ProposerSlashing {
@@ -481,17 +471,17 @@ pub mod beacon {
                 ) -> Result<Self, Self::Error> {
                     Ok(Self {
                         signed_header_1: signed_header_1
-                            .ok_or(StreamingFastProtosError::NullSigner)?
+                            .ok_or(ProtosError::NullSigner)?
                             .try_into()?,
                         signed_header_2: signed_header_2
-                            .ok_or(StreamingFastProtosError::NullSigner)?
+                            .ok_or(ProtosError::NullSigner)?
                             .try_into()?,
                     })
                 }
             }
 
             impl TryFrom<SignedBeaconBlockHeader> for types::SignedBeaconBlockHeader {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     SignedBeaconBlockHeader { message, signature }: SignedBeaconBlockHeader,
@@ -501,20 +491,20 @@ pub mod beacon {
                         signature: bls::generics::GenericSignature::deserialize(
                             signature.as_slice(),
                         )
-                        .map_err(|e| StreamingFastProtosError::Bls(format!("{:?}", e)))?,
+                        .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
                     })
                 }
             }
 
             impl TryFrom<SignedBlsToExecutionChange> for types::SignedBlsToExecutionChange {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     SignedBlsToExecutionChange { message, signature }: SignedBlsToExecutionChange,
                 ) -> Result<Self, Self::Error> {
                     Ok(Self {
                         message: message
-                            .ok_or(StreamingFastProtosError::NullBlsToExecutionChange)?
+                            .ok_or(ProtosError::NullBlsToExecutionChange)?
                             .try_into()?,
                         signature: bls::generics::GenericSignature::deserialize(
                             signature.as_slice(),
@@ -525,35 +515,33 @@ pub mod beacon {
             }
 
             impl TryFrom<SignedVoluntaryExit> for types::SignedVoluntaryExit {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     SignedVoluntaryExit { message, signature }: SignedVoluntaryExit,
                 ) -> Result<Self, Self::Error> {
                     Ok(Self {
-                        message: message
-                            .ok_or(StreamingFastProtosError::NullVoluntaryExit)?
-                            .into(),
+                        message: message.ok_or(ProtosError::NullVoluntaryExit)?.into(),
                         signature: bls::generics::GenericSignature::deserialize(
                             signature.as_slice(),
                         )
-                        .map_err(|e| StreamingFastProtosError::Bls(format!("{:?}", e)))?,
+                        .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
                     })
                 }
             }
 
             impl TryFrom<SingleBlockResponse> for Block {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(response: SingleBlockResponse) -> Result<Self, Self::Error> {
-                    let any = response.block.ok_or(StreamingFastProtosError::NullBlock)?;
+                    let any = response.block.ok_or(ProtosError::NullBlock)?;
                     let block = Block::decode(any.value.as_ref())?;
                     Ok(block)
                 }
             }
 
             impl<E: EthSpec> TryFrom<SyncAggregate> for types::SyncAggregate<E> {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     SyncAggregate {
@@ -566,14 +554,12 @@ pub mod beacon {
                             Bitfield::<Fixed<<E as EthSpec>::SyncCommitteeSize>>::from_bytes(
                                 sync_commitee_bits.as_slice().into(),
                             )
-                            .map_err(|e| {
-                                StreamingFastProtosError::SszTypesError(format!("{:?}", e))
-                            })?,
+                            .map_err(|e| ProtosError::SszTypesError(format!("{:?}", e)))?,
                         sync_committee_signature:
                             bls::generics::GenericAggregateSignature::deserialize(
                                 sync_comittee_signature.as_slice(),
                             )
-                            .map_err(|e| StreamingFastProtosError::Bls(format!("{:?}", e)))?,
+                            .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
                     })
                 }
             }
@@ -611,7 +597,7 @@ pub mod beacon {
             }
 
             impl TryFrom<DenebBody> for types::BeaconBlockBodyDeneb<MainnetEthSpec> {
-                type Error = StreamingFastProtosError;
+                type Error = ProtosError;
 
                 fn try_from(
                     DenebBody {
@@ -633,13 +619,13 @@ pub mod beacon {
                 ) -> Result<Self, Self::Error> {
                     let beacon_block_body = BeaconBlockBodyDeneb {
                         randao_reveal: bls::generics::GenericSignature::deserialize(&rando_reveal)
-                            .map_err(|e| StreamingFastProtosError::Bls(format!("{:?}", e)))?,
+                            .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
                         eth1_data: eth1_data
                             .map(|eth1_data| eth1_data.into())
                             .unwrap_or_default(),
                         graffiti: Graffiti::from(
                             <[u8; GRAFFITI_BYTES_LEN]>::try_from(graffiti.as_slice())
-                                .map_err(|_| StreamingFastProtosError::GraffitiInvalid)?,
+                                .map_err(|_| ProtosError::GraffitiInvalid)?,
                         ),
                         proposer_slashings: proposer_slashings
                             .into_iter()
@@ -671,7 +657,7 @@ pub mod beacon {
                             .transpose()?
                             .unwrap_or_else(types::SyncAggregate::new),
                         execution_payload: execution_payload
-                            .ok_or(StreamingFastProtosError::NullExecutionPayload)
+                            .ok_or(ProtosError::NullExecutionPayload)
                             .and_then(types::ExecutionPayloadDeneb::try_from)?
                             .into(),
                         bls_to_execution_changes: bls_to_execution_changes
@@ -684,7 +670,7 @@ pub mod beacon {
                             .map(|blob_kzg_commitment| {
                                 <[u8; 48]>::try_from(blob_kzg_commitment.as_slice())
                                     .map(types::KzgCommitment)
-                                    .map_err(|_| StreamingFastProtosError::KzgCommitmentInvalid)
+                                    .map_err(|_| ProtosError::KzgCommitmentInvalid)
                             })
                             .collect::<Result<Vec<_>, _>>()?
                             .into(),
@@ -697,7 +683,7 @@ pub mod beacon {
 }
 
 #[derive(Error, Debug)]
-pub enum StreamingFastProtosError {
+pub enum ProtosError {
     #[error("Block conversion error")]
     BlockConversionError,
 
