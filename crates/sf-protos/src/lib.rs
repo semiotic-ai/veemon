@@ -451,7 +451,9 @@ pub mod beacon {
                 ) -> Result<Self, Self::Error> {
                     Ok(IndexedAttestationBase {
                         attesting_indices: attesting_indices.into(),
-                        data: data.unwrap().try_into()?,
+                        data: data
+                            .ok_or(ProtosError::NullIndexedAttestationData)?
+                            .try_into()?,
                         signature: bls::generics::GenericAggregateSignature::deserialize(
                             signature.as_slice(),
                         )
@@ -487,7 +489,9 @@ pub mod beacon {
                     SignedBeaconBlockHeader { message, signature }: SignedBeaconBlockHeader,
                 ) -> Result<Self, Self::Error> {
                     Ok(Self {
-                        message: message.unwrap().into(),
+                        message: message
+                            .ok_or(ProtosError::NullSignedBeaconBlockHeaderMessage)?
+                            .into(),
                         signature: bls::generics::GenericSignature::deserialize(
                             signature.as_slice(),
                         )
@@ -702,6 +706,9 @@ pub enum ProtosError {
     #[error("Null attestation data")]
     NullAttestationData,
 
+    #[error("Null indexed attestation data")]
+    NullIndexedAttestationData,
+
     #[error("Null block field in block response")]
     NullBlock,
 
@@ -719,6 +726,9 @@ pub enum ProtosError {
 
     #[error("Proposer Slashing null signer")]
     NullSigner,
+
+    #[error("Null SignedBeaconBlockHeader Message")]
+    NullSignedBeaconBlockHeaderMessage,
 
     #[error("Null voluntary exit")]
     NullVoluntaryExit,
