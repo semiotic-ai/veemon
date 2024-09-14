@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 use tree_hash::TreeHash;
 use types::{
-    beacon_block_body::NUM_BEACON_BLOCK_BODY_HASH_TREE_ROOT_LEAVES, light_client_update,
+    beacon_block_body::NUM_BEACON_BLOCK_BODY_HASH_TREE_ROOT_LEAVES,
+    light_client_update::{self, EXECUTION_PAYLOAD_INDEX},
     BeaconBlock, BeaconBlockBody, Error, EthSpec, ForkName, Hash256, MainnetEthSpec,
 };
 
@@ -25,22 +26,6 @@ pub struct Data {
 /// fields is 12, which is between 8 (2^3) and 16 (2^4).
 pub const BEACON_BLOCK_BODY_PROOF_DEPTH: usize = 4;
 
-// Eth1Data is a [`BeaconBlockBody`] top-level field, subtract off the generalized indices
-// for the internal nodes. Result should be 1, the field offset of the execution
-// payload in the `BeaconBlockBody`:
-// https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/beacon-chain.md#beaconblockbody
-pub const ETH1_DATA_INDEX: usize = 17;
-
-/// The field corresponds to the index of the `eth1_data` field in the [`BeaconBlockBody`] struct:
-/// <https://github.com/ethereum/annotated-spec/blob/master/deneb/beacon-chain.md#beaconblockbody>.
-pub const ETH1_DATA_FIELD_INDEX: usize = 1;
-
-// ExecutionPayload is a [`BeaconBlockBody`] top-level field, subtract off the generalized indices
-// for the internal nodes. Result should be 9, the field offset of the execution
-// payload in the `BeaconBlockBody`:
-// https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/beacon-chain.md#beaconblockbody
-pub const EXECUTION_PAYLOAD_INDEX: usize = 25;
-
 /// The field corresponds to the index of the `execution_payload` field in the [`BeaconBlockBody`] struct:
 /// <https://github.com/ethereum/annotated-spec/blob/master/deneb/beacon-chain.md#beaconblockbody>.
 pub const EXECUTION_PAYLOAD_FIELD_INDEX: usize = 9;
@@ -52,9 +37,6 @@ pub trait HistoricalDataProofs {
 impl<E: EthSpec> HistoricalDataProofs for BeaconBlockBody<E> {
     fn compute_merkle_proof(&self, index: usize) -> Result<Vec<Hash256>, Error> {
         let field_index = match index {
-            ETH1_DATA_INDEX => index
-                .checked_sub(NUM_BEACON_BLOCK_BODY_HASH_TREE_ROOT_LEAVES)
-                .ok_or(Error::IndexNotSupported(index))?,
             EXECUTION_PAYLOAD_INDEX => index
                 .checked_sub(NUM_BEACON_BLOCK_BODY_HASH_TREE_ROOT_LEAVES)
                 .ok_or(Error::IndexNotSupported(index))?,
@@ -132,33 +114,6 @@ mod tests {
             "For this spike we are using a Deneb block JSON file that has been shared among contributors",
         )
     });
-
-    #[test]
-    fn test_inclusion_proof_for_block_body_given_eth1_data() {
-        let block_wrapper = &BLOCK_WRAPPER;
-        let block = &block_wrapper.data.message;
-
-        let eth1_data = block.body().eth1_data();
-        let eth1_data_root = eth1_data.tree_hash_root();
-
-        let block_body = block.body_deneb().unwrap();
-        let block_body_hash = block_body.tree_hash_root();
-
-        let body = BeaconBlockBody::from(block_body.clone());
-        let proof = body.compute_merkle_proof(ETH1_DATA_INDEX).unwrap();
-
-        let depth = BEACON_BLOCK_BODY_PROOF_DEPTH;
-
-        assert_eq!(proof.len(), depth, "proof length should equal depth");
-
-        assert!(verify_merkle_proof(
-            eth1_data_root,
-            &proof,
-            depth,
-            ETH1_DATA_FIELD_INDEX,
-            block_body_hash
-        ));
-    }
 
     /// Demonstrate that we can verify the inclusion proof for the execution payload field in the block body.
     /// The execution payload block hash should match the block hash of the execution block.
