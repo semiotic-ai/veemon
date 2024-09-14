@@ -5,6 +5,7 @@ edition = "2021"
 
 [lib]
 doctest = false
+path = "src/lib.rs"
 
 [dependencies]
 alloy-primitives = "=0.7.7"
