@@ -1,13 +1,15 @@
 # sf-protos
 
-StreamingFast's Rust-compiled protocol buffers, used in [header-accumulator](https://github.com/semiotic-ai/header_accumulator)
-and [flat-files-decoder](https://github.com/semiotic-ai/flat-files-decoder)
+StreamingFast's and Pinax's Rust-compiled protocol buffers for Firehose,
+used in [header-accumulator](https://github.com/semiotic-ai/header_accumulator),
+[flat-files-decoder](https://github.com/semiotic-ai/flat-files-decoder), and
+[forrestrie](https://github.com/semiotic-ai/forrestrie).
 
 ## Protobuffer definitions
 
 - `block.proto`: <https://github.com/streamingfast/firehose-ethereum/blob/335607aac766f9f3c6946d8b1ad3c8e36ab70930/proto/sf/ethereum/type/v2/type.proto>
 - `firehose.proto`: <https://github.com/streamingfast/proto/blob/develop/sf/firehose/v2/firehose.proto>
-- `type.proto`: <https://github.com/streamingfast/firehose-ethereum/blob/335607aac766f9f3c6946d8b1ad3c8e36ab70930/proto/sf/ethereum/type/v2/type.proto>
+- `type.proto`: <https://github.com/pinax-network/firehose-beacon/blob/main/proto/sf/beacon/type/v1/type.proto>
 
 ## Tests
 
