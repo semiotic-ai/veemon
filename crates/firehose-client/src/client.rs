@@ -106,14 +106,14 @@ mod tests {
 
         let channel = build_and_connect_channel(uri).await.unwrap();
 
-        let mut client = FetchClient::new(channel);
+        let mut execution_layer_client = FetchClient::new(channel);
 
         // This is the block number for the execution block we want to fetch
         let mut request = create_request(20672593);
 
         request.insert_api_key_if_provided(Firehose::Ethereum);
 
-        let response = client.block(request).await.unwrap();
+        let response = execution_layer_client.block(request).await.unwrap();
 
         let block = Block::try_from(response.into_inner()).unwrap();
 
@@ -123,7 +123,7 @@ mod tests {
             "0xea48ba1c8e38ea586239e9c5ec62949ddd79404c6006c099bb02a8b22ddd18e4"
         );
 
-        let mut client = fetch_client(Firehose::Beacon).await.unwrap();
+        let mut beacon_client = fetch_client(Firehose::Beacon).await.unwrap();
 
         // This is the slot number for the Beacon block we want to fetch, but right now
         // we don't have a way to map the block number of the execution block to the slot number
@@ -132,7 +132,7 @@ mod tests {
 
         request.insert_api_key_if_provided(Firehose::Beacon);
 
-        let response = client.block(request).await.unwrap();
+        let response = beacon_client.block(request).await.unwrap();
 
         let block = sf_protos::beacon::r#type::v1::Block::try_from(response.into_inner()).unwrap();
 
