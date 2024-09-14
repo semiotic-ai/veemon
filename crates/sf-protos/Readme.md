@@ -6,6 +6,8 @@ and [flat-files-decoder](https://github.com/semiotic-ai/flat-files-decoder)
 ## Protobuffer definitions
 
 - `block.proto`: <https://github.com/streamingfast/firehose-ethereum/blob/335607aac766f9f3c6946d8b1ad3c8e36ab70930/proto/sf/ethereum/type/v2/type.proto>
+- `firehose.proto`: <https://github.com/streamingfast/proto/blob/develop/sf/firehose/v2/firehose.proto>
+- `type.proto`: <https://github.com/streamingfast/firehose-ethereum/blob/335607aac766f9f3c6946d8b1ad3c8e36ab70930/proto/sf/ethereum/type/v2/type.proto>
 
 ## Tests
 
