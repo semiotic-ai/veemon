@@ -170,6 +170,7 @@ mod tests {
     use merkle_proof::verify_merkle_proof;
     use types::{light_client_update::CURRENT_SYNC_COMMITTEE_PROOF_LEN, MainnetEthSpec};
 
+    // State for slot number 9471054, Deneb, latest execution payload header block number 20264676.
     const HEAD_STATE_JSON: &str = include_str!("../../../head-state.json");
     const STATE: LazyCell<Mutex<HeadState<MainnetEthSpec>>> = LazyCell::new(|| {
         Mutex::new({
