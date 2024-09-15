@@ -16,6 +16,8 @@ use types::{
     Validator, Vector,
 };
 
+pub const CAPELLA_START_ERA: usize = 758;
+
 /// [`BeaconState`] `block_roots` vector has length `SLOTS_PER_HISTORICAL_ROOT` (See <https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate>),
 /// the value of which is calculated uint64(2**13) (= 8,192) (See <https://eth2book.info/capella/part3/config/preset/#time-parameters>)
 pub const HISTORY_TREE_DEPTH: usize = 13;
@@ -183,8 +185,6 @@ mod tests {
             "For this spike we are using a '8790016-state.json' file that has been shared among contributors",
         )
     });
-
-    const CAPELLA_START_ERA: usize = 758;
 
     #[test]
     fn test_inclusion_proofs_with_historical_and_state_roots() {
