@@ -170,6 +170,7 @@ mod tests {
     use merkle_proof::verify_merkle_proof;
     use types::{light_client_update::CURRENT_SYNC_COMMITTEE_PROOF_LEN, MainnetEthSpec};
 
+    // State for slot number 9471054, Deneb, latest execution payload header block number 20264676.
     const HEAD_STATE_JSON: &str = include_str!("../../../head-state.json");
     const STATE: LazyCell<Mutex<HeadState<MainnetEthSpec>>> = LazyCell::new(|| {
         Mutex::new({
@@ -288,22 +289,17 @@ mod tests {
         // There are 8192 slots in an era.
         let proof_era = transition_state.data().slot().as_usize() / 8192usize;
 
-        // In this test we are using the historical_summaries (introduced in Capella) for verification, so we need to subtract the Capella start era to get the correct index.
+        // In this test we are using the historical_summaries (introduced in Capella) for verification,
+        // so we need to subtract the Capella start era to get the correct index.
         let proof_era_index = proof_era - CAPELLA_START_ERA - 1;
 
         // We are going to prove that the block_root at index 4096 is included in the block_roots tree.
         // This is an arbitrary choice just for test purposes.
         let index = 4096usize;
 
-        let block_root_at_index = match transition_state.data().block_roots().get(index) {
-            Some(block_root) => block_root,
-            None => panic!("Block root not found"),
-        };
+        let block_root_at_index = transition_state.data().block_roots().get(index).unwrap();
 
-        let proof = match transition_state.compute_block_roots_proof(index) {
-            Ok(proof) => proof,
-            Err(e) => panic!("Error generating block_roots proof: {:?}", e),
-        };
+        let proof = transition_state.compute_block_roots_proof(index).unwrap();
 
         // To verify the proof, we use the state from a later slot.
         // The HistoricalSummary used to generate this proof is included in the historical_summaries list of this state.
@@ -312,15 +308,12 @@ mod tests {
         let state_lock = state.lock().unwrap();
 
         // The verifier retrieves the block_summary_root for the historical_summary and verifies the proof against it.
-        let historical_summary = match state_lock
+        let historical_summary = state_lock
             .data()
             .historical_summaries()
             .unwrap()
             .get(proof_era_index)
-        {
-            Some(historical_summary) => historical_summary,
-            None => panic!("HistoricalSummary not found"),
-        };
+            .unwrap();
 
         let historical_summary_root = historical_summary.tree_hash_root();
 
