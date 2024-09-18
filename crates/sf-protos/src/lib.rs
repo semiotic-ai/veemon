@@ -361,8 +361,9 @@ pub mod beacon {
                         gas_limit,
                         gas_used,
                         timestamp: timestamp
-                            .map(|ts| ts.seconds as u64 * 1_000_000_000 + ts.nanos as u64)
-                            .unwrap_or_default(),
+                            .as_ref()
+                            .ok_or(ProtosError::BlockConversionError)?
+                            .seconds as u64,
                         extra_data: extra_data.into(),
                         base_fee_per_gas: U256::from_big_endian(base_fee_per_gas.as_slice()),
                         block_hash: ExecutionBlockHash(H256::from_slice(block_hash.as_slice())),
@@ -680,6 +681,46 @@ pub mod beacon {
                             .into(),
                     };
                     Ok(beacon_block_body)
+                }
+            }
+
+            impl TryFrom<crate::beacon::r#type::v1::block::Body>
+                for types::BeaconBlockBodyDeneb<MainnetEthSpec>
+            {
+                type Error = ProtosError;
+
+                fn try_from(
+                    body: crate::beacon::r#type::v1::block::Body,
+                ) -> Result<Self, Self::Error> {
+                    match body {
+                        crate::beacon::r#type::v1::block::Body::Deneb(deneb) => {
+                            Ok(deneb.try_into()?)
+                        }
+                        _ => panic!("Invalid body type"),
+                    }
+                }
+            }
+
+            impl TryFrom<Block> for types::BeaconBlock<MainnetEthSpec> {
+                type Error = ProtosError;
+
+                fn try_from(
+                    Block {
+                        slot,
+                        proposer_index,
+                        parent_root,
+                        state_root,
+                        body,
+                        ..
+                    }: Block,
+                ) -> Result<Self, Self::Error> {
+                    Ok(Self::Deneb(types::BeaconBlockDeneb {
+                        slot: slot.into(),
+                        proposer_index,
+                        parent_root: H256::from_slice(parent_root.as_slice()),
+                        state_root: H256::from_slice(state_root.as_slice()),
+                        body: body.ok_or(ProtosError::BlockConversionError)?.try_into()?,
+                    }))
                 }
             }
         }
