@@ -682,6 +682,46 @@ pub mod beacon {
                     Ok(beacon_block_body)
                 }
             }
+
+            impl TryFrom<crate::beacon::r#type::v1::block::Body>
+                for types::BeaconBlockBodyDeneb<MainnetEthSpec>
+            {
+                type Error = ProtosError;
+
+                fn try_from(
+                    body: crate::beacon::r#type::v1::block::Body,
+                ) -> Result<Self, Self::Error> {
+                    match body {
+                        crate::beacon::r#type::v1::block::Body::Deneb(deneb) => {
+                            Ok(deneb.try_into()?)
+                        }
+                        _ => panic!("Invalid body type"),
+                    }
+                }
+            }
+
+            impl TryFrom<Block> for types::BeaconBlock<MainnetEthSpec> {
+                type Error = ProtosError;
+
+                fn try_from(
+                    Block {
+                        slot,
+                        proposer_index,
+                        parent_root,
+                        state_root,
+                        body,
+                        ..
+                    }: Block,
+                ) -> Result<Self, Self::Error> {
+                    Ok(Self::Deneb(types::BeaconBlockDeneb {
+                        slot: slot.into(),
+                        proposer_index,
+                        parent_root: H256::from_slice(parent_root.as_slice()),
+                        state_root: H256::from_slice(state_root.as_slice()),
+                        body: body.ok_or(ProtosError::BlockConversionError)?.try_into()?,
+                    }))
+                }
+            }
         }
     }
 }
