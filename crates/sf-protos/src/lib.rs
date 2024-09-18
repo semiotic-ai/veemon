@@ -361,8 +361,9 @@ pub mod beacon {
                         gas_limit,
                         gas_used,
                         timestamp: timestamp
-                            .map(|ts| ts.seconds as u64 * 1_000_000_000 + ts.nanos as u64)
-                            .unwrap_or_default(),
+                            .as_ref()
+                            .ok_or(ProtosError::BlockConversionError)?
+                            .seconds as u64,
                         extra_data: extra_data.into(),
                         base_fee_per_gas: U256::from_big_endian(base_fee_per_gas.as_slice()),
                         block_hash: ExecutionBlockHash(H256::from_slice(block_hash.as_slice())),
