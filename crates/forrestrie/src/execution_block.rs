@@ -1,6 +1,6 @@
 use alloy_rlp::Encodable;
 use ethers::prelude::*;
-use reth::primitives::{Bloom, Receipt, ReceiptWithBloom, TxType};
+use reth::primitives::{Bloom, Log, Receipt, ReceiptWithBloom, TxType};
 use reth_trie_common::{proof::ProofRetainer, root::adjust_index_for_rlp, HashBuilder, Nibbles};
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -124,7 +124,6 @@ pub fn build_trie_with_proofs(receipts: &[ReceiptWithBloom], target_idxs: &[usiz
 
         receipts[index].encode_inner(&mut value_buffer, false);
         // NOTICE: if the ProofRetainer is set, add_leaf automatically retains the proofs for the targets
-        print!("{:?}", Nibbles::unpack(&index_buffer));
         hb.add_leaf(Nibbles::unpack(&index_buffer), &value_buffer);
     }
 
@@ -178,7 +177,7 @@ mod tests {
         let mut hb: HashBuilder;
         //target_idxs are the logIndexes for receipts to get proofs from.
         // these values are arbitrary
-        let target_idxs = &[0, 1, 2, 129];
+        let target_idxs = &[0, 1, 2];
         let mut targets: Vec<Target> = Vec::new();
         let receipts_len;
 
@@ -203,7 +202,6 @@ mod tests {
                     let nibble = Nibbles::unpack(&index_buffer);
 
                     receipts[index].encode_inner(&mut value_buffer, false);
-                    println!("{:?} targets added", nibble);
                     targets.push(Target::new(nibble, value_buffer.clone()));
                 }
             }
