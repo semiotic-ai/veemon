@@ -23,16 +23,17 @@ pub struct ReceiptJson {
     pub logs_bloom: Bloom,
 }
 
-// represents leafs that are being generated proofs on
-pub struct Target {
+/// Represents a leaf in the trie for which a proof is to be generated, i.e., the target of the proof.
+/// The `nibbles` represent the path to the leaf in the trie, and the `value` is the data stored at the leaf.
+pub struct TargetLeaf {
     pub nibbles: Nibbles,
     pub value: Vec<u8>,
 }
 
-impl Target {
-    // Constructor to create a new Target
+impl TargetLeaf {
+    // Constructor to create a new TargetLeaf
     pub fn new(nibbles: Nibbles, value: Vec<u8>) -> Self {
-        Target { nibbles, value }
+        TargetLeaf { nibbles, value }
     }
 }
 
@@ -178,7 +179,7 @@ mod tests {
         //target_idxs are the logIndexes for receipts to get proofs from.
         // these values are arbitrary
         let target_idxs = &[0, 1, 2];
-        let mut targets: Vec<Target> = Vec::new();
+        let mut targets: Vec<TargetLeaf> = Vec::new();
         let receipts_len;
 
         match receipts_with_bloom {
@@ -202,7 +203,7 @@ mod tests {
                     let nibble = Nibbles::unpack(&index_buffer);
 
                     receipts[index].encode_inner(&mut value_buffer, false);
-                    targets.push(Target::new(nibble, value_buffer.clone()));
+                    targets.push(TargetLeaf::new(nibble, value_buffer.clone()));
                 }
             }
             Err(e) => {
