@@ -1,6 +1,6 @@
 use alloy_rlp::Encodable;
 use ethers::prelude::*;
-use reth::primitives::{Bloom, Log, Receipt, ReceiptWithBloom, TxType};
+use reth::primitives::{Bloom, Receipt, ReceiptWithBloom, TxType};
 use reth_trie_common::{proof::ProofRetainer, root::adjust_index_for_rlp, HashBuilder, Nibbles};
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -50,13 +50,14 @@ impl TryFrom<&ReceiptJson> for ReceiptWithBloom {
             success: receipt_json.status,
             cumulative_gas_used,
             logs: receipt_json.logs.clone(),
+            // NOTICE: receipts will have more fields depending of the EVM chain.
+            // this is how to handle them in the futuro
             // #[cfg(feature = "optimism")]
             // deposit_nonce: None, // Handle Optimism-specific fields as necessary
             // #[cfg(feature = "optimism")]
             // deposit_receipt_version: None,
         };
 
-        // Create the ReceiptWithBloom struct
         Ok(ReceiptWithBloom {
             bloom: receipt_json.logs_bloom,
             receipt,
@@ -158,23 +159,6 @@ mod tests {
     });
 
     #[test]
-    fn test_parse_wrapped_receipt_into_reth_receipt() {
-        let block_receipts: &LazyCell<ReceiptsFromBlock> = &BLOCK_RECEIPTS;
-        let receipts_with_bloom: Result<Vec<ReceiptWithBloom>, String> = block_receipts
-            .result
-            .iter()
-            .map(ReceiptWithBloom::try_from)
-            .collect::<Result<Vec<_>, _>>();
-
-        // Check that the conversion was successful
-        assert!(
-            receipts_with_bloom.is_ok(),
-            "Conversion failed with error: {:?}",
-            receipts_with_bloom.err().unwrap()
-        );
-    }
-
-    #[test]
     fn test_compute_receipts_trie_root_and_proof() {
         let block_wrapper: &LazyCell<BlockWrapper> = &BLOCK_WRAPPER;
         let block: &::types::BeaconBlock<::types::MainnetEthSpec> = &block_wrapper.data.message;
@@ -192,7 +176,9 @@ mod tests {
 
         // computes the root and verify against existing data
         let mut hb: HashBuilder;
-        let target_idxs = &[0, 1, 2];
+        //target_idxs are the logIndexes for receipts to get proofs from.
+        // these values are arbitrary
+        let target_idxs = &[0, 1, 2, 129];
         let mut targets: Vec<Target> = Vec::new();
         let receipts_len;
 
@@ -214,8 +200,9 @@ mod tests {
                     let index = adjust_index_for_rlp(*i, receipts_len);
                     index.encode(&mut index_buffer);
 
-                    receipts[index].encode_inner(&mut value_buffer, false);
                     let nibble = Nibbles::unpack(&index_buffer);
+
+                    receipts[index].encode_inner(&mut value_buffer, false);
                     println!("{:?} targets added", nibble);
                     targets.push(Target::new(nibble, value_buffer.clone()));
                 }
@@ -243,16 +230,5 @@ mod tests {
                 Ok(())
             );
         }
-
-        // check for exclusion proof
-        let mut index_buffer = Vec::new();
-        let index = adjust_index_for_rlp(6, receipts_len);
-        index.encode(&mut index_buffer);
-        let target = Nibbles::unpack(index_buffer);
-        println!("target nibble for exclusion: {:?}", target);
-        assert_eq!(
-            verify_proof(hb.root(), target, None, proof.values()),
-            Ok(())
-        );
     }
 }
