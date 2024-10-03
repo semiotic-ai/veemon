@@ -145,6 +145,9 @@ mod tests {
         // `BeaconBlock::canonical_root` calls `tree_hash_root` on the block.
         let block_root = block.canonical_root();
 
+        // See, for example, https://beaconcha.in/slot/8786333 and https://beaconscan.com/slot/8786333
+        insta::assert_debug_snapshot!(block_root, @"0x063d4cf1a4f85d228d9eae17a9ab7df8b13de51e7a1988342a901575cce79613");
+
         let block_header = block.block_header();
         let block_header_root = block_header.tree_hash_root();
 
