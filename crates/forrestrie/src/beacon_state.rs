@@ -42,6 +42,9 @@ pub const HISTORICAL_ROOTS_FIELD_INDEX: usize = 7;
 /// Index of `historical_summaries` field in the (post-Capella) BeaconState [struct](https://github.com/ethereum/annotated-spec/blob/master/capella/beacon-chain.md#beaconstate).
 pub const HISTORICAL_SUMMARIES_FIELD_INDEX: usize = 27;
 
+/// The maximum number of block roots that can be stored in a `BeaconState`'s `block_roots` list.
+pub const SLOTS_PER_HISTORICAL_ROOT: usize = 8192;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct HeadState<E: EthSpec> {
     version: String,
