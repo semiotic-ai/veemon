@@ -166,7 +166,11 @@ impl<E: EthSpec> HeadState<E> {
 
 #[cfg(test)]
 mod tests {
-    use std::{cell::LazyCell, sync::Mutex};
+    use std::{
+        cell::LazyCell,
+        collections::{BTreeMap, HashSet},
+        sync::Mutex,
+    };
 
     use super::*;
 
@@ -333,5 +337,181 @@ mod tests {
             ),
             "Merkle proof verification failed"
         );
+    }
+
+    #[test]
+    fn test_empty_slot_block_hashes_are_duplicates_of_previous_full_slot_block() {
+        // TODO(TRU-322): Test artifacts are a mess, ideally we would trim these JSON files
+        // to only include the necessary fields.
+        //
+        // The JSON artifact used in this test is a BeaconState at slot 10035200, acquired from the
+        // https://www.lightclientdata.org/eth/v2/debug/beacon/states/ provider.
+        //
+        // This slot was chosen because it is the first slot of an era (and an epoch),
+        // which we demonstrate by showing that the slot number (see below) modulo 8192 is 0.
+        let state: HeadState<MainnetEthSpec> =
+            serde_json::from_str(std::include_str!("../../../state-10035200.json")).unwrap();
+
+        let slot = state.data().slot().as_u64();
+        insta::assert_debug_snapshot!(slot, @
+            "10035200");
+
+        // Slot 10035200 is the first slot of the 1225th era.
+        // Every 8192 slots, the era increments by 1, and (after Capella) the historical summaries buffer is updated.
+        let current_era = slot / 8192;
+        assert_eq!(current_era, 1225);
+        // Total number of slots at end of 1224th era is 10035200.
+        assert_eq!(current_era * 8192, 10035200);
+        // Remember, slots are counted using zero-based numbering.
+        assert_eq!(slot % 8192, 0);
+
+        // The historical summaries buffer is updated every 8192 slots, from the start of the Capella era.
+        let num_historical_summaries = state.data().historical_summaries().unwrap().len() as u64;
+        assert_eq!(
+            (current_era - num_historical_summaries) as usize,
+            CAPELLA_START_ERA
+        );
+
+        let block_roots = state.data().block_roots().to_vec();
+
+        // Block roots buffer contains duplicates.
+        let block_roots_set: HashSet<&H256, std::hash::RandomState> =
+            HashSet::from_iter(block_roots.iter());
+        assert_ne!(block_roots_set.len(), block_roots.len());
+
+        let duplicate_block_roots_lookup_table = state
+            .data()
+            .block_roots()
+            .to_vec()
+            .iter()
+            .enumerate()
+            // Using BTreeMaps for deterministic order.
+            .fold(BTreeMap::<H256, Vec<usize>>::new(), |mut acc, (i, root)| {
+                acc.entry(*root).or_insert(Vec::new()).push(i);
+                acc
+            })
+            // Remove non-duplicate block roots.
+            .into_iter()
+            .filter(|(_, indices)| indices.len() > 1)
+            .collect::<BTreeMap<H256, Vec<usize>>>();
+
+        insta::assert_debug_snapshot!(duplicate_block_roots_lookup_table, @r###"
+        {
+            0x0a82fc1f6bf1b23143f85193290ae6a1a3829f97b8cbebc7310ccd4e2670ac04: [
+                8159,
+                8160,
+            ],
+            0x10160a60710f5cd535744af4ab93945b53a69d8ad5c2d185cef39fb5db2c739f: [
+                4829,
+                4830,
+            ],
+            0x144136a34d785b87f9b10252d656b7d76d72bf24d6c98f1ecf3db075e65ba11f: [
+                5408,
+                5409,
+            ],
+            0x1f44d980ff3fad59550d67a72899c2a9a382c27dcac285da4a30f4813a32ec6b: [
+                2082,
+                2083,
+            ],
+            0x33efdf2390b28e8b83a7ce932e9f7ae652cc94baea7529b066406d92a17a0085: [
+                2863,
+                2864,
+            ],
+            0x389f6d0adc7c3ac69e335bd7a23bd021bb2ca7f0379cf4747b3a57b8a3e84c26: [
+                6988,
+                6989,
+            ],
+            0x512b89995f45b2518c1533d0d0c2868952ffee057520ca9c8abaa4583a755d0c: [
+                3910,
+                3911,
+            ],
+            0x6205798f4257b000255c8decdfc19eb0ab5a7b1a37007ca38af772d9c06d3663: [
+                7263,
+                7264,
+            ],
+            0x845cb1a3a04d8461ba50186d3c441316bf62530e3875bb95b342cb3f8a527d3b: [
+                2568,
+                2569,
+            ],
+            0x8748739e4d1c526616e9ad02669abb7c937cb9329e4ec43a4b6da7fa987e9ea5: [
+                3776,
+                3777,
+                3778,
+            ],
+            0x9476f0da6e2711039adc15848cb2613c4c557f6dbc17b0ca6c2253b7b1583fb0: [
+                7235,
+                7236,
+            ],
+            0xa02ea51e375ce6d23bdbd6826ff9e9919b65d85aacffe241554e071e72fe55cc: [
+                6214,
+                6215,
+            ],
+            0xb4808b92f60e4261bd183000ace249bfe104f57f2fe4072c23966676defe5cd0: [
+                7098,
+                7099,
+            ],
+            0xb5aa2838677f7781c02eeed2503fe832a8193821568d91749614a417b9aefcce: [
+                7383,
+                7384,
+            ],
+            0xb84c76d1ec6022a00d445bd978445c5234c18ea33107121c622a75e2e4e59301: [
+                3743,
+                3744,
+                3745,
+            ],
+            0xb99242051a8ba08e6b903b6e0b13b97d0ba1e81f805ead71b9f9ee0d0c50bc51: [
+                8027,
+                8028,
+            ],
+            0xc165e4bfbfa8aaccbc18030442e93db86062ed37564c52e47a54c6d65fdbeb71: [
+                35,
+                36,
+            ],
+            0xc90431f6b954f062c250f9146febc938d9e285e4f3c716512c3bcc57b0afcd14: [
+                427,
+                428,
+            ],
+            0xc9465a42c903868b90c1520abf25940a7d441e0b580e880b9873ef347a4cdfd2: [
+                6852,
+                6853,
+            ],
+            0xccc381c7dd2f4867f6c1b57970fffc143acf3b78219d18f39c511099ec240c8d: [
+                1615,
+                1616,
+            ],
+            0xcfab9ef6f4de3ef63a869ba093400a18a5cf49f16965d22dad820f107fc626a1: [
+                6082,
+                6083,
+            ],
+            0xd5981b2a671bce2bba148ba165637700f71c9dd1841c4f34622c04fda51449f9: [
+                1839,
+                1840,
+            ],
+            0xd7601a5fe3e02182a18a63b78b99327b63c915461d2b5c069203c5654c461521: [
+                248,
+                249,
+            ],
+            0xdbc617a37da7178961ed67da921ae4fd2b1d5d88965f1917bd498681f3964402: [
+                5835,
+                5836,
+            ],
+            0xe727e8acedd15bd499acf5f049c13c225d33a53a6281fcfce721f18ce5008103: [
+                7405,
+                7406,
+            ],
+            0xf07c053f494307167b4301b68739c87b57f55ae6417ca6727a9c32ad1d497555: [
+                3579,
+                3580,
+            ],
+            0xf355793a27a764dd9536b7bd8199ce73af90cd130edeb70f461f31fc3ce65fb4: [
+                4530,
+                4531,
+            ],
+            0xfc5647ebb69a2b32742387a2eda5b4ce0b8670721c8b4558477de554655fb0ec: [
+                4174,
+                4175,
+            ],
+        }
+        "###);
     }
 }
