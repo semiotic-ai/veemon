@@ -286,7 +286,7 @@ mod tests {
     fn test_inclusion_proofs_for_block_roots() {
         let transition_state = &TRANSITION_STATE;
 
-        // There are 8192 slots in an era.
+        // There are 8192 slots in an era. 8790016 / 8192 = 1073.
         let proof_era = transition_state.data().slot().as_usize() / 8192usize;
 
         // In this test we are using the historical_summaries (introduced in Capella) for verification,
@@ -297,6 +297,7 @@ mod tests {
         // This is an arbitrary choice just for test purposes.
         let index = 4096usize;
 
+        // Buffer of most recent 8192 block roots:
         let block_root_at_index = transition_state.data().block_roots().get(index).unwrap();
 
         let proof = transition_state.compute_block_roots_proof(index).unwrap();
