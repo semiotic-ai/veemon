@@ -24,12 +24,12 @@ For more information see the
 - [Beacon Chain `BeaconState` spec](https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate)
 - [Beacon Chain `BeaconBlockBody` spec](https://github.com/ethereum/consensus-specs/blob/dev/specs/deneb/beacon-chain.md#beaconblockbody)
 - The [fork of `sigp/lighthouse`](https://github.com/semiotic-ai/lighthouse) we've been spiking.
-- [Google Drive shared resources](https://drive.google.com/drive/u/1/folders/15diM-Gu4WFg9FrMWti3_B8xP0J0szUhW),
+- [Google Drive shared resources](https://drive.google.com/drive/folders/19QBMHZFAV7uo_Cu4RwLPTwGpBcQMd-hy),
 including `head-state.json` used in `beacon_state.rs` tests.
 
 ## Prerequisites
 
 > [!NOTE]
-> You need to add the `head-state.json` file from our shared Google Drive to
-> the root of this repo to run tests, as well as the
-> [`bb-8786333.json`](https://drive.google.com/file/d/1-9SgmdxrOU5t1XlBc0hsRcEM-xZVN91N/view?usp=drive_link)!
+> You need to add the test assets files from our shared Google Drive to
+> the root of this repo to run tests. See **Google Drive shared resources**
+> above.
