@@ -1909,6 +1909,7 @@ dependencies = [
  "hex",
  "http 1.1.0",
  "insta",
+ "once_cell",
  "rustls 0.23.14",
  "serde",
  "serde_derive",

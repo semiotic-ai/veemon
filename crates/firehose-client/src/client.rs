@@ -11,7 +11,10 @@ pub mod channel {
 
         let config = super::tls::config();
 
-        Channel::builder(uri).tls_config(config)?.connect().await
+        Channel::builder(uri)
+            .tls_config(config.clone())?
+            .connect()
+            .await
     }
 
     pub async fn fetch_client(firehose: Firehose) -> Result<FetchClient<Channel>, ClientError> {
@@ -77,9 +80,11 @@ pub mod error {
 }
 
 pub mod tls {
+    use once_cell::sync::Lazy;
+
     use tonic::transport::ClientTlsConfig;
 
-    pub fn config() -> ClientTlsConfig {
+    static TLS_CONFIG: Lazy<ClientTlsConfig> = Lazy::new(|| {
         rustls::crypto::ring::default_provider()
             .install_default()
             .expect("Failed to install rustls crypto provider");
@@ -87,6 +92,10 @@ pub mod tls {
         ClientTlsConfig::new()
             .with_native_roots()
             .assume_http2(true)
+    });
+
+    pub fn config() -> &'static ClientTlsConfig {
+        &TLS_CONFIG
     }
 }
 
