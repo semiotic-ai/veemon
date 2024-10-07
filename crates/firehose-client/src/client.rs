@@ -100,8 +100,8 @@ mod tests {
         request::{create_blocks_request, create_request, BlocksRequested, FirehoseRequest},
     };
     use sf_protos::{
-        beacon::r#type::v1::block::Body,
-        ethereum::r#type::v2::Block,
+        beacon::{self, r#type::v1::block::Body},
+        ethereum,
         firehose::v2::{fetch_client::FetchClient, stream_client::StreamClient},
     };
 
@@ -122,7 +122,7 @@ mod tests {
 
         let response = execution_layer_client.block(request).await.unwrap();
 
-        let block = Block::try_from(response.into_inner()).unwrap();
+        let block = ethereum::r#type::v2::Block::try_from(response.into_inner()).unwrap();
 
         assert_eq!(block.number, 20672593);
         assert_eq!(
@@ -141,7 +141,7 @@ mod tests {
 
         let response = beacon_client.block(request).await.unwrap();
 
-        let block = sf_protos::beacon::r#type::v1::Block::try_from(response.into_inner()).unwrap();
+        let block = beacon::r#type::v1::Block::try_from(response.into_inner()).unwrap();
 
         assert_eq!(block.slot, 9881091);
 
@@ -166,6 +166,60 @@ mod tests {
         };
     }
 
+    /// Temporary test to demonstrate how to stream a range of blocks from Firehose Beacon
+    #[tokio::test]
+    async fn test_firehose_beacon_stream_blocks() {
+        // Testing this so far without proper benchmarking, the time taken to fetch the blocks
+        // grows linearly with the number of TOTAL_BLOCKS requested, to around 20 minutes for 8192 blocks!
+        const TOTAL_SLOTS: u64 = 10;
+        const START_SLOT: u64 = 9968872;
+
+        let uri = Firehose::Beacon.uri_from_env().unwrap();
+
+        let channel = build_and_connect_channel(uri).await.unwrap();
+
+        let mut client = StreamClient::new(channel);
+
+        let end_block = START_SLOT + TOTAL_SLOTS - 1;
+
+        let mut request = create_blocks_request(START_SLOT, end_block, BlocksRequested::FinalOnly);
+
+        request.insert_api_key_if_provided(Firehose::Beacon);
+
+        let response = client.blocks(request).await.unwrap();
+        let mut stream_inner = response.into_inner();
+
+        let mut blocks: Vec<beacon::r#type::v1::Block> = Vec::with_capacity(TOTAL_SLOTS as usize);
+
+        while let Ok(Some(block_msg)) = stream_inner.message().await {
+            let block = beacon::r#type::v1::Block::try_from(block_msg).unwrap();
+            blocks.push(block);
+        }
+
+        let slot_hash_map = blocks
+            .iter()
+            .map(|block| (block.slot, hex::encode(block.root.to_owned())))
+            // Use BTreeMap for deterministic order.
+            .collect::<std::collections::BTreeMap<u64, String>>();
+
+        // For now, just using this to signal that the test has completed
+        assert_eq!(blocks.len(), TOTAL_SLOTS as usize);
+        insta::assert_debug_snapshot!(slot_hash_map, @r###"
+        {
+            9968872: "93888f0ef50b9b35bfa594d0971dfbffe5692385fc17730af6b2321b6695095f",
+            9968873: "a149d7e490cfc7109700e47e77c521f94ecb585320aadeb4339eca361b124154",
+            9968874: "f6e824c8f4e79da5f0ee59d2642073e23dda4c9ebe62f84f26a18f299ec1cfbc",
+            9968875: "520db3414ef67d9280cf99c15195e3758d0db9b651d98b775818e530773de002",
+            9968876: "02090ac39348b84f3022abe162a0c715898436650499750f240ec7eae8afd5f5",
+            9968877: "937790abb3f73f1c9f6f4a6c97879bce0ebd0fb678d0af65f08338fd447bba6f",
+            9968878: "61c3f4ac768c4c1f9add321aef3144f7a1417650c43251a0c65b58fd307e6248",
+            9968879: "740a5fd2bff975410b70a4e77aea5ba71610813bb76f6d5e54eb9ee6748642e6",
+            9968880: "f07f09b96fd0c212a95782315ec61f747d5d32173cd311920fd6af4b1e05aa9d",
+            9968881: "4da93e355271c2edde13b4b72641f6111e50a635497250a3fbf650d38eee5f0e",
+        }
+        "###);
+    }
+
     /// Demonstrates how to fetch a single block from Ethereum firehose, using the `FetchClient`.
     #[tokio::test]
     async fn test_firehose_ethereum_fetch_block() {
@@ -181,7 +235,7 @@ mod tests {
 
         let response = client.block(request).await.unwrap();
 
-        let block = Block::try_from(response.into_inner()).unwrap();
+        let block = ethereum::r#type::v2::Block::try_from(response.into_inner()).unwrap();
 
         assert_eq!(block.number, 20672593);
         assert_eq!(
@@ -206,22 +260,21 @@ mod tests {
 
         let end_block = START_BLOCK + TOTAL_BLOCKS - 1;
 
-        let mut request =
-            create_blocks_request(START_BLOCK, end_block, BlocksRequested::FinalOnly);
+        let mut request = create_blocks_request(START_BLOCK, end_block, BlocksRequested::FinalOnly);
 
         request.insert_api_key_if_provided(Firehose::Ethereum);
 
         let response = client.blocks(request).await.unwrap();
         let mut stream_inner = response.into_inner();
 
-        let mut blocks: Vec<Block> = Vec::new();
+        let mut blocks: Vec<ethereum::r#type::v2::Block> = Vec::new();
 
         while let Ok(Some(block_msg)) = stream_inner.message().await {
-            let block = Block::try_from(block_msg).unwrap();
+            let block = ethereum::r#type::v2::Block::try_from(block_msg).unwrap();
             blocks.push(block);
         }
 
         // For now, just using this to signal that the test has completed
-        eprintln!("Number of elements: {}", blocks.len());
+        assert_eq!(blocks.len(), TOTAL_BLOCKS as usize);
     }
 }
