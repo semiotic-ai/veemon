@@ -22,13 +22,13 @@ pub fn create_request(num: u64) -> tonic::Request<SingleBlockRequest> {
 }
 
 pub fn create_blocks_request(
-    start_block_num: i64,
+    start_block_num: u64,
     stop_block_num: u64,
     blocks_requested: BlocksRequested,
 ) -> tonic::Request<Request> {
     use BlocksRequested::*;
     tonic::Request::new(Request {
-        start_block_num,
+        start_block_num: start_block_num as i64,
         stop_block_num,
         final_blocks_only: match blocks_requested {
             All => false,

@@ -1,5 +1,5 @@
 pub mod channel {
-    use sf_protos::firehose::v2::fetch_client::FetchClient;
+    use sf_protos::firehose::v2::{fetch_client::FetchClient, stream_client::StreamClient};
     use tonic::transport::{Channel, Uri};
 
     use super::{endpoint::Firehose, error::ClientError};
@@ -16,6 +16,13 @@ pub mod channel {
 
     pub async fn fetch_client(firehose: Firehose) -> Result<FetchClient<Channel>, ClientError> {
         Ok(FetchClient::new({
+            let execution_firehose_uri = firehose.uri_from_env()?;
+            build_and_connect_channel(execution_firehose_uri).await?
+        }))
+    }
+
+    pub async fn stream_client(firehose: Firehose) -> Result<StreamClient<Channel>, ClientError> {
+        Ok(StreamClient::new({
             let execution_firehose_uri = firehose.uri_from_env()?;
             build_and_connect_channel(execution_firehose_uri).await?
         }))
@@ -200,7 +207,7 @@ mod tests {
         let end_block = START_BLOCK + TOTAL_BLOCKS - 1;
 
         let mut request =
-            create_blocks_request(START_BLOCK as i64, end_block, BlocksRequested::FinalOnly);
+            create_blocks_request(START_BLOCK, end_block, BlocksRequested::FinalOnly);
 
         request.insert_api_key_if_provided(Firehose::Ethereum);
 
