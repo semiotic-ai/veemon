@@ -198,7 +198,10 @@ pub mod firehose {
 pub mod beacon {
     pub mod r#type {
         pub mod v1 {
-            use crate::{firehose::v2::SingleBlockResponse, ProtosError};
+            use crate::{
+                firehose::v2::{Response, SingleBlockResponse},
+                ProtosError,
+            };
             use primitive_types::{H256, U256};
             use prost::Message;
             use ssz_types::{length::Fixed, Bitfield, FixedVector};
@@ -539,6 +542,16 @@ pub mod beacon {
                 type Error = ProtosError;
 
                 fn try_from(response: SingleBlockResponse) -> Result<Self, Self::Error> {
+                    let any = response.block.ok_or(ProtosError::NullBlock)?;
+                    let block = Block::decode(any.value.as_ref())?;
+                    Ok(block)
+                }
+            }
+
+            impl TryFrom<Response> for Block {
+                type Error = ProtosError;
+
+                fn try_from(response: Response) -> Result<Self, Self::Error> {
                     let any = response.block.ok_or(ProtosError::NullBlock)?;
                     let block = Block::decode(any.value.as_ref())?;
                     Ok(block)
