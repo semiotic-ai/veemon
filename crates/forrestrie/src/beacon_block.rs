@@ -37,7 +37,7 @@ pub trait HistoricalDataProofs {
 impl<E: EthSpec> HistoricalDataProofs for BeaconBlockBody<E> {
     fn compute_merkle_proof(&self, index: usize) -> Result<Vec<Hash256>, Error> {
         let field_index = match index {
-            EXECUTION_PAYLOAD_INDEX => index
+            index if index == EXECUTION_PAYLOAD_INDEX => index
                 .checked_sub(NUM_BEACON_BLOCK_BODY_HASH_TREE_ROOT_LEAVES)
                 .ok_or(Error::IndexNotSupported(index))?,
             _ => return Err(Error::IndexNotSupported(index)),
@@ -99,7 +99,7 @@ mod tests {
     use merkle_proof::verify_merkle_proof;
 
     /// Deneb block JSON file shared among contributors.
-    /// The block hash is `0x5dde05ab1da7f768ed3ea2d53c6fa0d79c0c2283e52bb0d00842a4bdbf14c0ab`.
+    /// The execution payload block hash is `0xad1b9aa0d3315a08d38e258a914721630aa5d32efef8d02607555fe8ae92d7fc`.
     const DENEB_BLOCK_JSON: &str = include_str!("../../../bb-8786333.json");
 
     const BLOCK_WRAPPER: LazyCell<BlockWrapper> = LazyCell::new(|| {
@@ -142,6 +142,9 @@ mod tests {
         let block_wrapper = &BLOCK_WRAPPER;
         let block = &block_wrapper.data.message;
 
+        insta::assert_debug_snapshot!(block.slot(), @
+            "Slot(8786333)");
+
         // `BeaconBlock::canonical_root` calls `tree_hash_root` on the block.
         let block_root = block.canonical_root();
 
@@ -152,5 +155,10 @@ mod tests {
         let block_header_root = block_header.tree_hash_root();
 
         assert_eq!(block_root, block_header_root);
+
+        // This is to show that block hash and block body hash are different.
+        let body = block.body_deneb().unwrap();
+        let body_hash = body.tree_hash_root();
+        insta::assert_debug_snapshot!(body_hash, @"0xc15e821344ce5b201e2938248921743da8a07782168456929c8cef9f25a4cb02");
     }
 }
