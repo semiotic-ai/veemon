@@ -23,7 +23,7 @@ pub const CAPELLA_START_ERA: usize = 758;
 pub const HISTORY_TREE_DEPTH: usize = 13;
 
 /// The historical roots tree (pre-Capella) and the historical summaries tree (post-Capella) have the same depth.
-/// Both tree's root has the block_roots tree root and the state_roots tree root as childen and so has one more layer than each of these trees.
+/// Both tree's root has the block_roots tree root and the state_roots tree root as children and so has one more layer than each of these trees.
 pub const HISTORICAL_SUMMARY_TREE_DEPTH: usize = 14;
 
 /// Historical roots is a top-level field on [`BeaconState`], subtract off the generalized indices
@@ -158,7 +158,7 @@ impl<E: EthSpec> HeadState<E> {
         // We are going to verify this proof using the HistoricalSummary root, the two children nodes are the block_roots tree root and that state_roots tree root.
         // So we append the state_roots tree root to the proof.
         let state_roots_root = self.data.state_roots().tree_hash_root();
-        proof.extend(vec![state_roots_root]);
+        proof.push(state_roots_root);
 
         Ok(proof)
     }
