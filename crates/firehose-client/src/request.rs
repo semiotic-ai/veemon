@@ -12,6 +12,15 @@ pub enum BlocksRequested {
     FinalOnly,
 }
 
+impl From<BlocksRequested> for bool {
+    fn from(blocks_requested: BlocksRequested) -> bool {
+        match blocks_requested {
+            BlocksRequested::All => false,
+            BlocksRequested::FinalOnly => true,
+        }
+    }
+}
+
 /// Create a `SingleBlockRequest` for the given *number*.
 /// Number is slot number for beacon blocks.
 pub fn create_request(num: u64) -> tonic::Request<SingleBlockRequest> {
@@ -26,14 +35,10 @@ pub fn create_blocks_request(
     stop_block_num: u64,
     blocks_requested: BlocksRequested,
 ) -> tonic::Request<Request> {
-    use BlocksRequested::*;
     tonic::Request::new(Request {
         start_block_num: start_block_num as i64,
         stop_block_num,
-        final_blocks_only: match blocks_requested {
-            All => false,
-            FinalOnly => true,
-        },
+        final_blocks_only: blocks_requested.into(),
         ..Default::default()
     })
 }
