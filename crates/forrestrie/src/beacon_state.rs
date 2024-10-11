@@ -133,6 +133,27 @@ impl<E: EthSpec> HeadState<E> {
     pub fn version(&self) -> &str {
         &self.version
     }
+
+    /// This computation only makes sense if we have all of the leaves (BeaconBlock roots) to construct
+    /// the [`HistoricalSummary`] Merkle tree.
+    /// We construct a new [`HistoricalSummary`] from the state and check that the tree root is in historical_summaries.
+    /// This will be true if the state is in the first slot of an era.
+    pub fn block_roots_contain_entire_era(&self) -> Result<bool, Error> {
+        // Check if the block_roots buffer can have accumulated an entire era, i.e. 8192 blocks.
+        if self.data.block_roots().len() % SLOTS_PER_HISTORICAL_ROOT == 0 {
+            let historical_summary = HistoricalSummary::new(&self.data);
+            Ok(self
+                .data
+                .historical_summaries()?
+                .iter()
+                .last()
+                .map(|summary| summary == &historical_summary)
+                .unwrap_or(false))
+        } else {
+            Ok(false)
+        }
+    }
+
     /// Computes a Merkle inclusion proof of a `BeaconBlock` root using Merkle trees from either
     /// the [`historical_roots`](https://github.com/ethereum/annotated-spec/blob/master/phase0/beacon-chain.md#beaconstate)
     /// or [`historical_summaries`](https://github.com/ethereum/annotated-spec/blob/master/capella/beacon-chain.md#beaconstate) list.
@@ -140,16 +161,6 @@ impl<E: EthSpec> HeadState<E> {
     /// for more details about the `historical_roots` and [here](https://github.com/ethereum/annotated-spec/blob/master/capella/beacon-chain.md#historicalsummary)
     /// about `historical_summaries`.
     pub fn compute_block_roots_proof(&self, index: usize) -> Result<Vec<H256>, Error> {
-        // This computation only makes sense if we have all of the leaves (BeaconBlock roots) to construct the HistoricalSummary Merkle tree.
-        // So we construct a new [`HistoricalSummary`] from the state and check that the tree root is in historical_summaries.
-        // This will only be true if the state is in the last slot of an era.
-        let historical_summary = HistoricalSummary::new(&self.data);
-        let historical_summaries = self.data.historical_summaries()?.to_vec();
-        let latest_historical_summary = historical_summaries.last();
-        if latest_historical_summary != Some(&historical_summary) {
-            return Err(Error::SlotOutOfBounds);
-        }
-
         // Construct the block_roots Merkle tree and generate the proof.
         let leaves = self.data.block_roots().to_vec();
         let tree = MerkleTree::create(&leaves, HISTORY_TREE_DEPTH);
@@ -208,9 +219,13 @@ mod tests {
     });
 
     const TRANSITION_STATE_JSON: &str = include_str!("../../../8790016-state.json");
-    const TRANSITION_STATE: LazyCell<HeadState<MainnetEthSpec>> = LazyCell::new(|| {
+
+    /// # [https://beaconcha.in/slot/8790016](https://beaconcha.in/slot/8790016)
+    /// State root: `0xcdf3dc15e11659b7bc6c6a79a953877d89c6ea6f5909b31c9c1f097d82d5e1cd`
+    /// Block root: `0xa3649fb5d35ad9ea4094ffda055e65115a31eab0bd19fa5d8fe4f8214a8c3ff3`
+    const TRANSITION_STATE: LazyCell<Mutex<HeadState<MainnetEthSpec>>> = LazyCell::new(|| {
         serde_json::from_str(TRANSITION_STATE_JSON).expect(
-            "For this spike we are using a '8790016-state.json' file that has been shared among contributors",
+            "We are using a '8790016-state.json' file that has been shared among contributors",
         )
     });
 
@@ -307,14 +322,18 @@ mod tests {
     /// For this test, we want to prove that a block_root is included in a [`HistoricalSummary`] from the [`BeaconState`] historical_summaries List.
     /// A [`HistoricalSummary`] contains the roots of two Merkle trees, block_summary_root and state_summary root.
     /// We are interested in the block_summary tree, whose leaves consists of the [`BeaconBlockHeader`] roots for one era (8192 consecutive slots).  
-    /// For this test, we are using the state at [`Slot`] 8790016, which is the last [`Slot`] of era 1073, to build the proof.
-    /// We chose this [`Slot`] because it is the last [`Slot`] of an epoch, and all of the [`BeaconBlockHeader`] roots needed to construct the
+    /// For this test, we are using the state at [`Slot`] 8790016, which is the first [`Slot`] of era 1073, to build the proof.
+    /// We chose this [`Slot`] because it is the first [`Slot`] of an era, and all of the [`BeaconBlockHeader`] roots needed to construct the
     /// [`HistoricalSummary`] for this era are available in state.block_roots.
+    /// The last block root in the `block_roots` buffer is the block root of the previous block, in this case block number 19588228
+    /// from slot 8790015.
     fn test_inclusion_proofs_for_block_roots() {
         let transition_state = &TRANSITION_STATE;
 
+        let state_lock = transition_state.lock().unwrap();
+
         // There are 8192 slots in an era. 8790016 / 8192 = 1073.
-        let proof_era = transition_state.data().slot().as_usize() / 8192usize;
+        let proof_era = state_lock.data().slot().as_usize() / 8192usize;
 
         // In this test we are using the historical_summaries (introduced in Capella) for verification,
         // so we need to subtract the Capella start era to get the correct index.
@@ -325,9 +344,16 @@ mod tests {
         let index = 4096usize;
 
         // Buffer of most recent 8192 block roots:
-        let block_root_at_index = transition_state.data().block_roots().get(index).unwrap();
+        let block_root_at_index = state_lock.data().block_roots().get(index).unwrap().clone();
 
-        let proof = transition_state.compute_block_roots_proof(index).unwrap();
+        assert!(
+            state_lock.block_roots_contain_entire_era().unwrap(),
+            "Block roots buffer does not contain an entire era"
+        );
+
+        let proof = state_lock.compute_block_roots_proof(index).unwrap();
+
+        drop(state_lock);
 
         // To verify the proof, we use the state from a later slot.
         // The HistoricalSummary used to generate this proof is included in the historical_summaries list of this state.
@@ -349,7 +375,7 @@ mod tests {
 
         assert!(
             verify_merkle_proof(
-                *block_root_at_index,
+                block_root_at_index,
                 &proof,
                 HISTORICAL_SUMMARY_TREE_DEPTH,
                 index,
@@ -374,8 +400,10 @@ mod tests {
     fn test_inclusion_proofs_for_block_roots_only() {
         let transition_state = &TRANSITION_STATE;
 
+        let state_lock = transition_state.lock().unwrap();
+
         // There are 8192 slots in an era. 8790016 / 8192 = 1073.
-        let proof_era = transition_state.data().slot().as_usize() / 8192usize;
+        let proof_era = state_lock.data().slot().as_usize() / 8192usize;
 
         // In this test we are using the `historical_summaries` (introduced in Capella) for
         // verification, so we need to subtract the Capella start era to get the correct index.
@@ -387,11 +415,11 @@ mod tests {
         let index = 4096usize;
 
         // Buffer of most recent 8192 block roots:
-        let block_root_at_index = transition_state.data().block_roots().get(index).unwrap();
+        let block_root_at_index = state_lock.data().block_roots().get(index).unwrap().clone();
 
-        let proof = transition_state
-            .compute_block_roots_proof_only(index)
-            .unwrap();
+        let proof = state_lock.compute_block_roots_proof_only(index).unwrap();
+
+        drop(state_lock);
 
         // To verify the proof, we use the state from a later slot.
         // The HistoricalSummary used to generate this proof is included in the historical_summaries
@@ -415,7 +443,7 @@ mod tests {
 
         assert!(
             verify_merkle_proof(
-                *block_root_at_index,
+                block_root_at_index,
                 &proof,
                 HISTORY_TREE_DEPTH,
                 index,
