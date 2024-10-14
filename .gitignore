@@ -2,6 +2,7 @@
 
 # Use example Beacon head state file for testing, too large for version control
 *.json
-
+!.release-please-manifest.json
+!release-please-config.json
 .env
 .DS_Store
