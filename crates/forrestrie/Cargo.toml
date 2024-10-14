@@ -18,9 +18,9 @@ primitive-types.workspace = true
 serde.workspace = true
 tree_hash.workspace = true
 types.workspace = true
+sf-protos = { path = "../sf-protos" }
 
 [dev-dependencies]
 insta.workspace = true
 serde_json.workspace = true
-sf-protos.workspace = true
 tokio.workspace = true

@@ -1,6 +1,6 @@
 use std::fmt;
 
-use sf_protos::StreamingFastProtosError;
+use sf_protos::ProtosError;
 
 #[derive(Debug)]
 pub enum HeaderAccumulatorError {
@@ -134,10 +134,11 @@ impl From<std::io::Error> for SyncError {
     }
 }
 
-impl From<StreamingFastProtosError> for EraValidateError {
-    fn from(error: StreamingFastProtosError) -> Self {
+impl From<ProtosError> for EraValidateError {
+    fn from(error: ProtosError) -> Self {
         match error {
-            StreamingFastProtosError::BlockConversionError => Self::HeaderDecodeError,
+            ProtosError::BlockConversionError => Self::HeaderDecodeError,
+            _ => unimplemented!("Error mapping is not implemented")
         }
     }
 }

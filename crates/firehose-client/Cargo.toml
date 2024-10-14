@@ -9,13 +9,14 @@ name = "firehose_client"
 path = "src/lib.rs"
 
 [dependencies]
+sf-protos = { path = "../sf-protos" }
+
 dotenvy.workspace = true
 http.workspace = true
 once_cell.workspace = true
 rustls.workspace = true
 serde.workspace = true
 serde_derive.workspace = true
-sf-protos.workspace = true
 thiserror.workspace = true
 tonic = { workspace = true, features = ["tls-roots"] }
 

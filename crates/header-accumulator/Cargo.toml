@@ -6,18 +6,20 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+sf-protos = { path = "../sf-protos" }
+
+ethportal-api.workspace = true
+primitive-types.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
 alloy-primitives = "=0.7.7"
 base64 = "0.21.7"
 clap = { version = "4.4.10", features = ["derive"] }
 env_logger = "0.10.1"
 ethereum-types = "=0.14.1"
-ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.2.2", tag = "v0.1.0-alpha.35" }
 log = "0.4.20"
-primitive-types = "=0.12.2"
 rlp = "0.5.2"
-serde = "1.0.196"
-serde_json = "1.0.108"
-sf-protos = { git = "https://github.com/semiotic-ai/sf-protos.git", branch = "main" }
 # Needs to match that transitively depended on by trin-validation
 tree_hash = { git = "https://github.com/KolbyML/tree_hash.git", rev = "8aaf8bb4184148768d48e2cfbbdd0b95d1da8730" }
 trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0", tag = "v0.1.0-alpha.35" }
@@ -25,7 +27,3 @@ trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1
 [dev-dependencies]
 decoder = { git = "https://github.com/semiotic-ai/flat-files-decoder.git", branch = "main" }
 tempfile = "3.0"
-
-[profile.release]
-codegen-units = 1
-lto = false
