@@ -138,7 +138,7 @@ impl From<ProtosError> for EraValidateError {
     fn from(error: ProtosError) -> Self {
         match error {
             ProtosError::BlockConversionError => Self::HeaderDecodeError,
-            _ => unimplemented!("Error mapping is not implemented")
+            _ => unimplemented!("Error mapping is not implemented"),
         }
     }
 }
