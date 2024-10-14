@@ -1,0 +1,26 @@
+[package]
+name = "forrestrie"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+
+[lib]
+name = "forrestrie"
+path = "src/lib.rs"
+
+[[bin]]
+name = "forrestrie"
+path = "src/main.rs"
+
+[dependencies]
+merkle_proof.workspace = true
+primitive-types.workspace = true
+serde.workspace = true
+tree_hash.workspace = true
+types.workspace = true
+
+[dev-dependencies]
+insta.workspace = true
+serde_json.workspace = true
+sf-protos.workspace = true
+tokio.workspace = true

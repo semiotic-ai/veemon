@@ -1,0 +1,7 @@
+/target
+
+# Use example Beacon head state file for testing, too large for version control
+*.json
+
+.env
+.DS_Store
