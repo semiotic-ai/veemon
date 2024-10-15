@@ -236,7 +236,7 @@ pub fn extract_blocks<R: Read>(mut reader: R) -> Result<Vec<Block>, DecodeError>
 /// # Arguments
 ///
 /// * `end_block`: For blocks after the merge, Ethereum sync committee should be used. This is why the default block
-/// for this param is the MERGE_BLOCK (block 15537393)
+///   for this param is the MERGE_BLOCK (block 15537393)
 /// * `reader`: where bytes are read from
 /// * `writer`: where bytes written to
 pub async fn stream_blocks<R: Read, W: Write>(
