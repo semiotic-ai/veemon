@@ -29,7 +29,7 @@ pub const HISTORICAL_SUMMARY_TREE_DEPTH: usize = 14;
 /// Historical roots is a top-level field on [`BeaconState`], subtract off the generalized indices
 // for the internal nodes. Result should be 7, the field offset of the committee in the [`BeaconState`]:
 // https://github.com/ethereum/consensus-specs/blob/dev/specs/altair/beacon-chain.md#beaconstate
-const HISTORICAL_ROOTS_INDEX: usize = 39;
+pub const HISTORICAL_ROOTS_INDEX: usize = 39;
 
 /// Historical summaries is a top-level field on [`BeaconState`], subtract off the generalized indices
 // for the internal nodes. Result should be 27, the field offset of the committee in the [`BeaconState`]:
