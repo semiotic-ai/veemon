@@ -1,16 +1,16 @@
-# Forrestrie
+# Veemon
 
 ## Overview
 
-Validating post-merge Ethereum data.
+Verifying Ethereum data.
 
-### Crates
+## Crates
 
-#### Forrestrie
+### Forrestrie
 
 Library of types and methods for verifying post-merge Ethereum data.
 
-#### Firehose Client
+### Firehose Client
 
 Support for interfacing programmatically with Firehose gRPC endpoints.
 
@@ -27,9 +27,25 @@ For more information see the
 - [Google Drive shared resources](https://drive.google.com/drive/folders/19QBMHZFAV7uo_Cu4RwLPTwGpBcQMd-hy),
 including `head-state.json` used in `beacon_state.rs` tests.
 
-## Prerequisites
+## Examples
 
-> [!NOTE]
-> You need to add the test assets files from our shared Google Drive to
-> the root of this repo to run tests. See **Google Drive shared resources**
-> above.
+Here's an example of how to run one of the examples in the `forrestrie` crate:
+
+```terminal
+cd crates/forrestrie && cargo run -- --examples historical_state_roots_proof
+```
+
+Use environment variables to provide Firehose Ethereum and Firehose Beacon providers of
+your choice.
+
+To do so, place a `.env` file in the root of the crate you want to run examples for. 
+Your `.env` file should look like something this, depending on your requirements:
+
+```shell
+FIREHOSE_ETHEREUM_URL=<YOUR-FIREHOSE-ETHEREUM-URL>
+FIREHOSE_ETHEREUM_PORT=<YOUR-FIREHOSE-ETHEREUM-PORT>
+FIREHOSE_BEACON_URL=<YOUR-FIREHOSE-BEACON-URL>
+FIREHOSE_BEACON_PORT=<YOUR-FIREHOSE-BEACON-PORT>
+BEACON_API_KEY=<YOUR-API-KEY>
+ETHEREUM_API_KEY=<YOUR-API-KEY>
+```
