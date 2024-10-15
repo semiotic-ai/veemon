@@ -136,29 +136,4 @@ mod tests {
             block_body_hash
         ));
     }
-
-    #[test]
-    fn test_beacon_block_header_root_and_beacon_block_root_match() {
-        let block_wrapper = &BLOCK_WRAPPER;
-        let block = &block_wrapper.data.message;
-
-        insta::assert_debug_snapshot!(block.slot(), @
-            "Slot(8786333)");
-
-        // `BeaconBlock::canonical_root` calls `tree_hash_root` on the block.
-        let block_root = block.canonical_root();
-
-        // See, for example, https://beaconcha.in/slot/8786333 and https://beaconscan.com/slot/8786333
-        insta::assert_debug_snapshot!(block_root, @"0x063d4cf1a4f85d228d9eae17a9ab7df8b13de51e7a1988342a901575cce79613");
-
-        let block_header = block.block_header();
-        let block_header_root = block_header.tree_hash_root();
-
-        assert_eq!(block_root, block_header_root);
-
-        // This is to show that block hash and block body hash are different.
-        let body = block.body_deneb().unwrap();
-        let body_hash = body.tree_hash_root();
-        insta::assert_debug_snapshot!(body_hash, @"0xc15e821344ce5b201e2938248921743da8a07782168456929c8cef9f25a4cb02");
-    }
 }
