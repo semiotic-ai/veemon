@@ -666,9 +666,9 @@ message BalanceChange {
   // It is safe in those case(s) to consider the balance as being 0.
   //
   // If you consume this from a Substreams, you can safely use:
-  //
-  //     let old_value = old_value.unwrap_or_default();
-  //
+  // ```rust,ignore
+  // let old_value = old_value.unwrap_or_default();
+  // ```
   BigInt old_value = 2;
 
   // NewValue is the balance of the address after the change. This value
@@ -677,9 +677,9 @@ message BalanceChange {
   // 0.
   //
   // If you consume this from a Substreams, you can safely use:
-  //
-  //     let new_value = new_value.unwrap_or_default();
-  //
+  // ```rust,ignore
+  // let new_value = new_value.unwrap_or_default();
+  // ```
   BigInt new_value = 3;
 
   // Reason is the reason why the balance has changed. This is useful to determine
