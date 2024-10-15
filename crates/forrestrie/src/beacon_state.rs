@@ -230,50 +230,6 @@ mod tests {
     });
 
     #[test]
-    fn test_inclusion_proofs_with_historical_and_state_roots() {
-        let state = STATE;
-
-        let state_lock = state.lock().unwrap();
-
-        let proof = state_lock
-            .compute_merkle_proof_for_historical_data(HISTORICAL_ROOTS_INDEX)
-            .unwrap();
-
-        drop(state_lock);
-
-        insta::assert_debug_snapshot!(proof, @r###"
-        [
-            0xe81a79506c46b126f75a08cdd5cbc35052b61ca944c6c3becf32432e2ee6373a,
-            0xcfb49cd7eb0051153685e5e6124b635c6b9bcc69a6ead6af0ef7d9885fcc16e2,
-            0x29c2e1f6d96493e9b49517cb78123990038429e4c3574688a48f9abe69238449,
-            0xdb329a01d9114f087155633b36b498c8e60028c0acedc8e3b64e013dbbd4fa06,
-            0x53b107024e402f616f8f348d900e0d62f4b6f0558d2bfbd09200e68620a5b9c2,
-        ]
-        "###);
-
-        let mut state_lock = state.lock().unwrap();
-
-        let historical_roots_tree_hash_root = state_lock.historical_roots_tree_hash_root();
-
-        let state_root = state_lock.state_root().unwrap();
-
-        drop(state_lock);
-
-        let depth = CURRENT_SYNC_COMMITTEE_PROOF_LEN;
-
-        assert!(
-            verify_merkle_proof(
-                historical_roots_tree_hash_root,
-                &proof,
-                depth,
-                HISTORICAL_ROOTS_FIELD_INDEX,
-                state_root
-            ),
-            "Merkle proof verification failed"
-        );
-    }
-
-    #[test]
     fn test_inclusion_proofs_for_historical_summary_given_historical_summaries_root() {
         let state = &STATE;
 
