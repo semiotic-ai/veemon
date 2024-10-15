@@ -22,6 +22,7 @@ insta = "1.39.0"
 merkle_proof = { git = "https://github.com/semiotic-ai/lighthouse.git", branch = "stable" }
 once_cell = "1.20.2"
 primitive-types = "0.12.2"
+reqwest = { version = "0.12.8", features = ["json"] }
 rustls = { version = "0.23.12", features = ["ring"] }
 serde = { version = "1.0.208", features = ["derive"] }
 serde_derive = "1.0.208"

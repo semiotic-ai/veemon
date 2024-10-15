@@ -23,5 +23,6 @@ sf-protos = { path = "../sf-protos" }
 
 [dev-dependencies]
 insta.workspace = true
+reqwest.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
