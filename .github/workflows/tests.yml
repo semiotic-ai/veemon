@@ -36,6 +36,8 @@ jobs:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@89e9040de88b577a072e3760aaf59f585da083af #v0.0.5
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
       - run: |
           rustup component add clippy
           # Temporarily allowing dead-code, while denying all other warnings
@@ -65,6 +67,8 @@ jobs:
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
       - name: Run tests and generate coverage report
         run: cargo llvm-cov test --all-features --workspace --lcov --output-path lcov.info
       - name: Upload coverage to Coveralls
@@ -95,6 +99,8 @@ jobs:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@89e9040de88b577a072e3760aaf59f585da083af #v0.0.5
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
       - name: Test documentation code snippets
         run: cargo test --doc --all-features --workspace
 
@@ -116,11 +122,13 @@ jobs:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@89e9040de88b577a072e3760aaf59f585da083af #v0.0.5
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
       - name: Cargo check
         run: cargo check
 
   audit:
-    name: Cargo Audit 
+    name: cargo audit 
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -141,6 +149,8 @@ jobs:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@89e9040de88b577a072e3760aaf59f585da083af #v0.0.5
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
       - name: Install Cargo Audit
         run: |
           cargo install cargo-audit
