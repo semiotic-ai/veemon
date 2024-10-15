@@ -153,8 +153,7 @@ mod tests {
         let trace = block
             .transaction_traces
             .iter()
-            .filter(|t| Type::try_from(t.r#type).unwrap() == Type::TrxTypeLegacy)
-            .next()
+            .find(|t| Type::try_from(t.r#type).unwrap() == Type::TrxTypeLegacy)
             .unwrap();
 
         let transaction = trace_to_signed(trace).unwrap();
@@ -199,8 +198,7 @@ mod tests {
         let trace = block
             .transaction_traces
             .iter()
-            .filter(|t| t.index == 141)
-            .next()
+            .find(|t| t.index == 141)
             .unwrap();
 
         let transaction = trace_to_signed(trace).unwrap();
