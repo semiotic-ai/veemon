@@ -2244,6 +2244,7 @@ dependencies = [
 name = "forrestrie"
 version = "0.1.0"
 dependencies = [
+ "firehose-client",
  "insta",
  "merkle_proof",
  "primitive-types",

@@ -13,6 +13,7 @@ name = "forrestrie"
 path = "src/main.rs"
 
 [dependencies]
+firehose-client = { path = "../firehose-client" }
 merkle_proof.workspace = true
 primitive-types.workspace = true
 serde.workspace = true
