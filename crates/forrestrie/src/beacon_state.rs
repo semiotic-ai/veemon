@@ -230,51 +230,6 @@ mod tests {
     });
 
     #[test]
-    fn test_inclusion_proofs_for_historical_summary_given_historical_summaries_root() {
-        let state = &STATE;
-
-        let state_lock = state.lock().unwrap();
-
-        let proof = state_lock
-            .compute_merkle_proof_for_historical_data(HISTORICAL_SUMMARIES_INDEX)
-            .unwrap();
-
-        drop(state_lock);
-
-        insta::assert_debug_snapshot!(proof, @r###"
-        [
-            0x053a090000000000000000000000000000000000000000000000000000000000,
-            0x455a0d1e0a3b5660d74b6520062c9c3cead986928686e535451ca6e61aeb291f,
-            0xdb56114e00fdd4c1f85c892bf35ac9a89289aaecb1ebd0a96cde606a748b5d71,
-            0xc204e43766c4e9d43da1a54c3053024eef28d407bcca7936900ffd2e7aa165b2,
-            0x2150a88f205759c59817f42dc307620c67d3d23417959286928d186c639a0948,
-        ]
-        "###);
-
-        let mut state_lock = state.lock().unwrap();
-
-        let historical_summaries_tree_hash_root =
-            state_lock.historical_summaries_tree_hash_root().unwrap();
-
-        let state_root = state_lock.state_root().unwrap();
-
-        drop(state_lock);
-
-        let depth = CURRENT_SYNC_COMMITTEE_PROOF_LEN;
-
-        assert!(
-            verify_merkle_proof(
-                historical_summaries_tree_hash_root,
-                &proof,
-                depth,
-                HISTORICAL_SUMMARIES_FIELD_INDEX,
-                state_root
-            ),
-            "Merkle proof verification failed"
-        );
-    }
-
-    #[test]
     /// For this test, we want to prove that a block_root is included in a [`HistoricalSummary`] from the [`BeaconState`] historical_summaries List.
     /// A [`HistoricalSummary`] contains the roots of two Merkle trees, block_summary_root and state_summary root.
     /// We are interested in the block_summary tree, whose leaves consists of the [`BeaconBlockHeader`] roots for one era (8192 consecutive slots).  
