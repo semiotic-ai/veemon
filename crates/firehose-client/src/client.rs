@@ -207,7 +207,7 @@ mod tests {
 
         let slot_hash_map = blocks
             .iter()
-            .map(|block| (block.slot, hex::encode(block.root.to_owned())))
+            .map(|block| (block.slot, hex::encode(&block.root)))
             // Use BTreeMap for deterministic order.
             .collect::<std::collections::BTreeMap<u64, String>>();
 
