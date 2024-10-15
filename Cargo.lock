@@ -951,24 +951,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bls"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "arbitrary",
- "blst",
- "ethereum-types",
- "ethereum_hashing",
- "ethereum_serde_utils",
- "ethereum_ssz",
- "hex",
- "rand",
- "serde",
- "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "zeroize",
-]
-
-[[package]]
 name = "blst"
 version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1184,26 +1166,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "compare_fields"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "itertools 0.10.5",
-]
-
-[[package]]
 name = "compare_fields_derive"
 version = "0.2.0"
 source = "git+https://github.com/semiotic-ai/lighthouse.git?branch=stable#680cdbfcecb03c651db15e8949bd7367ef39c9ed"
-dependencies = [
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "compare_fields_derive"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -1564,38 +1529,11 @@ dependencies = [
  "revm-primitives",
  "serde",
  "serde_json",
- "sf-protos 0.1.0",
+ "sf-protos",
  "simple-log",
  "thiserror",
  "tokio",
  "tokio-test",
- "zstd",
-]
-
-[[package]]
-name = "decoder"
-version = "0.1.1"
-source = "git+https://github.com/semiotic-ai/flat-files-decoder.git?branch=main#42c5b1009705ec6bd6458726fce035f66873b268"
-dependencies = [
- "alloy-primitives",
- "alloy-rlp",
- "bincode",
- "clap",
- "prost",
- "prost-build",
- "prost-types",
- "prost-wkt-build",
- "rand",
- "rayon",
- "reth-primitives",
- "reth-trie-common",
- "revm-primitives",
- "serde",
- "serde_json",
- "sf-protos 0.1.0 (git+https://github.com/semiotic-ai/sf-protos.git?branch=main)",
- "simple-log",
- "thiserror",
- "tokio",
  "zstd",
 ]
 
@@ -1953,21 +1891,7 @@ name = "eth2_interop_keypairs"
 version = "0.2.0"
 source = "git+https://github.com/semiotic-ai/lighthouse.git?branch=stable#680cdbfcecb03c651db15e8949bd7367ef39c9ed"
 dependencies = [
- "bls 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
- "ethereum_hashing",
- "hex",
- "lazy_static",
- "num-bigint",
- "serde",
- "serde_yaml",
-]
-
-[[package]]
-name = "eth2_interop_keypairs"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "bls 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
+ "bls",
  "ethereum_hashing",
  "hex",
  "lazy_static",
@@ -2185,7 +2109,7 @@ dependencies = [
  "rustls 0.23.14",
  "serde",
  "serde_derive",
- "sf-protos 0.1.0",
+ "sf-protos",
  "thiserror",
  "tokio",
  "tonic",
@@ -2218,14 +2142,14 @@ dependencies = [
  "bincode",
  "bytes",
  "clap",
- "decoder 0.1.1",
+ "decoder",
  "dotenv",
  "env_logger 0.11.5",
  "futures",
  "header_accumulator",
  "log",
  "object_store",
- "sf-protos 0.1.0",
+ "sf-protos",
  "thiserror",
  "tokio",
  "tree_hash 0.6.0 (git+https://github.com/KolbyML/tree_hash.git?rev=8aaf8bb4184148768d48e2cfbbdd0b95d1da8730)",
@@ -2270,14 +2194,14 @@ name = "forrestrie"
 version = "0.1.0"
 dependencies = [
  "insta",
- "merkle_proof 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "merkle_proof",
  "primitive-types",
  "serde",
  "serde_json",
- "sf-protos 0.1.0",
+ "sf-protos",
  "tokio",
  "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "types 0.2.1 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "types",
 ]
 
 [[package]]
@@ -2597,7 +2521,7 @@ dependencies = [
  "alloy-primitives",
  "base64 0.21.7",
  "clap",
- "decoder 0.1.1 (git+https://github.com/semiotic-ai/flat-files-decoder.git?branch=main)",
+ "decoder",
  "env_logger 0.10.2",
  "ethereum-types",
  "ethportal-api",
@@ -2606,7 +2530,7 @@ dependencies = [
  "rlp",
  "serde",
  "serde_json",
- "sf-protos 0.1.0",
+ "sf-protos",
  "tempfile",
  "tree_hash 0.6.0 (git+https://github.com/KolbyML/tree_hash.git?rev=8aaf8bb4184148768d48e2cfbbdd0b95d1da8730)",
  "trin-validation",
@@ -3000,14 +2924,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "int_to_bytes"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "bytes",
-]
-
-[[package]]
 name = "inventory"
 version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3330,23 +3246,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kzg"
-version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "arbitrary",
- "c-kzg",
- "derivative",
- "ethereum_hashing",
- "ethereum_serde_utils",
- "ethereum_ssz",
- "ethereum_ssz_derive",
- "hex",
- "serde",
- "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3540,18 +3439,7 @@ dependencies = [
  "ethereum-types",
  "ethereum_hashing",
  "lazy_static",
- "safe_arith 0.1.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
-]
-
-[[package]]
-name = "merkle_proof"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "ethereum-types",
- "ethereum_hashing",
- "lazy_static",
- "safe_arith 0.1.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
+ "safe_arith",
 ]
 
 [[package]]
@@ -4989,11 +4877,6 @@ version = "0.1.0"
 source = "git+https://github.com/semiotic-ai/lighthouse.git?branch=stable#680cdbfcecb03c651db15e8949bd7367ef39c9ed"
 
 [[package]]
-name = "safe_arith"
-version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-
-[[package]]
 name = "same-file"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5242,7 +5125,7 @@ name = "sf-protos"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives",
- "bls 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "bls",
  "ethportal-api",
  "hex",
  "primitive-types",
@@ -5257,29 +5140,7 @@ dependencies = [
  "thiserror",
  "tonic",
  "tonic-build",
- "types 0.2.1 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
-]
-
-[[package]]
-name = "sf-protos"
-version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/sf-protos.git?branch=main#48ccab8b1dd49de143d3285200e3d6f90a9d2b17"
-dependencies = [
- "alloy-primitives",
- "bls 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "ethportal-api",
- "primitive-types",
- "prost",
- "prost-build",
- "prost-wkt",
- "prost-wkt-types",
- "reth-primitives",
- "serde",
- "ssz_types 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "thiserror",
- "tonic",
- "tonic-build",
- "types 0.2.1 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
+ "types",
 ]
 
 [[package]]
@@ -5654,15 +5515,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "swap_or_not_shuffle"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "ethereum-types",
- "ethereum_hashing",
-]
-
-[[package]]
 name = "syn"
 version = "1.0.109"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5761,15 +5613,6 @@ dependencies = [
 name = "test_random_derive"
 version = "0.2.0"
 source = "git+https://github.com/semiotic-ai/lighthouse.git?branch=stable#680cdbfcecb03c651db15e8949bd7367ef39c9ed"
-dependencies = [
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "test_random_derive"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -6294,24 +6137,24 @@ dependencies = [
  "alloy-primitives",
  "alloy-rlp",
  "arbitrary",
- "bls 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
- "compare_fields 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
- "compare_fields_derive 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "bls",
+ "compare_fields",
+ "compare_fields_derive",
  "derivative",
- "eth2_interop_keypairs 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "eth2_interop_keypairs",
  "ethereum-types",
  "ethereum_hashing",
  "ethereum_serde_utils",
  "ethereum_ssz",
  "ethereum_ssz_derive",
  "hex",
- "int_to_bytes 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "int_to_bytes",
  "itertools 0.10.5",
- "kzg 0.1.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "kzg",
  "lazy_static",
  "log",
  "maplit",
- "merkle_proof 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "merkle_proof",
  "metastruct",
  "milhouse",
  "parking_lot 0.12.3",
@@ -6321,7 +6164,7 @@ dependencies = [
  "regex",
  "rpds",
  "rusqlite",
- "safe_arith 0.1.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "safe_arith",
  "serde",
  "serde_json",
  "serde_yaml",
@@ -6329,59 +6172,9 @@ dependencies = [
  "smallvec",
  "ssz_types 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "superstruct 0.8.0",
- "swap_or_not_shuffle 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "swap_or_not_shuffle",
  "tempfile",
- "test_random_derive 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
- "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "tree_hash_derive 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "types"
-version = "0.2.1"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "alloy-primitives",
- "alloy-rlp",
- "arbitrary",
- "bls 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "compare_fields 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "compare_fields_derive 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "derivative",
- "eth2_interop_keypairs 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "ethereum-types",
- "ethereum_hashing",
- "ethereum_serde_utils",
- "ethereum_ssz",
- "ethereum_ssz_derive",
- "hex",
- "int_to_bytes 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "itertools 0.10.5",
- "kzg 0.1.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "lazy_static",
- "log",
- "maplit",
- "merkle_proof 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "metastruct",
- "milhouse",
- "parking_lot 0.12.3",
- "rand",
- "rand_xorshift",
- "rayon",
- "regex",
- "rpds",
- "rusqlite",
- "safe_arith 0.1.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "serde",
- "serde_json",
- "serde_yaml",
- "slog",
- "smallvec",
- "ssz_types 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "superstruct 0.8.0",
- "swap_or_not_shuffle 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "tempfile",
- "test_random_derive 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
+ "test_random_derive",
  "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tree_hash_derive 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
