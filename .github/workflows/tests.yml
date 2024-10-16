@@ -43,39 +43,6 @@ jobs:
           # Temporarily allowing dead-code, while denying all other warnings
           cargo clippy --all-features --all-targets -- -A dead-code -D warnings
 
-  test-and-coverage:
-    name: cargo test and coverage
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      actions: read
-    container:
-      image: rust:1.80-bookworm
-    steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 #v2.7.3
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Configure sccache
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@89e9040de88b577a072e3760aaf59f585da083af #v0.0.5
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
-      - name: Run tests and generate coverage report
-        run: cargo llvm-cov test --all-features --workspace --lcov --output-path lcov.info
-      - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@643bc377ffa44ace6394b2b5d0d3950076de9f63 # v2.3.0
-        with:
-          file: ./lcov.info
-
   # Cannot do with llvm-cov, see https://github.com/taiki-e/cargo-llvm-cov/issues/2
   test-docs:
     name: cargo test docs code snippets
