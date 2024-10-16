@@ -1548,7 +1548,6 @@ dependencies = [
  "criterion",
  "prost",
  "prost-build",
- "prost-types",
  "prost-wkt-build",
  "rand",
  "rayon",
@@ -1860,19 +1859,6 @@ checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
 dependencies = [
  "log",
  "regex",
-]
-
-[[package]]
-name = "env_logger"
-version = "0.10.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cd405aab171cb85d6735e5c8d9db038c17d3ca007a4d2c25f337935c3d90580"
-dependencies = [
- "humantime",
- "is-terminal",
- "log",
- "regex",
- "termcolor",
 ]
 
 [[package]]
@@ -2203,7 +2189,7 @@ dependencies = [
  "sf-protos",
  "thiserror",
  "tokio",
- "tree_hash 0.6.0 (git+https://github.com/KolbyML/tree_hash.git?rev=8aaf8bb4184148768d48e2cfbbdd0b95d1da8730)",
+ "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "trin-validation",
  "url",
  "zstd",
@@ -2590,7 +2576,7 @@ dependencies = [
  "base64 0.21.7",
  "clap",
  "decoder",
- "env_logger 0.10.2",
+ "env_logger 0.11.5",
  "ethereum-types",
  "ethportal-api",
  "log",
@@ -5821,15 +5807,6 @@ dependencies = [
  "once_cell",
  "rustix",
  "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "termcolor"
-version = "1.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
-dependencies = [
- "winapi-util",
 ]
 
 [[package]]

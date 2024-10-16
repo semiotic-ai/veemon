@@ -13,16 +13,16 @@ name = "forrestrie"
 path = "src/main.rs"
 
 [dependencies]
-firehose-client = { path = "../firehose-client" }
 merkle_proof.workspace = true
 primitive-types.workspace = true
-serde.workspace = true
+serde = { workspace = true, features = ["derive"] }
+sf-protos = { path = "../sf-protos" }
 tree_hash.workspace = true
 types.workspace = true
-sf-protos = { path = "../sf-protos" }
 
 [dev-dependencies]
+firehose-client = { path = "../firehose-client" }
 insta.workspace = true
 reqwest.workspace = true
 serde_json.workspace = true
-tokio.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

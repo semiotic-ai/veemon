@@ -6,29 +6,27 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sf-protos = { path = "../sf-protos" }
 alloy-primitives.workspace = true
-
-alloy-rlp = "0.3.7"
-bincode = "1.3.3"
-clap = { version = "4.3.21", features = ["derive"] }
-prost = "0.13.1"
-prost-types = "0.13.1"
-rand = "0.8.5"
-rayon = "1.8.0"
-reth-primitives = { git = "https://github.com/paradigmxyz/reth", version = "1.0.1", tag = "v1.0.1" }
-reth-trie-common = { git = "https://github.com/paradigmxyz/reth", version = "1.0.1", tag = "v1.0.1" }
-revm-primitives = "=6.0.0"
-serde = { version = "1.0.196", features = ["derive"] }
-serde_json = "1.0.108"
-simple-log = "1.6.0"
-thiserror = "1.0.44"
-tokio = { version = "1.35.0", features = ["full"] }
-zstd = "0.13.0"
+alloy-rlp.workspace = true
+bincode.workspace = true
+clap.workspace = true
+prost.workspace = true
+rand.workspace = true
+rayon.workspace = true
+reth-primitives.workspace = true
+reth-trie-common.workspace = true
+revm-primitives.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+sf-protos = { path = "../sf-protos" }
+simple-log.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["full"] }
+zstd.workspace = true
 
 [dev-dependencies]
-criterion = { version = "0.5.1", features = ["html_reports"] }
-tokio-test = "0.4.3"
+criterion.workspace = true
+tokio-test.workspace = true
 
 [[bench]]
 name = "decoder"
@@ -38,7 +36,6 @@ harness = false
 name = "stream_blocks"
 harness = false
 
-
 [build-dependencies]
-prost-build = "0.13.1"
-prost-wkt-build = "0.6.0"
+prost-build.workspace = true
+prost-wkt-build.workspace = true
