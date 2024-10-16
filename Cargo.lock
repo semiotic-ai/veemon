@@ -82,10 +82,11 @@ checksum = "5c6cb57a04249c6480766f7f7cef5467412af1490f8d1e243141daddada3264f"
 
 [[package]]
 name = "alloy-chains"
-version = "0.1.36"
+version = "0.1.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94c225801d42099570d0674701dddd4142f0ef715282aeb5985042e2ec962df7"
+checksum = "156bfc5dcd52ef9a5f33381701fa03310317e14c65093a9430d3e3557b08dcd3"
 dependencies = [
+ "alloy-primitives 0.8.8",
  "num_enum",
  "serde",
  "strum",
@@ -97,7 +98,7 @@ version = "0.1.0"
 source = "git+https://github.com/alloy-rs/alloy?rev=8c9dd0a#8c9dd0ae0a0f12eb81b5afe75a9b55ea4ad3abf4"
 dependencies = [
  "alloy-eips 0.1.0",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "alloy-serde 0.1.0",
  "serde",
@@ -111,7 +112,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da374e868f54c7f4ad2ad56829827badca388efd645f8cf5fccc61c2b5343504"
 dependencies = [
  "alloy-eips 0.1.4",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "alloy-serde 0.1.4",
  "c-kzg",
@@ -123,7 +124,7 @@ name = "alloy-eips"
 version = "0.1.0"
 source = "git+https://github.com/alloy-rs/alloy?rev=8c9dd0a#8c9dd0ae0a0f12eb81b5afe75a9b55ea4ad3abf4"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "alloy-serde 0.1.0",
  "c-kzg",
@@ -137,11 +138,11 @@ version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f76ecab54890cdea1e4808fc0891c7e6cfcf71fe1a9fe26810c7280ef768f4ed"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "alloy-serde 0.1.4",
  "c-kzg",
- "derive_more",
+ "derive_more 0.99.18",
  "once_cell",
  "serde",
  "sha2 0.10.8",
@@ -152,7 +153,7 @@ name = "alloy-genesis"
 version = "0.1.0"
 source = "git+https://github.com/alloy-rs/alloy?rev=8c9dd0a#8c9dd0ae0a0f12eb81b5afe75a9b55ea4ad3abf4"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-serde 0.1.0",
  "serde",
 ]
@@ -163,7 +164,7 @@ version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bca15afde1b6d15e3fc1c97421262b1bbb37aee45752e3c8b6d6f13f776554ff"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-serde 0.1.4",
  "serde",
 ]
@@ -178,7 +179,7 @@ dependencies = [
  "bytes",
  "cfg-if",
  "const-hex",
- "derive_more",
+ "derive_more 0.99.18",
  "ethereum_ssz",
  "getrandom",
  "hex-literal",
@@ -189,6 +190,33 @@ dependencies = [
  "rand",
  "ruint",
  "serde",
+ "tiny-keccak",
+]
+
+[[package]]
+name = "alloy-primitives"
+version = "0.8.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38f35429a652765189c1c5092870d8360ee7b7769b09b06d89ebaefd34676446"
+dependencies = [
+ "alloy-rlp",
+ "bytes",
+ "cfg-if",
+ "const-hex",
+ "derive_more 1.0.0",
+ "foldhash",
+ "hex-literal",
+ "indexmap 2.6.0",
+ "itoa",
+ "k256",
+ "keccak-asm",
+ "paste",
+ "proptest",
+ "rand",
+ "ruint",
+ "rustc-hash 2.0.0",
+ "serde",
+ "sha3 0.10.8",
  "tiny-keccak",
 ]
 
@@ -222,7 +250,7 @@ dependencies = [
  "alloy-consensus 0.1.0",
  "alloy-eips 0.1.0",
  "alloy-genesis 0.1.0",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "alloy-serde 0.1.0",
  "alloy-sol-types",
@@ -249,7 +277,7 @@ version = "0.1.0"
 source = "git+https://github.com/alloy-rs/alloy?rev=8c9dd0a#8c9dd0ae0a0f12eb81b5afe75a9b55ea4ad3abf4"
 dependencies = [
  "alloy-consensus 0.1.0",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "alloy-rpc-types 0.1.0",
  "alloy-serde 0.1.0",
@@ -266,7 +294,7 @@ checksum = "ab4123ee21f99ba4bd31bfa36ba89112a18a500f8b452f02b35708b1b951e2b9"
 dependencies = [
  "alloy-consensus 0.1.4",
  "alloy-eips 0.1.4",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "alloy-serde 0.1.4",
  "alloy-sol-types",
@@ -281,7 +309,7 @@ name = "alloy-rpc-types-trace"
 version = "0.1.0"
 source = "git+https://github.com/alloy-rs/alloy?rev=8c9dd0a#8c9dd0ae0a0f12eb81b5afe75a9b55ea4ad3abf4"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rpc-types 0.1.0",
  "alloy-serde 0.1.0",
  "serde",
@@ -293,7 +321,7 @@ name = "alloy-serde"
 version = "0.1.0"
 source = "git+https://github.com/alloy-rs/alloy?rev=8c9dd0a#8c9dd0ae0a0f12eb81b5afe75a9b55ea4ad3abf4"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "serde",
  "serde_json",
 ]
@@ -304,7 +332,7 @@ version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9416c52959e66ead795a11f4a86c248410e9e368a0765710e57055b8a1774dd6"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "serde",
  "serde_json",
 ]
@@ -362,7 +390,7 @@ version = "0.7.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a91ca40fa20793ae9c3841b83e74569d1cc9af29a2f5237314fd3452d51e38c7"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-sol-macro",
  "const-hex",
 ]
@@ -373,9 +401,9 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03704f265cbbb943b117ecb5055fd46e8f41e7dc8a58b1aed20bcd40ace38c15"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
- "derive_more",
+ "derive_more 0.99.18",
  "hashbrown 0.14.5",
  "nybbles",
  "serde",
@@ -951,24 +979,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bls"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "arbitrary",
- "blst",
- "ethereum-types",
- "ethereum_hashing",
- "ethereum_serde_utils",
- "ethereum_ssz",
- "hex",
- "rand",
- "serde",
- "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "zeroize",
-]
-
-[[package]]
 name = "blst"
 version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -994,9 +1004,9 @@ checksum = "c3ac9f8b63eca6fd385229b3675f6cc0dc5c8a5c8a54a59d4f52ffd670d87b0c"
 
 [[package]]
 name = "bytemuck"
-version = "1.18.0"
+version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94bbb0ad554ad961ddc5da507a12a29b14e4ae5bda06b19f575a3e6079d2e2ae"
+checksum = "8334215b81e418a0a7bdb8ef0849474f40bb10c8b71f1c4ed315cff49f32494d"
 
 [[package]]
 name = "byteorder"
@@ -1036,9 +1046,9 @@ checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 
 [[package]]
 name = "cc"
-version = "1.1.28"
+version = "1.1.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e80e3b6a3ab07840e1cae9b0666a63970dc28e8ed5ffbcdacbfc760c281bfc1"
+checksum = "b16803a61b81d9eabb7eae2588776c4c1e584b738ede45fdbb4c972cec1e9945"
 dependencies = [
  "jobserver",
  "libc",
@@ -1184,26 +1194,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "compare_fields"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "itertools 0.10.5",
-]
-
-[[package]]
 name = "compare_fields_derive"
 version = "0.2.0"
 source = "git+https://github.com/semiotic-ai/lighthouse.git?branch=stable#680cdbfcecb03c651db15e8949bd7367ef39c9ed"
-dependencies = [
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "compare_fields_derive"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -1548,14 +1541,13 @@ dependencies = [
 name = "decoder"
 version = "0.1.1"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "bincode",
  "clap",
  "criterion",
  "prost",
  "prost-build",
- "prost-types",
  "prost-wkt-build",
  "rand",
  "rayon",
@@ -1564,38 +1556,11 @@ dependencies = [
  "revm-primitives",
  "serde",
  "serde_json",
- "sf-protos 0.1.0",
+ "sf-protos",
  "simple-log",
  "thiserror",
  "tokio",
  "tokio-test",
- "zstd",
-]
-
-[[package]]
-name = "decoder"
-version = "0.1.1"
-source = "git+https://github.com/semiotic-ai/flat-files-decoder.git?branch=main#42c5b1009705ec6bd6458726fce035f66873b268"
-dependencies = [
- "alloy-primitives",
- "alloy-rlp",
- "bincode",
- "clap",
- "prost",
- "prost-build",
- "prost-types",
- "prost-wkt-build",
- "rand",
- "rayon",
- "reth-primitives",
- "reth-trie-common",
- "revm-primitives",
- "serde",
- "serde_json",
- "sf-protos 0.1.0 (git+https://github.com/semiotic-ai/sf-protos.git?branch=main)",
- "simple-log",
- "thiserror",
- "tokio",
  "zstd",
 ]
 
@@ -1662,6 +1627,27 @@ dependencies = [
  "quote",
  "rustc_version 0.4.1",
  "syn 2.0.79",
+]
+
+[[package]]
+name = "derive_more"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
+dependencies = [
+ "derive_more-impl",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.79",
+ "unicode-xid",
 ]
 
 [[package]]
@@ -1877,19 +1863,6 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.10.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cd405aab171cb85d6735e5c8d9db038c17d3ca007a4d2c25f337935c3d90580"
-dependencies = [
- "humantime",
- "is-terminal",
- "log",
- "regex",
- "termcolor",
-]
-
-[[package]]
-name = "env_logger"
 version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e13fa619b91fb2381732789fc5de83b45675e882f66623b7d8cb4f643017018d"
@@ -1953,21 +1926,7 @@ name = "eth2_interop_keypairs"
 version = "0.2.0"
 source = "git+https://github.com/semiotic-ai/lighthouse.git?branch=stable#680cdbfcecb03c651db15e8949bd7367ef39c9ed"
 dependencies = [
- "bls 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
- "ethereum_hashing",
- "hex",
- "lazy_static",
- "num-bigint",
- "serde",
- "serde_yaml",
-]
-
-[[package]]
-name = "eth2_interop_keypairs"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "bls 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
+ "bls",
  "ethereum_hashing",
  "hex",
  "lazy_static",
@@ -1981,7 +1940,7 @@ name = "eth_trie"
 version = "0.4.0"
 source = "git+https://github.com/kolbyml/eth-trie.rs.git?rev=11ec003e3276e1413f06328ab746af5d99f112bb#11ec003e3276e1413f06328ab746af5d99f112bb"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "hashbrown 0.14.5",
  "keccak-hash",
@@ -2075,7 +2034,7 @@ name = "ethportal-api"
 version = "0.2.2"
 source = "git+https://github.com/ethereum/trin.git?tag=v0.1.0-alpha.35#31ea2a21df5dcefcd779ea32c72e016a34555fed"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "anyhow",
  "base64 0.13.1",
@@ -2178,16 +2137,18 @@ name = "firehose-client"
 version = "0.1.0"
 dependencies = [
  "dotenvy",
+ "futures",
  "hex",
  "http 1.1.0",
  "insta",
  "once_cell",
- "rustls 0.23.14",
+ "rustls 0.23.15",
  "serde",
  "serde_derive",
- "sf-protos 0.1.0",
+ "sf-protos",
  "thiserror",
  "tokio",
+ "tokio-stream",
  "tonic",
 ]
 
@@ -2218,17 +2179,17 @@ dependencies = [
  "bincode",
  "bytes",
  "clap",
- "decoder 0.1.1",
+ "decoder",
  "dotenv",
  "env_logger 0.11.5",
  "futures",
  "header_accumulator",
  "log",
  "object_store",
- "sf-protos 0.1.0",
+ "sf-protos",
  "thiserror",
  "tokio",
- "tree_hash 0.6.0 (git+https://github.com/KolbyML/tree_hash.git?rev=8aaf8bb4184148768d48e2cfbbdd0b95d1da8730)",
+ "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "trin-validation",
  "url",
  "zstd",
@@ -2257,6 +2218,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f81ec6369c545a7d40e4589b5597581fa1c441fe1cce96dd1de43159910a36a2"
 
 [[package]]
+name = "foreign-types"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6f339eb8adc052cd2ca78910fda869aefa38d22d5cb648e6485e4d3fc06f3b1"
+dependencies = [
+ "foreign-types-shared",
+]
+
+[[package]]
+name = "foreign-types-shared"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
+
+[[package]]
 name = "form_urlencoded"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2269,15 +2245,17 @@ dependencies = [
 name = "forrestrie"
 version = "0.1.0"
 dependencies = [
+ "firehose-client",
  "insta",
- "merkle_proof 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "merkle_proof",
  "primitive-types",
+ "reqwest 0.12.8",
  "serde",
  "serde_json",
- "sf-protos 0.1.0",
+ "sf-protos",
  "tokio",
  "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "types 0.2.1 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "types",
 ]
 
 [[package]]
@@ -2594,11 +2572,11 @@ dependencies = [
 name = "header_accumulator"
 version = "0.1.0"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "base64 0.21.7",
  "clap",
- "decoder 0.1.1 (git+https://github.com/semiotic-ai/flat-files-decoder.git?branch=main)",
- "env_logger 0.10.2",
+ "decoder",
+ "env_logger 0.11.5",
  "ethereum-types",
  "ethportal-api",
  "log",
@@ -2606,7 +2584,7 @@ dependencies = [
  "rlp",
  "serde",
  "serde_json",
- "sf-protos 0.1.0",
+ "sf-protos",
  "tempfile",
  "tree_hash 0.6.0 (git+https://github.com/KolbyML/tree_hash.git?rev=8aaf8bb4184148768d48e2cfbbdd0b95d1da8730)",
  "trin-validation",
@@ -2763,9 +2741,9 @@ checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
 name = "hyper"
-version = "0.14.30"
+version = "0.14.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a152ddd61dfaec7273fe8419ab357f33aee0d914c5f4efbf0d96fa749eea5ec9"
+checksum = "8c08302e8fa335b151b788c775ff56e7a03ae64ff85c548ee820fecb70356e85"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -2787,9 +2765,9 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "1.4.1"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50dfd22e0e76d0f662d429a5f80fcaf3855009297eab6a0a9f8543834744ba05"
+checksum = "bbbff0a806a4728c99295b254c8838933b5b082d75e3cb70c8dab21fdfbcfa9a"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -2814,7 +2792,7 @@ checksum = "ec3efd23720e2049821a693cbc7e65ea87c72f1c58ff2f9522ff332b1491e590"
 dependencies = [
  "futures-util",
  "http 0.2.12",
- "hyper 0.14.30",
+ "hyper 0.14.31",
  "log",
  "rustls 0.21.12",
  "rustls-native-certs 0.6.3",
@@ -2823,15 +2801,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "hyper-rustls"
+version = "0.27.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08afdbb5c31130e3034af566421053ab03787c640246a446327f550d11bcb333"
+dependencies = [
+ "futures-util",
+ "http 1.1.0",
+ "hyper 1.5.0",
+ "hyper-util",
+ "rustls 0.23.15",
+ "rustls-pki-types",
+ "tokio",
+ "tokio-rustls 0.26.0",
+ "tower-service",
+]
+
+[[package]]
 name = "hyper-timeout"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3203a961e5c83b6f5498933e78b6b263e208c197b63e9c6c53cc82ffd3f63793"
 dependencies = [
- "hyper 1.4.1",
+ "hyper 1.5.0",
  "hyper-util",
  "pin-project-lite",
  "tokio",
+ "tower-service",
+]
+
+[[package]]
+name = "hyper-tls"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70206fc6890eaca9fde8a0bf71caa2ddfc9fe045ac9e5c70df101a7dbde866e0"
+dependencies = [
+ "bytes",
+ "http-body-util",
+ "hyper 1.5.0",
+ "hyper-util",
+ "native-tls",
+ "tokio",
+ "tokio-native-tls",
  "tower-service",
 ]
 
@@ -2846,7 +2857,7 @@ dependencies = [
  "futures-util",
  "http 1.1.0",
  "http-body 1.0.1",
- "hyper 1.4.1",
+ "hyper 1.5.0",
  "pin-project-lite",
  "socket2 0.5.7",
  "tokio",
@@ -3000,14 +3011,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "int_to_bytes"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "bytes",
-]
-
-[[package]]
 name = "inventory"
 version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3086,9 +3089,9 @@ dependencies = [
 
 [[package]]
 name = "js-sys"
-version = "0.3.71"
+version = "0.3.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0cb94a0ffd3f3ee755c20f7d8752f45cac88605a4dcf808abcff72873296ec7b"
+checksum = "6a88f1bda2bd75b0452a14784937d796722fdebfe50df998aeb3f0b7603019a9"
 dependencies = [
  "wasm-bindgen",
 ]
@@ -3146,7 +3149,7 @@ dependencies = [
  "beef",
  "futures-timer",
  "futures-util",
- "hyper 0.14.30",
+ "hyper 0.14.31",
  "jsonrpsee-types",
  "parking_lot 0.12.3",
  "rand",
@@ -3167,8 +3170,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c7b9f95208927653e7965a98525e7fc641781cab89f0e27c43fa2974405683"
 dependencies = [
  "async-trait",
- "hyper 0.14.30",
- "hyper-rustls",
+ "hyper 0.14.31",
+ "hyper-rustls 0.24.2",
  "jsonrpsee-core",
  "jsonrpsee-types",
  "serde",
@@ -3201,7 +3204,7 @@ checksum = "a482bc4e25eebd0adb61a3468c722763c381225bd3ec46e926f709df8a8eb548"
 dependencies = [
  "futures-util",
  "http 0.2.12",
- "hyper 0.14.30",
+ "hyper 0.14.31",
  "jsonrpsee-core",
  "jsonrpsee-types",
  "route-recognizer",
@@ -3316,23 +3319,6 @@ checksum = "a4933f3f57a8e9d9da04db23fb153356ecaf00cbd14aee46279c33dc80925c37"
 name = "kzg"
 version = "0.1.0"
 source = "git+https://github.com/semiotic-ai/lighthouse.git?branch=stable#680cdbfcecb03c651db15e8949bd7367ef39c9ed"
-dependencies = [
- "arbitrary",
- "c-kzg",
- "derivative",
- "ethereum_hashing",
- "ethereum_serde_utils",
- "ethereum_ssz",
- "ethereum_ssz_derive",
- "hex",
- "serde",
- "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "kzg"
-version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
 dependencies = [
  "arbitrary",
  "c-kzg",
@@ -3540,18 +3526,7 @@ dependencies = [
  "ethereum-types",
  "ethereum_hashing",
  "lazy_static",
- "safe_arith 0.1.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
-]
-
-[[package]]
-name = "merkle_proof"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "ethereum-types",
- "ethereum_hashing",
- "lazy_static",
- "safe_arith 0.1.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
+ "safe_arith",
 ]
 
 [[package]]
@@ -3677,6 +3652,23 @@ name = "nanotemplate"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f247bfe894f8a04e0d8b1eb5eed9dfb7424f6dda47cf83e3f03670e87cb2831b"
+
+[[package]]
+name = "native-tls"
+version = "0.2.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8614eb2c83d59d1c8cc974dd3f920198647674a0a035e1af1fa58707e317466"
+dependencies = [
+ "libc",
+ "log",
+ "openssl",
+ "openssl-probe",
+ "openssl-sys",
+ "schannel",
+ "security-framework",
+ "security-framework-sys",
+ "tempfile",
+]
 
 [[package]]
 name = "nom"
@@ -3806,14 +3798,14 @@ dependencies = [
  "chrono",
  "futures",
  "humantime",
- "hyper 0.14.30",
+ "hyper 0.14.31",
  "itertools 0.12.1",
  "md-5",
  "parking_lot 0.12.3",
  "percent-encoding",
  "quick-xml",
  "rand",
- "reqwest",
+ "reqwest 0.11.27",
  "ring 0.17.8",
  "rustls-pemfile 2.2.0",
  "serde",
@@ -3844,10 +3836,48 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
+name = "openssl"
+version = "0.10.67"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b8cefcf97f41316955f9294cd61f639bdcfa9f2f230faac6cb896aa8ab64704"
+dependencies = [
+ "bitflags 2.6.0",
+ "cfg-if",
+ "foreign-types",
+ "libc",
+ "once_cell",
+ "openssl-macros",
+ "openssl-sys",
+]
+
+[[package]]
+name = "openssl-macros"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.79",
+]
+
+[[package]]
 name = "openssl-probe"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
+
+[[package]]
+name = "openssl-sys"
+version = "0.9.104"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45abf306cbf99debc8195b66b7346498d7b10c210de50418b5ccd7ceba08c741"
+dependencies = [
+ "cc",
+ "libc",
+ "pkg-config",
+ "vcpkg",
+]
 
 [[package]]
 name = "ordered-float"
@@ -3952,9 +3982,9 @@ checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 
 [[package]]
 name = "pest"
-version = "2.7.13"
+version = "2.7.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdbef9d1d47087a895abd220ed25eb4ad973a5e26f6a4367b038c25e28dfc2d9"
+checksum = "879952a81a83930934cbf1786752d6dedc3b1f29e8f8fb2ad1d0a36f377cf442"
 dependencies = [
  "memchr",
  "thiserror",
@@ -4142,9 +4172,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.87"
+version = "1.0.88"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3e4daa0dcf6feba26f985457cdf104d4b4256fc5a09547140f3631bb076b19a"
+checksum = "7c3a7fc5db1e57d5a779a352c8cdb57b29aa4c40cc69c3a68a7fedc815fbf2f9"
 dependencies = [
  "unicode-ident",
 ]
@@ -4445,8 +4475,8 @@ dependencies = [
  "h2 0.3.26",
  "http 0.2.12",
  "http-body 0.4.6",
- "hyper 0.14.30",
- "hyper-rustls",
+ "hyper 0.14.31",
+ "hyper-rustls 0.24.2",
  "ipnet",
  "js-sys",
  "log",
@@ -4461,7 +4491,7 @@ dependencies = [
  "serde_json",
  "serde_urlencoded",
  "sync_wrapper 0.1.2",
- "system-configuration",
+ "system-configuration 0.5.1",
  "tokio",
  "tokio-rustls 0.24.1",
  "tokio-util",
@@ -4475,6 +4505,49 @@ dependencies = [
 ]
 
 [[package]]
+name = "reqwest"
+version = "0.12.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f713147fbe92361e52392c73b8c9e48c04c6625bce969ef54dc901e58e042a7b"
+dependencies = [
+ "base64 0.22.1",
+ "bytes",
+ "encoding_rs",
+ "futures-core",
+ "futures-util",
+ "h2 0.4.6",
+ "http 1.1.0",
+ "http-body 1.0.1",
+ "http-body-util",
+ "hyper 1.5.0",
+ "hyper-rustls 0.27.3",
+ "hyper-tls",
+ "hyper-util",
+ "ipnet",
+ "js-sys",
+ "log",
+ "mime",
+ "native-tls",
+ "once_cell",
+ "percent-encoding",
+ "pin-project-lite",
+ "rustls-pemfile 2.2.0",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "sync_wrapper 1.0.1",
+ "system-configuration 0.6.1",
+ "tokio",
+ "tokio-native-tls",
+ "tower-service",
+ "url",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "windows-registry",
+]
+
+[[package]]
 name = "reth-codecs"
 version = "1.0.1"
 source = "git+https://github.com/paradigmxyz/reth?tag=v1.0.1#d599393771f9d7d137ea4abf271e1bd118184c73"
@@ -4482,7 +4555,7 @@ dependencies = [
  "alloy-consensus 0.1.4",
  "alloy-eips 0.1.4",
  "alloy-genesis 0.1.4",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "bytes",
  "modular-bitfield",
  "reth-codecs-derive",
@@ -4506,7 +4579,7 @@ version = "1.0.1"
 source = "git+https://github.com/paradigmxyz/reth?tag=v1.0.1#d599393771f9d7d137ea4abf271e1bd118184c73"
 dependencies = [
  "alloy-chains",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "auto_impl",
  "crc",
@@ -4524,12 +4597,12 @@ source = "git+https://github.com/paradigmxyz/reth?tag=v1.0.1#d599393771f9d7d137e
 dependencies = [
  "alloy-eips 0.1.4",
  "alloy-genesis 0.1.4",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "alloy-rpc-types 0.1.4",
  "bytes",
  "c-kzg",
- "derive_more",
+ "derive_more 0.99.18",
  "modular-bitfield",
  "once_cell",
  "rayon",
@@ -4554,12 +4627,12 @@ dependencies = [
  "alloy-consensus 0.1.4",
  "alloy-eips 0.1.4",
  "alloy-genesis 0.1.4",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "alloy-rpc-types-eth",
  "byteorder",
  "bytes",
- "derive_more",
+ "derive_more 0.99.18",
  "modular-bitfield",
  "reth-codecs",
  "revm-primitives",
@@ -4574,7 +4647,7 @@ version = "0.2.0-beta.5"
 source = "git+https://github.com/paradigmxyz/reth.git?rev=8d1d13ef89cf19459adc37ba0c45e7aac6270dc1#8d1d13ef89cf19459adc37ba0c45e7aac6270dc1"
 dependencies = [
  "alloy-genesis 0.1.0",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "alloy-rpc-types 0.1.0",
  "alloy-rpc-types-engine",
@@ -4594,8 +4667,8 @@ name = "reth-static-file-types"
 version = "1.0.1"
 source = "git+https://github.com/paradigmxyz/reth?tag=v1.0.1#d599393771f9d7d137ea4abf271e1bd118184c73"
 dependencies = [
- "alloy-primitives",
- "derive_more",
+ "alloy-primitives 0.7.7",
+ "derive_more 0.99.18",
  "serde",
  "strum",
 ]
@@ -4607,11 +4680,11 @@ source = "git+https://github.com/paradigmxyz/reth?tag=v1.0.1#d599393771f9d7d137e
 dependencies = [
  "alloy-consensus 0.1.4",
  "alloy-genesis 0.1.4",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "alloy-trie",
  "bytes",
- "derive_more",
+ "derive_more 0.99.18",
  "itertools 0.13.0",
  "nybbles",
  "reth-codecs",
@@ -4627,13 +4700,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b518f536bacee396eb28a43f0984b25b2cd80f052ba4f2e794d554d711c13f33"
 dependencies = [
  "alloy-eips 0.1.4",
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "auto_impl",
  "bitflags 2.6.0",
  "bitvec",
  "c-kzg",
  "cfg-if",
- "derive_more",
+ "derive_more 0.99.18",
  "dyn-clone",
  "enumn",
  "hashbrown 0.14.5",
@@ -4874,9 +4947,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.14"
+version = "0.23.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "415d9944693cb90382053259f89fbb077ea730ad7273047ec63b19bc9b160ba8"
+checksum = "5fbb44d7acc4e873d613422379f69f237a1b141928c02f6bc6ccfddddc2d7993"
 dependencies = [
  "aws-lc-rs",
  "log",
@@ -4933,9 +5006,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-pki-types"
-version = "1.9.0"
+version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e696e35370c65c9c541198af4543ccd580cf17fc25d8e05c5a242b202488c55"
+checksum = "16f1201b3c9a7ee8039bcadc17b7e605e2945b27eee7631788c1bd2b0643674b"
 
 [[package]]
 name = "rustls-webpki"
@@ -4961,9 +5034,9 @@ dependencies = [
 
 [[package]]
 name = "rustversion"
-version = "1.0.17"
+version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "955d28af4278de8121b7ebeb796b6a45735dc01436d898801014aced2773a3d6"
+checksum = "0e819f2bc632f285be6d7cd36e25940d45b2391dd6d9b939e79de557f7014248"
 
 [[package]]
 name = "rusty-fork"
@@ -4987,11 +5060,6 @@ checksum = "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f"
 name = "safe_arith"
 version = "0.1.0"
 source = "git+https://github.com/semiotic-ai/lighthouse.git?branch=stable#680cdbfcecb03c651db15e8949bd7367ef39c9ed"
-
-[[package]]
-name = "safe_arith"
-version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
 
 [[package]]
 name = "same-file"
@@ -5241,8 +5309,8 @@ dependencies = [
 name = "sf-protos"
 version = "0.1.0"
 dependencies = [
- "alloy-primitives",
- "bls 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "alloy-primitives 0.7.7",
+ "bls",
  "ethportal-api",
  "hex",
  "primitive-types",
@@ -5257,29 +5325,7 @@ dependencies = [
  "thiserror",
  "tonic",
  "tonic-build",
- "types 0.2.1 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
-]
-
-[[package]]
-name = "sf-protos"
-version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/sf-protos.git?branch=main#48ccab8b1dd49de143d3285200e3d6f90a9d2b17"
-dependencies = [
- "alloy-primitives",
- "bls 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "ethportal-api",
- "primitive-types",
- "prost",
- "prost-build",
- "prost-wkt",
- "prost-wkt-types",
- "reth-primitives",
- "serde",
- "ssz_types 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "thiserror",
- "tonic",
- "tonic-build",
- "types 0.2.1 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
+ "types",
 ]
 
 [[package]]
@@ -5654,15 +5700,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "swap_or_not_shuffle"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "ethereum-types",
- "ethereum_hashing",
-]
-
-[[package]]
 name = "syn"
 version = "1.0.109"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5707,6 +5744,9 @@ name = "sync_wrapper"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7065abeca94b6a8a577f9bd45aa0867a2238b74e8eb67cf10d492bc39351394"
+dependencies = [
+ "futures-core",
+]
 
 [[package]]
 name = "system-configuration"
@@ -5716,7 +5756,18 @@ checksum = "ba3a3adc5c275d719af8cb4272ea1c4a6d668a777f37e115f6d11ddbc1c8e0e7"
 dependencies = [
  "bitflags 1.3.2",
  "core-foundation",
- "system-configuration-sys",
+ "system-configuration-sys 0.5.0",
+]
+
+[[package]]
+name = "system-configuration"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c879d448e9d986b661742763247d3693ed13609438cf3d006f51f5368a5ba6b"
+dependencies = [
+ "bitflags 2.6.0",
+ "core-foundation",
+ "system-configuration-sys 0.6.0",
 ]
 
 [[package]]
@@ -5724,6 +5775,16 @@ name = "system-configuration-sys"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a75fb188eb626b924683e3b95e3a48e63551fcfb51949de2f06a9d91dbee93c9"
+dependencies = [
+ "core-foundation-sys",
+ "libc",
+]
+
+[[package]]
+name = "system-configuration-sys"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e1d1b10ced5ca923a1fcb8d03e96b8d3268065d724548c0211415ff6ac6bac4"
 dependencies = [
  "core-foundation-sys",
  "libc",
@@ -5749,27 +5810,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "termcolor"
-version = "1.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
-dependencies = [
- "winapi-util",
-]
-
-[[package]]
 name = "test_random_derive"
 version = "0.2.0"
 source = "git+https://github.com/semiotic-ai/lighthouse.git?branch=stable#680cdbfcecb03c651db15e8949bd7367ef39c9ed"
-dependencies = [
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "test_random_derive"
-version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -5941,6 +5984,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-native-tls"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbae76ab933c85776efabc971569dd6119c580d8f5d448769dec1764bf796ef2"
+dependencies = [
+ "native-tls",
+ "tokio",
+]
+
+[[package]]
 name = "tokio-rustls"
 version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5956,7 +6009,7 @@ version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c7bc40d0e5a97695bb96e27995cd3a08538541b0a846f65bba7a359f36700d4"
 dependencies = [
- "rustls 0.23.14",
+ "rustls 0.23.15",
  "rustls-pki-types",
  "tokio",
 ]
@@ -6043,7 +6096,7 @@ dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
  "http-body-util",
- "hyper 1.4.1",
+ "hyper 1.5.0",
  "hyper-timeout",
  "hyper-util",
  "percent-encoding",
@@ -6199,7 +6252,7 @@ name = "tree_hash"
 version = "0.6.0"
 source = "git+https://github.com/KolbyML/tree_hash.git?rev=8aaf8bb4184148768d48e2cfbbdd0b95d1da8730#8aaf8bb4184148768d48e2cfbbdd0b95d1da8730"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "ethereum_hashing",
  "smallvec",
 ]
@@ -6241,7 +6294,7 @@ name = "trin-validation"
 version = "0.1.0"
 source = "git+https://github.com/ethereum/trin.git?tag=v0.1.0-alpha.35#31ea2a21df5dcefcd779ea32c72e016a34555fed"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "anyhow",
  "eth2_hashing",
  "ethereum_ssz",
@@ -6291,27 +6344,27 @@ name = "types"
 version = "0.2.1"
 source = "git+https://github.com/semiotic-ai/lighthouse.git?branch=stable#680cdbfcecb03c651db15e8949bd7367ef39c9ed"
 dependencies = [
- "alloy-primitives",
+ "alloy-primitives 0.7.7",
  "alloy-rlp",
  "arbitrary",
- "bls 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
- "compare_fields 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
- "compare_fields_derive 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "bls",
+ "compare_fields",
+ "compare_fields_derive",
  "derivative",
- "eth2_interop_keypairs 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "eth2_interop_keypairs",
  "ethereum-types",
  "ethereum_hashing",
  "ethereum_serde_utils",
  "ethereum_ssz",
  "ethereum_ssz_derive",
  "hex",
- "int_to_bytes 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "int_to_bytes",
  "itertools 0.10.5",
- "kzg 0.1.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "kzg",
  "lazy_static",
  "log",
  "maplit",
- "merkle_proof 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "merkle_proof",
  "metastruct",
  "milhouse",
  "parking_lot 0.12.3",
@@ -6321,7 +6374,7 @@ dependencies = [
  "regex",
  "rpds",
  "rusqlite",
- "safe_arith 0.1.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "safe_arith",
  "serde",
  "serde_json",
  "serde_yaml",
@@ -6329,59 +6382,9 @@ dependencies = [
  "smallvec",
  "ssz_types 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "superstruct 0.8.0",
- "swap_or_not_shuffle 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
+ "swap_or_not_shuffle",
  "tempfile",
- "test_random_derive 0.2.0 (git+https://github.com/semiotic-ai/lighthouse.git?branch=stable)",
- "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "tree_hash_derive 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "types"
-version = "0.2.1"
-source = "git+https://github.com/sigp/lighthouse.git?branch=stable#2e0eb6d1b8705bbda2ba56eb195d9cc7c6575e95"
-dependencies = [
- "alloy-primitives",
- "alloy-rlp",
- "arbitrary",
- "bls 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "compare_fields 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "compare_fields_derive 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "derivative",
- "eth2_interop_keypairs 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "ethereum-types",
- "ethereum_hashing",
- "ethereum_serde_utils",
- "ethereum_ssz",
- "ethereum_ssz_derive",
- "hex",
- "int_to_bytes 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "itertools 0.10.5",
- "kzg 0.1.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "lazy_static",
- "log",
- "maplit",
- "merkle_proof 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "metastruct",
- "milhouse",
- "parking_lot 0.12.3",
- "rand",
- "rand_xorshift",
- "rayon",
- "regex",
- "rpds",
- "rusqlite",
- "safe_arith 0.1.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "serde",
- "serde_json",
- "serde_yaml",
- "slog",
- "smallvec",
- "ssz_types 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "superstruct 0.8.0",
- "swap_or_not_shuffle 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
- "tempfile",
- "test_random_derive 0.2.0 (git+https://github.com/sigp/lighthouse.git?branch=stable)",
+ "test_random_derive",
  "tree_hash 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tree_hash_derive 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -6535,7 +6538,7 @@ dependencies = [
  "flate2",
  "log",
  "once_cell",
- "rustls 0.23.14",
+ "rustls 0.23.15",
  "rustls-pki-types",
  "serde",
  "serde_json",
@@ -6659,9 +6662,9 @@ checksum = "9c8d87e72b64a3b4db28d11ce29237c246188f4f51057d65a7eab63b7987e423"
 
 [[package]]
 name = "wasm-bindgen"
-version = "0.2.94"
+version = "0.2.95"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef073ced962d62984fb38a36e5fdc1a2b23c9e0e1fa0689bb97afa4202ef6887"
+checksum = "128d1e363af62632b8eb57219c8fd7877144af57558fb2ef0368d0087bddeb2e"
 dependencies = [
  "cfg-if",
  "once_cell",
@@ -6670,9 +6673,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-backend"
-version = "0.2.94"
+version = "0.2.95"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4bfab14ef75323f4eb75fa52ee0a3fb59611977fd3240da19b2cf36ff85030e"
+checksum = "cb6dd4d3ca0ddffd1dd1c9c04f94b868c37ff5fac97c30b97cff2d74fce3a358"
 dependencies = [
  "bumpalo",
  "log",
@@ -6685,9 +6688,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-futures"
-version = "0.4.44"
+version = "0.4.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65471f79c1022ffa5291d33520cbbb53b7687b01c2f8e83b57d102eed7ed479d"
+checksum = "cc7ec4f8827a71586374db3e87abdb5a2bb3a15afed140221307c3ec06b1f63b"
 dependencies = [
  "cfg-if",
  "js-sys",
@@ -6697,9 +6700,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.94"
+version = "0.2.95"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7bec9830f60924d9ceb3ef99d55c155be8afa76954edffbb5936ff4509474e7"
+checksum = "e79384be7f8f5a9dd5d7167216f022090cf1f9ec128e6e6a482a2cb5c5422c56"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -6707,9 +6710,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.94"
+version = "0.2.95"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c74f6e152a76a2ad448e223b0fc0b6b5747649c3d769cc6bf45737bf97d0ed6"
+checksum = "26c6ab57572f7a24a4985830b120de1594465e5d500f24afe89e16b4e833ef68"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6720,9 +6723,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.94"
+version = "0.2.95"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a42f6c679374623f295a8623adfe63d9284091245c3504bde47c17a3ce2777d9"
+checksum = "65fc09f10666a9f147042251e0dda9c18f166ff7de300607007e96bdebc1068d"
 
 [[package]]
 name = "wasm-streams"
@@ -6739,9 +6742,9 @@ dependencies = [
 
 [[package]]
 name = "web-sys"
-version = "0.3.71"
+version = "0.3.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44188d185b5bdcae1052d08bcbcf9091a5524038d4572cc4f4f2bb9d5554ddd9"
+checksum = "f6488b90108c040df0fe62fa815cbdee25124641df01814dd7282749234c6112"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
@@ -6811,6 +6814,36 @@ version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33ab640c8d7e35bf8ba19b884ba838ceb4fba93a4e8c65a9059d08afcfc683d9"
 dependencies = [
+ "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "windows-registry"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e400001bb720a623c1c69032f8e3e4cf09984deec740f007dd2b03ec864804b0"
+dependencies = [
+ "windows-result",
+ "windows-strings",
+ "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "windows-result"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d1043d8214f791817bab27572aaa8af63732e11bf84aa21a45a78d6c317ae0e"
+dependencies = [
+ "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "windows-strings"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4cd9b125c486025df0eabcb585e62173c6c9eddcec5d117d3b6e8c30e2ee4d10"
+dependencies = [
+ "windows-result",
  "windows-targets 0.52.6",
 ]
 

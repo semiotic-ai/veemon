@@ -12,15 +12,17 @@ path = "src/lib.rs"
 sf-protos = { path = "../sf-protos" }
 
 dotenvy.workspace = true
+futures.workspace = true
 http.workspace = true
 once_cell.workspace = true
 rustls.workspace = true
-serde.workspace = true
+serde = { workspace = true, features = ["derive"] }
 serde_derive.workspace = true
 thiserror.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio-stream.workspace = true
 tonic = { workspace = true, features = ["tls-roots"] }
 
 [dev-dependencies]
 hex.workspace = true
 insta.workspace = true
-tokio.workspace = true

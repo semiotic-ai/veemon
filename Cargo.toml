@@ -4,26 +4,59 @@ resolver = "2"
 
 [workspace.dependencies]
 alloy-primitives = "=0.7.7"
+alloy-rlp = "0.3.7"
+anyhow = "1"
+base64 = "0.21.7"
+bincode = "1.3.3"
+bls = { git = "https://github.com/semiotic-ai/lighthouse.git", branch = "stable" }
+bytes = "1.5"
+clap = { version = "4.4.10", features = ["derive"] }
+criterion = { version = "0.5.1", features = ["html_reports"] }
+dotenv = "0.15.0"
 dotenvy = "0.15.7"
+env_logger = "0.11.2"
+ethereum-types = "=0.14.1"
 ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.2.2", tag = "v0.1.0-alpha.35" }
+futures = "0.3.31"
 hex = "0.4.3"
 http = "1.1.0"
 insta = "1.39.0"
+log = "0.4.20"
 merkle_proof = { git = "https://github.com/semiotic-ai/lighthouse.git", branch = "stable" }
-
-bls = { git = "https://github.com/semiotic-ai/lighthouse.git", branch = "stable" }
-
+object_store = { version = "0.9.0", features = ["gcp", "http", "aws"] }
 once_cell = "1.20.2"
 primitive-types = "0.12.2"
+prost = "0.13.1"
+prost-build = "0.13.1"
+prost-types = "0.13.1"
+prost-wkt = "0.6.0"
+prost-wkt-types = "0.6.0"
+prost-wkt-build = "0.6.0"
+rand = "0.8.5"
+rayon = "1.8.0"
+reqwest = { version = "0.12.8", features = ["json"] }
+reth-primitives = { git = "https://github.com/paradigmxyz/reth", version = "1.0.1", tag = "v1.0.1" }
+reth-trie-common = { git = "https://github.com/paradigmxyz/reth", version = "1.0.1", tag = "v1.0.1" }
+revm-primitives = "=6.0.0"
+rlp = "0.5.2"
 rustls = { version = "0.23.12", features = ["ring"] }
-serde = { version = "1.0.208", features = ["derive"] }
+serde = "1.0.208"
 serde_derive = "1.0.208"
 serde_json = "1.0.127"
+simple-log = "1.6.0"
+ssz_types = "0.6"
+tempfile = "3.0"
 thiserror = "1.0.63"
-tokio = { version = "1.39.2", features = ["macros", "rt-multi-thread"] }
+tokio = "1.39.2"
+tokio-stream = "0.1.16"
+tokio-test = "0.4.3"
 tonic = "0.12.0"
+tonic-build = "0.12.0"
 tree_hash = "0.6.0"
+trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0", tag = "v0.1.0-alpha.35" }
 types = { git = "https://github.com/semiotic-ai/lighthouse.git", branch = "stable" }
+url = "2.5"
+zstd = "0.13.0"
 
 [profile.dev.build-override]
 opt-level = 3
