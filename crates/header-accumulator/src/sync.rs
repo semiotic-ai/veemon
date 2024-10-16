@@ -175,24 +175,21 @@ mod tests {
 
         // Test case where epoch exists and hashes match
         let epoch = 0;
-        assert_eq!(
-            json_lock
-                .check_sync_state(&file_path, epoch, mac_file.historical_epochs[0].0)
-                .unwrap(),
-            true
-        );
+        assert!(json_lock
+            .check_sync_state(&file_path, epoch, mac_file.historical_epochs[0].0)
+            .unwrap(),);
 
         // Test case where epoch does not exist
         let epoch = 2;
         let result = json_lock
-            .check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[2].0)
+            .check_sync_state(&file_path, epoch, mac_file.historical_epochs[2].0)
             .unwrap();
-        assert_eq!(result, false);
+        assert!(!result);
 
         // // test when hashes differ but lock is present
         let epoch = 0;
         let result = json_lock
-            .check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[1].0)
+            .check_sync_state(&file_path, epoch, mac_file.historical_epochs[1].0)
             .map_err(|error| error.to_string());
         assert_eq!(
             result.unwrap_err(),
@@ -202,9 +199,9 @@ mod tests {
         // test case for another epoch hash
         let epoch = 1;
         let result = json_lock
-            .check_sync_state(&file_path, epoch.clone(), mac_file.historical_epochs[1].0)
+            .check_sync_state(&file_path, epoch, mac_file.historical_epochs[1].0)
             .map_err(|error| error.to_string());
-        assert_eq!(result.unwrap(), true);
+        assert!(result.unwrap());
 
         Ok(())
     }
