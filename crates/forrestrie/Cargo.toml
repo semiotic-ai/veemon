@@ -13,6 +13,9 @@ name = "forrestrie"
 path = "src/main.rs"
 
 [dependencies]
+ethportal-api.workspace = true
+firehose-client = { path = "../firehose-client" }
+futures.workspace = true
 merkle_proof.workspace = true
 primitive-types.workspace = true
 serde = { workspace = true, features = ["derive"] }

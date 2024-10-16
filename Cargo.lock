@@ -2245,7 +2245,9 @@ dependencies = [
 name = "forrestrie"
 version = "0.1.0"
 dependencies = [
+ "ethportal-api",
  "firehose-client",
+ "futures",
  "insta",
  "merkle_proof",
  "primitive-types",
