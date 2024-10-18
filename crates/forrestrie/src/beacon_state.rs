@@ -16,7 +16,34 @@ use types::{
     Validator, Vector,
 };
 
-pub const CAPELLA_START_ERA: usize = 758;
+/// The number of slots in an epoch.
+pub const SLOTS_PER_EPOCH: usize = 32;
+/// The number of slots in an era.
+pub const SLOTS_PER_ERA: usize = SLOTS_PER_HISTORICAL_ROOT;
+/// Slots are 0-indexed.
+/// See, for example, `https://beaconcha.in/slot/0`.
+pub const BEACON_GENESIS_SLOT: usize = 0;
+/// See [Upgrading Ethereum](https://eth2book.info/capella/part4/history/) for more information.
+pub const PHASE_0_START_EPOCH: usize = 0;
+/// See [Upgrading Ethereum](https://eth2book.info/capella/part4/history/) for more information.
+pub const ALTAIR_START_EPOCH: usize = 74240;
+/// See [Upgrading Ethereum](https://eth2book.info/capella/part4/history/) for more information.
+pub const BELLATRIX_START_EPOCH: usize = 144896;
+/// See [Upgrading Ethereum](https://eth2book.info/capella/part4/history/) for more information.
+pub const CAPELLA_START_EPOCH: usize = 194048;
+/// See [Upgrading Ethereum](https://eth2book.info/capella/part4/history/) for more information.
+/// The first slot number of the Deneb fork.
+pub const CAPELLA_START_SLOT: usize = CAPELLA_START_EPOCH * SLOTS_PER_EPOCH;
+/// The first era of the Deneb fork.
+pub const CAPELLA_START_ERA: usize =
+    (CAPELLA_START_EPOCH * SLOTS_PER_EPOCH) / SLOTS_PER_HISTORICAL_ROOT;
+/// https://beaconcha.in/slot/8626176
+pub const DENEB_START_SLOT: usize = 8626176;
+/// https://beaconcha.in/slot/8626176
+pub const FIRST_EXECUTION_BLOCK_DENEB: usize = 19426587;
+/// The offset between the Ethereum block number and the Beacon block number at the start of the Deneb fork,
+/// i.e. the difference between the first execution block number in the Deneb fork and the start slot number of the Deneb fork.
+pub const ETHEREUM_BEACON_DENEB_OFFSET: usize = FIRST_EXECUTION_BLOCK_DENEB - DENEB_START_SLOT;
 
 /// [`BeaconState`] `block_roots` vector has length [`SLOTS_PER_HISTORICAL_ROOT`] (See <https://github.com/ethereum/consensus-specs/blob/dev/specs/capella/beacon-chain.md#beaconstate>),
 /// the value of which is calculated uint64(2**13) (= 8,192) (See <https://eth2book.info/capella/part3/config/preset/#time-parameters>)
