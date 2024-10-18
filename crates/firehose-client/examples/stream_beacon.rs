@@ -16,7 +16,8 @@ async fn main() {
     let mut client = FirehoseClient::new(Chain::Beacon);
     let mut stream = client
         .stream_beacon_with_retry(START_SLOT, TOTAL_SLOTS)
-        .await;
+        .await
+        .unwrap();
 
     let mut blocks: Vec<FirehoseBeaconBlock> = Vec::with_capacity(TOTAL_SLOTS as usize);
 

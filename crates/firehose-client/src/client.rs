@@ -17,6 +17,7 @@ use tonic::{
     transport::{Channel, Uri},
     Response, Status,
 };
+use tracing::{error, info, trace};
 
 pub struct FirehoseClient {
     chain: Chain,
@@ -43,9 +44,10 @@ impl FirehoseClient {
             self.fetch_client = Some(fetch_client(self.chain).await?);
         }
         let mut request = create_single_block_fetch_request(number);
+
         request.insert_api_key_if_provided(self.chain);
-        // TODO: proper tracing
-        println!("Requesting block number:\n\t{}", number);
+
+        info!("Requesting block number:\n\t{}", number);
         Ok(self.fetch_client.as_mut().unwrap().block(request).await)
     }
 
@@ -66,16 +68,10 @@ impl FirehoseClient {
         &mut self,
         start: u64,
         total: u64,
-    ) -> impl futures::Stream<Item = FirehoseBeaconBlock> {
+    ) -> Result<impl futures::Stream<Item = FirehoseBeaconBlock>, ClientError> {
         let (tx, rx) = tokio::sync::mpsc::channel::<FirehoseBeaconBlock>(8192);
 
-        let client = self
-            .get_streaming_client()
-            .await
-            .map_err(|e| {
-                panic!("Failed to get streaming client: {:?}", e);
-            })
-            .unwrap();
+        let client = self.get_streaming_client().await?;
 
         tokio::spawn(async move {
             let mut blocks = 0;
@@ -90,59 +86,60 @@ impl FirehoseClient {
                     start + total - 1,
                     BlocksRequested::All,
                 );
-                let response = client.blocks(request).await.unwrap();
-                let mut stream_inner = response.into_inner();
-                while let Ok(Some(block_msg)) = stream_inner.message().await {
-                    if blocks % 100 == 0 {
-                        println!("Blocks fetched: {}", blocks);
-                    }
-                    match FirehoseBeaconBlock::try_from(block_msg) {
-                        Ok(block) => {
-                            if let Some(last_slot) = last_valid_slot {
-                                let missed_slots = block.slot.saturating_sub(last_slot + 1);
-                                if missed_slots > 0 {
-                                    // TODO: proper tracing
-                                    println!("Missed block at slot: {}", start + blocks);
+                match client.blocks(request).await {
+                    Ok(response) => {
+                        let mut stream_inner = response.into_inner();
+                        while let Ok(Some(block_msg)) = stream_inner.message().await {
+                            if blocks % 100 == 0 {
+                                trace!("Blocks fetched: {}", blocks);
+                            }
+                            match FirehoseBeaconBlock::try_from(block_msg) {
+                                Ok(block) => {
+                                    if let Some(last_slot) = last_valid_slot {
+                                        let missed_slots = block.slot.saturating_sub(last_slot + 1);
+                                        if missed_slots > 0 {
+                                            trace!("Missed block at slot: {}", start + blocks);
 
-                                    let last_block = last_valid_block.take().unwrap();
-                                    let tx = tx.clone();
-                                    for _ in 0..missed_slots {
-                                        blocks += 1;
-                                        tx.send(last_block.clone()).await.unwrap();
+                                            let last_block = last_valid_block.take().unwrap();
+                                            let tx = tx.clone();
+                                            for _ in 0..missed_slots {
+                                                blocks += 1;
+                                                tx.send(last_block.clone()).await.unwrap();
+                                            }
+                                        }
                                     }
+                                    last_valid_slot = Some(block.slot);
+                                    last_valid_block = Some(block.clone());
+
+                                    blocks += 1;
+                                    tx.clone().send(block).await.unwrap();
+                                }
+                                Err(e) => {
+                                    error!("Failed to convert block message to block: {e}");
+                                    break;
                                 }
                             }
-                            last_valid_slot = Some(block.slot);
-                            last_valid_block = Some(block.clone());
-
-                            blocks += 1;
-                            tx.clone().send(block).await.unwrap();
-                        }
-                        Err(_) => {
-                            panic!("Failed to convert block message to block");
                         }
                     }
-                }
+                    Err(e) => {
+                        error!("Failed to get blocks stream: {:?}", e.code());
+                        break;
+                    }
+                };
             }
         });
 
-        ReceiverStream::new(rx)
+        Ok(ReceiverStream::new(rx))
     }
 
     pub async fn stream_ethereum_with_retry(
         &mut self,
         start: u64,
         total: u64,
-    ) -> impl futures::Stream<Item = FirehoseEthBlock> {
+    ) -> Result<impl futures::Stream<Item = FirehoseEthBlock>, ClientError> {
         let (tx, rx) = tokio::sync::mpsc::channel::<FirehoseEthBlock>(8192);
 
-        let client = self
-            .get_streaming_client()
-            .await
-            .map_err(|e| {
-                panic!("Failed to get streaming client: {:?}", e);
-            })
-            .unwrap();
+        let client = self.get_streaming_client().await?;
 
         tokio::spawn(async move {
             let mut blocks = 0;
@@ -159,22 +156,22 @@ impl FirehoseClient {
                 let mut stream_inner = response.into_inner();
                 while let Ok(Some(block_msg)) = stream_inner.message().await {
                     if blocks % 100 == 0 && blocks != 0 {
-                        println!("Blocks fetched: {}", blocks);
+                        trace!("Blocks fetched: {}", blocks);
                     }
                     match FirehoseEthBlock::try_from(block_msg) {
                         Ok(block) => {
                             blocks += 1;
                             tx.clone().send(block).await.unwrap();
                         }
-                        Err(_) => {
-                            panic!("Failed to convert block message to block");
+                        Err(e) => {
+                            panic!("Failed to convert block message to block: {e}");
                         }
                     }
                 }
             }
         });
 
-        ReceiverStream::new(rx)
+        Ok(ReceiverStream::new(rx))
     }
 }
 
