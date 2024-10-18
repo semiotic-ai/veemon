@@ -52,6 +52,7 @@ tokio-stream = "0.1.16"
 tokio-test = "0.4.3"
 tonic = "0.12.0"
 tonic-build = "0.12.0"
+tracing = "0.1.40"
 tree_hash = "0.6.0"
 trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0", tag = "v0.1.0-alpha.35" }
 types = { git = "https://github.com/semiotic-ai/lighthouse.git", branch = "stable" }

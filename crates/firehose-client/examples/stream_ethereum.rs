@@ -15,7 +15,8 @@ async fn main() {
     let mut client = FirehoseClient::new(Chain::Ethereum);
     let mut stream = client
         .stream_ethereum_with_retry(START_BLOCK, TOTAL_BLOCKS)
-        .await;
+        .await
+        .unwrap();
 
     let mut blocks: Vec<FirehoseEthBlock> = Vec::with_capacity(TOTAL_BLOCKS as usize);
 

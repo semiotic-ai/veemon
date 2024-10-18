@@ -154,7 +154,8 @@ async fn main() {
     let num_blocks = SLOTS_PER_HISTORICAL_ROOT as u64;
     let mut stream = beacon_client
         .stream_beacon_with_retry(era * SLOTS_PER_HISTORICAL_ROOT as u64, num_blocks)
-        .await;
+        .await
+        .unwrap();
     let mut block_roots: Vec<Hash256> = Vec::with_capacity(8192);
     while let Some(block) = stream.next().await {
         let root = BlockRoot::try_from(block).unwrap();

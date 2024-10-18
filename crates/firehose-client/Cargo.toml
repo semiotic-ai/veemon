@@ -22,6 +22,7 @@ thiserror.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tokio-stream.workspace = true
 tonic = { workspace = true, features = ["tls-roots"] }
+tracing.workspace = true
 
 [dev-dependencies]
 hex.workspace = true
