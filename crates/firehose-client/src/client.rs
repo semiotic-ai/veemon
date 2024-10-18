@@ -71,6 +71,7 @@ impl FirehoseClient {
     ) -> Result<impl futures::Stream<Item = FirehoseBeaconBlock>, ClientError> {
         let (tx, rx) = tokio::sync::mpsc::channel::<FirehoseBeaconBlock>(8192);
 
+        let chain = self.chain;
         let client = self.get_streaming_client().await?;
 
         tokio::spawn(async move {
@@ -81,7 +82,7 @@ impl FirehoseClient {
             while blocks < total {
                 let mut client = client.clone();
                 let request = create_blocks_streaming_request(
-                    Chain::Ethereum,
+                    chain,
                     start + blocks,
                     start + total - 1,
                     BlocksRequested::All,
@@ -139,6 +140,7 @@ impl FirehoseClient {
     ) -> Result<impl futures::Stream<Item = FirehoseEthBlock>, ClientError> {
         let (tx, rx) = tokio::sync::mpsc::channel::<FirehoseEthBlock>(8192);
 
+        let chain = self.chain;
         let client = self.get_streaming_client().await?;
 
         tokio::spawn(async move {
@@ -147,7 +149,7 @@ impl FirehoseClient {
             while blocks < total {
                 let mut client = client.clone();
                 let request = create_blocks_streaming_request(
-                    Chain::Ethereum,
+                    chain,
                     start + blocks,
                     start + total - 1,
                     BlocksRequested::All,
