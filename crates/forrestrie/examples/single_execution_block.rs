@@ -48,21 +48,19 @@ use types::{
 const EXECUTION_BLOCK_NUMBER: u64 = 20759937;
 /// This slot is the slot of the Beacon block that contains the execution block with [`EXECUTION_BLOCK_NUMBER`].
 const BEACON_SLOT_NUMBER: u64 = 9968872; // <- 9968872 pairs with 20759937
+/// The URL to fetch the head state of the Beacon chain.
+const LIGHT_CLIENT_DATA_URL: &str =
+    "https://www.lightclientdata.org/eth/v2/debug/beacon/states/head";
 
 #[tokio::main]
 async fn main() {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Get the head state of the Beacon chain from a Beacon API provider.
     let state_handle = tokio::spawn(async move {
-        let url = "https://www.lightclientdata.org/eth/v2/debug/beacon/states/head".to_string();
+        let url = LIGHT_CLIENT_DATA_URL.to_string();
         println!("Requesting head state ... (this can take a while!)");
         let response = reqwest::get(url).await.unwrap();
-        let head_state: HeadState<MainnetEthSpec> = if response.status().is_success() {
-            let json_response: serde_json::Value = response.json().await.unwrap();
-            serde_json::from_value(json_response).unwrap()
-        } else {
-            panic!("Request failed with status: {}", response.status());
-        };
+        let head_state: HeadState<MainnetEthSpec> = response.json().await.unwrap();
         head_state
     });
 
