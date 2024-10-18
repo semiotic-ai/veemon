@@ -29,7 +29,8 @@ use forrestrie::{
         HistoricalDataProofs, BEACON_BLOCK_BODY_PROOF_DEPTH, EXECUTION_PAYLOAD_FIELD_INDEX,
     },
     beacon_state::{
-        compute_block_roots_proof_only, HeadState, HISTORY_TREE_DEPTH, SLOTS_PER_HISTORICAL_ROOT,
+        compute_block_roots_proof_only, HeadState, CAPELLA_START_ERA, HISTORY_TREE_DEPTH,
+        SLOTS_PER_HISTORICAL_ROOT,
     },
     BlockRoot,
 };
@@ -46,7 +47,7 @@ use types::{
 /// The execution block is in the execution payload of the Beacon block in slot [`BEACON_SLOT_NUMBER`].
 const EXECUTION_BLOCK_NUMBER: u64 = 20759937;
 /// This slot is the slot of the Beacon block that contains the execution block with [`EXECUTION_BLOCK_NUMBER`].
-const BEACON_SLOT_NUMBER: u64 = 9968872; // <- this is the one that pairs with 20759937
+const BEACON_SLOT_NUMBER: u64 = 9968872; // <- 9968872 pairs with 20759937
 
 #[tokio::main]
 async fn main() {
@@ -148,15 +149,15 @@ async fn main() {
 
     // The era of the block's slot.
     // This is also the index of the historical summary containing the block roots for this era.
-    let era = lighthouse_beacon_block.slot().as_u64() / 8192;
+    let era = lighthouse_beacon_block.slot().as_usize() / SLOTS_PER_HISTORICAL_ROOT;
 
     println!("Requesting 8192 blocks for the era... (this takes a while)");
     let num_blocks = SLOTS_PER_HISTORICAL_ROOT as u64;
     let mut stream = beacon_client
-        .stream_beacon_with_retry(era * SLOTS_PER_HISTORICAL_ROOT as u64, num_blocks)
+        .stream_beacon_with_retry((era * SLOTS_PER_HISTORICAL_ROOT) as u64, num_blocks)
         .await
         .unwrap();
-    let mut block_roots: Vec<Hash256> = Vec::with_capacity(8192);
+    let mut block_roots: Vec<Hash256> = Vec::with_capacity(SLOTS_PER_HISTORICAL_ROOT);
     while let Some(block) = stream.next().await {
         let root = BlockRoot::try_from(block).unwrap();
         block_roots.push(root.0);
@@ -171,13 +172,18 @@ async fn main() {
     let index = lighthouse_beacon_block.slot().as_usize() % SLOTS_PER_HISTORICAL_ROOT;
     // Compute the proof of the block's inclusion in the block roots.
     let proof = compute_block_roots_proof_only::<MainnetEthSpec>(&block_roots, index).unwrap();
+    // To get the correct index, we need to subtract the Capella start era.
+    // `HistoricalSummary` was introduced in Capella and the block we're proving inclusion for is in
+    // the post-Capella era.
+    // For pre-Capella states, we would use the same method, only using the historical_roots field.
+    let proof_era = era - CAPELLA_START_ERA;
 
     let head_state = state_handle.await.unwrap();
     let historical_summary: &HistoricalSummary = head_state
         .data()
         .historical_summaries()
         .unwrap()
-        .get(era as usize)
+        .get(proof_era)
         .unwrap();
     let block_roots_tree_hash_root = historical_summary.block_summary_root();
     assert_eq!(proof.len(), HISTORY_TREE_DEPTH);
