@@ -206,15 +206,15 @@ fn create_blocks_streaming_request(
 
 async fn fetch_client(firehose: Chain) -> Result<FetchClient<Channel>, ClientError> {
     Ok(FetchClient::new({
-        let execution_firehose_uri = firehose.uri_from_env()?;
-        build_and_connect_channel(execution_firehose_uri).await?
+        let uri = firehose.uri_from_env()?;
+        build_and_connect_channel(uri).await?
     }))
 }
 
 async fn stream_client(firehose: Chain) -> Result<StreamClient<Channel>, ClientError> {
     Ok(StreamClient::new({
-        let execution_firehose_uri = firehose.uri_from_env()?;
-        build_and_connect_channel(execution_firehose_uri).await?
+        let uri = firehose.uri_from_env()?;
+        build_and_connect_channel(uri).await?
     }))
 }
 
