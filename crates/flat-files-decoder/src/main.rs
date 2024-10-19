@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use decoder::{decode_flat_files, stream_blocks};
+use decoder::{decode_flat_files, stream_blocks, Decompression};
 use std::io::{self, BufReader, BufWriter};
 
 #[derive(Parser, Debug)]
@@ -34,7 +34,7 @@ enum Commands {
         output: Option<String>,
         #[clap(short, long)]
         /// optionally decompress zstd compressed flat files
-        decompress: Option<bool>,
+        decompress: Decompression,
     },
 }
 #[tokio::main]

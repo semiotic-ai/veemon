@@ -1,6 +1,6 @@
 use std::fs;
 
-use decoder::decode_flat_files;
+use decoder::{decode_flat_files, Decompression};
 use header_accumulator::{
     era_validator::EraValidator, errors::HeaderAccumulatorError, types::ExtHeaderRecord,
 };
@@ -16,7 +16,7 @@ fn test_era_validate() -> Result<(), HeaderAccumulatorError> {
     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
     for number in (0..=8200).step_by(100) {
         let file_name = format!("tests/ethereum_firehose_first_8200/{:010}.dbin", number);
-        match decode_flat_files(file_name, None, None, Some(false)) {
+        match decode_flat_files(file_name, None, None, Decompression::None) {
             Ok(blocks) => {
                 let (successful_headers, _): (Vec<_>, Vec<_>) = blocks
                     .iter()
@@ -82,7 +82,7 @@ fn test_era_validate_compressed() -> Result<(), HeaderAccumulatorError> {
     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
     for number in (0..=8200).step_by(100) {
         let file_name = format!("tests/compressed/{:010}.dbin.zst", number);
-        match decode_flat_files(file_name, None, None, Some(true)) {
+        match decode_flat_files(file_name, None, None, Decompression::Zstd) {
             Ok(blocks) => {
                 let (successful_headers, _): (Vec<_>, Vec<_>) = blocks
                     .iter()

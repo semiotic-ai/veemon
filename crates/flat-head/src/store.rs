@@ -1,6 +1,6 @@
 use anyhow::Context;
 use bytes::Bytes;
-use decoder::handle_buf;
+use decoder::{handle_buf, Decompression};
 use object_store::{
     aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, http::HttpBuilder,
     local::LocalFileSystem, path::Path, ClientOptions, ObjectStore,
@@ -13,7 +13,7 @@ use sf_protos::ethereum::r#type::v2::Block;
 
 pub fn new<S: AsRef<str>>(
     store_url: S,
-    decompress: bool,
+    decompress: Decompression,
     compatible: Option<String>,
 ) -> Result<Store, anyhow::Error> {
     let store_url = store_url.as_ref();
@@ -123,7 +123,7 @@ pub fn new<S: AsRef<str>>(
 pub struct Store {
     store: Arc<dyn ObjectStore>,
     base: String,
-    decompress: bool,
+    decompress: Decompression,
 }
 
 impl Store {
@@ -158,8 +158,11 @@ impl ReadOptions {
     }
 }
 
-async fn handle_from_bytes(bytes: Bytes, decompress: bool) -> Result<Vec<Block>, ReadError> {
-    handle_buf(bytes.as_ref(), Some(decompress)).map_err(|e| ReadError::DecodeError(e.to_string()))
+async fn handle_from_bytes(
+    bytes: Bytes,
+    decompress: Decompression,
+) -> Result<Vec<Block>, ReadError> {
+    handle_buf(bytes.as_ref(), decompress).map_err(|e| ReadError::DecodeError(e.to_string()))
 }
 
 // async fn fake_handle_from_stream(
