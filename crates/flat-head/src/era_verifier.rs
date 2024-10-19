@@ -1,3 +1,4 @@
+use decoder::Decompression;
 use futures::stream::{FuturesOrdered, StreamExt};
 use tokio::task;
 
@@ -19,13 +20,13 @@ pub async fn verify_eras(
     compatible: Option<String>,
     start_epoch: usize,
     end_epoch: Option<usize>,
-    decompress: Option<bool>,
+    decompress: Decompression,
 ) -> Result<Vec<usize>, anyhow::Error> {
     let mut validated_epochs = Vec::new();
     let (tx, mut rx) = mpsc::channel(5);
 
-    let blocks_store: store::Store = store::new(store_url, decompress.unwrap_or(false), compatible)
-        .expect("failed to create blocks store");
+    let blocks_store: store::Store =
+        store::new(store_url, decompress, compatible).expect("failed to create blocks store");
 
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
         let tx = tx.clone();
@@ -75,7 +76,7 @@ pub async fn verify_eras(
 async fn get_blocks_from_store(
     epoch: usize,
     store: &Store,
-    decompress: Option<bool>,
+    decompress: Decompression,
 ) -> Result<Vec<Block>, anyhow::Error> {
     let start_100_block = epoch * MAX_EPOCH_SIZE;
     let end_100_block = (epoch + 1) * MAX_EPOCH_SIZE;
@@ -95,14 +96,17 @@ async fn extract_100s_blocks(
     store: &Store,
     start_block: usize,
     end_block: usize,
-    decompress: Option<bool>,
+    decompress: Decompression,
 ) -> Result<Vec<Block>, anyhow::Error> {
     // Flat files are stored in 100 block files
     // So we need to find the 100 block file that contains the start block and the 100 block file that contains the end block
     let start_100_block = (start_block / 100) * 100;
     let end_100_block = (((end_block as f32) / 100.0).ceil() as usize) * 100;
 
-    let zst_extension = if decompress.unwrap() { ".zst" } else { "" };
+    let zst_extension = match decompress {
+        Decompression::Zstd => ".zst",
+        Decompression::None => "",
+    };
 
     let mut futs = FuturesOrdered::new();
 

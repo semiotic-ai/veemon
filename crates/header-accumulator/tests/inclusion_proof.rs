@@ -1,4 +1,4 @@
-use decoder::decode_flat_files;
+use decoder::{decode_flat_files, Decompression};
 use header_accumulator::{
     self,
     errors::EraValidateError,
@@ -17,7 +17,7 @@ fn test_inclusion_proof() -> Result<(), EraValidateError> {
             "tests/ethereum_firehose_first_8200/{:010}.dbin",
             flat_file_number
         );
-        match decode_flat_files(file_name, None, None, Some(false)) {
+        match decode_flat_files(file_name, None, None, Decompression::None) {
             Ok(blocks) => {
                 headers.extend(
                     blocks

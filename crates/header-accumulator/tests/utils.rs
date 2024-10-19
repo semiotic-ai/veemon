@@ -1,4 +1,4 @@
-use decoder::decode_flat_files;
+use decoder::{decode_flat_files, Decompression};
 use ethportal_api::Header;
 
 #[test]
@@ -7,7 +7,7 @@ fn test_header_from_block() {
         "tests/ethereum_firehose_first_8200/0000008200.dbin".to_string(),
         None,
         None,
-        Some(false),
+        Decompression::None,
     )
     .unwrap();
 

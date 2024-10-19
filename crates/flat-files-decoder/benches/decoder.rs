@@ -1,7 +1,7 @@
 extern crate rand;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use decoder::handle_file;
+use decoder::{handle_file, Decompression};
 use std::fs;
 
 const ITERS_PER_FILE: usize = 10;
@@ -23,7 +23,7 @@ fn bench(c: &mut Criterion) {
                 }
             }
 
-            b.iter(|| handle_file(black_box(&path), None, None, None));
+            b.iter(|| handle_file(black_box(&path), None, None, Decompression::None));
         }
     });
 

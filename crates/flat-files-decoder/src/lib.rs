@@ -30,6 +30,32 @@ use zstd::stream::decode_all;
 
 const MERGE_BLOCK: usize = 15537393;
 
+#[derive(Clone, Copy, Debug)]
+pub enum Decompression {
+    Zstd,
+    None,
+}
+
+impl From<bool> for Decompression {
+    fn from(value: bool) -> Self {
+        if value {
+            Decompression::Zstd
+        } else {
+            Decompression::None
+        }
+    }
+}
+
+impl From<&str> for Decompression {
+    fn from(value: &str) -> Self {
+        match value {
+            "true" => Decompression::Zstd,
+            "false" => Decompression::None,
+            _ => Decompression::None,
+        }
+    }
+}
+
 pub enum DecodeInput {
     Path(String),
     Reader(Box<dyn Read>),
@@ -49,12 +75,12 @@ pub enum DecodeInput {
 ///             If `None`, decoded blocks are not written to disk.
 /// * `headers_dir`: An [`Option<&str>`] specifying the directory containing header files for verification.
 ///                  Must be a directory if provided.
-/// * `decompress`: An [`Option<bool>`] specifying if it is necessary to decompress from zstd.
+/// * `decompress`: A [`Decompression`] enum specifying if it is necessary to decompress from zstd.
 pub fn decode_flat_files(
     input: String,
     output: Option<&str>,
     headers_dir: Option<&str>,
-    decompress: Option<bool>,
+    decompress: Decompression,
 ) -> Result<Vec<Block>, DecodeError> {
     let metadata = fs::metadata(&input).map_err(DecodeError::IoError)?;
 
@@ -75,7 +101,7 @@ fn decode_flat_files_dir(
     input: &str,
     output: Option<&str>,
     headers_dir: Option<&str>,
-    decompress: Option<bool>,
+    decompress: Decompression,
 ) -> Result<Vec<Block>, DecodeError> {
     let paths = fs::read_dir(input).map_err(DecodeError::IoError)?;
 
@@ -120,22 +146,24 @@ fn decode_flat_files_dir(
 ///             If `None`, decoded blocks are not written to disk.
 /// * `headers_dir`: An [`Option<&str>`] specifying the directory containing header files for verification.
 ///                  Must be a directory if provided.
-/// * `decompress`: An [`Option<bool>`] indicating whether decompression from `zstd` format is necessary.
+/// * `decompress`: A [`Decompression`] enum indicating whether decompression from `zstd` format is necessary.
 ///
 pub fn handle_file(
     path: &PathBuf,
     output: Option<&str>,
     headers_dir: Option<&str>,
-    decompress: Option<bool>,
+    decompress: Decompression,
 ) -> Result<Vec<Block>, DecodeError> {
     let input_file = BufReader::new(File::open(path).map_err(DecodeError::IoError)?);
     // Check if decompression is required and read the file accordingly.
-    let mut file_contents: Box<dyn Read> = if decompress == Some(true) {
-        let decompressed_data = decode_all(input_file)
-            .map_err(|e| DecodeError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e)))?;
-        Box::new(Cursor::new(decompressed_data))
-    } else {
-        Box::new(input_file)
+    let mut file_contents: Box<dyn Read> = match decompress {
+        Decompression::Zstd => {
+            let decompressed_data = decode_all(input_file).map_err(|e| {
+                DecodeError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e))
+            })?;
+            Box::new(Cursor::new(decompressed_data))
+        }
+        Decompression::None => Box::new(input_file),
     };
 
     let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
@@ -166,11 +194,10 @@ pub fn handle_file(
 /// * `buf`: A byte slice referencing the in-memory content of the flat file to be decoded.
 /// * `decompress`: A boolean indicating whether the input buffer should be decompressed.
 ///
-pub fn handle_buf(buf: &[u8], decompress: Option<bool>) -> Result<Vec<Block>, DecodeError> {
-    let buf = if decompress.unwrap_or(false) {
-        zstd::decode_all(buf).map_err(|_| DecodeError::DecompressError)?
-    } else {
-        buf.to_vec()
+pub fn handle_buf(buf: &[u8], decompress: Decompression) -> Result<Vec<Block>, DecodeError> {
+    let buf = match decompress {
+        Decompression::Zstd => zstd::decode_all(buf).map_err(|_| DecodeError::DecompressError)?,
+        Decompression::None => buf.to_vec(),
     };
 
     let dbin_file = DbinFile::try_from_read(&mut Cursor::new(buf))?;
@@ -318,23 +345,16 @@ where
 
 #[cfg(test)]
 mod tests {
-    use prost::Message;
-
-    use crate::dbin::DbinFile;
-    use crate::receipts::check_receipt_root;
-    use crate::{handle_buf, handle_file, receipts, stream_blocks};
     use sf_protos::bstream::v1::Block as BstreamBlock;
-    use sf_protos::ethereum::r#type::v2::Block;
-    use std::fs::File;
-    use std::io::{self, Cursor, Read, Write};
-    use std::io::{BufReader, BufWriter};
-    use std::path::PathBuf;
+    use std::io::{self, BufReader, BufWriter, Cursor, Read, Write};
+
+    use super::*;
 
     #[test]
     fn test_handle_file() {
         let path = PathBuf::from("example0017686312.dbin");
 
-        let result = handle_file(&path, None, None, None);
+        let result = handle_file(&path, None, None, Decompression::None);
 
         assert!(result.is_ok());
     }
@@ -343,7 +363,7 @@ mod tests {
     fn test_handle_file_zstd() {
         let path = PathBuf::from("./tests/0000000000.dbin.zst");
 
-        let result = handle_file(&path, None, None, Some(true));
+        let result = handle_file(&path, None, None, Decompression::Zstd);
 
         assert!(result.is_ok());
         let blocks: Vec<Block> = result.unwrap();
@@ -410,7 +430,7 @@ mod tests {
             .read_to_end(&mut buffer)
             .expect("Failed to read file");
 
-        let result = handle_buf(&buffer, Some(false));
+        let result = handle_buf(&buffer, Decompression::None);
         assert!(result.is_ok(), "handle_buf should complete successfully");
     }
 
@@ -426,7 +446,7 @@ mod tests {
             .read_to_end(&mut buffer)
             .expect("Failed to read file");
 
-        let result = handle_buf(&buffer, Some(true));
+        let result = handle_buf(&buffer, Decompression::Zstd);
         assert!(
             result.is_ok(),
             "handle_buf should complete successfully with decompression"
