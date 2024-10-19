@@ -2334,6 +2334,8 @@ dependencies = [
  "tokio",
  "tonic",
  "tonic-build",
+ "tracing",
+ "tracing-subscriber",
  "tree_hash 0.6.0",
  "types",
 ]
