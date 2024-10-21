@@ -9,7 +9,7 @@ use std::sync::Arc;
 use thiserror::Error;
 use url::Url;
 
-use sf_protos::ethereum::r#type::v2::Block;
+use sf_protos::ethereum_v2::Block;
 
 pub fn new<S: AsRef<str>>(
     store_url: S,
@@ -164,37 +164,3 @@ async fn handle_from_bytes(
 ) -> Result<Vec<Block>, ReadError> {
     handle_buf(bytes.as_ref(), decompress).map_err(|e| ReadError::DecodeError(e.to_string()))
 }
-
-// async fn fake_handle_from_stream(
-//     mut stream: BoxStream<'static, Result<Bytes, object_store::Error>>,
-//     decompress: bool,
-// ) -> Result<Vec<Block>, ReadError> {
-//     use futures::stream::TryStreamExt; // for `try_next`
-
-//     let mut file = tokio::fs::OpenOptions::new()
-//         .write(true)
-//         .create(true)
-//         .truncate(true)
-//         .open("/tmp/temp_block.dbin.zst")
-//         .await
-//         .expect("demo code, no file would be use when flat_file_decoders will be updated");
-
-//     while let Some(item) = stream.try_next().await? {
-//         file.write_all(&item)
-//             .await
-//             .expect("demo code, unable to write to temp file");
-//     }
-
-//     file.sync_all()
-//         .await
-//         .expect("demo code, unable to sync temp file");
-//     drop(file);
-
-//     Ok(decode_flat_files(
-//         "/tmp/temp_block.dbin.zst".to_string(),
-//         None,
-//         None,
-//         Some(decompress),
-//     )
-//     .expect("demo code, deal with error nicely"))
-// }

@@ -4,7 +4,7 @@ use reth_primitives::{Log, LogData};
 use revm_primitives::hex;
 use std::convert::TryInto;
 
-use sf_protos::ethereum::r#type::v2::Log as BlockLog;
+use sf_protos::ethereum_v2::Log as BlockLog;
 
 pub fn map_logs(logs: &[BlockLog]) -> Result<Vec<Log>, ReceiptError> {
     logs.iter().map(block_log_to_log).collect()

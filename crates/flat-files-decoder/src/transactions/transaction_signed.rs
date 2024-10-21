@@ -2,7 +2,7 @@ use crate::transactions::error::TransactionError;
 use alloy_primitives::FixedBytes;
 use reth_primitives::TransactionSigned;
 use revm_primitives::hex;
-use sf_protos::ethereum::r#type::v2::TransactionTrace;
+use sf_protos::ethereum_v2::TransactionTrace;
 use std::str::FromStr;
 
 use super::{signature::signature_from_trace, transaction::trace_to_transaction};
