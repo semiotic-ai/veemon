@@ -2,136 +2,47 @@ use std::fmt;
 
 use firehose_protos::error::ProtosError;
 
-#[derive(Debug)]
-pub enum HeaderAccumulatorError {
-    EraValidateError(EraValidateError),
-    SyncError(SyncError),
-}
-
-impl std::error::Error for HeaderAccumulatorError {}
-
-impl fmt::Display for HeaderAccumulatorError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            HeaderAccumulatorError::EraValidateError(ref e) => write!(f, "{}", e),
-            HeaderAccumulatorError::SyncError(ref e) => write!(f, "{}", e),
-        }
-    }
-}
-
-impl From<EraValidateError> for HeaderAccumulatorError {
-    fn from(error: EraValidateError) -> Self {
-        HeaderAccumulatorError::EraValidateError(error)
-    }
-}
-
-impl From<SyncError> for HeaderAccumulatorError {
-    fn from(error: SyncError) -> Self {
-        HeaderAccumulatorError::SyncError(error)
-    }
-}
-
-#[derive(Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum EraValidateError {
+    #[error("Too many header records")]
     TooManyHeaderRecords,
+    #[error("Invalid pre-merge accumulator file")]
     InvalidPreMergeAccumulatorFile,
+    #[error("Error decoding header from flat files")]
     HeaderDecodeError,
+    #[error("Error decoding flat files")]
     FlatFileDecodeError,
+    #[error("Era accumulator mismatch")]
     EraAccumulatorMismatch,
+    #[error("Error creating epoch accumulator")]
     EpochAccumulatorError,
+    #[error("Error generating inclusion proof")]
     ProofGenerationFailure,
+    #[error("Error validating inclusion proof")]
     ProofValidationFailure,
+    #[error("Error reading from stdin")]
     IoError,
+    #[error("Start epoch block not found")]
     StartEpochBlockNotFound,
+    #[error("Start epoch must be less than end epoch")]
     EndEpochLessThanStartEpoch,
+    #[error("Merge block not found")]
     MergeBlockNotFound,
+    #[error("Error reading json from stdin")]
     JsonError,
+    #[error("Error decoding total difficulty")]
     TotalDifficultyDecodeError,
+    #[error("blocks in epoch must respect the range of blocks numbers")]
     InvalidEpochStart,
-    InvalidEpochLength,
+    #[error("blocks in epoch must be exactly 8192 units, found {0}")]
+    InvalidEpochLength(usize),
+
+    #[error("not all blocks are in the same epoch")]
+    InvalidBlockInEpoch,
+    #[error("Error converting ExtHeaderRecord to header")]
     ExtHeaderRecordError,
+    #[error("Invalid block range: {0} - {1}")]
     InvalidBlockRange(u64, u64),
-}
-
-#[derive(Debug)]
-pub enum SyncError {
-    LockfileIoError(std::io::Error),
-    LockfileReadError,
-}
-
-impl std::error::Error for EraValidateError {}
-impl std::error::Error for SyncError {}
-
-impl fmt::Display for EraValidateError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use EraValidateError::*;
-        match *self {
-            EraValidateError::TooManyHeaderRecords => write!(f, "Too many header records"),
-            EraValidateError::InvalidPreMergeAccumulatorFile => {
-                write!(f, "Invalid pre-merge accumulator file")
-            }
-            HeaderDecodeError => {
-                write!(f, "Error decoding header from flat files")
-            }
-            FlatFileDecodeError => write!(f, "Error decoding flat files"),
-            EraAccumulatorMismatch => write!(f, "Era accumulator mismatch"),
-            EpochAccumulatorError => {
-                write!(f, "Error creating epoch accumulator")
-            }
-            ProofGenerationFailure => {
-                write!(f, "Error generating inclusion proof")
-            }
-            ProofValidationFailure => {
-                write!(f, "Error validating inclusion proof")
-            }
-            IoError => write!(f, "Error reading from stdin"),
-            StartEpochBlockNotFound => {
-                write!(f, "Start epoch block not found")
-            }
-            EndEpochLessThanStartEpoch => {
-                write!(f, "Start epoch must be less than end epoch")
-            }
-            MergeBlockNotFound => {
-                write!(f, "Merge block not found")
-            }
-            JsonError => {
-                write!(f, "Error reading json from stdin")
-            }
-            TotalDifficultyDecodeError => {
-                write!(f, "Error decoding total difficulty")
-            }
-            InvalidEpochLength => {
-                write!(f, "blocks in epoch must be exactly 8192 units")
-            }
-            InvalidEpochStart => {
-                write!(
-                    f,
-                    "blocks in epoch must respect the range of blocks numbers"
-                )
-            }
-            ExtHeaderRecordError => {
-                write!(f, "Error converting ExtHeaderRecord to header")
-            }
-            InvalidBlockRange(start, end) => {
-                write!(f, "Invalid block range: {} - {}", start, end)
-            }
-        }
-    }
-}
-
-impl fmt::Display for SyncError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::LockfileIoError(e) => write!(f, "Error reading lockfile: {e}"),
-            Self::LockfileReadError => write!(f, "Epoch not found"),
-        }
-    }
-}
-
-impl From<std::io::Error> for SyncError {
-    fn from(error: std::io::Error) -> Self {
-        SyncError::LockfileIoError(error)
-    }
 }
 
 impl From<ProtosError> for EraValidateError {

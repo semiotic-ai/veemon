@@ -1,19 +1,27 @@
-use std::path::Path;
-
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
 use tree_hash::TreeHash;
-use trin_validation::accumulator::PreMergeAccumulator;
+use trin_validation::accumulator::{HistoricalEpochRoots, PreMergeAccumulator};
 
 use crate::{
-    epoch::{FINAL_EPOCH, MAX_EPOCH_SIZE, MERGE_BLOCK},
-    errors::{EraValidateError, HeaderAccumulatorError},
-    sync::{Lock, LockEntry},
-    types::ExtHeaderRecord,
+    epoch::{Epoch, FINAL_EPOCH},
+    errors::EraValidateError,
 };
 
-pub trait EraValidator {
-    type Error;
+pub struct EraValidator {
+    historical_epochs: HistoricalEpochRoots,
+}
 
+impl From<PreMergeAccumulator> for EraValidator {
+    fn from(value: PreMergeAccumulator) -> Self {
+        Self {
+            historical_epochs: value.historical_epochs,
+        }
+    }
+}
+
+pub type RootHash = [u8; 32];
+
+impl EraValidator {
     /// Validates many headers against a header accumulator
     ///
     /// It also keeps a record in `lockfile.json` of the validated epochs to skip them
@@ -25,13 +33,15 @@ pub trait EraValidator {
     /// * `start_epoch` -  The epoch number that all the first 8192 blocks are set located
     /// * `end_epoch` -  The epoch number that all the last 8192 blocks are located
     /// * `use_lock` - when set to true, uses the lockfile to store already processed blocks. True by default
-    fn era_validate(
-        &self,
-        headers: Vec<ExtHeaderRecord>,
-        start_epoch: usize,
-        end_epoch: Option<usize>,
-        use_lock: bool,
-    ) -> Result<Vec<usize>, Self::Error>;
+    pub fn validate_eras(&self, epochs: &[&Epoch]) -> Result<Vec<RootHash>, EraValidateError> {
+        let mut validated_epochs = Vec::new();
+        for epoch in epochs {
+            let root = self.validate_era(epoch)?;
+            validated_epochs.push(root);
+        }
+
+        Ok(validated_epochs)
+    }
 
     /// takes 8192 block headers and checks if they consist in a valid epoch.
     ///
@@ -44,103 +54,20 @@ pub trait EraValidator {
     ///
     /// For block post merge, the sync-committee should be used to validate block headers   
     /// in the canonical blockchain. So this function is not useful for those.
-    fn process_headers(
-        &self,
-        headers: Vec<ExtHeaderRecord>,
-        epoch: usize,
-    ) -> Result<[u8; 32], Self::Error>;
-}
-
-impl EraValidator for PreMergeAccumulator {
-    type Error = HeaderAccumulatorError;
-
-    fn era_validate(
-        &self,
-        mut headers: Vec<ExtHeaderRecord>,
-        start_epoch: usize,
-        end_epoch: Option<usize>,
-        use_lock: bool,
-    ) -> Result<Vec<usize>, Self::Error> {
-        let end_epoch = end_epoch.unwrap_or(start_epoch + 1);
-
-        // Ensure start epoch is less than end epoch
-        if start_epoch >= end_epoch {
-            Err(EraValidateError::EndEpochLessThanStartEpoch)?;
-        }
-
-        let mut validated_epochs = Vec::new();
-        for epoch in start_epoch..end_epoch {
-            // checks if epoch was already synced form lockfile.
-            if use_lock {
-                let file_path = Path::new("./lockfile.json");
-                let lock_file = Lock::from_file(file_path)?;
-
-                match lock_file.check_sync_state(file_path, epoch, self.historical_epochs[epoch].0)
-                {
-                    Ok(true) => {
-                        log::info!("Skipping, epoch already synced: {}", epoch);
-                        continue;
-                    }
-                    Ok(false) => {
-                        log::info!("syncing new epoch: {}", epoch);
-                    }
-                    Err(e) => {
-                        return {
-                            log::error!("error: {}", e);
-                            Err(EraValidateError::EpochAccumulatorError.into())
-                        }
-                    }
-                }
-            }
-            let epoch_headers: Vec<ExtHeaderRecord> = headers.drain(0..MAX_EPOCH_SIZE).collect();
-            let root = self.process_headers(epoch_headers, epoch)?;
-            validated_epochs.push(epoch);
-
-            // stores the validated epoch into lockfile to avoid validating again and keeping a concise state
-            if use_lock {
-                let path = Path::new("./lockfile.json");
-                let mut lock_file = Lock::from_file(path)?;
-                lock_file.update(LockEntry::new(&epoch, root));
-
-                match lock_file.store_last_state(path) {
-                    Ok(_) => {}
-                    Err(e) => {
-                        log::error!("error: {}", e);
-                        return Err(EraValidateError::EpochAccumulatorError.into());
-                    }
-                }
-            }
-        }
-
-        Ok(validated_epochs)
-    }
-
-    fn process_headers(
-        &self,
-        mut headers: Vec<ExtHeaderRecord>,
-        epoch: usize,
-    ) -> Result<[u8; 32], Self::Error> {
-        if headers.len() != MAX_EPOCH_SIZE {
-            Err(EraValidateError::InvalidEpochLength)?;
-        }
-
-        if headers[0].block_number % MAX_EPOCH_SIZE as u64 != 0 {
-            Err(EraValidateError::InvalidEpochStart)?;
-        }
-
-        if epoch > FINAL_EPOCH {
+    pub fn validate_era(&self, epoch: &Epoch) -> Result<RootHash, EraValidateError> {
+        if epoch.number() > FINAL_EPOCH {
             log::warn!(
                 "the blocks from this epoch are not being validated since they are post merge.
             For post merge blocks, use the sync-committee subprotocol"
             );
-            headers.retain(|header: &ExtHeaderRecord| header.block_number < MERGE_BLOCK);
+            // TODO return error
         }
 
-        let header_records: Vec<_> = headers.into_iter().map(HeaderRecord::from).collect();
+        let header_records: Vec<_> = epoch.iter().map(HeaderRecord::from).collect();
         let epoch_accumulator = EpochAccumulator::from(header_records);
 
         let root: [u8; 32] = epoch_accumulator.tree_hash_root().0;
-        let valid_root = self.historical_epochs[epoch].0;
+        let valid_root = self.historical_epochs[epoch.number()].0;
 
         if root != valid_root {
             log::error!(
