@@ -1,0 +1,72 @@
+name: deploy-docs
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy-pages:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    container:
+      image: rust:1.82-bookworm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 #v2.7.3
+        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
+      - name: Configure sccache
+        run: |
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@89e9040de88b577a072e3760aaf59f585da083af #v0.0.5
+        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
+      - name: 🔨 Documentation
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --no-deps
+      - name: Create index.html
+        uses: DamianReeves/write-file-action@master
+        with:
+          path: target/doc/index.html
+          contents: |
+            <!DOCTYPE html>
+            <meta charset="utf-8">
+            <title>Redirecting to nli/</title>
+            <meta http-equiv="refresh" content="0; URL=nli/">
+            <link rel="canonical" href="nli/">
+          write-mode: append
+      - name: Fix permissions
+        run: |
+          chmod -c -R +rX "target/doc/" | while read line; do
+            echo "::warning title=Invalid file permissions automatically fixed::$line"
+          done
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './target/doc'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
