@@ -1,3 +1,6 @@
+//! Firehose Beacon-related data structures and operations.
+//! See the protobuffer definitions section of the README for more information.
+//!
 use crate::error::ProtosError;
 use crate::firehose::v2::{Response, SingleBlockResponse};
 use primitive_types::{H256, U256};

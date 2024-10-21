@@ -6,9 +6,9 @@ use crate::receipts::error::ReceiptError;
 use crate::receipts::receipt::FullReceipt;
 use alloy_primitives::B256;
 use alloy_rlp::{Encodable, Header};
+use firehose_protos::ethereum_v2::Block;
 use reth_trie_common::root::ordered_trie_root_with_encoder;
 use revm_primitives::hex;
-use sf_protos::ethereum_v2::Block;
 
 const BYZANTINUM_FORK_BLOCK: u64 = 4_370_000;
 

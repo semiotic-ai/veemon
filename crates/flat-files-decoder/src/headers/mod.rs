@@ -2,8 +2,8 @@ pub mod error;
 
 use crate::headers::error::BlockHeaderError;
 use alloy_primitives::B256;
+use firehose_protos::ethereum_v2::{Block, BlockHeader};
 use serde::{Deserialize, Serialize};
-use sf_protos::ethereum_v2::{Block, BlockHeader};
 use std::fs::File;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]

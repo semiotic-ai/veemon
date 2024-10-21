@@ -13,11 +13,11 @@ clap.workspace = true
 decoder = { path = "../flat-files-decoder" }
 dotenvy.workspace = true
 env_logger.workspace = true
+firehose-protos = { path = "../firehose-protos" }
 futures.workspace = true
 header_accumulator = { path = "../header-accumulator" }
 log.workspace = true
 object_store.workspace = true
-sf-protos = { path = "../sf-protos" }
 thiserror.workspace = true
 tokio = { workspace = true, features = ["full"] }
 tree_hash.workspace = true

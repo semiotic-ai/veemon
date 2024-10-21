@@ -4,9 +4,9 @@ use crate::transactions::tx_type::map_tx_type;
 use alloy_consensus::{TxEip1559, TxEip2930, TxLegacy};
 use alloy_primitives::{Address, ChainId};
 use alloy_primitives::{Bytes, TxKind, Uint};
+use firehose_protos::ethereum_v2::{BigInt, CallType, TransactionTrace};
 use reth_primitives::Transaction;
 use reth_primitives::TxType;
-use sf_protos::ethereum_v2::{BigInt, CallType, TransactionTrace};
 
 use super::bigint_to_u128;
 

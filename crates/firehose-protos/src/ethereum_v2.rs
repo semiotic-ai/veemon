@@ -1,6 +1,6 @@
-//! Module for Firehose Ethereum-related data structures and operations.
-//! Currently contains the `.proto` defined [here](https://github.com/streamingfast/firehose-ethereum/blob/d9ec696423c2288db640f00026ae29a6cc4c2121/proto/sf/ethereum/type/v2/type.proto#L9)    
-
+//! Firehose Ethereum-related data structures and operations.
+//! See the protobuffer definitions section of the README for more information.
+//!
 use alloy_primitives::{Address, Bloom, FixedBytes, Uint};
 use ethportal_api::types::execution::header::Header;
 use prost::Message;

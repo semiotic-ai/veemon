@@ -3,7 +3,7 @@
 //! Demonstrates how to fetch a single block from Beacon Firehose, using the `Fetch` API.
 
 use firehose_client::client::{Chain, FirehoseClient};
-use sf_protos::{
+use firehose_protos::{
     beacon_v1::{block::Body, Block as FirehoseBeaconBlock},
     ethereum_v2::Block as FirehoseEthBlock,
 };

@@ -1,7 +1,7 @@
 use alloy_primitives::U256;
+use firehose_protos::ethereum_v2::TransactionTrace;
 use reth_primitives::Signature;
 use revm_primitives::hex;
-use sf_protos::ethereum_v2::TransactionTrace;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

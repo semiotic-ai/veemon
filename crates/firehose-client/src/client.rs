@@ -2,8 +2,8 @@ use std::str::FromStr;
 
 use crate::error::ClientError;
 use dotenvy::{dotenv, var};
-use sf_protos::firehose::v2::SingleBlockResponse;
-use sf_protos::{
+use firehose_protos::firehose::v2::SingleBlockResponse;
+use firehose_protos::{
     beacon_v1::Block as FirehoseBeaconBlock,
     ethereum_v2::Block as FirehoseEthBlock,
     firehose::v2::{

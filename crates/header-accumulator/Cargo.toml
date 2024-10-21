@@ -12,12 +12,12 @@ clap.workspace = true
 env_logger.workspace = true
 ethereum-types.workspace = true
 ethportal-api.workspace = true
+firehose-protos = { path = "../firehose-protos" }
 log.workspace = true
 primitive-types.workspace = true
 rlp.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
-sf-protos = { path = "../sf-protos" }
 tree_hash = "0.8.0"
 trin-validation.workspace = true
 
