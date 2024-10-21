@@ -3,9 +3,8 @@
 //! This module provides access to Rust implementations of StreamingFast's protocol buffer definitions,
 //! enabling the encoding and decoding of data for Ethereum blockchain and bstream services.
 
+pub mod error;
 pub mod ethereum_v2;
-
-use thiserror::Error;
 
 pub mod bstream {
     pub mod v1 {
@@ -22,10 +21,8 @@ pub mod firehose {
 pub mod beacon {
     pub mod r#type {
         pub mod v1 {
-            use crate::{
-                firehose::v2::{Response, SingleBlockResponse},
-                ProtosError,
-            };
+            use crate::error::ProtosError;
+            use crate::firehose::v2::{Response, SingleBlockResponse};
             use primitive_types::{H256, U256};
             use prost::Message;
             use ssz_types::{length::Fixed, Bitfield, FixedVector};
@@ -562,55 +559,4 @@ pub mod beacon {
             }
         }
     }
-}
-
-#[derive(Error, Debug)]
-pub enum ProtosError {
-    #[error("Block conversion error")]
-    BlockConversionError,
-
-    #[error("BLS error: {0}")]
-    Bls(String),
-
-    #[error("Error in decoding block: {0}")]
-    DecodeError(#[from] prost::DecodeError),
-
-    #[error("GraffitiInvalid")]
-    GraffitiInvalid,
-
-    #[error("KzgCommitmentInvalid")]
-    KzgCommitmentInvalid,
-
-    #[error("Null attestation data")]
-    NullAttestationData,
-
-    #[error("Null indexed attestation data")]
-    NullIndexedAttestationData,
-
-    #[error("Null block field in block response")]
-    NullBlock,
-
-    #[error("Null BlsToExecutionChange")]
-    NullBlsToExecutionChange,
-
-    #[error("Null checkpoint")]
-    NullCheckpoint,
-
-    #[error("Null deposit data")]
-    NullDepositData,
-
-    #[error("Null execution payload")]
-    NullExecutionPayload,
-
-    #[error("Proposer Slashing null signer")]
-    NullSigner,
-
-    #[error("Null SignedBeaconBlockHeader Message")]
-    NullSignedBeaconBlockHeaderMessage,
-
-    #[error("Null voluntary exit")]
-    NullVoluntaryExit,
-
-    #[error("SSZ Types error: {0}")]
-    SszTypesError(String),
 }
