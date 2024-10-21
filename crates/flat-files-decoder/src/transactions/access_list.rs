@@ -2,7 +2,7 @@ use crate::transactions::error::TransactionError;
 use alloy_eip2930::{AccessList, AccessListItem};
 use alloy_primitives::{Address, B256};
 use revm_primitives::hex;
-use sf_protos::ethereum::r#type::v2::AccessTuple;
+use sf_protos::ethereum_v2::AccessTuple;
 
 pub(crate) fn compute_access_list(
     access_list: &[AccessTuple],

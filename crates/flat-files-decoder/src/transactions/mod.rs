@@ -10,7 +10,7 @@ use crate::transactions::error::TransactionError;
 use alloy_primitives::U128;
 use reth_primitives::{proofs::calculate_transaction_root, TransactionSigned};
 use revm_primitives::hex;
-use sf_protos::ethereum::r#type::v2::{BigInt, Block};
+use sf_protos::ethereum_v2::{BigInt, Block};
 
 use self::transaction_signed::trace_to_signed;
 
@@ -48,19 +48,14 @@ pub fn bigint_to_u128(value: BigInt) -> Result<u128, TransactionError> {
 #[cfg(test)]
 mod tests {
     use crate::dbin::DbinFile;
-    use crate::transactions::bigint_to_u128;
-    use crate::transactions::transaction_signed::trace_to_signed;
+
     use alloy_primitives::{Address, Bytes, Parity, TxHash, TxKind, U256};
     use prost::Message;
     use reth_primitives::TxType;
-    use sf_protos::bstream::v1::Block as BstreamBlock;
-    use sf_protos::ethereum::r#type::v2::transaction_trace::Type;
-    use sf_protos::ethereum::r#type::v2::{BigInt, Block};
-    use std::fs::File;
-    use std::io::BufReader;
-    use std::str::FromStr;
+    use sf_protos::{bstream::v1::Block as BstreamBlock, ethereum_v2::transaction_trace::Type};
+    use std::{fs::File, io::BufReader, str::FromStr};
 
-    use super::error::TransactionError;
+    use super::*;
 
     #[test]
     fn test_bigint_to_u128() -> Result<(), TransactionError> {

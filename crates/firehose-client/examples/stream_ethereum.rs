@@ -3,7 +3,7 @@
 //! This example demonstrates how to stream Ethereum blocks using the Firehose client.
 use firehose_client::client::{Chain, FirehoseClient};
 use futures::StreamExt;
-use sf_protos::ethereum::r#type::v2::Block as FirehoseEthBlock;
+use sf_protos::ethereum_v2::Block as FirehoseEthBlock;
 
 #[tokio::main]
 async fn main() {
