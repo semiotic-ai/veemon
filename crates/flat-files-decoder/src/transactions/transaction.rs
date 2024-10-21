@@ -1,10 +1,11 @@
 use crate::transactions::access_list::compute_access_list;
 use crate::transactions::error::TransactionError;
 use crate::transactions::tx_type::map_tx_type;
-use alloy_primitives::{TxKind, Uint};
-use reth_primitives::{
-    Address, Bytes, ChainId, Transaction, TxEip1559, TxEip2930, TxLegacy, TxType,
-};
+use alloy_consensus::{TxEip1559, TxEip2930, TxLegacy};
+use alloy_primitives::{Address, ChainId};
+use alloy_primitives::{Bytes, TxKind, Uint};
+use reth_primitives::Transaction;
+use reth_primitives::TxType;
 use sf_protos::ethereum::r#type::v2::{BigInt, CallType, TransactionTrace};
 
 use super::bigint_to_u128;
@@ -95,6 +96,7 @@ pub fn trace_to_transaction(trace: &TransactionTrace) -> Result<Transaction, Tra
             })
         }
         TxType::Eip4844 => unimplemented!(),
+        TxType::Eip7702 => unimplemented!(),
     };
 
     Ok(transaction)

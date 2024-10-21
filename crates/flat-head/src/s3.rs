@@ -1,4 +1,4 @@
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use header_accumulator::{
     epoch::MAX_EPOCH_SIZE, era_validator::EraValidator, types::ExtHeaderRecord,
 };

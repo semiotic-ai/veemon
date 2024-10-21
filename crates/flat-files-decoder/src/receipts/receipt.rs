@@ -1,8 +1,9 @@
 use crate::receipts::error::ReceiptError;
 use crate::receipts::logs::map_logs;
 use crate::transactions::tx_type::map_tx_type;
-use alloy_primitives::FixedBytes;
-use reth_primitives::{hex, Bloom, Log, Receipt, ReceiptWithBloom};
+use alloy_primitives::{Bloom, FixedBytes};
+use reth_primitives::{Log, Receipt, ReceiptWithBloom};
+use revm_primitives::hex;
 use sf_protos::ethereum::r#type::v2::TransactionTrace;
 
 pub struct FullReceipt {

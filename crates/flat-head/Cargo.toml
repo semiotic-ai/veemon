@@ -11,7 +11,7 @@ bincode.workspace = true
 bytes.workspace = true
 clap.workspace = true
 decoder = { path = "../flat-files-decoder" }
-dotenv.workspace = true
+dotenvy.workspace = true
 env_logger.workspace = true
 futures.workspace = true
 header_accumulator = { path = "../header-accumulator" }
