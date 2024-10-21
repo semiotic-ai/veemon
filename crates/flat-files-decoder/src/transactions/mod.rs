@@ -7,7 +7,9 @@ mod transaction;
 mod transaction_signed;
 
 use crate::transactions::error::TransactionError;
-use reth_primitives::{hex, proofs::calculate_transaction_root, TransactionSigned, U128};
+use alloy_primitives::U128;
+use reth_primitives::{proofs::calculate_transaction_root, TransactionSigned};
+use revm_primitives::hex;
 use sf_protos::ethereum::r#type::v2::{BigInt, Block};
 
 use self::transaction_signed::trace_to_signed;
@@ -48,8 +50,9 @@ mod tests {
     use crate::dbin::DbinFile;
     use crate::transactions::bigint_to_u128;
     use crate::transactions::transaction_signed::trace_to_signed;
+    use alloy_primitives::{Address, Bytes, Parity, TxHash, TxKind, U256};
     use prost::Message;
-    use reth_primitives::{Address, Bytes, TxHash, TxKind, TxType, U256};
+    use reth_primitives::TxType;
     use sf_protos::bstream::v1::Block as BstreamBlock;
     use sf_protos::ethereum::r#type::v2::transaction_trace::Type;
     use sf_protos::ethereum::r#type::v2::{BigInt, Block};
@@ -119,14 +122,14 @@ mod tests {
 
         let signature = transaction.signature;
 
-        assert_eq!(signature.v(Some(1)), 37);
+        assert_eq!(signature.v(), Parity::Parity(false));
         assert_eq!(
-            signature.r,
+            signature.r(),
             U256::from_str("0x0c8ee5280894c443ad128321d3f682c257afef878c5be9c18028b9570414213e")
                 .unwrap()
         );
         assert_eq!(
-            signature.s,
+            signature.s(),
             U256::from_str("0x0318b26186566acbe046e9d9caaa02444f730f4e9023c835530e622e357f3fdd")
                 .unwrap()
         );
@@ -164,14 +167,14 @@ mod tests {
 
         assert_eq!(transaction.transaction.chain_id(), Some(1));
 
-        assert_eq!(signature.v(Some(1)), 38);
+        assert_eq!(signature.v(), Parity::Parity(true));
         assert_eq!(
-            signature.r,
+            signature.r(),
             U256::from_str("0x44c2b52e2e291f1c13f572ff786039d4520955b640eae90d3c3d9a2117b0638b")
                 .unwrap()
         );
         assert_eq!(
-            signature.s,
+            signature.s(),
             U256::from_str("0x2a15dc9fd6c495a4a65015c3c6e41f480626741e78008091415b26410e209902")
                 .unwrap()
         );

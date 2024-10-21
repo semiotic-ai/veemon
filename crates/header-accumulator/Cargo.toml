@@ -19,7 +19,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 sf-protos = { path = "../sf-protos" }
 # Needs to match that transitively depended on by trin-validation
-tree_hash = { git = "https://github.com/KolbyML/tree_hash.git", rev = "8aaf8bb4184148768d48e2cfbbdd0b95d1da8730" }
+tree_hash = "0.8.0"
 trin-validation.workspace = true
 
 [dev-dependencies]

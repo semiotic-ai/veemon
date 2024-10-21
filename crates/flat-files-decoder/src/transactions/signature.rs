@@ -1,4 +1,6 @@
-use reth_primitives::{hex, Signature, U256};
+use alloy_primitives::U256;
+use reth_primitives::Signature;
+use revm_primitives::hex;
 use sf_protos::ethereum::r#type::v2::TransactionTrace;
 use thiserror::Error;
 
@@ -29,7 +31,7 @@ pub fn signature_from_trace(trace: &TransactionTrace) -> Result<Signature, Inval
 
     let odd_y_parity = get_y_parity(trace)?;
 
-    Ok(Signature { r, s, odd_y_parity })
+    Ok(Signature::new(r, s, odd_y_parity.into()))
 }
 
 fn get_y_parity(trace: &TransactionTrace) -> Result<bool, InvalidSignatureError> {
