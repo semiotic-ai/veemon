@@ -4,7 +4,7 @@
 
 use firehose_client::client::{Chain, FirehoseClient};
 use sf_protos::{
-    beacon::r#type::v1::{block::Body, Block as FirehoseBeaconBlock},
+    beacon_v1::{block::Body, Block as FirehoseBeaconBlock},
     ethereum_v2::Block as FirehoseEthBlock,
 };
 

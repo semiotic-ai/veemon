@@ -36,7 +36,7 @@ use forrestrie::{
 };
 use futures::StreamExt;
 use merkle_proof::verify_merkle_proof;
-use sf_protos::{beacon, ethereum_v2};
+use sf_protos::{beacon_v1, ethereum_v2};
 use tree_hash::TreeHash;
 use types::{
     historical_summary::HistoricalSummary, light_client_update::EXECUTION_PAYLOAD_INDEX,
@@ -82,7 +82,7 @@ async fn main() {
         .await
         .unwrap()
         .unwrap();
-    let beacon_block = beacon::r#type::v1::Block::try_from(response.into_inner()).unwrap();
+    let beacon_block = beacon_v1::Block::try_from(response.into_inner()).unwrap();
     assert_eq!(beacon_block.slot, BEACON_SLOT_NUMBER);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -108,7 +108,7 @@ async fn main() {
         lighthouse_beacon_block_root.as_bytes(),
         beacon_block.root.as_slice()
     );
-    let Some(beacon::r#type::v1::block::Body::Deneb(body)) = beacon_block.body else {
+    let Some(beacon_v1::block::Body::Deneb(body)) = beacon_block.body else {
         panic!("Unsupported block version!");
     };
     let block_body: BeaconBlockBodyDeneb<MainnetEthSpec> = body.try_into().unwrap();
