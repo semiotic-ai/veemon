@@ -4,7 +4,7 @@
 
 use firehose_client::client::{Chain, FirehoseClient};
 use futures::StreamExt;
-use sf_protos::beacon::r#type::v1::Block as FirehoseBeaconBlock;
+use sf_protos::beacon_v1::Block as FirehoseBeaconBlock;
 
 #[tokio::main]
 async fn main() {
