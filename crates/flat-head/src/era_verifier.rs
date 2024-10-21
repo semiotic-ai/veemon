@@ -3,7 +3,7 @@ use futures::stream::{FuturesOrdered, StreamExt};
 use tokio::task;
 
 use header_accumulator::{era_validator::EraValidator, types::ExtHeaderRecord};
-use sf_protos::ethereum::r#type::v2::Block;
+use sf_protos::ethereum_v2::Block;
 use tokio::sync::mpsc;
 use trin_validation::accumulator::PreMergeAccumulator;
 

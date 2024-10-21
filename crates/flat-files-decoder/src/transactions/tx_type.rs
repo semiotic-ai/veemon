@@ -1,5 +1,5 @@
 use reth_primitives::TxType;
-use sf_protos::ethereum::r#type::v2::transaction_trace::Type;
+use sf_protos::ethereum_v2::transaction_trace::Type;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

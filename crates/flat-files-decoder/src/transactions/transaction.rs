@@ -6,7 +6,7 @@ use alloy_primitives::{Address, ChainId};
 use alloy_primitives::{Bytes, TxKind, Uint};
 use reth_primitives::Transaction;
 use reth_primitives::TxType;
-use sf_protos::ethereum::r#type::v2::{BigInt, CallType, TransactionTrace};
+use sf_protos::ethereum_v2::{BigInt, CallType, TransactionTrace};
 
 use super::bigint_to_u128;
 

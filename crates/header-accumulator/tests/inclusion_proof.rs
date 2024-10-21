@@ -5,7 +5,7 @@ use header_accumulator::{
     inclusion_proof::{generate_inclusion_proof, verify_inclusion_proof},
     types::ExtHeaderRecord,
 };
-use sf_protos::ethereum::r#type::v2::Block;
+use sf_protos::ethereum_v2::Block;
 
 #[test]
 fn test_inclusion_proof() -> Result<(), EraValidateError> {

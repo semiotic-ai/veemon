@@ -10,21 +10,22 @@ pub mod headers;
 pub mod receipts;
 pub mod transactions;
 
-use crate::error::DecodeError;
-use crate::headers::check_valid_header;
-use crate::transactions::check_transaction_root;
+use crate::{
+    error::DecodeError, headers::check_valid_header, transactions::check_transaction_root,
+};
 use dbin::DbinFile;
 use error::CheckError;
 use headers::HeaderRecordWithNumber;
 use prost::Message;
 use rayon::prelude::*;
 use receipts::check_receipt_root;
-use sf_protos::ethereum::r#type::v2::Block;
+use sf_protos::ethereum_v2::Block;
 use simple_log::log;
-use std::fs;
-use std::fs::File;
-use std::io::{BufReader, Cursor, Read, Write};
-use std::path::PathBuf;
+use std::{
+    fs::{self, File},
+    io::{BufReader, Cursor, Read, Write},
+    path::PathBuf,
+};
 use tokio::join;
 use zstd::stream::decode_all;
 
@@ -323,9 +324,8 @@ pub async fn stream_blocks<R: Read, W: Write>(
 fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecodeError> {
     let block_stream = sf_protos::bstream::v1::Block::decode(bytes.as_slice())
         .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
-    let block =
-        sf_protos::ethereum::r#type::v2::Block::decode(block_stream.payload_buffer.as_slice())
-            .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+    let block = sf_protos::ethereum_v2::Block::decode(block_stream.payload_buffer.as_slice())
+        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
     Ok(block)
 }
 
@@ -346,7 +346,7 @@ where
 #[cfg(test)]
 mod tests {
     use sf_protos::bstream::v1::Block as BstreamBlock;
-    use std::io::{self, BufReader, BufWriter, Cursor, Read, Write};
+    use std::io::{BufReader, BufWriter};
 
     use super::*;
 
@@ -401,7 +401,7 @@ mod tests {
             for i in inputs {
                 let mut input = File::open(i).expect("couldn't read input file");
 
-                io::copy(&mut input, &mut writer).expect("couldn't copy");
+                std::io::copy(&mut input, &mut writer).expect("couldn't copy");
                 writer.flush().expect("failed to flush output");
             }
         }

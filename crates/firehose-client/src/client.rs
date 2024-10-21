@@ -2,14 +2,15 @@ use std::str::FromStr;
 
 use crate::error::ClientError;
 use dotenvy::{dotenv, var};
+use sf_protos::firehose::v2::SingleBlockResponse;
 use sf_protos::{
     beacon::r#type::v1::Block as FirehoseBeaconBlock,
-    ethereum::r#type::v2::Block as FirehoseEthBlock,
+    ethereum_v2::Block as FirehoseEthBlock,
     firehose::v2::{
         fetch_client::FetchClient,
         single_block_request::{BlockNumber, Reference},
         stream_client::StreamClient,
-        Request, SingleBlockRequest, SingleBlockResponse,
+        Request, SingleBlockRequest,
     },
 };
 use tokio_stream::wrappers::ReceiverStream;

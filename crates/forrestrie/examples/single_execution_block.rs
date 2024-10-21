@@ -36,7 +36,7 @@ use forrestrie::{
 };
 use futures::StreamExt;
 use merkle_proof::verify_merkle_proof;
-use sf_protos::{beacon, ethereum};
+use sf_protos::{beacon, ethereum_v2};
 use tree_hash::TreeHash;
 use types::{
     historical_summary::HistoricalSummary, light_client_update::EXECUTION_PAYLOAD_INDEX,
@@ -72,7 +72,7 @@ async fn main() {
         .await
         .unwrap()
         .unwrap();
-    let eth1_block = ethereum::r#type::v2::Block::try_from(response.into_inner()).unwrap();
+    let eth1_block = ethereum_v2::Block::try_from(response.into_inner()).unwrap();
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // And get the Beacon block.
