@@ -30,7 +30,7 @@ pub async fn verify_eras(
 
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
         let tx = tx.clone();
-        let macc = macc.clone();
+        let era_validator: EraValidator = macc.clone().into();
         let store = blocks_store.clone();
 
         task::spawn(async move {
@@ -51,8 +51,8 @@ pub async fn verify_eras(
                             (succ, errs)
                         });
 
-                    let valid_epochs = macc
-                        .era_validate(successful_headers, epoch, Some(epoch + 1), true)
+                    let valid_epochs = era_validator
+                        .validate_era(successful_headers, epoch, Some(epoch + 1), true)
                         .unwrap();
 
                     let _ = tx.send(valid_epochs).await;

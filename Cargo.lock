@@ -2648,6 +2648,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
+ "thiserror",
  "tree_hash 0.8.0",
  "trin-validation",
 ]
