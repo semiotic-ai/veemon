@@ -40,6 +40,8 @@ jobs:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@89e9040de88b577a072e3760aaf59f585da083af #v0.0.5
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
       - name: 🔨 Documentation
         uses: actions-rs/cargo@v1
         with:
