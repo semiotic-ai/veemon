@@ -4,7 +4,7 @@ use crate::error::ClientError;
 use dotenvy::{dotenv, var};
 use sf_protos::firehose::v2::SingleBlockResponse;
 use sf_protos::{
-    beacon::r#type::v1::Block as FirehoseBeaconBlock,
+    beacon_v1::Block as FirehoseBeaconBlock,
     ethereum_v2::Block as FirehoseEthBlock,
     firehose::v2::{
         fetch_client::FetchClient,

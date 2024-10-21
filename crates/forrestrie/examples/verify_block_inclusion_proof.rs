@@ -29,7 +29,7 @@ use forrestrie::beacon_block::{
     HistoricalDataProofs, BEACON_BLOCK_BODY_PROOF_DEPTH, EXECUTION_PAYLOAD_FIELD_INDEX,
 };
 use merkle_proof::verify_merkle_proof;
-use sf_protos::beacon::r#type::v1::Block as FirehoseBeaconBlock;
+use sf_protos::beacon_v1::Block as FirehoseBeaconBlock;
 use tree_hash::TreeHash;
 use types::{
     light_client_update::EXECUTION_PAYLOAD_INDEX, BeaconBlock, BeaconBlockBody, MainnetEthSpec,
