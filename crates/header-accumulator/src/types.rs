@@ -1,6 +1,6 @@
 use alloy_primitives::{Uint, B256};
 use ethportal_api::{types::execution::accumulator::HeaderRecord, Header};
-use sf_protos::ethereum_v2::{Block, BlockHeader};
+use firehose_protos::ethereum_v2::{Block, BlockHeader};
 
 use crate::errors::EraValidateError;
 

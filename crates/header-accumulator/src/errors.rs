@@ -1,6 +1,6 @@
 use std::fmt;
 
-use sf_protos::error::ProtosError;
+use firehose_protos::error::ProtosError;
 
 #[derive(Debug)]
 pub enum HeaderAccumulatorError {

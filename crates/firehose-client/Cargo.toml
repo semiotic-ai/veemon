@@ -8,9 +8,8 @@ name = "firehose_client"
 path = "src/lib.rs"
 
 [dependencies]
-sf-protos = { path = "../sf-protos" }
-
 dotenvy.workspace = true
+firehose-protos = { path = "../firehose-protos" }
 futures.workspace = true
 http.workspace = true
 once_cell.workspace = true

@@ -15,11 +15,11 @@ use crate::{
 };
 use dbin::DbinFile;
 use error::CheckError;
+use firehose_protos::ethereum_v2::Block;
 use headers::HeaderRecordWithNumber;
 use prost::Message;
 use rayon::prelude::*;
 use receipts::check_receipt_root;
-use sf_protos::ethereum_v2::Block;
 use simple_log::log;
 use std::{
     fs::{self, File},
@@ -322,9 +322,9 @@ pub async fn stream_blocks<R: Read, W: Write>(
 }
 
 fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecodeError> {
-    let block_stream = sf_protos::bstream::v1::Block::decode(bytes.as_slice())
+    let block_stream = firehose_protos::bstream::v1::Block::decode(bytes.as_slice())
         .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
-    let block = sf_protos::ethereum_v2::Block::decode(block_stream.payload_buffer.as_slice())
+    let block = firehose_protos::ethereum_v2::Block::decode(block_stream.payload_buffer.as_slice())
         .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
     Ok(block)
 }
@@ -345,7 +345,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use sf_protos::bstream::v1::Block as BstreamBlock;
+    use firehose_protos::bstream::v1::Block as BstreamBlock;
     use std::io::{BufReader, BufWriter};
 
     use super::*;

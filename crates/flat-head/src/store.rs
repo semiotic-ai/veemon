@@ -9,7 +9,7 @@ use std::sync::Arc;
 use thiserror::Error;
 use url::Url;
 
-use sf_protos::ethereum_v2::Block;
+use firehose_protos::ethereum_v2::Block;
 
 pub fn new<S: AsRef<str>>(
     store_url: S,

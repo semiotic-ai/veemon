@@ -14,11 +14,11 @@ path = "src/main.rs"
 [dependencies]
 ethportal-api.workspace = true
 firehose-client = { path = "../firehose-client" }
+firehose-protos = { path = "../firehose-protos" }
 futures.workspace = true
 merkle_proof.workspace = true
 primitive-types.workspace = true
 serde = { workspace = true, features = ["derive"] }
-sf-protos = { path = "../sf-protos" }
 tree_hash.workspace = true
 types.workspace = true
 

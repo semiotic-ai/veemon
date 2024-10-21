@@ -8,9 +8,9 @@ mod transaction_signed;
 
 use crate::transactions::error::TransactionError;
 use alloy_primitives::U128;
+use firehose_protos::ethereum_v2::{BigInt, Block};
 use reth_primitives::{proofs::calculate_transaction_root, TransactionSigned};
 use revm_primitives::hex;
-use sf_protos::ethereum_v2::{BigInt, Block};
 
 use self::transaction_signed::trace_to_signed;
 
@@ -50,9 +50,11 @@ mod tests {
     use crate::dbin::DbinFile;
 
     use alloy_primitives::{Address, Bytes, Parity, TxHash, TxKind, U256};
+    use firehose_protos::{
+        bstream::v1::Block as BstreamBlock, ethereum_v2::transaction_trace::Type,
+    };
     use prost::Message;
     use reth_primitives::TxType;
-    use sf_protos::{bstream::v1::Block as BstreamBlock, ethereum_v2::transaction_trace::Type};
     use std::{fs::File, io::BufReader, str::FromStr};
 
     use super::*;

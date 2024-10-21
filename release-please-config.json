@@ -9,6 +9,6 @@
     "crates/flat-head": {},
     "crates/forrestrie": {},
     "crates/header-accumulator": {},
-    "crates/sf-protos": {}
+    "crates/firehose-protos": {}
   }
 }

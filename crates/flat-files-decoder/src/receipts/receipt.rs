@@ -2,9 +2,9 @@ use crate::receipts::error::ReceiptError;
 use crate::receipts::logs::map_logs;
 use crate::transactions::tx_type::map_tx_type;
 use alloy_primitives::{Bloom, FixedBytes};
+use firehose_protos::ethereum_v2::TransactionTrace;
 use reth_primitives::{Log, Receipt, ReceiptWithBloom};
 use revm_primitives::hex;
-use sf_protos::ethereum_v2::TransactionTrace;
 
 pub struct FullReceipt {
     pub receipt: ReceiptWithBloom,

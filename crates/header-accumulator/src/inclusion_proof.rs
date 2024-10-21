@@ -8,7 +8,7 @@ use ethportal_api::{
     },
     Header,
 };
-use sf_protos::ethereum_v2::Block;
+use firehose_protos::ethereum_v2::Block;
 use trin_validation::{
     accumulator::PreMergeAccumulator, header_validator::HeaderValidator,
     historical_roots_acc::HistoricalRootsAccumulator,
