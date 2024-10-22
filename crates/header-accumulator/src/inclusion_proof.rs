@@ -9,6 +9,7 @@ use ethportal_api::{
     Header,
 };
 use firehose_protos::ethereum_v2::Block;
+use tree_hash::Hash256;
 use trin_validation::{
     accumulator::PreMergeAccumulator, header_validator::HeaderValidator,
     historical_roots_acc::HistoricalRootsAccumulator,
@@ -26,7 +27,7 @@ pub fn generate_inclusion_proof(
     mut ext_headers: Vec<ExtHeaderRecord>,
     start_block: u64,
     end_block: u64,
-) -> Result<Vec<[FixedBytes<32>; 15]>, EraValidateError> {
+) -> Result<Vec<[Hash256; 15]>, EraValidateError> {
     if start_block > end_block {
         return Err(EraValidateError::InvalidBlockRange(start_block, end_block));
     }
@@ -77,7 +78,7 @@ pub fn generate_inclusion_proof(
 pub fn verify_inclusion_proof(
     blocks: Vec<Block>,
     pre_merge_accumulator_file: Option<PreMergeAccumulator>,
-    inclusion_proof: Vec<[FixedBytes<32>; 15]>,
+    inclusion_proof: Vec<[Hash256; 15]>,
 ) -> Result<(), EraValidateError> {
     let pre_merge_acc = pre_merge_accumulator_file.unwrap_or_default();
 
