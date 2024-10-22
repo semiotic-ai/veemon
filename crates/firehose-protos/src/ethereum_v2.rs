@@ -4,6 +4,7 @@
 use alloy_primitives::{Address, Bloom, FixedBytes, Uint};
 use ethportal_api::types::execution::header::Header;
 use prost::Message;
+use prost_wkt_types::Any;
 use reth_primitives::TxType;
 use transaction_trace::Type;
 
@@ -115,13 +116,36 @@ impl From<Type> for TxType {
     }
 }
 
+fn decode_block<M>(response: M) -> Result<Block, ProtosError>
+where
+    M: MessageWithBlock,
+{
+    let any = response.block().ok_or(ProtosError::NullBlock)?;
+    let block = Block::decode(any.value.as_ref())?;
+    Ok(block)
+}
+
+trait MessageWithBlock {
+    fn block(&self) -> Option<&Any>;
+}
+
+impl MessageWithBlock for SingleBlockResponse {
+    fn block(&self) -> Option<&Any> {
+        self.block.as_ref()
+    }
+}
+
+impl MessageWithBlock for Response {
+    fn block(&self) -> Option<&Any> {
+        self.block.as_ref()
+    }
+}
+
 impl TryFrom<SingleBlockResponse> for Block {
     type Error = ProtosError;
 
     fn try_from(response: SingleBlockResponse) -> Result<Self, Self::Error> {
-        let any = response.block.ok_or(ProtosError::NullBlock)?;
-        let block = Block::decode(any.value.as_ref())?;
-        Ok(block)
+        decode_block(response)
     }
 }
 
@@ -129,9 +153,7 @@ impl TryFrom<Response> for Block {
     type Error = ProtosError;
 
     fn try_from(response: Response) -> Result<Self, Self::Error> {
-        let any = response.block.ok_or(ProtosError::NullBlock)?;
-        let block = Block::decode(any.value.as_ref())?;
-        Ok(block)
+        decode_block(response)
     }
 }
 
