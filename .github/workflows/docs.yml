@@ -54,9 +54,9 @@ jobs:
           contents: |
             <!DOCTYPE html>
             <meta charset="utf-8">
-            <title>Redirecting to nli/</title>
-            <meta http-equiv="refresh" content="0; URL=nli/">
-            <link rel="canonical" href="nli/">
+            <title>Redirecting to decoder/</title>
+            <meta http-equiv="refresh" content="0; URL=decoder/">
+            <link rel="canonical" href="decoder/">
           write-mode: append
       - name: Fix permissions
         run: |
