@@ -22,12 +22,3 @@ Firehose fetch and streaming, client and server gRPC implementation.
 ### [`type.proto`](https://github.com/pinax-network/firehose-beacon/blob/main/proto/sf/beacon/type/v1/type.proto)
 
 Pinax's Firehose Beacon `Block` implementation.
-
-## Tests
-
-### Data
-
-`exec_layer_block_20562650_header.json` was serialized to JSON from a
-`firehose_protos::ethereum::r#type::v2::Block` received from a Firehose endpoint
-over gRPC and then redacted to only contain data for the fields necessary
-to compute the `Header`.
