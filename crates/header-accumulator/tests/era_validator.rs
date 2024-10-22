@@ -2,6 +2,7 @@ use decoder::{decode_flat_files, Decompression};
 use header_accumulator::{
     epoch::Epoch, era_validator::EraValidator, errors::EraValidateError, types::ExtHeaderRecord,
 };
+use tree_hash::Hash256;
 use trin_validation::accumulator::PreMergeAccumulator;
 
 #[test]
@@ -43,10 +44,10 @@ fn test_era_validate() -> Result<(), EraValidateError> {
 
     let result = premerge_accumulator.validate_eras(&[&epoch])?;
 
-    let expected = [
+    let expected = Hash256::new([
         94, 193, 255, 184, 195, 177, 70, 244, 38, 6, 199, 76, 237, 151, 61, 193, 110, 197, 161, 7,
         192, 52, 88, 88, 195, 67, 252, 148, 120, 11, 66, 24,
-    ];
+    ]);
     assert_eq!(result.first(), Some(&expected));
 
     Ok(())

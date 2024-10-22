@@ -1,5 +1,5 @@
-use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
-use tree_hash::TreeHash;
+use ethportal_api::types::execution::accumulator::EpochAccumulator;
+use tree_hash::{Hash256, TreeHash};
 use trin_validation::accumulator::{HistoricalEpochRoots, PreMergeAccumulator};
 
 use crate::{
@@ -19,21 +19,13 @@ impl From<PreMergeAccumulator> for EraValidator {
     }
 }
 
-pub type RootHash = [u8; 32];
-
 impl EraValidator {
-    /// Validates many headers against a header accumulator
-    ///
-    /// It also keeps a record in `lockfile.json` of the validated epochs to skip them
+    /// Validates many epochs against a header accumulator
     ///
     /// # Arguments
     ///
-    /// * `headers`-  A mutable vector of [`ExtHeaderRecord`]. The Vector can be any size,
-    ///   however, it must be in chunks of 8192 blocks to work properly to function without error
-    /// * `start_epoch` -  The epoch number that all the first 8192 blocks are set located
-    /// * `end_epoch` -  The epoch number that all the last 8192 blocks are located
-    /// * `use_lock` - when set to true, uses the lockfile to store already processed blocks. True by default
-    pub fn validate_eras(&self, epochs: &[&Epoch]) -> Result<Vec<RootHash>, EraValidateError> {
+    /// * `epochs`-  An array of [`Epoch`].
+    pub fn validate_eras(&self, epochs: &[&Epoch]) -> Result<Vec<Hash256>, EraValidateError> {
         let mut validated_epochs = Vec::new();
         for epoch in epochs {
             let root = self.validate_era(epoch)?;
@@ -43,31 +35,24 @@ impl EraValidator {
         Ok(validated_epochs)
     }
 
-    /// takes 8192 block headers and checks if they consist in a valid epoch.
+    /// Takes an Epoch and validates against Header Accumulators
     ///
-    /// An epoch must respect the order of blocks, i.e., block numbers for epoch
-    /// 0 must start from block 0 to block 8191.
-    ///
-    /// headers can only be validated for now against epochs before The Merge.
+    /// Epochs can only be validated for now against epochs before The Merge.
     /// All pre-merge blocks (which are numbered before [`FINAL_EPOCH`]), are validated using
     /// the [Header Accumulator](https://github.com/ethereum/portal-network-specs/blob/8ad5bc33cb0d4485d2eab73bf2decc43e7566a8f/history-network.md#the-header-accumulator)
     ///
     /// For block post merge, the sync-committee should be used to validate block headers   
     /// in the canonical blockchain. So this function is not useful for those.
-    pub fn validate_era(&self, epoch: &Epoch) -> Result<RootHash, EraValidateError> {
+    pub fn validate_era(&self, epoch: &Epoch) -> Result<Hash256, EraValidateError> {
         if epoch.number() > FINAL_EPOCH {
-            log::warn!(
-                "the blocks from this epoch are not being validated since they are post merge.
-            For post merge blocks, use the sync-committee subprotocol"
-            );
-            // TODO return error
+            return Err(EraValidateError::EpochPostMerge(epoch.number()));
         }
 
-        let header_records: Vec<_> = epoch.iter().map(HeaderRecord::from).collect();
+        let header_records: Vec<_> = epoch.iter().cloned().collect();
         let epoch_accumulator = EpochAccumulator::from(header_records);
 
-        let root: [u8; 32] = epoch_accumulator.tree_hash_root().0;
-        let valid_root = self.historical_epochs[epoch.number()].0;
+        let root = epoch_accumulator.tree_hash_root();
+        let valid_root = self.historical_epochs[epoch.number()];
 
         if root != valid_root {
             log::error!(
