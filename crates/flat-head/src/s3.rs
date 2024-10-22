@@ -1,6 +1,8 @@
 use dotenvy::dotenv;
 use header_accumulator::{
-    epoch::MAX_EPOCH_SIZE, era_validator::EraValidator, types::ExtHeaderRecord,
+    epoch::{Epoch, MAX_EPOCH_SIZE},
+    era_validator::EraValidator,
+    types::ExtHeaderRecord,
 };
 use std::env;
 use trin_validation::accumulator::PreMergeAccumulator;
@@ -49,6 +51,8 @@ pub async fn s3_fetch(
 
     let file_names = gen_dbin_filenames(start_epoch, end_epoch, decompress);
 
+    let era_validator: EraValidator = PreMergeAccumulator::default().into();
+
     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
     for file_name in file_names {
         let path_string = format!("/{}", file_name);
@@ -84,14 +88,13 @@ pub async fn s3_fetch(
                 // Handle the decoding error
             }
         }
-        if headers.len() >= 8192 {
-            let epoch_headers: Vec<ExtHeaderRecord> = headers.drain(0..MAX_EPOCH_SIZE).collect();
-            let valid_blocks = PreMergeAccumulator::default().era_validate(
-                epoch_headers,
-                start_epoch as usize,
-                Some(end_epoch as usize),
-                true,
-            );
+        if headers.len() >= MAX_EPOCH_SIZE {
+            let epoch: Epoch = headers
+                .drain(0..MAX_EPOCH_SIZE)
+                .collect::<Vec<_>>()
+                .try_into()
+                .unwrap();
+            let valid_blocks = era_validator.validate_era(&epoch);
             println!("{:?} valid epochs", valid_blocks);
         }
     }
