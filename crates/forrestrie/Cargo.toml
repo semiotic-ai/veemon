@@ -21,7 +21,7 @@ serde = { workspace = true, features = ["derive"] }
 tracing.workspace = true
 ssz_types.workspace = true
 tonic.workspace = true
-tree_hash.workspace = true
+tree_hash = "0.6.0"
 types.workspace = true
 
 [dev-dependencies]

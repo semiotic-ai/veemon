@@ -5,6 +5,7 @@ use tokio::task;
 use firehose_protos::ethereum_v2::Block;
 use header_accumulator::{era_validator::EraValidator, types::ExtHeaderRecord};
 use tokio::sync::mpsc;
+use tree_hash::Hash256;
 use trin_validation::accumulator::PreMergeAccumulator;
 
 use crate::store::{self, Store};
@@ -21,7 +22,7 @@ pub async fn verify_eras(
     start_epoch: usize,
     end_epoch: Option<usize>,
     decompress: Decompression,
-) -> Result<Vec<usize>, anyhow::Error> {
+) -> Result<Vec<Hash256>, anyhow::Error> {
     let mut validated_epochs = Vec::new();
     let (tx, mut rx) = mpsc::channel(5);
 
@@ -51,9 +52,8 @@ pub async fn verify_eras(
                             (succ, errs)
                         });
 
-                    let valid_epochs = era_validator
-                        .validate_era(successful_headers, epoch, Some(epoch + 1), true)
-                        .unwrap();
+                    let epoch = successful_headers.try_into().unwrap();
+                    let valid_epochs = era_validator.validate_era(&epoch).unwrap();
 
                     let _ = tx.send(valid_epochs).await;
                 }
@@ -67,7 +67,7 @@ pub async fn verify_eras(
 
     // Process blocks as they arrive
     while let Some(epochs) = rx.recv().await {
-        validated_epochs.extend(epochs);
+        validated_epochs.push(epochs);
     }
 
     Ok(validated_epochs)
