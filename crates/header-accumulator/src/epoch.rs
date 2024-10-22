@@ -53,7 +53,10 @@ impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
             .map(|w| w[0].block_number + 1)
             .collect();
         if !blocks_missing.is_empty() {
-            return Err(EraValidateError::MissingBlock(blocks_missing));
+            return Err(EraValidateError::MissingBlock {
+                blocks: blocks_missing,
+                epoch: epoch_number,
+            });
         }
 
         // check if all blocks are in the same era
