@@ -32,7 +32,7 @@ impl TryFrom<ExtHeaderRecord> for Header {
 
     fn try_from(ext: ExtHeaderRecord) -> Result<Self, Self::Error> {
         ext.full_header
-            .ok_or(EraValidateError::ExtHeaderRecordError)
+            .ok_or(EraValidateError::ExtHeaderRecordError(ext.block_number))
     }
 }
 

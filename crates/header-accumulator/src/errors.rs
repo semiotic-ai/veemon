@@ -13,16 +13,16 @@ pub enum EraValidateError {
     #[error("Error validating inclusion proof")]
     ProofValidationFailure,
 
-    #[error("blocks in epoch must be exactly 8192 units, found {0}")]
+    #[error("Blocks in epoch must be exactly 8192 units, found {0}")]
     InvalidEpochLength(usize),
 
-    #[error("block was missing while creating epoch")]
-    MissingBlock(Vec<u64>),
+    #[error("Block was missing while creating epoch {epoch}. Missing blocks: {blocks:?}")]
+    MissingBlock { epoch: u64, blocks: Vec<u64> },
 
-    #[error("not all blocks are in the same epoch. epochs found: {0:?}")]
+    #[error("Not all blocks are in the same epoch. Epochs found: {0:?}")]
     InvalidBlockInEpoch(HashSet<u64>),
-    #[error("Error converting ExtHeaderRecord to header")]
-    ExtHeaderRecordError,
+    #[error("Error converting ExtHeaderRecord to header block number {0}")]
+    ExtHeaderRecordError(u64),
     #[error("Invalid block range: {0} - {1}")]
     InvalidBlockRange(u64, u64),
     #[error("Epoch is in post merge: {0}")]
