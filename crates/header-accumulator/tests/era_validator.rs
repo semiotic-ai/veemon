@@ -1,7 +1,5 @@
 use decoder::{decode_flat_files, Decompression};
-use header_accumulator::{
-    epoch::Epoch, era_validator::EraValidator, errors::EraValidateError, types::ExtHeaderRecord,
-};
+use header_accumulator::{Epoch, EraValidateError, EraValidator, ExtHeaderRecord};
 use tree_hash::Hash256;
 use trin_validation::accumulator::PreMergeAccumulator;
 

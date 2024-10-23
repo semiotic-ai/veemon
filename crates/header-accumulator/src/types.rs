@@ -4,6 +4,11 @@ use firehose_protos::ethereum_v2::{Block, BlockHeader};
 
 use crate::errors::EraValidateError;
 
+/// Extension of header with conversion traits
+///
+/// It's capable of converting to HeaderRecord to be used inside Epochs.
+/// It can also convert to firehose protos.
+/// You can extract the full header as an option
 #[derive(Clone)]
 pub struct ExtHeaderRecord {
     pub block_hash: B256,

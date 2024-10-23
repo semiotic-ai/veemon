@@ -1,4 +1,4 @@
-use header_accumulator::epoch::MAX_EPOCH_SIZE;
+use header_accumulator::MAX_EPOCH_SIZE;
 
 /// return the filenames of files to be fetched, between a starting and an ending epoch
 pub fn gen_dbin_filenames(start: u64, end: u64, compressed: Option<bool>) -> Vec<String> {

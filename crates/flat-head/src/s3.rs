@@ -1,9 +1,5 @@
 use dotenvy::dotenv;
-use header_accumulator::{
-    epoch::{Epoch, MAX_EPOCH_SIZE},
-    era_validator::EraValidator,
-    types::ExtHeaderRecord,
-};
+use header_accumulator::{Epoch, EraValidator, ExtHeaderRecord, MAX_EPOCH_SIZE};
 use std::env;
 use trin_validation::accumulator::PreMergeAccumulator;
 
