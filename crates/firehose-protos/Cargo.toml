@@ -9,7 +9,6 @@ path = "src/lib.rs"
 
 [dependencies]
 alloy-primitives.workspace = true
-bls.workspace = true
 ethportal-api.workspace = true
 primitive-types.workspace = true
 prost.workspace = true
@@ -17,10 +16,8 @@ prost-wkt.workspace = true
 prost-wkt-types.workspace = true
 reth-primitives.workspace = true
 serde.workspace = true
-ssz_types.workspace = true
 thiserror.workspace = true
 tonic.workspace = true
-types.workspace = true
 
 [dev-dependencies]
 hex.workspace = true

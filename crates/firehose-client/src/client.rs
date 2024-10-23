@@ -2,17 +2,16 @@ use std::str::FromStr;
 
 use crate::error::ClientError;
 use dotenvy::{dotenv, var};
-use firehose_protos::firehose::v2::SingleBlockResponse;
 use firehose_protos::{
-    beacon_v1::Block as FirehoseBeaconBlock,
     ethereum_v2::Block as FirehoseEthBlock,
     firehose::v2::{
         fetch_client::FetchClient,
         single_block_request::{BlockNumber, Reference},
         stream_client::StreamClient,
-        Request, SingleBlockRequest,
+        Request, SingleBlockRequest, SingleBlockResponse,
     },
 };
+use forrestrie::beacon_v1::Block as FirehoseBeaconBlock;
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{
     transport::{Channel, Uri},

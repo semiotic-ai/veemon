@@ -24,7 +24,7 @@
 //!
 use ethportal_api::Header;
 use firehose_client::client::{Chain, FirehoseClient};
-use firehose_protos::{beacon_v1, ethereum_v2};
+use firehose_protos::ethereum_v2;
 use forrestrie::{
     beacon_block::{
         HistoricalDataProofs, BEACON_BLOCK_BODY_PROOF_DEPTH, EXECUTION_PAYLOAD_FIELD_INDEX,
@@ -33,7 +33,7 @@ use forrestrie::{
         compute_block_roots_proof_only, HeadState, CAPELLA_START_ERA, HISTORY_TREE_DEPTH,
         SLOTS_PER_HISTORICAL_ROOT,
     },
-    BlockRoot,
+    beacon_v1::{self, BlockRoot},
 };
 use futures::StreamExt;
 use merkle_proof::verify_merkle_proof;

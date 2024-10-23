@@ -25,7 +25,7 @@
 //! ```
 //!
 use firehose_client::client::{Chain, FirehoseClient};
-use firehose_protos::beacon_v1::Block as FirehoseBeaconBlock;
+use forrestrie::beacon_v1::Block as FirehoseBeaconBlock;
 use tree_hash::TreeHash;
 use types::{BeaconBlock, MainnetEthSpec};
 

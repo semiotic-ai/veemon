@@ -8,13 +8,18 @@ name = "forrestrie"
 path = "src/lib.rs"
 
 [dependencies]
+bls.workspace = true
 ethportal-api.workspace = true
-firehose-client = { path = "../firehose-client" }
 firehose-protos = { path = "../firehose-protos" }
 futures.workspace = true
 merkle_proof.workspace = true
 primitive-types.workspace = true
+prost.workspace = true
+prost-wkt.workspace = true
+prost-wkt-types.workspace = true
 serde = { workspace = true, features = ["derive"] }
+ssz_types.workspace = true
+tonic.workspace = true
 tree_hash.workspace = true
 types.workspace = true
 
@@ -24,3 +29,7 @@ insta.workspace = true
 reqwest = { workspace = true, features = ["json"] }
 serde_json.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+
+[build-dependencies]
+prost-build.workspace = true
+tonic-build.workspace = true

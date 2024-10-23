@@ -9,6 +9,7 @@ path = "src/lib.rs"
 
 [dependencies]
 dotenvy.workspace = true
+forrestrie = { path = "../forrestrie" }
 firehose-protos = { path = "../firehose-protos" }
 futures.workspace = true
 http.workspace = true

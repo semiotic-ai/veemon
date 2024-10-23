@@ -15,14 +15,6 @@ fn main() {
     tonic_build::configure()
         .build_client(true)
         .file_descriptor_set_path(out_dir.join("descriptors.bin"))
-        .compile_protos_with_config(
-            config,
-            &[
-                "protos/block.proto",
-                "protos/bstream.proto",
-                "protos/firehose.proto",
-            ],
-            &["protos/"],
-        )
+        .compile_protos_with_config(config, &["protos/type.proto"], &["protos/"])
         .unwrap();
 }
