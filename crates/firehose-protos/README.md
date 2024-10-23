@@ -17,7 +17,3 @@ Representation of the tracing of a block in the Ethereum blockchain.
 ### [`firehose.proto`](https://github.com/streamingfast/proto/blob/develop/sf/firehose/v2/firehose.proto)
 
 Firehose fetch and streaming, client and server gRPC implementation.
-
-### [`type.proto`](https://github.com/pinax-network/firehose-beacon/blob/main/proto/sf/beacon/type/v1/type.proto)
-
-Pinax's Firehose Beacon `Block` implementation.

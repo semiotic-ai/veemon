@@ -2318,14 +2318,36 @@ version = "0.1.1"
 dependencies = [
  "bls",
  "ethportal-api",
+ "firehose-protos",
+ "futures",
+ "merkle_proof",
+ "primitive-types",
+ "prost",
+ "prost-build",
+ "prost-wkt",
+ "prost-wkt-types",
+ "serde",
+ "ssz_types 0.6.0",
+ "tonic",
+ "tonic-build",
+ "tree_hash 0.6.0",
+ "types",
+]
+
+[[package]]
+name = "forrestrie-examples"
+version = "0.1.1"
+dependencies = [
+ "bls",
+ "ethportal-api",
  "firehose-client",
  "firehose-protos",
+ "forrestrie",
  "futures",
  "insta",
  "merkle_proof",
  "primitive-types",
  "prost",
- "prost-build",
  "prost-wkt",
  "prost-wkt-types",
  "reqwest",
@@ -2334,7 +2356,6 @@ dependencies = [
  "ssz_types 0.6.0",
  "tokio",
  "tonic",
- "tonic-build",
  "tracing",
  "tracing-subscriber",
  "tree_hash 0.6.0",
@@ -2640,7 +2661,6 @@ dependencies = [
  "base64 0.21.7",
  "clap",
  "decoder",
- "env_logger 0.11.5",
  "ethportal-api",
  "firehose-protos",
  "log",
