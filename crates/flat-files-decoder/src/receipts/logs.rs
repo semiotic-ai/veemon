@@ -6,11 +6,11 @@ use std::convert::TryInto;
 
 use firehose_protos::ethereum_v2::Log as BlockLog;
 
-pub fn map_logs(logs: &[BlockLog]) -> Result<Vec<Log>, ReceiptError> {
+pub(crate) fn map_logs(logs: &[BlockLog]) -> Result<Vec<Log>, ReceiptError> {
     logs.iter().map(block_log_to_log).collect()
 }
 
-pub fn block_log_to_log(log: &BlockLog) -> Result<Log, ReceiptError> {
+pub(crate) fn block_log_to_log(log: &BlockLog) -> Result<Log, ReceiptError> {
     let slice: [u8; 20] = log
         .address
         .as_slice()
@@ -26,7 +26,7 @@ pub fn block_log_to_log(log: &BlockLog) -> Result<Log, ReceiptError> {
     Ok(Log { address, data })
 }
 
-fn map_topics(topics: &[Vec<u8>]) -> Result<Vec<B256>, ReceiptError> {
+pub(crate) fn map_topics(topics: &[Vec<u8>]) -> Result<Vec<B256>, ReceiptError> {
     topics.iter().map(map_topic).collect()
 }
 

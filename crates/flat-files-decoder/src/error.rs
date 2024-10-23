@@ -29,12 +29,10 @@ pub enum DecodeError {
     JoinError(JoinError),
 }
 
-// Define an enum for all possible error types
 #[derive(Debug)]
 pub enum CheckError {
-    ReceiptError(ReceiptError), // Replace with actual error types
+    ReceiptError(ReceiptError),
     TransactionError(TransactionError),
-    // Add more as needed
 }
 
 impl std::fmt::Display for CheckError {
@@ -42,7 +40,6 @@ impl std::fmt::Display for CheckError {
         match self {
             CheckError::ReceiptError(e) => write!(f, "Receipt Error: {}", e),
             CheckError::TransactionError(e) => write!(f, "Transaction Error: {}", e),
-            // Handle other errors
         }
     }
 }

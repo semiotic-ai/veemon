@@ -18,7 +18,6 @@ use error::CheckError;
 use firehose_protos::ethereum_v2::Block;
 use headers::HeaderRecordWithNumber;
 use prost::Message;
-use rayon::prelude::*;
 use receipts::check_receipt_root;
 use simple_log::log;
 use std::{
@@ -37,29 +36,14 @@ pub enum Decompression {
     None,
 }
 
-impl From<bool> for Decompression {
-    fn from(value: bool) -> Self {
-        if value {
-            Decompression::Zstd
-        } else {
-            Decompression::None
-        }
-    }
-}
-
 impl From<&str> for Decompression {
     fn from(value: &str) -> Self {
         match value {
-            "true" => Decompression::Zstd,
-            "false" => Decompression::None,
+            "true" | "1" => Decompression::Zstd,
+            "false" | "0" => Decompression::None,
             _ => Decompression::None,
         }
     }
-}
-
-pub enum DecodeInput {
-    Path(String),
-    Reader(Box<dyn Read>),
 }
 
 /// Decodes and optionally verifies block flat files from a given directory or single file.
@@ -185,7 +169,7 @@ pub fn handle_file(
 
 /// Decodes a flat file from a buffer containing its contents and optionally decompresses it.
 ///
-/// Decodes flat files that are already loaded into memory, without direct file system ac   cess.
+/// Decodes flat files that are already loaded into memory, without direct file system access.
 /// It can handle both compressed (if `zstd` decompression is specified) and uncompressed data. Upon successful
 /// decoding, it returns a vector of all the blocks contained within the flat file. The actual number of blocks
 /// returned depends on the format and content of the flat file—ranging from a single block to multiple blocks.
@@ -239,20 +223,6 @@ fn handle_block(
     }
 
     Ok(block)
-}
-
-/// Gets a vector of blocks from a single .dbin file
-pub fn extract_blocks<R: Read>(mut reader: R) -> Result<Vec<Block>, DecodeError> {
-    log::debug!("Reading messages");
-    let dbin_file = DbinFile::try_from_read(&mut reader)?;
-    log::debug!("Validating blocks");
-
-    // Parallel processing of block headers
-    dbin_file
-        .messages
-        .par_iter()
-        .map(|message| handle_block(message, None, None))
-        .collect()
 }
 
 /// Decode blocks from a reader and writes them, serialized, to a writer
