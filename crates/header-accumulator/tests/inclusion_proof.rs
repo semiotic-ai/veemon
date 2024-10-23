@@ -1,10 +1,7 @@
 use decoder::{decode_flat_files, Decompression};
 use firehose_protos::ethereum_v2::Block;
 use header_accumulator::{
-    self,
-    errors::EraValidateError,
-    inclusion_proof::{generate_inclusion_proof, verify_inclusion_proof},
-    types::ExtHeaderRecord,
+    generate_inclusion_proof, verify_inclusion_proof, EraValidateError, ExtHeaderRecord,
 };
 
 #[test]

@@ -3,7 +3,7 @@ use futures::stream::{FuturesOrdered, StreamExt};
 use tokio::task;
 
 use firehose_protos::ethereum_v2::Block;
-use header_accumulator::{era_validator::EraValidator, types::ExtHeaderRecord};
+use header_accumulator::{EraValidator, ExtHeaderRecord};
 use tokio::sync::mpsc;
 use tree_hash::Hash256;
 use trin_validation::accumulator::PreMergeAccumulator;

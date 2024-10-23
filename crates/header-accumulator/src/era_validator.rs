@@ -7,6 +7,7 @@ use crate::{
     errors::EraValidateError,
 };
 
+/// Contains a list with length 1896 with hashes for each epoch
 pub struct EraValidator {
     historical_epochs: HistoricalEpochRoots,
 }

@@ -1,6 +1,7 @@
 use alloy_primitives::map::HashSet;
 use firehose_protos::error::ProtosError;
 
+/// Possible errors while interacting with the lib
 #[derive(thiserror::Error, Debug)]
 pub enum EraValidateError {
     #[error("Error decoding header from flat files")]
