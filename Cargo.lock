@@ -2183,7 +2183,7 @@ checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 
 [[package]]
 name = "firehose-client"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dotenvy",
  "firehose-protos",
@@ -2313,7 +2313,7 @@ dependencies = [
 
 [[package]]
 name = "forrestrie"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bls",
  "ethportal-api",
