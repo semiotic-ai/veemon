@@ -3,7 +3,7 @@
 //! Demonstrates how to stream a range of blocks from Firehose Beacon
 
 use firehose_client::client::{Chain, FirehoseClient};
-use firehose_protos::beacon_v1::Block as FirehoseBeaconBlock;
+use forrestrie::beacon_v1::Block as FirehoseBeaconBlock;
 use futures::StreamExt;
 
 #[tokio::main]

@@ -1,13 +1,13 @@
 //! Firehose Beacon-related data structures and operations.
 //! See the protobuffer definitions section of the README for more information.
 //!
-use crate::error::ProtosError;
-use crate::firehose::v2::{Response, SingleBlockResponse};
+use firehose_protos::error::ProtosError;
+use firehose_protos::firehose::v2::{Response, SingleBlockResponse};
 use primitive_types::{H256, U256};
 use prost::Message;
 use ssz_types::{length::Fixed, Bitfield, FixedVector};
 use types::{
-    Address, BeaconBlockBodyDeneb, BitList, EthSpec, ExecutionBlockHash, Graffiti,
+    Address, BeaconBlock, BeaconBlockBodyDeneb, BitList, EthSpec, ExecutionBlockHash, Graffiti,
     IndexedAttestationBase, MainnetEthSpec, GRAFFITI_BYTES_LEN,
 };
 
@@ -505,5 +505,16 @@ impl TryFrom<Block> for types::BeaconBlock<MainnetEthSpec> {
             state_root: H256::from_slice(state_root.as_slice()),
             body: body.ok_or(ProtosError::BlockConversionError)?.try_into()?,
         }))
+    }
+}
+
+pub struct BlockRoot(pub H256);
+
+impl TryFrom<Block> for BlockRoot {
+    type Error = ProtosError;
+
+    fn try_from(beacon_block: Block) -> Result<Self, Self::Error> {
+        let lighthouse_beacon_block = BeaconBlock::<MainnetEthSpec>::try_from(beacon_block)?;
+        Ok(Self(lighthouse_beacon_block.canonical_root()))
     }
 }

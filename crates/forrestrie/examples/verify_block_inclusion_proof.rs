@@ -25,9 +25,11 @@
 //! ```
 //!
 use firehose_client::client::{Chain, FirehoseClient};
-use firehose_protos::beacon_v1::Block as FirehoseBeaconBlock;
-use forrestrie::beacon_block::{
-    HistoricalDataProofs, BEACON_BLOCK_BODY_PROOF_DEPTH, EXECUTION_PAYLOAD_FIELD_INDEX,
+use forrestrie::{
+    beacon_block::{
+        HistoricalDataProofs, BEACON_BLOCK_BODY_PROOF_DEPTH, EXECUTION_PAYLOAD_FIELD_INDEX,
+    },
+    beacon_v1::Block as FirehoseBeaconBlock,
 };
 use merkle_proof::verify_merkle_proof;
 use tree_hash::TreeHash;
