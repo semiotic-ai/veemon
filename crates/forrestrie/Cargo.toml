@@ -7,10 +7,6 @@ edition = "2021"
 name = "forrestrie"
 path = "src/lib.rs"
 
-[[bin]]
-name = "forrestrie"
-path = "src/main.rs"
-
 [dependencies]
 ethportal-api.workspace = true
 firehose-client = { path = "../firehose-client" }
