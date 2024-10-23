@@ -7,8 +7,6 @@ pub enum BlockHeaderError {
     ReadError(#[from] std::io::Error),
     #[error("JSON Error")]
     JsonError(#[from] serde_json::Error),
-    #[error("Invalid input")]
-    InvalidInput,
     #[error("Mismatched roots")]
     MismatchedRoots(Box<(BlockHeaderRoots, BlockHeaderRoots)>),
     #[error("Missing header")]

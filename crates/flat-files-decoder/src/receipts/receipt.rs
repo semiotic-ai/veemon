@@ -6,7 +6,7 @@ use firehose_protos::ethereum_v2::TransactionTrace;
 use reth_primitives::{Log, Receipt, ReceiptWithBloom};
 use revm_primitives::hex;
 
-pub struct FullReceipt {
+pub(crate) struct FullReceipt {
     pub receipt: ReceiptWithBloom,
     pub state_root: Vec<u8>,
 }

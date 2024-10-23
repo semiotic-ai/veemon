@@ -26,7 +26,7 @@ impl TryFrom<BlockHeader> for BlockHeaderRoots {
     }
 }
 
-pub fn check_valid_header(block: &Block, header_dir: &str) -> Result<(), BlockHeaderError> {
+pub(crate) fn check_valid_header(block: &Block, header_dir: &str) -> Result<(), BlockHeaderError> {
     let header_file_path = format!("{}/{}.json", header_dir, block.number);
     let header_file = File::open(header_file_path)?;
 
@@ -49,7 +49,7 @@ pub fn check_valid_header(block: &Block, header_dir: &str) -> Result<(), BlockHe
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct HeaderRecordWithNumber {
+pub(crate) struct HeaderRecordWithNumber {
     pub block_hash: Vec<u8>,
     pub total_difficulty: Vec<u8>,
     pub block_number: u64,

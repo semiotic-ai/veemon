@@ -38,7 +38,7 @@ pub fn check_transaction_root(block: &Block) -> Result<(), TransactionError> {
     Ok(())
 }
 
-pub fn bigint_to_u128(value: BigInt) -> Result<u128, TransactionError> {
+pub(crate) fn bigint_to_u128(value: BigInt) -> Result<u128, TransactionError> {
     let slice = value.bytes.as_slice();
     let n = U128::try_from_be_slice(slice)
         .ok_or(TransactionError::InvalidBigInt(hex::encode(slice)))?;

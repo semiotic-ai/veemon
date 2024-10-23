@@ -16,7 +16,7 @@ pub(crate) fn compute_access_list(
     Ok(AccessList(access_list_items))
 }
 
-pub fn atuple_to_alist_item(tuple: &AccessTuple) -> Result<AccessListItem, TransactionError> {
+fn atuple_to_alist_item(tuple: &AccessTuple) -> Result<AccessListItem, TransactionError> {
     let address: Address = Address::from_slice(tuple.address.as_slice());
     let storage_keys = tuple
         .storage_keys

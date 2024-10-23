@@ -12,7 +12,9 @@ use super::bigint_to_u128;
 
 pub const CHAIN_ID: ChainId = 1;
 
-pub fn trace_to_transaction(trace: &TransactionTrace) -> Result<Transaction, TransactionError> {
+pub(crate) fn trace_to_transaction(
+    trace: &TransactionTrace,
+) -> Result<Transaction, TransactionError> {
     let tx_type = map_tx_type(&trace.r#type)?;
 
     let nonce = trace.nonce;
@@ -102,7 +104,7 @@ pub fn trace_to_transaction(trace: &TransactionTrace) -> Result<Transaction, Tra
     Ok(transaction)
 }
 
-pub fn get_tx_kind(trace: &TransactionTrace) -> Result<TxKind, TransactionError> {
+fn get_tx_kind(trace: &TransactionTrace) -> Result<TxKind, TransactionError> {
     let first_call = trace.calls.first().ok_or(TransactionError::MissingCall)?;
 
     let call_type = first_call.call_type();

@@ -14,7 +14,9 @@ pub enum InvalidSignatureError {
     V(u8),
 }
 
-pub fn signature_from_trace(trace: &TransactionTrace) -> Result<Signature, InvalidSignatureError> {
+pub(crate) fn signature_from_trace(
+    trace: &TransactionTrace,
+) -> Result<Signature, InvalidSignatureError> {
     let r_bytes: [u8; 32] = trace
         .r
         .as_slice()
