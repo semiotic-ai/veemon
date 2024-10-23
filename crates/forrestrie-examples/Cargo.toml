@@ -1,28 +1,28 @@
 [package]
-name = "forrestrie"
+name = "forrestrie-examples"
 version = "0.1.1"
 edition = "2021"
 
-[lib]
-name = "forrestrie"
-path = "src/lib.rs"
-
-[dependencies]
+[dev-dependencies]
 bls.workspace = true
 ethportal-api.workspace = true
+firehose-client = { path = "../firehose-client" }
 firehose-protos = { path = "../firehose-protos" }
+forrestrie = { path = "../forrestrie" }
 futures.workspace = true
+insta.workspace = true
 merkle_proof.workspace = true
 primitive-types.workspace = true
 prost.workspace = true
 prost-wkt.workspace = true
 prost-wkt-types.workspace = true
+reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 ssz_types.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tonic.workspace = true
+tracing.workspace = true
+tracing-subscriber = "0.3"
 tree_hash = "0.6.0"
 types.workspace = true
-
-[build-dependencies]
-prost-build.workspace = true
-tonic-build.workspace = true

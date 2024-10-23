@@ -3,6 +3,7 @@
   "crates/flat-files-decoder": "0.2.0",
   "crates/flat-head": "0.1.0",
   "crates/forrestrie": "0.1.1",
+  "crates/forrestrie-examples": "0.1.1",
   "crates/header-accumulator": "0.2.0",
   "crates/firehose-protos": "0.1.0"
 }

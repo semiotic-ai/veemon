@@ -30,8 +30,10 @@
 //!
 
 use firehose_client::client::{Chain, FirehoseClient};
-use firehose_protos::beacon_v1::{block, Block as FirehoseBeaconBlock};
-use forrestrie::beacon_state::ETHEREUM_BEACON_DENEB_OFFSET;
+use forrestrie::{
+    beacon_state::ETHEREUM_BEACON_DENEB_OFFSET,
+    beacon_v1::{block, Block as FirehoseBeaconBlock},
+};
 use std::cmp::Ordering::*;
 use tracing::info;
 use tracing_subscriber::FmtSubscriber;

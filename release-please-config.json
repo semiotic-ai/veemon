@@ -8,6 +8,7 @@
     "crates/flat-files-decoder": {},
     "crates/flat-head": {},
     "crates/forrestrie": {},
+    "crates/forrestrie-examples": {},
     "crates/header-accumulator": {},
     "crates/firehose-protos": {}
   }
