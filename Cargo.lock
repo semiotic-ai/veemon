@@ -2260,6 +2260,7 @@ dependencies = [
  "object_store",
  "thiserror",
  "tokio",
+ "tree_hash 0.8.0",
  "trin-validation",
  "url",
  "zstd",

@@ -12,6 +12,7 @@ bytes.workspace = true
 clap.workspace = true
 decoder = { path = "../flat-files-decoder" }
 dotenvy.workspace = true
+tree_hash.workspace = true
 env_logger.workspace = true
 firehose-protos = { path = "../firehose-protos" }
 futures.workspace = true
