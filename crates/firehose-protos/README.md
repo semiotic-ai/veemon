@@ -1,9 +1,8 @@
 # `firehose-protos`
 
-StreamingFast's and Pinax's Rust-compiled protocol buffers for Firehose,
-used in [header-accumulator](./../header-accumulator/Readme.md),
-[flat-files-decoder](./../flat-files-decoder/Readme.md), and
-[forrestrie](./../../README.md).
+StreamingFast's Firehose protocol buffers compiled to Rust,
+used in [header-accumulator](./../header-accumulator/Readme.md)
+and [flat-files-decoder](./../flat-files-decoder/Readme.md).
 
 ## Protobuffer definitions
 
