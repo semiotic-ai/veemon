@@ -55,15 +55,15 @@ impl EraValidator {
         let root = epoch_accumulator.tree_hash_root();
         let valid_root = self.historical_epochs[epoch.number()];
 
-        if root != valid_root {
+        if root == valid_root {
+            Ok(root)
+        } else {
             log::error!(
                 "the valid hash is: {:?} and the provided hash was: {:?}",
                 valid_root,
                 root
             );
-            Err(EraValidateError::EraAccumulatorMismatch)?;
+            Err(EraValidateError::EraAccumulatorMismatch)
         }
-
-        Ok(root)
     }
 }
