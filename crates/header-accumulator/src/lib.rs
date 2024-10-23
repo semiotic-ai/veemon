@@ -1,5 +1,5 @@
 //! # Header accumulator
-
+//!
 //! This crate is used to accumulate block headers and compare them
 //! against header accumulators. This process is used to verify the
 //! authenticity of these blocks.
