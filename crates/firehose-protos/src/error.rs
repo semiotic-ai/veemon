@@ -1,9 +1,20 @@
 use thiserror::Error;
 
+use crate::ethereum_v2::EcdsaComponent;
+
 #[derive(Error, Debug)]
 pub enum ProtosError {
     #[error("Block conversion error")]
     BlockConversionError,
+
+    #[error("Invalid address: {0}")]
+    BlockLogInvalidAddressError(String),
+
+    #[error("Invalid topic: {0}")]
+    BlockLogInvalidTopicError(String),
+
+    #[error("TryFromSliceError: {0}")]
+    BlockLogTryFromSliceError(#[from] std::array::TryFromSliceError),
 
     #[error("BLS error: {0}")]
     Bls(String),
@@ -13,6 +24,15 @@ pub enum ProtosError {
 
     #[error("GraffitiInvalid")]
     GraffitiInvalid,
+
+    #[error("Invalid BigInt: {0}")]
+    InvalidBigInt(String),
+
+    #[error("Invalid Storage Key: {0}")]
+    InvalidStorageKey(String),
+
+    #[error("Invalid trace signature {0:?} component: {1}")]
+    InvalidTraceSignature(EcdsaComponent, String),
 
     #[error("KzgCommitmentInvalid")]
     KzgCommitmentInvalid,
@@ -49,4 +69,10 @@ pub enum ProtosError {
 
     #[error("SSZ Types error: {0}")]
     SszTypesError(String),
+
+    #[error("Transaction call missing")]
+    TransactionMissingCall,
+
+    #[error("Transaction type conversion error")]
+    TransactionTypeConversionError,
 }

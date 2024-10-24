@@ -1,5 +1,4 @@
 pub mod error;
-pub mod logs;
 pub mod receipt;
 
 use crate::receipts::error::ReceiptError;

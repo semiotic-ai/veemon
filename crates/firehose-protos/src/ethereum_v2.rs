@@ -1,11 +1,16 @@
 //! Firehose Ethereum-related data structures and operations.
 //! See the protobuffer definitions section of the README for more information.
 //!
-use alloy_primitives::{Address, Bloom, FixedBytes, Uint};
+
+use alloy_consensus::{TxEip1559, TxEip2930, TxLegacy};
+use alloy_eip2930::{AccessList, AccessListItem};
+use alloy_primitives::{
+    Address, Bloom, Bytes, ChainId, FixedBytes, Parity, TxKind, Uint, B256, U128, U256,
+};
 use ethportal_api::types::execution::header::Header;
 use prost::Message;
 use prost_wkt_types::Any;
-use reth_primitives::TxType;
+use reth_primitives::{LogData, Signature, Transaction, TransactionSigned, TxType};
 use transaction_trace::Type;
 
 use crate::{
@@ -154,6 +159,305 @@ impl TryFrom<Response> for Block {
 
     fn try_from(response: Response) -> Result<Self, Self::Error> {
         decode_block(response)
+    }
+}
+
+impl TryFrom<&Log> for alloy_primitives::Log {
+    type Error = ProtosError;
+
+    fn try_from(log: &Log) -> Result<Self, Self::Error> {
+        let address = Address::try_from(log)?;
+        let topics = log.to_topics()?;
+        let log_data = Bytes::copy_from_slice(log.data.as_slice());
+        let data = LogData::new_unchecked(topics, log_data);
+
+        Ok(alloy_primitives::Log { address, data })
+    }
+}
+
+impl TryFrom<&Log> for Address {
+    type Error = ProtosError;
+
+    fn try_from(log: &Log) -> Result<Self, Self::Error> {
+        let slice: [u8; 20] = log.address.as_slice().try_into().map_err(|_| {
+            ProtosError::BlockLogInvalidAddressError(hex::encode(log.address.clone()))
+        })?;
+        Ok(Address::from(slice))
+    }
+}
+
+impl Log {
+    fn to_topics(&self) -> Result<Vec<B256>, ProtosError> {
+        fn to_b256(slice: &[u8]) -> Result<B256, ProtosError> {
+            B256::try_from(slice)
+                .map_err(|_| ProtosError::BlockLogInvalidTopicError(hex::encode(slice)))
+        }
+
+        self.topics
+            .iter()
+            .map(Vec::as_slice)
+            .map(to_b256)
+            .collect::<Result<Vec<_>, _>>()
+    }
+}
+
+impl TransactionTrace {
+    pub fn is_success(&self) -> bool {
+        self.status == 1
+    }
+
+    pub fn parity(&self) -> Result<Parity, ProtosError> {
+        // Extract the first byte of the V value (Ethereum's V value).
+        let v: u8 = if self.v.is_empty() { 0 } else { self.v[0] };
+
+        let parity = match v {
+            // V values 0 and 1 directly indicate Y parity.
+            0 | 1 => v == 1,
+
+            // V values 27 and 28 are commonly used in Ethereum and indicate Y parity.
+            27 | 28 => v - 27 == 1,
+
+            // V values 37 and 38 are less common but still valid and represent Y parity.
+            37 | 38 => v - 37 == 1,
+
+            // If V is outside the expected range, return an error.
+            _ => {
+                return Err(ProtosError::InvalidTraceSignature(
+                    EcdsaComponent::V,
+                    v.to_string(),
+                ))
+            }
+        };
+
+        Ok(parity.into())
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum EcdsaComponent {
+    R,
+    S,
+    V,
+}
+
+impl TryFrom<&TransactionTrace> for TxKind {
+    type Error = ProtosError;
+
+    fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
+        let first_call = trace
+            .calls
+            .first()
+            .ok_or(ProtosError::TransactionMissingCall)?;
+
+        match first_call.call_type() {
+            CallType::Create => Ok(TxKind::Create),
+            _ => {
+                // If not, interpret the transaction as a Call
+                let address = Address::from_slice(trace.to.as_slice());
+                Ok(TxKind::Call(address))
+            }
+        }
+    }
+}
+
+impl TryFrom<&TransactionTrace> for Signature {
+    type Error = ProtosError;
+
+    fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
+        use EcdsaComponent::*;
+
+        // Extract the R value from the trace and ensure it's a valid 32-byte array.
+        let r_bytes: [u8; 32] = trace
+            .r
+            .as_slice()
+            .try_into()
+            .map_err(|_| Self::Error::InvalidTraceSignature(R, hex::encode(&trace.r)))?;
+        let r = U256::from_be_bytes(r_bytes);
+
+        // Extract the S value from the trace and ensure it's a valid 32-byte array.
+        let s_bytes: [u8; 32] = trace
+            .s
+            .as_slice()
+            .try_into()
+            .map_err(|_| Self::Error::InvalidTraceSignature(S, hex::encode(&trace.s)))?;
+        let s = U256::from_be_bytes(s_bytes);
+
+        // Extract the Y parity from the V value.
+        let odd_y_parity = trace.parity()?;
+
+        Ok(Signature::new(r, s, odd_y_parity))
+    }
+}
+
+impl TryFrom<&TransactionTrace> for reth_primitives::TxType {
+    type Error = ProtosError;
+
+    fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
+        match Type::try_from(trace.r#type) {
+            Ok(tx_type) => Ok(TxType::from(tx_type)),
+            Err(_) => Err(ProtosError::TransactionTypeConversionError),
+        }
+    }
+}
+
+pub const CHAIN_ID: ChainId = 1;
+
+impl TryFrom<&TransactionTrace> for Transaction {
+    type Error = ProtosError;
+
+    fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
+        let tx_type = reth_primitives::TxType::try_from(trace)?;
+        let nonce = trace.nonce;
+        let gas_price = match &trace.gas_price {
+            Some(gas_price) => gas_price.clone(),
+            None => BigInt { bytes: vec![0] },
+        };
+        let gas_price = u128::try_from(&gas_price)?;
+        let gas_limit = trace.gas_limit;
+
+        let to = TxKind::try_from(trace)?;
+
+        let trace_value = match &trace.value {
+            Some(value) => value.clone(),
+            None => BigInt { bytes: vec![0] },
+        };
+        let value = Uint::from(u128::try_from(&trace_value)?);
+        let input = Bytes::copy_from_slice(trace.input.as_slice());
+
+        let transaction: Transaction = match tx_type {
+            TxType::Legacy => {
+                let v: u8 = if trace.v.is_empty() { 0 } else { trace.v[0] };
+
+                let chain_id: Option<ChainId> = if v == 27 || v == 28 {
+                    None
+                } else {
+                    Some(CHAIN_ID)
+                };
+
+                Transaction::Legacy(TxLegacy {
+                    chain_id,
+                    nonce,
+                    gas_price,
+                    gas_limit,
+                    to,
+                    value,
+                    input,
+                })
+            }
+            TxType::Eip2930 => {
+                let access_list = AccessList::try_from(trace)?;
+
+                Transaction::Eip2930(TxEip2930 {
+                    chain_id: CHAIN_ID,
+                    nonce,
+                    gas_price,
+                    gas_limit,
+                    to,
+                    value,
+                    access_list,
+                    input,
+                })
+            }
+            TxType::Eip1559 => {
+                let access_list = AccessList::try_from(trace)?;
+
+                let trace_max_fee_per_gas = match trace.max_fee_per_gas.clone() {
+                    Some(max_fee_per_gas) => max_fee_per_gas,
+                    None => BigInt { bytes: vec![0] },
+                };
+                let max_fee_per_gas = u128::try_from(&trace_max_fee_per_gas)?;
+
+                let trace_max_priority_fee_per_gas = match trace.max_priority_fee_per_gas.clone() {
+                    Some(max_priority_fee_per_gas) => max_priority_fee_per_gas,
+                    None => BigInt { bytes: vec![0] },
+                };
+                let max_priority_fee_per_gas = u128::try_from(&trace_max_priority_fee_per_gas)?;
+
+                Transaction::Eip1559(TxEip1559 {
+                    chain_id: CHAIN_ID,
+                    nonce,
+                    gas_limit,
+                    max_fee_per_gas,
+                    max_priority_fee_per_gas,
+                    to,
+                    value,
+                    access_list,
+                    input,
+                })
+            }
+            TxType::Eip4844 => unimplemented!(),
+            TxType::Eip7702 => unimplemented!(),
+        };
+
+        Ok(transaction)
+    }
+}
+
+impl TryFrom<&TransactionTrace> for TransactionSigned {
+    type Error = ProtosError;
+
+    fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
+        let transaction = Transaction::try_from(trace)?;
+        let signature = Signature::try_from(trace)?;
+        let hash = FixedBytes::from_slice(trace.hash.as_slice());
+
+        Ok(TransactionSigned {
+            transaction,
+            signature,
+            hash,
+        })
+    }
+}
+
+impl TryFrom<&TransactionTrace> for AccessList {
+    type Error = ProtosError;
+
+    fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
+        let access_list_items = trace
+            .access_list
+            .iter()
+            .map(AccessListItem::try_from)
+            .collect::<Result<Vec<AccessListItem>, Self::Error>>()?;
+
+        Ok(AccessList(access_list_items))
+    }
+}
+
+impl TryFrom<&AccessTuple> for AccessListItem {
+    type Error = ProtosError;
+
+    fn try_from(tuple: &AccessTuple) -> Result<Self, Self::Error> {
+        let address = Address::from_slice(tuple.address.as_slice());
+
+        let storage_keys = tuple
+            .storage_keys
+            .iter()
+            .map(convert_to_b256)
+            .collect::<Result<Vec<B256>, ProtosError>>()?;
+
+        Ok(AccessListItem {
+            address,
+            storage_keys,
+        })
+    }
+}
+
+fn convert_to_b256(key: &Vec<u8>) -> Result<B256, ProtosError> {
+    let key_bytes: [u8; 32] = key
+        .as_slice()
+        .try_into()
+        .map_err(|_| ProtosError::InvalidStorageKey(hex::encode(key.clone())))?;
+    Ok(B256::from(key_bytes))
+}
+
+impl TryFrom<&BigInt> for u128 {
+    type Error = ProtosError;
+
+    fn try_from(value: &BigInt) -> Result<Self, Self::Error> {
+        let slice = value.bytes.as_slice();
+        let n =
+            U128::try_from_be_slice(slice).ok_or(ProtosError::InvalidBigInt(hex::encode(slice)))?;
+        Ok(u128::from_le_bytes(n.to_le_bytes()))
     }
 }
 

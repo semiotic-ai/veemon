@@ -8,8 +8,11 @@ doctest = false
 path = "src/lib.rs"
 
 [dependencies]
+alloy-consensus.workspace = true
+alloy-eip2930.workspace = true
 alloy-primitives.workspace = true
 ethportal-api.workspace = true
+hex.workspace = true
 primitive-types.workspace = true
 prost.workspace = true
 prost-wkt.workspace = true
@@ -20,7 +23,6 @@ thiserror.workspace = true
 tonic.workspace = true
 
 [dev-dependencies]
-hex.workspace = true
 serde_json.workspace = true
 
 [build-dependencies]

@@ -30,13 +30,13 @@ pub(crate) fn check_valid_header(block: &Block, header_dir: &str) -> Result<(), 
     let header_file_path = format!("{}/{}.json", header_dir, block.number);
     let header_file = File::open(header_file_path)?;
 
-    let header_roots: BlockHeaderRoots = serde_json::from_reader(header_file)?; // TODO: Errors
+    let header_roots: BlockHeaderRoots = serde_json::from_reader(header_file)?;
 
     let block_header = match block.header.as_ref() {
         Some(header) => header,
         None => return Err(BlockHeaderError::MissingHeader),
     };
-    let block_header_roots: BlockHeaderRoots = block_header.clone().try_into()?; // TODO: Errors
+    let block_header_roots: BlockHeaderRoots = block_header.clone().try_into()?;
 
     if header_roots != block_header_roots {
         return Err(BlockHeaderError::MismatchedRoots(Box::new((
