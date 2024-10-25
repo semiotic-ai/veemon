@@ -14,6 +14,9 @@ pub enum ProtosError {
     #[error("GraffitiInvalid")]
     GraffitiInvalid,
 
+    #[error("Invalid access tuple storage key: {0}")]
+    InvalidAccessTupleStorageKey(String),
+
     #[error("Invalid log address: {0}")]
     InvalidLogAddress(String),
 
