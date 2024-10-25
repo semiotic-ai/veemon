@@ -1,19 +1,13 @@
-//! Firehose Ethereum-related data structures and operations.
-//! See the protobuffer definitions section of the README for more information.
-//!
+use super::Block;
 use alloy_primitives::{Address, Bloom, FixedBytes, Uint};
 use ethportal_api::types::execution::header::Header;
 use prost::Message;
 use prost_wkt_types::Any;
-use reth_primitives::TxType;
-use transaction_trace::Type;
 
 use crate::{
     error::ProtosError,
     firehose::v2::{Response, SingleBlockResponse},
 };
-
-tonic::include_proto!("sf.ethereum.r#type.v2");
 
 impl TryFrom<&Block> for Header {
     type Error = ProtosError;
@@ -94,28 +88,6 @@ impl TryFrom<&Block> for Header {
     }
 }
 
-impl From<Type> for TxType {
-    fn from(tx_type: Type) -> Self {
-        use TxType::*;
-        use Type::*;
-
-        match tx_type {
-            TrxTypeLegacy => Legacy,
-            TrxTypeAccessList => Eip2930,
-            TrxTypeDynamicFee => Eip1559,
-            TrxTypeBlob => Eip4844,
-            TrxTypeArbitrumDeposit => unimplemented!(),
-            TrxTypeArbitrumUnsigned => unimplemented!(),
-            TrxTypeArbitrumContract => unimplemented!(),
-            TrxTypeArbitrumRetry => unimplemented!(),
-            TrxTypeArbitrumSubmitRetryable => unimplemented!(),
-            TrxTypeArbitrumInternal => unimplemented!(),
-            TrxTypeArbitrumLegacy => unimplemented!(),
-            TrxTypeOptimismDeposit => unimplemented!(),
-        }
-    }
-}
-
 fn decode_block<M>(response: M) -> Result<Block, ProtosError>
 where
     M: MessageWithBlock,
@@ -159,6 +131,10 @@ impl TryFrom<Response> for Block {
 
 #[cfg(test)]
 mod tests {
+    use ethportal_api::Header;
+
+    use crate::ethereum_v2::BlockHeader;
+
     use super::*;
 
     #[test]
