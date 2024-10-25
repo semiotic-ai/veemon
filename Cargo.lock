@@ -2207,6 +2207,7 @@ dependencies = [
 name = "firehose-protos"
 version = "0.1.0"
 dependencies = [
+ "alloy-eip2930",
  "alloy-primitives 0.8.9",
  "ethportal-api",
  "hex",

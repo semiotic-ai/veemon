@@ -8,6 +8,7 @@ doctest = false
 path = "src/lib.rs"
 
 [dependencies]
+alloy-eip2930.workspace = true
 alloy-primitives.workspace = true
 ethportal-api.workspace = true
 primitive-types.workspace = true
