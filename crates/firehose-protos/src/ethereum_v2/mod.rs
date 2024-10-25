@@ -2,6 +2,7 @@
 //! See the protobuffer definitions section of the README for more information.
 //!
 
+pub mod access;
 pub mod eth_block;
 pub mod log;
 pub mod transaction;

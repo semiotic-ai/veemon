@@ -1,5 +1,6 @@
 use crate::transactions::signature::InvalidSignatureError;
 use crate::transactions::tx_type::TransactionTypeError;
+use firehose_protos::error::ProtosError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -26,4 +27,6 @@ pub enum TransactionError {
     MissingMaxFeePerGas,
     #[error("Missing Header")]
     MissingHeader,
+    #[error("Protos Error: {0}")]
+    ProtosError(#[from] ProtosError),
 }
