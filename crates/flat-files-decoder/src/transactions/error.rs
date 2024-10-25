@@ -1,5 +1,3 @@
-use crate::transactions::signature::InvalidSignatureError;
-use crate::transactions::tx_type::TransactionTypeError;
 use firehose_protos::error::ProtosError;
 use thiserror::Error;
 
@@ -15,10 +13,6 @@ pub enum TransactionError {
     InvalidBigInt(String),
     #[error("EIP-4844 not supported")]
     EIP4844NotSupported,
-    #[error("Invalid Signature: {0}")]
-    InvalidSignature(#[from] InvalidSignatureError),
-    #[error("Invalid Transaction Type: {0}")]
-    InvalidType(#[from] TransactionTypeError),
     #[error("Missing Gas Price")]
     MissingGasPrice,
     #[error("Missing Value")]

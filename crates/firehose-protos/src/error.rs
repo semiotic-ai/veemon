@@ -17,11 +17,17 @@ pub enum ProtosError {
     #[error("Invalid access tuple storage key: {0}")]
     InvalidAccessTupleStorageKey(String),
 
+    #[error("Invalid BigInt: {0}")]
+    InvalidBigInt(String),
+
     #[error("Invalid log address: {0}")]
     InvalidLogAddress(String),
 
     #[error("Invalid log topic: {0}")]
     InvalidLogTopic(String),
+
+    #[error("Invalid trace signature {0:?} component: {1}")]
+    InvalidTraceSignature(String, String),
 
     #[error("KzgCommitmentInvalid")]
     KzgCommitmentInvalid,
@@ -58,4 +64,10 @@ pub enum ProtosError {
 
     #[error("SSZ Types error: {0}")]
     SszTypesError(String),
+
+    #[error("Transaction missing call")]
+    TransactionMissingCall,
+
+    #[error("TxTypeConversionError: {0}")]
+    TxTypeConversion(String),
 }
