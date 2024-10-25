@@ -1,5 +1,4 @@
 use crate::receipts::error::ReceiptError;
-use crate::transactions::tx_type::map_tx_type;
 use alloy_primitives::{Bloom, FixedBytes};
 use firehose_protos::ethereum_v2::TransactionTrace;
 use reth_primitives::{Log, Receipt, ReceiptWithBloom};
@@ -14,8 +13,9 @@ impl TryFrom<&TransactionTrace> for FullReceipt {
     type Error = ReceiptError;
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
-        let success = map_success(&trace.status)?;
-        let tx_type = map_tx_type(&trace.r#type)?;
+        let success = trace.is_success();
+        let tx_type = trace.try_into()?;
+
         let trace_receipt = match &trace.receipt {
             Some(receipt) => receipt,
             None => return Err(ReceiptError::MissingReceipt),
@@ -48,15 +48,9 @@ impl TryFrom<&TransactionTrace> for FullReceipt {
     }
 }
 
-fn map_success(status: &i32) -> Result<bool, ReceiptError> {
-    Ok(*status == 1)
-}
-
 fn map_bloom(slice: &[u8]) -> Result<Bloom, ReceiptError> {
     if slice.len() == 256 {
-        let array: [u8; 256] = slice
-            .try_into()
-            .expect("Slice length doesn't match array length");
+        let array: [u8; 256] = slice.try_into()?;
         Ok(Bloom(FixedBytes(array)))
     } else {
         Err(ReceiptError::InvalidBloom(hex::encode(slice)))

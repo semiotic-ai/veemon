@@ -1,24 +1,15 @@
 pub mod error;
-pub mod tx_type;
-
-mod access_list;
-mod signature;
-mod transaction;
-mod transaction_signed;
 
 use crate::transactions::error::TransactionError;
-use alloy_primitives::U128;
-use firehose_protos::ethereum_v2::{BigInt, Block};
+use firehose_protos::ethereum_v2::Block;
 use reth_primitives::{proofs::calculate_transaction_root, TransactionSigned};
 use revm_primitives::hex;
-
-use self::transaction_signed::trace_to_signed;
 
 pub fn check_transaction_root(block: &Block) -> Result<(), TransactionError> {
     let mut transactions: Vec<TransactionSigned> = Vec::new();
 
     for trace in &block.transaction_traces {
-        transactions.push(trace_to_signed(trace)?);
+        transactions.push(trace.try_into()?);
     }
 
     let tx_root = calculate_transaction_root(&transactions);
@@ -38,20 +29,14 @@ pub fn check_transaction_root(block: &Block) -> Result<(), TransactionError> {
     Ok(())
 }
 
-pub(crate) fn bigint_to_u128(value: BigInt) -> Result<u128, TransactionError> {
-    let slice = value.bytes.as_slice();
-    let n = U128::try_from_be_slice(slice)
-        .ok_or(TransactionError::InvalidBigInt(hex::encode(slice)))?;
-    Ok(u128::from_le_bytes(n.to_le_bytes()))
-}
-
 #[cfg(test)]
 mod tests {
     use crate::dbin::DbinFile;
 
     use alloy_primitives::{Address, Bytes, Parity, TxHash, TxKind, U256};
     use firehose_protos::{
-        bstream::v1::Block as BstreamBlock, ethereum_v2::transaction_trace::Type,
+        bstream::v1::Block as BstreamBlock,
+        ethereum_v2::{transaction_trace::Type, BigInt},
     };
     use prost::Message;
     use reth_primitives::TxType;
@@ -68,7 +53,7 @@ mod tests {
             bytes: n_bytes.to_vec(),
         };
 
-        let new_u128: u128 = bigint_to_u128(bigint)?;
+        let new_u128 = u128::try_from(&bigint)?;
         assert_eq!(new_u128, n_u128);
         Ok(())
     }
@@ -87,7 +72,7 @@ mod tests {
 
         let trace = block.transaction_traces.first().unwrap();
 
-        let transaction = trace_to_signed(trace).unwrap();
+        let transaction = TransactionSigned::try_from(trace).unwrap();
 
         let tx_details = transaction.transaction;
 
@@ -156,7 +141,7 @@ mod tests {
             .find(|t| Type::try_from(t.r#type).unwrap() == Type::TrxTypeLegacy)
             .unwrap();
 
-        let transaction = trace_to_signed(trace).unwrap();
+        let transaction = TransactionSigned::try_from(trace).unwrap();
 
         let signature = transaction.signature;
 
@@ -201,7 +186,7 @@ mod tests {
             .find(|t| t.index == 141)
             .unwrap();
 
-        let transaction = trace_to_signed(trace).unwrap();
+        let transaction = TransactionSigned::try_from(trace).unwrap();
 
         let tx_details = transaction.transaction;
 

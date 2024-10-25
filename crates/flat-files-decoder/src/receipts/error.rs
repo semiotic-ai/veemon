@@ -1,4 +1,3 @@
-use crate::transactions::tx_type::TransactionTypeError;
 use firehose_protos::error::ProtosError;
 use thiserror::Error;
 
@@ -6,8 +5,6 @@ use thiserror::Error;
 pub enum ReceiptError {
     #[error("Invalid status")]
     InvalidStatus,
-    #[error("Invalid tx type")]
-    InvalidTxType(#[from] TransactionTypeError),
     #[error("Invalid address: {0}")]
     InvalidAddress(String),
     #[error("Invalid topic: {0}")]
@@ -22,4 +19,6 @@ pub enum ReceiptError {
     MissingReceipt,
     #[error("Protos error: {0}")]
     ProtosError(#[from] ProtosError),
+    #[error("TryFromSliceError: {0}")]
+    TryFromSliceError(#[from] std::array::TryFromSliceError),
 }
