@@ -14,6 +14,12 @@ pub enum ProtosError {
     #[error("GraffitiInvalid")]
     GraffitiInvalid,
 
+    #[error("Invalid log address: {0}")]
+    InvalidLogAddress(String),
+
+    #[error("Invalid log topic: {0}")]
+    InvalidLogTopic(String),
+
     #[error("KzgCommitmentInvalid")]
     KzgCommitmentInvalid,
 

@@ -1,4 +1,5 @@
 use crate::transactions::tx_type::TransactionTypeError;
+use firehose_protos::error::ProtosError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -19,4 +20,6 @@ pub enum ReceiptError {
     MissingRoot,
     #[error("Missing receipt")]
     MissingReceipt,
+    #[error("Protos error: {0}")]
+    ProtosError(#[from] ProtosError),
 }

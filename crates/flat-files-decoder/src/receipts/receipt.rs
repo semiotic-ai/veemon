@@ -1,5 +1,4 @@
 use crate::receipts::error::ReceiptError;
-use crate::receipts::logs::map_logs;
 use crate::transactions::tx_type::map_tx_type;
 use alloy_primitives::{Bloom, FixedBytes};
 use firehose_protos::ethereum_v2::TransactionTrace;
@@ -21,7 +20,12 @@ impl TryFrom<&TransactionTrace> for FullReceipt {
             Some(receipt) => receipt,
             None => return Err(ReceiptError::MissingReceipt),
         };
-        let logs: Vec<Log> = map_logs(&trace_receipt.logs)?;
+        let logs = trace_receipt
+            .logs
+            .iter()
+            .map(Log::try_from)
+            .collect::<Result<Vec<_>, _>>()?;
+
         let cumulative_gas_used = trace_receipt.cumulative_gas_used;
 
         let receipt = Receipt {

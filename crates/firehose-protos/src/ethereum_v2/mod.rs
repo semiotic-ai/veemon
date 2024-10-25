@@ -3,6 +3,7 @@
 //!
 
 pub mod eth_block;
+pub mod log;
 pub mod transaction;
 
 tonic::include_proto!("sf.ethereum.r#type.v2");
