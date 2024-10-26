@@ -1,62 +1,16 @@
-pub mod error;
-
-use crate::transactions::error::TransactionError;
-use firehose_protos::ethereum_v2::Block;
-use reth_primitives::{proofs::calculate_transaction_root, TransactionSigned};
-use revm_primitives::hex;
-
-pub fn check_transaction_root(block: &Block) -> Result<(), TransactionError> {
-    let mut transactions: Vec<TransactionSigned> = Vec::new();
-
-    for trace in &block.transaction_traces {
-        transactions.push(trace.try_into()?);
-    }
-
-    let tx_root = calculate_transaction_root(&transactions);
-
-    let block_header = match block.header {
-        Some(ref header) => header,
-        None => return Err(TransactionError::MissingHeader),
-    };
-
-    if tx_root.as_slice() != block_header.transactions_root.as_slice() {
-        return Err(TransactionError::MismatchedRoot(
-            hex::encode(tx_root.as_slice()),
-            hex::encode(block_header.transactions_root.as_slice()),
-        ));
-    }
-
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use crate::dbin::DbinFile;
 
     use alloy_primitives::{Address, Bytes, Parity, TxHash, TxKind, U256};
+    use firehose_protos::ethereum_v2::Block;
     use firehose_protos::{
-        bstream::v1::Block as BstreamBlock,
-        ethereum_v2::{transaction_trace::Type, BigInt},
+        bstream::v1::Block as BstreamBlock, ethereum_v2::transaction_trace::Type,
     };
     use prost::Message;
+    use reth_primitives::TransactionSigned;
     use reth_primitives::TxType;
     use std::{fs::File, io::BufReader, str::FromStr};
-
-    use super::*;
-
-    #[test]
-    fn test_bigint_to_u128() -> Result<(), TransactionError> {
-        let n_u128: u128 = 12345678910;
-        let n_bytes: [u8; 16] = n_u128.to_be_bytes();
-
-        let bigint = BigInt {
-            bytes: n_bytes.to_vec(),
-        };
-
-        let new_u128 = u128::try_from(&bigint)?;
-        assert_eq!(new_u128, n_u128);
-        Ok(())
-    }
 
     #[test]
     fn example_file_first_tx() {

@@ -32,6 +32,9 @@ pub enum ProtosError {
     #[error("KzgCommitmentInvalid")]
     KzgCommitmentInvalid,
 
+    #[error("MissingBlockHeader")]
+    MissingBlockHeader,
+
     #[error("Null attestation data")]
     NullAttestationData,
 

@@ -2223,6 +2223,7 @@ dependencies = [
  "thiserror",
  "tonic",
  "tonic-build",
+ "tracing",
 ]
 
 [[package]]

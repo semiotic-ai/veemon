@@ -20,6 +20,7 @@ reth-primitives.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 tonic.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
 hex.workspace = true
