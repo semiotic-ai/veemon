@@ -1,8 +1,10 @@
-use super::Block;
+use super::{Block, BlockHeader};
 use alloy_primitives::{Address, Bloom, FixedBytes, Uint};
 use ethportal_api::types::execution::header::Header;
 use prost::Message;
 use prost_wkt_types::Any;
+use reth_primitives::{proofs::calculate_transaction_root, TransactionSigned};
+use tracing::error;
 
 use crate::{
     error::ProtosError,
@@ -126,6 +128,50 @@ impl TryFrom<Response> for Block {
 
     fn try_from(response: Response) -> Result<Self, Self::Error> {
         decode_block(response)
+    }
+}
+
+impl Block {
+    fn calculate_transaction_root(&self) -> Result<FixedBytes<32>, ProtosError> {
+        let transactions = self.transaction_traces_to_signed_transactions()?;
+        Ok(calculate_transaction_root(&transactions))
+    }
+
+    fn header(&self) -> Result<&BlockHeader, ProtosError> {
+        self.header.as_ref().ok_or(ProtosError::MissingBlockHeader)
+    }
+
+    fn transaction_traces_to_signed_transactions(
+        &self,
+    ) -> Result<Vec<TransactionSigned>, ProtosError> {
+        self.transaction_traces
+            .iter()
+            .map(|trace| trace.try_into())
+            .collect()
+    }
+
+    /// Checks if the transaction root matches the block header's transactions root.
+    /// Returns `true` if they match, `false` otherwise.
+    pub fn transaction_root_is_verified(&self) -> bool {
+        let tx_root = match self.calculate_transaction_root() {
+            Ok(tx_root) => tx_root,
+            Err(e) => {
+                error!("Failed to calculate transaction root: {e}");
+                return false;
+            }
+        };
+
+        match self.verify_transaction_root(tx_root.as_slice()) {
+            Ok(result) => result,
+            Err(e) => {
+                error!("Failed to verify transaction root: {e}");
+                false
+            }
+        }
+    }
+
+    fn verify_transaction_root(&self, other_transaction_root: &[u8]) -> Result<bool, ProtosError> {
+        Ok(other_transaction_root == self.header()?.transactions_root.as_slice())
     }
 }
 

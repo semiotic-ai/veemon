@@ -10,11 +10,8 @@ pub mod headers;
 pub mod receipts;
 pub mod transactions;
 
-use crate::{
-    error::DecodeError, headers::check_valid_header, transactions::check_transaction_root,
-};
+use crate::{error::DecodeError, headers::check_valid_header};
 use dbin::DbinFile;
-use error::CheckError;
 use firehose_protos::ethereum_v2::Block;
 use headers::HeaderRecordWithNumber;
 use prost::Message;
@@ -207,7 +204,9 @@ fn handle_block(
     }
     if block.number != 0 {
         check_receipt_root(&block)?;
-        check_transaction_root(&block)?;
+        if !block.transaction_root_is_verified() {
+            return Err(DecodeError::TransactionRoot);
+        }
     }
 
     if let Some(output) = output {
@@ -254,11 +253,15 @@ pub async fn stream_blocks<R: Read, W: Write>(
                 block_number = block.number as usize;
 
                 let receipts_check_process = spawn_check(&block, |b| {
-                    check_receipt_root(b).map_err(CheckError::ReceiptError)
+                    check_receipt_root(b).map_err(DecodeError::ReceiptError)
                 });
 
                 let transactions_check_process = spawn_check(&block, |b| {
-                    check_transaction_root(b).map_err(CheckError::TransactionError)
+                    if !b.transaction_root_is_verified() {
+                        Err(DecodeError::TransactionRoot)
+                    } else {
+                        Ok(())
+                    }
                 });
 
                 let joint_return = join![receipts_check_process, transactions_check_process];
@@ -302,7 +305,7 @@ fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecodeError> {
 // Define a generic function to spawn a blocking task for a given check.
 fn spawn_check<F>(block: &Block, check: F) -> tokio::task::JoinHandle<()>
 where
-    F: FnOnce(&Block) -> Result<(), CheckError> + Send + 'static,
+    F: FnOnce(&Block) -> Result<(), DecodeError> + Send + 'static,
 {
     let block_clone = block.clone();
     tokio::task::spawn_blocking(move || match check(&block_clone) {

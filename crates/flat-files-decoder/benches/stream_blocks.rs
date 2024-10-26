@@ -7,7 +7,6 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use decoder::{
     dbin::{error::DbinFileError, DbinFile},
     receipts::check_receipt_root,
-    transactions::check_transaction_root,
 };
 use prost::Message;
 
@@ -173,7 +172,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
                 )
                 .unwrap();
                 b.iter(|| {
-                    black_box(check_transaction_root(&block)).unwrap();
+                    black_box(block.transaction_root_is_verified());
                 });
             }
         }
