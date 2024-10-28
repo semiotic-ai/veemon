@@ -2333,7 +2333,7 @@ dependencies = [
 name = "forrestrie"
 version = "0.1.1"
 dependencies = [
- "alloy-primitives 0.8.9",
+ "alloy-primitives 0.8.10",
  "alloy-rlp",
  "bls",
  "ethportal-api",
