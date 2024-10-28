@@ -1,0 +1,83 @@
+// //! # Execution Layer block receipt proofs
+// //!
+// //!
+// //! This is a scenario where it is necessary to prove a receipt to be in a block.
+
+// use forrestrie::beacon_state::{
+//     HeadState, CAPELLA_START_ERA, HISTORICAL_SUMMARY_TREE_DEPTH, SLOTS_PER_HISTORICAL_ROOT,
+// };
+// use merkle_proof::verify_merkle_proof;
+// use tree_hash::TreeHash;
+// use types::MainnetEthSpec;
+// #[tokio::main]
+// async fn main() {
+//     let block_wrapper: &LazyCell<BlockWrapper> = &BLOCK_WRAPPER;
+//     let block: &::types::BeaconBlock<::types::MainnetEthSpec> = &block_wrapper.data.message;
+//     let block_body: &::types::BeaconBlockBodyDeneb<::types::MainnetEthSpec> =
+//         block.body_deneb().unwrap();
+//     let payload = &block_body.execution_payload;
+//     let receipts_root = payload.execution_payload.receipts_root;
+
+//     let block_receipts: &LazyCell<ReceiptsFromBlock> = &BLOCK_RECEIPTS;
+//     let receipts_with_bloom: Result<Vec<ReceiptWithBloom>, String> = block_receipts
+//         .result
+//         .iter()
+//         .map(ReceiptWithBloom::try_from)
+//         .collect::<Result<Vec<_>, _>>();
+
+//     // computes the root and verify against existing data
+//     let mut hb: HashBuilder;
+//     //target_idxs are the logIndexes for receipts to get proofs from.
+//     // these values are arbitrary
+//     let target_idxs = &[0, 1, 2];
+//     let mut targets: Vec<TargetLeaf> = Vec::new();
+//     let receipts_len;
+
+//     match receipts_with_bloom {
+//         Ok(receipts) => {
+//             hb = build_trie_with_proofs(&receipts, target_idxs);
+//             let calculated_root = H256::from(hb.root().0);
+//             assert_eq!(calculated_root, receipts_root, "Roots do not match!");
+
+//             let mut index_buffer = Vec::new();
+//             let mut value_buffer = Vec::new();
+
+//             // build some of the targets to get proofs for them
+//             receipts_len = receipts.len();
+//             for i in target_idxs {
+//                 index_buffer.clear();
+//                 value_buffer.clear();
+
+//                 let index = adjust_index_for_rlp(*i, receipts_len);
+//                 index.encode(&mut index_buffer);
+
+//                 let nibble = Nibbles::unpack(&index_buffer);
+
+//                 receipts[index].encode_inner(&mut value_buffer, false);
+//                 targets.push(TargetLeaf::new(nibble, value_buffer.clone()));
+//             }
+//         }
+//         Err(e) => {
+//             // Handle the error (e.g., by logging or panicking)
+//             panic!("Failed to convert receipts: {}", e);
+//         }
+//     }
+
+//     // verifies proof for retained targets
+//     let proof = hb.take_proof_nodes();
+//     for target in targets.iter() {
+//         let proof1 = proof
+//             .iter()
+//             .filter_map(|(k, v)| target.nibbles.starts_with(k).then_some(v));
+
+//         assert_eq!(
+//             verify_proof(
+//                 hb.root(),
+//                 target.nibbles.clone(),
+//                 Some(target.value.to_vec()),
+//                 proof1.clone(),
+//             ),
+//             Ok(())
+//         );
+//     }
+// }

@@ -26,22 +26,33 @@ pub struct ReceiptJson {
 impl ReceiptJson {
     #[cfg(test)]
     fn fake() -> Self {
-        use alloy_primitives::Address;
-        use alloy_rlp::Bytes;
+        use alloy_primitives::{Address, Bytes};
+        use rand::{self, Rng};
 
         fn fake_log() -> Log {
             // generate random slice of bytes
-            let data = [0x01, 0x02, 0x03, 0x04];
+            let mut rng = rand::thread_rng();
 
-            Log::new(Address::default(), vec![]).unwrap()
+            // Generate a random u32
+            let random_u32: u32 = rng.gen();
+
+            Log::new(
+                Address::default(),
+                vec![],
+                Bytes::from(random_u32.to_be_bytes().to_vec()),
+            )
+            .unwrap()
         }
+
+        let logs: Vec<Log> = (3..5).into_iter().map(|_| fake_log()).collect();
+        dbg!(&logs);
 
         ReceiptJson {
             tx_type: TxType::Eip1559, // Replace with any desired variant
             block_hash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
                 .to_string(),
             block_number: "0x1a".to_string(),
-            logs: vec![Log::empty()],
+            logs,
             cumulative_gas_used: U256::from(0x5208), // Mock gas used value
             status: true,                            // Mock status as successful
             logs_bloom: Bloom::default(),            // Mock an empty logs bloom
@@ -176,6 +187,9 @@ mod tests {
 
     #[test]
     fn test_compute_receipts_trie_root_and_proof() {
+        // TODO: instead of generating receipts, pick a small exempt from
+        // the execution block that fits here. It should work better,
+        // since faking logs requires the log to be properly rlp encoded
         let block_receipts: ReceiptsFromBlock =
             (0..10).into_iter().map(|_| ReceiptJson::fake()).collect();
 
