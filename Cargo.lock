@@ -2346,6 +2346,7 @@ dependencies = [
  "prost-build",
  "prost-wkt",
  "prost-wkt-types",
+ "rand",
  "reth-primitives",
  "reth-trie-common",
  "serde",

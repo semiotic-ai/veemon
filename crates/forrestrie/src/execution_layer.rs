@@ -26,6 +26,16 @@ pub struct ReceiptJson {
 impl ReceiptJson {
     #[cfg(test)]
     fn fake() -> Self {
+        use alloy_primitives::Address;
+        use alloy_rlp::Bytes;
+
+        fn fake_log() -> Log {
+            // generate random slice of bytes
+            let data = [0x01, 0x02, 0x03, 0x04];
+
+            Log::new(Address::default(), vec![]).unwrap()
+        }
+
         ReceiptJson {
             tx_type: TxType::Eip1559, // Replace with any desired variant
             block_hash: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
@@ -85,6 +95,14 @@ impl TryFrom<&ReceiptJson> for ReceiptWithBloom {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ReceiptsFromBlock {
     pub result: Vec<ReceiptJson>,
+}
+
+impl FromIterator<ReceiptJson> for ReceiptsFromBlock {
+    fn from_iter<I: IntoIterator<Item = ReceiptJson>>(iter: I) -> Self {
+        ReceiptsFromBlock {
+            result: iter.into_iter().collect(),
+        }
+    }
 }
 
 fn status_to_bool<'de, D>(deserializer: D) -> Result<bool, D::Error>
@@ -158,7 +176,8 @@ mod tests {
 
     #[test]
     fn test_compute_receipts_trie_root_and_proof() {
-        // TODO: create ReceiptsFromBlock dummy variables instead of reading from json
+        let block_receipts: ReceiptsFromBlock =
+            (0..10).into_iter().map(|_| ReceiptJson::fake()).collect();
 
         let receipts_with_bloom: Result<Vec<ReceiptWithBloom>, String> = block_receipts
             .result
@@ -178,6 +197,7 @@ mod tests {
             Ok(receipts) => {
                 hb = build_trie_with_proofs(&receipts, target_idxs);
                 let calculated_root = H256::from(hb.root().0);
+                dbg!(&calculated_root);
                 // assert_eq!(calculated_root, receipts_root, "Roots do not match!");
 
                 let mut index_buffer = Vec::new();

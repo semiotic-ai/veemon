@@ -28,6 +28,7 @@ tree_hash = "0.6.0"
 types.workspace = true
 
 [dev-dependencies]
+rand.workspace = true
 fake.workspace = true
 
 [build-dependencies]
