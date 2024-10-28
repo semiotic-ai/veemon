@@ -126,4 +126,16 @@ mod tests {
         let hash = "d4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3";
         Hash256::from_hex(hash).unwrap();
     }
+
+    // TODO: compute an header accumulator pre-merge, and check if header accumulator matches with
+    // pre-computed frozen header accumulators we have
+    // pub const MERGE_BLOCK: usize = 15537394;
+
+    // Compute an accumulator  post merge, and pre-capella, checks if it matches frozen header accumulator
+    // pub const CAPELLA_START_EPOCH: usize = 194048;
+
+    // compute an accumulator post-capella (deneb)
+    // pub const FIRST_EXECUTION_BLOCK_DENEB: usize = 19426587;
+
+    // pub const FIRST_DENEB_EPOCH: usize = ?;
 }
