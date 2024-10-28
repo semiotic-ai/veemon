@@ -2363,6 +2363,29 @@ version = "0.1.1"
 dependencies = [
  "bls",
  "ethportal-api",
+ "fake",
+ "firehose-protos",
+ "futures",
+ "merkle_proof",
+ "primitive-types",
+ "prost",
+ "prost-build",
+ "prost-wkt",
+ "prost-wkt-types",
+ "serde",
+ "ssz_types 0.6.0",
+ "tonic",
+ "tonic-build",
+ "tree_hash 0.6.0",
+ "types",
+]
+
+[[package]]
+name = "forrestrie-examples"
+version = "0.1.1"
+dependencies = [
+ "bls",
+ "ethportal-api",
  "firehose-client",
  "firehose-protos",
  "forrestrie",
