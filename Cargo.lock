@@ -2363,7 +2363,6 @@ version = "0.1.1"
 dependencies = [
  "bls",
  "ethportal-api",
- "fake",
  "firehose-protos",
  "futures",
  "merkle_proof",
