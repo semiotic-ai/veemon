@@ -7,7 +7,6 @@
 pub mod dbin;
 pub mod error;
 pub mod headers;
-pub mod receipts;
 pub mod transactions;
 
 use crate::{error::DecodeError, headers::check_valid_header};
@@ -15,7 +14,6 @@ use dbin::DbinFile;
 use firehose_protos::ethereum_v2::Block;
 use headers::HeaderRecordWithNumber;
 use prost::Message;
-use receipts::check_receipt_root;
 use simple_log::log;
 use std::{
     fs::{self, File},
@@ -202,8 +200,12 @@ fn handle_block(
     if let Some(headers_dir) = headers_dir {
         check_valid_header(&block, headers_dir)?;
     }
+
     if block.number != 0 {
-        check_receipt_root(&block)?;
+        if !block.receipt_root_is_verified() {
+            return Err(DecodeError::ReceiptRoot);
+        }
+
         if !block.transaction_root_is_verified() {
             return Err(DecodeError::TransactionRoot);
         }
@@ -252,17 +254,17 @@ pub async fn stream_blocks<R: Read, W: Write>(
                 let block = decode_block_from_bytes(&message)?;
                 block_number = block.number as usize;
 
-                let receipts_check_process = spawn_check(&block, |b| {
-                    check_receipt_root(b).map_err(DecodeError::ReceiptError)
-                });
+                let receipts_check_process =
+                    spawn_check(&block, |b| match b.receipt_root_is_verified() {
+                        true => Ok(()),
+                        false => Err(DecodeError::ReceiptRoot),
+                    });
 
-                let transactions_check_process = spawn_check(&block, |b| {
-                    if !b.transaction_root_is_verified() {
-                        Err(DecodeError::TransactionRoot)
-                    } else {
-                        Ok(())
-                    }
-                });
+                let transactions_check_process =
+                    spawn_check(&block, |b| match b.transaction_root_is_verified() {
+                        true => Ok(()),
+                        false => Err(DecodeError::TransactionRoot),
+                    });
 
                 let joint_return = join![receipts_check_process, transactions_check_process];
                 joint_return.0.map_err(DecodeError::JoinError)?;
@@ -358,12 +360,7 @@ mod tests {
         // Remove an item from the block to make the receipt root invalid
         block.transaction_traces.pop();
 
-        let result = check_receipt_root(&block);
-
-        matches!(
-            result.unwrap_err(),
-            receipts::error::ReceiptError::MismatchedRoot(_, _)
-        );
+        assert!(!block.receipt_root_is_verified());
     }
 
     #[test]
@@ -406,6 +403,9 @@ mod tests {
             .expect("Failed to read file");
 
         let result = handle_buf(&buffer, Decompression::None);
+        if let Err(e) = result {
+            panic!("handle_buf failed: {}", e);
+        }
         assert!(result.is_ok(), "handle_buf should complete successfully");
     }
 
