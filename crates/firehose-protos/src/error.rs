@@ -29,6 +29,9 @@ pub enum ProtosError {
     #[error("Invalid trace signature {0:?} component: {1}")]
     InvalidTraceSignature(String, String),
 
+    #[error("Invalid transaction receipt logs bloom: {0}")]
+    InvalidTransactionReceiptLogsBloom(String),
+
     #[error("KzgCommitmentInvalid")]
     KzgCommitmentInvalid,
 
@@ -70,6 +73,9 @@ pub enum ProtosError {
 
     #[error("Transaction missing call")]
     TransactionMissingCall,
+
+    #[error("Transaction trace missing receipt")]
+    TransactionTraceMissingReceipt,
 
     #[error("TxTypeConversionError: {0}")]
     TxTypeConversion(String),

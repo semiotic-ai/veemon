@@ -1,9 +1,13 @@
-use super::{Block, BlockHeader};
-use alloy_primitives::{Address, Bloom, FixedBytes, Uint};
+use super::{Block, BlockHeader, TransactionReceipt, TransactionTrace};
+use alloy_primitives::{hex, Address, Bloom, FixedBytes, Uint, B256};
+use alloy_rlp::{Encodable, Header as RlpHeader};
 use ethportal_api::types::execution::header::Header;
 use prost::Message;
 use prost_wkt_types::Any;
-use reth_primitives::{proofs::calculate_transaction_root, TransactionSigned};
+use reth_primitives::{
+    proofs::calculate_transaction_root, Log, Receipt, ReceiptWithBloom, TransactionSigned,
+};
+use reth_trie_common::root::ordered_trie_root_with_encoder;
 use tracing::error;
 
 use crate::{
@@ -132,13 +136,90 @@ impl TryFrom<Response> for Block {
 }
 
 impl Block {
+    /// Calculates the trie receipt root of a given block receipts
+    ///
+    /// It uses the traces to aggregate receipts from blocks
+    ///
+    /// # Arguments
+    ///
+    /// * `block` reference to the block which the root will be verified
+    ///
+    /// # Note on Testing
+    ///
+    /// See the [receipt_root.rs](../examples/receipt_root.rs) example for a usage example.
+    ///
+    pub fn calculate_receipt_root(&self) -> Result<B256, ProtosError> {
+        let receipts = self.full_receipts()?;
+        let encoder = self.full_receipt_encoder();
+        Ok(ordered_trie_root_with_encoder(&receipts, encoder))
+    }
+
     fn calculate_transaction_root(&self) -> Result<FixedBytes<32>, ProtosError> {
         let transactions = self.transaction_traces_to_signed_transactions()?;
         Ok(calculate_transaction_root(&transactions))
     }
 
+    fn full_receipts(&self) -> Result<Vec<FullReceipt>, ProtosError> {
+        self.transaction_traces
+            .iter()
+            .map(FullReceipt::try_from)
+            .collect()
+    }
+
+    /// Returns an encoder function for [RLP-encoding]((https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp))
+    /// full receipts based on the Byzantium fork block.
+    ///
+    /// This function generates an encoding strategy for receipts based on the block number:
+    /// - **Pre-Byzantium:** Encodes with a header including state root, cumulative gas, bloom filter, and logs.
+    /// - **Byzantium and later:** Encodes the inner receipt contents only.
+    ///
+    /// The encoder function returned takes a reference to a [`FullReceipt`] and a mutable buffer implementing
+    /// [`BufMut`], into which it writes the RLP-encoded data.
+    ///
+    /// # Arguments
+    ///
+    /// * `block` - Reference to the [`Block`] from which to derive the encoding strategy.
+    ///
+    /// # Returns
+    ///
+    /// A function that encodes a [`FullReceipt`] into an RLP format, writing the result to a mutable `Vec<u8>`.
+    ///
+    fn full_receipt_encoder(&self) -> fn(&FullReceipt, &mut Vec<u8>) {
+        if self.is_pre_byzantium() {
+            |r: &FullReceipt, out: &mut Vec<u8>| r.encode_pre_byzantium_receipt(out)
+        } else {
+            |r: &FullReceipt, out: &mut Vec<u8>| r.encode_byzantium_and_later_receipt(out)
+        }
+    }
+
     fn header(&self) -> Result<&BlockHeader, ProtosError> {
         self.header.as_ref().ok_or(ProtosError::MissingBlockHeader)
+    }
+
+    fn is_pre_byzantium(&self) -> bool {
+        const BYZANTIUM_FORK_BLOCK: u64 = 4_370_000;
+
+        self.number < BYZANTIUM_FORK_BLOCK
+    }
+
+    /// Checks if the receipt root calculated using [`Self::calculate_receipt_root`] matches
+    /// the block header's receipt root field.
+    pub fn receipt_root_is_verified(&self) -> bool {
+        let computed_root = match self.calculate_receipt_root() {
+            Ok(computed_root) => computed_root,
+            Err(e) => {
+                error!("Failed to calculate receipt root: {e}");
+                return false;
+            }
+        };
+
+        match self.verify_receipt_root(computed_root.as_slice()) {
+            Ok(result) => result,
+            Err(e) => {
+                error!("Failed to verify receipt root: {e}");
+                false
+            }
+        }
     }
 
     fn transaction_traces_to_signed_transactions(
@@ -170,8 +251,97 @@ impl Block {
         }
     }
 
+    fn verify_receipt_root(&self, other_receipt_root: &[u8]) -> Result<bool, ProtosError> {
+        Ok(other_receipt_root == self.header()?.receipt_root.as_slice())
+    }
+
     fn verify_transaction_root(&self, other_transaction_root: &[u8]) -> Result<bool, ProtosError> {
         Ok(other_transaction_root == self.header()?.transactions_root.as_slice())
+    }
+}
+
+struct FullReceipt {
+    receipt: ReceiptWithBloom,
+    state_root: Vec<u8>,
+}
+
+impl TryFrom<&TransactionTrace> for FullReceipt {
+    type Error = ProtosError;
+
+    fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
+        let tx_type = trace.try_into()?;
+
+        let trace_receipt = trace.receipt()?;
+
+        let logs = trace_receipt.logs()?;
+
+        let receipt = Receipt {
+            success: trace.is_success(),
+            tx_type,
+            logs,
+            cumulative_gas_used: trace_receipt.cumulative_gas_used,
+        };
+
+        let bloom = Bloom::try_from(trace_receipt)?;
+
+        Ok(Self {
+            receipt: ReceiptWithBloom { receipt, bloom },
+            state_root: trace_receipt.state_root.to_vec(),
+        })
+    }
+}
+
+/// The size of the logs bloom filter in bytes, as specified by the Ethereum protocol.
+const BLOOM_SIZE: usize = 256;
+
+impl TryFrom<&TransactionReceipt> for Bloom {
+    type Error = ProtosError;
+
+    fn try_from(receipt: &TransactionReceipt) -> Result<Self, Self::Error> {
+        let logs_bloom = receipt.logs_bloom.as_slice();
+        logs_bloom
+            .try_into()
+            .map(|array: [u8; BLOOM_SIZE]| Bloom(FixedBytes(array)))
+            .map_err(|_| Self::Error::InvalidTransactionReceiptLogsBloom(hex::encode(logs_bloom)))
+    }
+}
+
+impl TransactionReceipt {
+    fn logs(&self) -> Result<Vec<Log>, ProtosError> {
+        self.logs.iter().map(Log::try_from).collect()
+    }
+}
+
+impl FullReceipt {
+    /// Pre-Byzantium: encode header values and additional receipt data
+    fn encode_pre_byzantium_receipt(&self, encoded: &mut Vec<u8>) {
+        // Worried about determinism and the order of calling `encode` on the fields,
+        // we experimented with different orders and found that the order of encoding
+        // the fields does not affect the resulting hash.
+        self.rlp_header().encode(encoded);
+        self.state_root.as_slice().encode(encoded);
+        Encodable::encode(&self.receipt.receipt.cumulative_gas_used, encoded);
+        self.receipt.bloom.encode(encoded);
+        self.receipt.receipt.logs.encode(encoded);
+    }
+
+    /// For Byzantium and later: only encode the inner receipt contents using the `reth_primitives`
+    /// [`ReceiptWithBloom`] `encode_inner` method.
+    fn encode_byzantium_and_later_receipt(&self, encoded: &mut Vec<u8>) {
+        self.receipt.encode_inner(encoded, false);
+    }
+
+    /// Encodes receipt header using [RLP serialization](https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp)
+    fn rlp_header(&self) -> RlpHeader {
+        let payload_length = self.state_root.as_slice().length()
+            + self.receipt.receipt.cumulative_gas_used.length()
+            + self.receipt.bloom.length()
+            + self.receipt.receipt.logs.length();
+
+        RlpHeader {
+            list: true,
+            payload_length,
+        }
     }
 }
 
