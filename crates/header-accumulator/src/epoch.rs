@@ -1,7 +1,7 @@
 use std::array::IntoIter;
 
 use alloy_primitives::map::HashSet;
-use ethportal_api::types::execution::accumulator::HeaderRecord;
+use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
 
 use crate::{errors::EraValidateError, types::ExtHeaderRecord};
 
@@ -30,6 +30,7 @@ pub const MERGE_BLOCK: u64 = 15537394;
 /// 0 must start from block 0 to block 8191.
 ///
 /// All blocks must be at the same epoch
+#[derive(Clone)]
 pub struct Epoch {
     number: usize,
     data: Box<[HeaderRecord; MAX_EPOCH_SIZE]>,
@@ -78,6 +79,13 @@ impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
             number: epoch_number as usize,
             data,
         })
+    }
+}
+
+impl From<Epoch> for EpochAccumulator {
+    fn from(value: Epoch) -> Self {
+        let vec: Vec<HeaderRecord> = value.data.to_vec();
+        EpochAccumulator::from(vec)
     }
 }
 

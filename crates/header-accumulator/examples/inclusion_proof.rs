@@ -1,9 +1,8 @@
 use std::{fs::File, io::BufReader};
 
-use firehose_protos::EthBlock as Block;
 use flat_files_decoder::{read_blocks_from_reader, Compression};
 use header_accumulator::{
-    generate_inclusion_proof, verify_inclusion_proof, EraValidateError, ExtHeaderRecord,
+    generate_inclusion_proofs, verify_inclusion_proofs, Epoch, EraValidateError, ExtHeaderRecord,
 };
 
 fn create_test_reader(path: &str) -> BufReader<File> {
@@ -12,7 +11,6 @@ fn create_test_reader(path: &str) -> BufReader<File> {
 
 fn main() -> Result<(), EraValidateError> {
     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
-    let mut all_blocks: Vec<Block> = Vec::new();
 
     for flat_file_number in (0..=8200).step_by(100) {
         let file = format!(
@@ -27,7 +25,6 @@ fn main() -> Result<(), EraValidateError> {
                         .map(|block| ExtHeaderRecord::try_from(block).unwrap())
                         .collect::<Vec<ExtHeaderRecord>>(),
                 );
-                all_blocks.extend(blocks);
             }
             Err(e) => {
                 eprintln!("error: {:?}", e);
@@ -38,23 +35,27 @@ fn main() -> Result<(), EraValidateError> {
 
     let start_block = 301;
     let end_block = 402;
-    let inclusion_proof =
-        generate_inclusion_proof(headers, start_block, end_block).unwrap_or_else(|e| {
+    let headers_to_proof: Vec<_> = headers[start_block..end_block]
+        .iter()
+        .map(|ext| ext.full_header.as_ref().unwrap().clone())
+        .collect();
+    let epoch: Epoch = headers.try_into().unwrap();
+
+    let inclusion_proof = generate_inclusion_proofs(vec![epoch], headers_to_proof.clone())
+        .unwrap_or_else(|e| {
             println!("Error occurred: {}", e);
             std::process::exit(1);
         });
-    assert_eq!(
-        inclusion_proof.len() as usize,
-        (end_block - start_block + 1) as usize
-    );
+    assert_eq!(inclusion_proof.len(), headers_to_proof.len());
+
+    let proof_headers = headers_to_proof
+        .into_iter()
+        .zip(inclusion_proof)
+        .map(|(header, proof)| proof.with_header(header))
+        .collect::<Result<Vec<_>, _>>()?;
 
     // Verify inclusion proof
-    let proof_blocks: Vec<Block> = all_blocks[start_block as usize..=end_block as usize].to_vec();
-    assert!(verify_inclusion_proof(proof_blocks, None, inclusion_proof.clone()).is_ok());
-
-    // Verify if inclusion proof fails on not proven blocks
-    let proof_blocks: Vec<Block> = all_blocks[302..=403].to_vec();
-    assert!(verify_inclusion_proof(proof_blocks, None, inclusion_proof.clone()).is_err());
+    assert!(verify_inclusion_proofs(None, proof_headers).is_ok());
 
     println!("Inclusion proof verified successfully!");
 
