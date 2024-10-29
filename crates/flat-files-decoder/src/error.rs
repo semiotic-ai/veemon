@@ -1,6 +1,5 @@
 use crate::dbin::error::DbinFileError;
 use crate::headers::error::BlockHeaderError;
-use crate::receipts::error::ReceiptError;
 use thiserror::Error;
 use tokio::task::JoinError;
 
@@ -16,8 +15,8 @@ pub enum DecodeError {
     BlockHeaderError(#[from] BlockHeaderError),
     #[error("Invalid Transaction Root")]
     TransactionRoot,
-    #[error("Invalid Receipt Root: {0}")]
-    ReceiptError(#[from] ReceiptError),
+    #[error("Invalid Receipt Root")]
+    ReceiptRoot,
     #[error("IO Error: {0}")]
     IoError(#[from] std::io::Error),
     #[error("Invalid content type: {0}")]

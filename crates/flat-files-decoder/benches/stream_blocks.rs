@@ -4,10 +4,7 @@ use std::{
 };
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use flat_files_decoder::{
-    dbin::{error::DbinFileError, DbinFile},
-    receipts::check_receipt_root,
-};
+use flat_files_decoder::dbin::{error::DbinFileError, DbinFile};
 use prost::Message;
 
 const ITERS_PER_FILE: usize = 10;
@@ -138,7 +135,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
                 )
                 .unwrap();
                 b.iter(|| {
-                    black_box(check_receipt_root(&block)).unwrap();
+                    black_box(block.receipt_root_is_verified());
                 });
             }
         }
