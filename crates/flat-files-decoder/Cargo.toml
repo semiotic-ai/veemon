@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 alloy-primitives.workspace = true
 alloy-consensus.workspace = true
-alloy-rlp.workspace = true
 alloy-eip2930.workspace = true
 bincode.workspace = true
 clap.workspace = true
@@ -17,7 +16,6 @@ prost.workspace = true
 rand.workspace = true
 rayon.workspace = true
 reth-primitives.workspace = true
-reth-trie-common.workspace = true
 revm-primitives.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true

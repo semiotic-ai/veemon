@@ -10,7 +10,7 @@ use tracing::debug;
 
 use crate::error::ProtosError;
 
-use super::{transaction_trace::Type, BigInt, CallType, TransactionTrace};
+use super::{transaction_trace::Type, BigInt, CallType, TransactionReceipt, TransactionTrace};
 
 impl From<Type> for TxType {
     fn from(tx_type: Type) -> Self {
@@ -55,7 +55,7 @@ fn get_legacy_chain_id(trace: &TransactionTrace) -> Option<ChainId> {
 
 impl TransactionTrace {
     /// Returns true if the transaction's status is successful.
-    pub fn is_success(&self) -> bool {
+    pub(crate) fn is_success(&self) -> bool {
         self.status == 1
     }
 
@@ -83,6 +83,12 @@ impl TransactionTrace {
         };
 
         Ok(parity.into())
+    }
+
+    pub(crate) fn receipt(&self) -> Result<&TransactionReceipt, ProtosError> {
+        self.receipt
+            .as_ref()
+            .ok_or(ProtosError::TransactionTraceMissingReceipt)
     }
 
     fn v(&self) -> u8 {
