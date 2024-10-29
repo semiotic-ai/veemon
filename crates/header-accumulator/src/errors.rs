@@ -9,6 +9,19 @@ pub enum EraValidateError {
     #[error("Era accumulator mismatch")]
     EraAccumulatorMismatch,
 
+    #[error("Block epoch {block_epoch} (block number {block_number}) could not be proven with provided epoch {epoch_number}.")]
+    EpochNotMatchForHeader {
+        epoch_number: usize,
+        block_number: u64,
+        block_epoch: usize,
+    },
+
+    #[error("Expected epoch {block_epoch} was not found in the provided epoch list. Epochs provided: {epoch_list:?}.")]
+    EpochNotFoundInProvidedList {
+        block_epoch: usize,
+        epoch_list: Vec<usize>,
+    },
+
     #[error("Error generating inclusion proof")]
     ProofGenerationFailure,
     #[error("Error validating inclusion proof")]
@@ -28,6 +41,12 @@ pub enum EraValidateError {
     InvalidBlockRange(u64, u64),
     #[error("Epoch is in post merge: {0}")]
     EpochPostMerge(usize),
+
+    #[error("Header block number ({block_number}) is different than expected ({expected_number})")]
+    HeaderMismatch {
+        expected_number: u64,
+        block_number: u64,
+    },
 }
 
 impl From<ProtosError> for EraValidateError {
