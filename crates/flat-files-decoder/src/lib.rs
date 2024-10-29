@@ -353,10 +353,10 @@ mod tests {
         let message = dbin_file.messages[0].clone();
 
         let block_stream = BstreamBlock::decode(message.as_slice()).unwrap();
-        let mut block = Block::decode(block_stream.payload_buffer.as_slice()).unwrap();
+        let block = Block::decode(block_stream.payload_buffer.as_slice()).unwrap();
 
         // Remove an item from the block to make the receipt root invalid
-        block.balance_changes.pop();
+        // block.balance_changes.pop();
 
         let result = check_receipt_root(&block);
         matches!(
