@@ -1,0 +1,10 @@
+[package]
+name = "firehose-protos-examples"
+version = "0.1.1"
+edition = "2021"
+
+[dev-dependencies]
+alloy-primitives.workspace = true
+firehose-client = { path = "../firehose-client" }
+firehose-protos = { path = "../firehose-protos" }
+tokio.workspace = true

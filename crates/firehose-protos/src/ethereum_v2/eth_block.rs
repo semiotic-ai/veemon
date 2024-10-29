@@ -146,7 +146,7 @@ impl Block {
     ///
     /// # Note on Testing
     ///
-    /// See the [receipt_root.rs](../examples/receipt_root.rs) example for a usage example.
+    /// See the [receipt_root.rs](../../../firehose-protos-examples/examples/receipt_root.rs) example for a usage example.
     ///
     pub fn calculate_receipt_root(&self) -> Result<B256, ProtosError> {
         let receipts = self.full_receipts()?;
