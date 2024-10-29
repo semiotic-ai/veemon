@@ -2235,6 +2235,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "firehose-protos-examples"
+version = "0.1.1"
+dependencies = [
+ "alloy-primitives 0.8.10",
+ "firehose-client",
+ "firehose-protos",
+ "tokio",
+]
+
+[[package]]
 name = "fixed-hash"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

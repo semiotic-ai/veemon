@@ -2,7 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/refs/heads/main/schemas/config.json",
   "bootstrap-sha": "ba33f662ca04f59eeffa523b220545126cda17ad",
   "release-type": "rust",
-  "plugins": ["cargo-workspace"],
+  "plugins": [
+    "cargo-workspace"
+  ],
   "packages": {
     "crates/firehose-client": {},
     "crates/flat-files-decoder": {},
@@ -10,6 +12,7 @@
     "crates/forrestrie": {},
     "crates/forrestrie-examples": {},
     "crates/header-accumulator": {},
-    "crates/firehose-protos": {}
+    "crates/firehose-protos": {},
+    "crates/firehose-protos-examples": {}
   }
 }
