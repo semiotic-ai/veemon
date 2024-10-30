@@ -344,7 +344,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_check_valid_root_fail() {
         let path = PathBuf::from("example0017686312.dbin");
         let mut file = BufReader::new(File::open(path).expect("Failed to open file"));
@@ -357,7 +356,7 @@ mod tests {
         let mut block = Block::decode(block_stream.payload_buffer.as_slice()).unwrap();
 
         // Remove an item from the block to make the receipt root invalid
-        block.balance_changes.pop();
+        block.transaction_traces.pop();
 
         let result = check_receipt_root(&block);
 
