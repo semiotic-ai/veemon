@@ -26,6 +26,7 @@ zstd.workspace = true
 
 [dev-dependencies]
 criterion.workspace = true
+insta.workspace = true
 tokio-test.workspace = true
 
 [[bench]]
