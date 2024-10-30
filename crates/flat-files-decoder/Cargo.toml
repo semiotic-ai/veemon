@@ -24,7 +24,6 @@ rayon.workspace = true
 reth-primitives.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
-simple-log.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["full"] }
 tracing.workspace = true

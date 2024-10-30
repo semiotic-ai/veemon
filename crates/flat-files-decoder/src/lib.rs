@@ -14,7 +14,6 @@ use dbin::{DbinFile, DbinFileError};
 use firehose_protos::ethereum_v2::Block;
 use headers::HeaderRecordWithNumber;
 use prost::Message;
-use simple_log::log;
 use std::{
     fs::{self, File},
     io::{BufReader, Cursor, Read, Write},
@@ -329,7 +328,7 @@ where
     tokio::task::spawn_blocking(move || match check(&block_clone) {
         Ok(_) => {}
         Err(err) => {
-            log::error!("{}", err);
+            error!("{}", err);
         }
     })
 }
