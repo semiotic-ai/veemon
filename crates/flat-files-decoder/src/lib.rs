@@ -25,9 +25,10 @@ use zstd::stream::decode_all;
 
 const MERGE_BLOCK: usize = 15537393;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub enum Decompression {
     Zstd,
+    #[default]
     None,
 }
 
@@ -37,6 +38,15 @@ impl From<&str> for Decompression {
             "true" | "1" => Decompression::Zstd,
             "false" | "0" => Decompression::None,
             _ => Decompression::None,
+        }
+    }
+}
+
+impl From<bool> for Decompression {
+    fn from(value: bool) -> Self {
+        match value {
+            true => Decompression::Zstd,
+            false => Decompression::None,
         }
     }
 }

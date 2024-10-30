@@ -13,9 +13,9 @@ struct Cli {
 enum Commands {
     /// Stream data continuously
     Stream {
-        /// decompress .dibn files if they are compressed with zstd
+        /// decompress .dbin files if they are compressed with zstd
         #[clap(short, long, default_value = "false")]
-        decompress: bool,
+        decompression: Decompression,
         /// the block to end streaming
         #[clap(short, long)]
         end_block: Option<usize>,
@@ -34,7 +34,7 @@ enum Commands {
         output: Option<String>,
         #[clap(short, long)]
         /// optionally decompress zstd compressed flat files
-        decompress: Decompression,
+        decompression: Decompression,
     },
 }
 #[tokio::main]
@@ -43,33 +43,38 @@ async fn main() {
 
     match cli.command {
         Commands::Stream {
-            decompress,
+            decompression,
             end_block,
-        } => {
-            if decompress {
+        } => match decompression {
+            Decompression::Zstd => {
                 let reader =
                     zstd::stream::Decoder::new(io::stdin()).expect("Failed to create zstd decoder");
                 let writer = BufWriter::new(io::stdout().lock());
                 stream_blocks(reader, writer, end_block)
                     .await
                     .expect("Failed to stream blocks");
-            } else {
+            }
+            Decompression::None => {
                 let reader = BufReader::with_capacity((64 * 2) << 20, io::stdin().lock());
                 let writer = BufWriter::new(io::stdout().lock());
                 stream_blocks(reader, writer, end_block)
                     .await
                     .expect("Failed to stream blocks");
             }
-        }
+        },
         Commands::Decode {
             input,
             headers_dir,
             output,
-            decompress,
+            decompression,
         } => {
-            let blocks =
-                decode_flat_files(input, output.as_deref(), headers_dir.as_deref(), decompress)
-                    .expect("Failed to decode files");
+            let blocks = decode_flat_files(
+                input,
+                output.as_deref(),
+                headers_dir.as_deref(),
+                decompression,
+            )
+            .expect("Failed to decode files");
 
             println!("Total blocks: {}", blocks.len());
         }
