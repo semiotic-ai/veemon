@@ -3,7 +3,13 @@ name = "flat-files-decoder"
 version = "0.1.1"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "flat_files_decoder"
+path = "src/lib.rs"
+
+[[bin]]
+name = "flat-files-decoder"
+path = "src/main.rs"
 
 [dependencies]
 alloy-primitives.workspace = true
