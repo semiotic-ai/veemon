@@ -1574,6 +1574,7 @@ dependencies = [
  "clap",
  "criterion",
  "firehose-protos",
+ "insta",
  "prost",
  "prost-build",
  "prost-wkt-build",
