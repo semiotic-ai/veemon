@@ -1,6 +1,6 @@
 use anyhow::Context;
 use bytes::Bytes;
-use decoder::{handle_buf, Decompression};
+use flat_files_decoder::{handle_buf, Decompression};
 use object_store::{
     aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, http::HttpBuilder,
     local::LocalFileSystem, path::Path, ClientOptions, ObjectStore,
