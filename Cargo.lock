@@ -2276,7 +2276,7 @@ dependencies = [
  "firehose-protos",
  "flat-files-decoder",
  "futures",
- "header_accumulator",
+ "header-accumulator",
  "log",
  "object_store",
  "thiserror",
@@ -2675,7 +2675,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "header_accumulator"
+name = "header-accumulator"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.8.10",

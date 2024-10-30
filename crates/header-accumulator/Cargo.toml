@@ -1,5 +1,5 @@
 [package]
-name = "header_accumulator"
+name = "header-accumulator"
 version = "0.1.0"
 edition = "2021"
 
