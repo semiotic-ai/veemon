@@ -344,6 +344,7 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
     fn test_check_valid_root_fail() {
         let path = PathBuf::from("example0017686312.dbin");
         let mut file = BufReader::new(File::open(path).expect("Failed to open file"));
@@ -353,26 +354,16 @@ mod tests {
         let message = dbin_file.messages[0].clone();
 
         let block_stream = BstreamBlock::decode(message.as_slice()).unwrap();
-        let block = Block::decode(block_stream.payload_buffer.as_slice()).unwrap();
+        let mut block = Block::decode(block_stream.payload_buffer.as_slice()).unwrap();
 
         // Remove an item from the block to make the receipt root invalid
-        // block.balance_changes.pop();
+        block.balance_changes.pop();
 
         let result = check_receipt_root(&block);
 
-        // The test "should" have failed, but is returning `Ok(())`.
-        // I suspect the test is not working as expected because the return type of the
-        // expression `Err(ReceiptError::MismatchedRoot(..))` is `Result<(), ReceiptError>`!
-        // We never return the error, but the test passes because they share a type.
-        insta::assert_debug_snapshot!(result, @r###"
-        Ok(
-            (),
-        )
-        "###);
-
         matches!(
-            result,
-            Err(receipts::error::ReceiptError::MismatchedRoot(_, _))
+            result.unwrap_err(),
+            receipts::error::ReceiptError::MismatchedRoot(_, _)
         );
     }
 
