@@ -25,4 +25,6 @@ pub enum DecodeError {
     ProtobufError(String),
     #[error("Join error: {0}")]
     JoinError(JoinError),
+    #[error("JSON Error: {0}")]
+    JsonError(#[from] serde_json::Error),
 }

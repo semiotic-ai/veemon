@@ -12,7 +12,7 @@ pub mod transactions;
 use crate::{error::DecodeError, headers::check_valid_header};
 use dbin::DbinFile;
 use firehose_protos::ethereum_v2::Block;
-use headers::HeaderRecordWithNumber;
+use headers::{BlockHeaderRoots, HeaderRecordWithNumber};
 use prost::Message;
 use simple_log::log;
 use std::{
@@ -198,7 +198,10 @@ fn handle_block(
     let block = decode_block_from_bytes(message)?;
 
     if let Some(headers_dir) = headers_dir {
-        check_valid_header(&block, headers_dir)?;
+        let header_file_path = format!("{}/{}.json", headers_dir, block.number);
+        let header_file = File::open(header_file_path)?;
+        let header_roots: BlockHeaderRoots = serde_json::from_reader(header_file)?;
+        check_valid_header(&block, header_roots)?;
     }
 
     if block.number != 0 {

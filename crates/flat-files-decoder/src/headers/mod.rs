@@ -4,7 +4,6 @@ use crate::headers::error::BlockHeaderError;
 use alloy_primitives::B256;
 use firehose_protos::ethereum_v2::{Block, BlockHeader};
 use serde::{Deserialize, Serialize};
-use std::fs::File;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BlockHeaderRoots {
@@ -26,16 +25,15 @@ impl TryFrom<BlockHeader> for BlockHeaderRoots {
     }
 }
 
-pub(crate) fn check_valid_header(block: &Block, header_dir: &str) -> Result<(), BlockHeaderError> {
-    let header_file_path = format!("{}/{}.json", header_dir, block.number);
-    let header_file = File::open(header_file_path)?;
-
-    let header_roots: BlockHeaderRoots = serde_json::from_reader(header_file)?;
-
+pub(crate) fn check_valid_header(
+    block: &Block,
+    header_roots: BlockHeaderRoots,
+) -> Result<(), BlockHeaderError> {
     let block_header = match block.header.as_ref() {
         Some(header) => header,
         None => return Err(BlockHeaderError::MissingHeader),
     };
+
     let block_header_roots: BlockHeaderRoots = block_header.clone().try_into()?;
 
     if header_roots != block_header_roots {
