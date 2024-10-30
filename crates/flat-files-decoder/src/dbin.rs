@@ -4,30 +4,17 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum DbinFileError {
     #[error("Incorrect dbin bytes")]
-    InvalidDBINBytes,
-    #[error("Read error")]
-    ReadError(#[from] std::io::Error),
-    #[error("Invalid UTF8")]
-    InvalidUTF8(#[from] std::string::FromUtf8Error),
+    InvalidDbinBytes,
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("Invalid UTF8: {0}")]
+    InvalidUtf8(#[from] std::string::FromUtf8Error),
     #[error("Unsupported version")]
-    UnsupportedDBINVersion,
-    #[error("Start of new DBIN file")]
-    StartOfNewDBINFile,
-    #[error("DBIN files with different versions")]
-    DifferingDBINVersions,
-}
-
-impl DbinFileError {
-    pub fn kind(&self) -> std::io::ErrorKind {
-        match self {
-            DbinFileError::StartOfNewDBINFile => std::io::ErrorKind::Other,
-            DbinFileError::InvalidDBINBytes => todo!(),
-            DbinFileError::ReadError(_) => std::io::ErrorKind::UnexpectedEof,
-            DbinFileError::InvalidUTF8(_) => todo!(),
-            DbinFileError::UnsupportedDBINVersion => todo!(),
-            DbinFileError::DifferingDBINVersions => todo!(),
-        }
-    }
+    UnsupportedDbinVersion,
+    #[error("Start of new dbin file")]
+    StartOfNewDbinFile,
+    #[error("dbin files with different versions")]
+    DifferingDbinVersions,
 }
 
 /// `DbinFile` is a struct that represents a simple file storage format to pack a stream of protobuf messages. It is defined by StreamingFast.
@@ -56,11 +43,10 @@ impl DbinFile {
     fn read_header<R: Read>(read: &mut R) -> Result<DbinHeader, DbinFileError> {
         let mut buf: [u8; 4] = [0; 4];
 
-        read.read_exact(&mut buf)
-            .map_err(DbinFileError::ReadError)?;
+        read.read_exact(&mut buf)?;
 
         if &buf != b"dbin" {
-            return Err(DbinFileError::StartOfNewDBINFile);
+            return Err(DbinFileError::StartOfNewDbinFile);
         }
 
         let dbin_header = Self::read_partial_header(read)?;
@@ -75,26 +61,23 @@ impl DbinFile {
         let content_version;
 
         let mut buf: [u8; 1] = [0; 1];
-        read.read_exact(&mut buf)
-            .map_err(DbinFileError::ReadError)?;
+        read.read_exact(&mut buf)?;
 
         if buf[0] == 0 {
             version = 0u8;
             let mut content_type_bytes: [u8; 3] = [0; 3];
-            read.read_exact(&mut content_type_bytes)
-                .map_err(DbinFileError::ReadError)?;
+            read.read_exact(&mut content_type_bytes)?;
 
             content_type = String::from_utf8(Vec::from(content_type_bytes))
-                .map_err(DbinFileError::InvalidUTF8)?;
+                .map_err(DbinFileError::InvalidUtf8)?;
 
             let mut content_version_bytes: [u8; 2] = [0; 2];
-            read.read_exact(&mut content_version_bytes)
-                .map_err(DbinFileError::ReadError)?;
+            read.read_exact(&mut content_version_bytes)?;
 
             content_version = String::from_utf8(Vec::from(content_version_bytes))
-                .map_err(DbinFileError::InvalidUTF8)?;
+                .map_err(DbinFileError::InvalidUtf8)?;
         } else {
-            return Err(DbinFileError::UnsupportedDBINVersion);
+            return Err(DbinFileError::UnsupportedDbinVersion);
         }
 
         Ok(DbinHeader {
@@ -112,27 +95,32 @@ impl DbinFile {
         loop {
             match Self::read_message(read) {
                 Ok(message) => messages.push(message),
-                Err(err) => {
-                    if err.kind() == std::io::ErrorKind::UnexpectedEof {
-                        return Ok(DbinFile {
-                            header: DbinHeader {
-                                version: dbin_header.version,
-                                content_type: dbin_header.content_type,
-                                content_version: dbin_header.content_version,
-                            },
-                            messages,
-                        });
-                    } else if err.kind() == std::io::ErrorKind::Other {
-                        // Check that version, content_type, and content_version match the previous header
-                        let dbin_header_new = Self::read_partial_header(read)?;
-                        if dbin_header.version != dbin_header_new.version
-                            || dbin_header.content_type != dbin_header_new.content_type
-                            || dbin_header.content_version != dbin_header_new.content_version
-                        {
-                            return Err(DbinFileError::DifferingDBINVersions);
+                Err(e) => {
+                    match e {
+                        DbinFileError::Io(io_error) => {
+                            if io_error.kind() == std::io::ErrorKind::UnexpectedEof {
+                                return Ok(DbinFile {
+                                    header: DbinHeader {
+                                        version: dbin_header.version,
+                                        content_type: dbin_header.content_type,
+                                        content_version: dbin_header.content_version,
+                                    },
+                                    messages,
+                                });
+                            } else if io_error.kind() == std::io::ErrorKind::Other {
+                                // Check that version, content_type, and content_version match the previous header
+                                let dbin_header_new = Self::read_partial_header(read)?;
+                                if dbin_header.version != dbin_header_new.version
+                                    || dbin_header.content_type != dbin_header_new.content_type
+                                    || dbin_header.content_version
+                                        != dbin_header_new.content_version
+                                {
+                                    return Err(DbinFileError::DifferingDbinVersions);
+                                }
+                            }
                         }
-                    } else {
-                        return Err(err);
+                        // Catch all other variants of the error
+                        e => return Err(e),
                     }
                 }
             }
@@ -147,7 +135,7 @@ impl DbinFile {
         read.read_exact(&mut size)?;
 
         if &size == b"dbin" {
-            return Err(DbinFileError::StartOfNewDBINFile);
+            return Err(DbinFileError::StartOfNewDbinFile);
         }
 
         Ok(Self::read_content(size, read)?)

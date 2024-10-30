@@ -10,7 +10,7 @@ pub mod error;
 pub mod headers;
 
 use crate::{error::DecodeError, headers::check_valid_header};
-use dbin::DbinFile;
+use dbin::{DbinFile, DbinFileError};
 use firehose_protos::ethereum_v2::Block;
 use headers::HeaderRecordWithNumber;
 use prost::Message;
@@ -21,6 +21,7 @@ use std::{
     path::PathBuf,
 };
 use tokio::join;
+use tracing::{error, info};
 use zstd::stream::decode_all;
 
 const MERGE_BLOCK: usize = 15537393;
@@ -289,16 +290,21 @@ pub async fn stream_blocks<R: Read, W: Write>(
                 writer.write_all(&header_record_bin)?;
                 writer.flush().map_err(DecodeError::IoError)?;
             }
-            Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
-                if block_number < end_block {
-                    log::info!("Reached end of file, waiting for more blocks");
-                    continue; // More blocks to read
-                } else {
-                    break; // read all the blocks
-                }
-            }
             Err(e) => {
-                log::error!("Error reading DBIN file: {}", e);
+                if let DbinFileError::Io(ref e) = e {
+                    if e.kind() == std::io::ErrorKind::UnexpectedEof {
+                        if block_number < end_block {
+                            info!("Reached end of file, waiting for more blocks");
+                            // More blocks to read
+                            continue;
+                        } else {
+                            // All blocks have been read
+                            break;
+                        }
+                    }
+                }
+
+                error!("Error reading dbin file: {}", e);
                 break;
             }
         }
