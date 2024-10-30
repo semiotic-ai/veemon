@@ -8,7 +8,6 @@
 pub mod dbin;
 pub mod error;
 pub mod headers;
-pub mod transactions;
 
 use crate::{error::DecodeError, headers::check_valid_header};
 use dbin::DbinFile;
