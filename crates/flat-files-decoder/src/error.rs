@@ -1,4 +1,4 @@
-use crate::dbin::error::DbinFileError;
+use crate::dbin::DbinFileError;
 use crate::headers::error::BlockHeaderError;
 use thiserror::Error;
 use tokio::task::JoinError;
