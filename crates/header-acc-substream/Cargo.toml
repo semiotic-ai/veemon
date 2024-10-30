@@ -1,5 +1,5 @@
 [package]
-name = "header_accumulator"
+name = "header_accumulator_substream"
 version = "0.0.1"
 edition = "2021"
 
