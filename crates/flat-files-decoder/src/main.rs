@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use decoder::{decode_flat_files, stream_blocks, Decompression};
+use flat_files_decoder::{decode_flat_files, stream_blocks, Decompression};
 use std::io::{self, BufReader, BufWriter};
 
 #[derive(Parser, Debug)]

@@ -1,5 +1,5 @@
-use decoder::{decode_flat_files, Decompression};
 use ethportal_api::Header;
+use flat_files_decoder::{decode_flat_files, Decompression};
 
 #[test]
 fn test_header_from_block() {
