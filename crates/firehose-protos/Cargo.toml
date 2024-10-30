@@ -25,7 +25,6 @@ tonic.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
-firehose-client = { path = "../firehose-client" }
 hex.workspace = true
 serde_json.workspace = true
 tokio.workspace = true

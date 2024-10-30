@@ -2216,7 +2216,6 @@ dependencies = [
  "alloy-primitives 0.8.10",
  "alloy-rlp",
  "ethportal-api",
- "firehose-client",
  "hex",
  "primitive-types",
  "prost",
