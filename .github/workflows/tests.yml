@@ -120,3 +120,31 @@ jobs:
         uses: arduino/setup-protoc@v3
       - name: Cargo check
         run: cargo check
+
+  release-check:
+    name: release-please dry-run
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install release-please CLI
+        run: npm install -g release-please
+
+      - name: Run release-please dry-run
+        run: |
+          release-please release-pr \
+            --repo-url=semiotic-ai/veemon \
+            --token=${{ secrets.GITHUB_TOKEN }} \
+            --manifest-file .release-please-manifest.json \
+            --target-branch=${{ github.head_ref }} \
+            --dry-run
+
