@@ -6,6 +6,7 @@ edition = "2021"
 [lib]
 doctest = false
 path = "src/lib.rs"
+name = "firehose_protos"
 
 [dependencies]
 alloy-consensus.workspace = true
