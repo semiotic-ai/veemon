@@ -359,6 +359,17 @@ mod tests {
         // block.balance_changes.pop();
 
         let result = check_receipt_root(&block);
+
+        // The test "should" have failed, but is returning `Ok(())`.
+        // I suspect the test is not working as expected because the return type of the
+        // expression `Err(ReceiptError::MismatchedRoot(..))` is `Result<(), ReceiptError>`!
+        // We never return the error, but the test passes because they share a type.
+        insta::assert_debug_snapshot!(result, @r###"
+        Ok(
+            (),
+        )
+        "###);
+
         matches!(
             result,
             Err(receipts::error::ReceiptError::MismatchedRoot(_, _))
