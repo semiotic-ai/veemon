@@ -11,8 +11,8 @@ pub mod transactions;
 
 use crate::{error::DecodeError, headers::check_valid_header};
 use dbin::DbinFile;
-use firehose_protos::ethereum_v2::Block;
-use headers::{BlockHeaderRoots, HeaderRecordWithNumber};
+use firehose_protos::ethereum_v2::{eth_block::BlockHeaderRoots, Block};
+use headers::HeaderRecordWithNumber;
 use prost::Message;
 use simple_log::log;
 use std::{

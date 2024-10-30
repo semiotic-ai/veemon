@@ -79,4 +79,7 @@ pub enum ProtosError {
 
     #[error("TxTypeConversionError: {0}")]
     TxTypeConversion(String),
+
+    #[error("TryFromSliceError: {0}")]
+    TryFromSliceError(#[from] std::array::TryFromSliceError),
 }

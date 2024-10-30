@@ -11,4 +11,6 @@ pub enum BlockHeaderError {
     MissingHeader,
     #[error("Invalid total difficulty")]
     InvalidTotalDifficulty,
+    #[error("Protos error: {0}")]
+    ProtosError(#[from] firehose_protos::error::ProtosError),
 }

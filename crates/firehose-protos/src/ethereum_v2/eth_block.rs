@@ -8,6 +8,7 @@ use reth_primitives::{
     proofs::calculate_transaction_root, Log, Receipt, ReceiptWithBloom, TransactionSigned,
 };
 use reth_trie_common::root::ordered_trie_root_with_encoder;
+use serde::{Deserialize, Serialize};
 use tracing::error;
 
 use crate::{
@@ -342,6 +343,28 @@ impl FullReceipt {
             list: true,
             payload_length,
         }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BlockHeaderRoots {
+    pub receipt_root: B256,
+    pub transactions_root: B256,
+}
+
+impl TryFrom<BlockHeader> for BlockHeaderRoots {
+    type Error = ProtosError;
+
+    fn try_from(header: BlockHeader) -> Result<Self, Self::Error> {
+        const ROOT_SIZE: usize = 32;
+
+        let receipt_root: [u8; ROOT_SIZE] = header.receipt_root.as_slice().try_into()?;
+        let transactions_root: [u8; ROOT_SIZE] = header.transactions_root.as_slice().try_into()?;
+
+        Ok(Self {
+            receipt_root: receipt_root.into(),
+            transactions_root: transactions_root.into(),
+        })
     }
 }
 

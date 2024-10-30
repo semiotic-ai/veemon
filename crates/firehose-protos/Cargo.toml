@@ -20,7 +20,7 @@ prost-wkt.workspace = true
 prost-wkt-types.workspace = true
 reth-primitives.workspace = true
 reth-trie-common.workspace = true
-serde.workspace = true
+serde = { workspace = true, features = ["derive"] }
 thiserror.workspace = true
 tonic.workspace = true
 tracing.workspace = true

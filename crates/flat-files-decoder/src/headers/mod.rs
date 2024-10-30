@@ -1,29 +1,8 @@
 pub mod error;
 
 use crate::headers::error::BlockHeaderError;
-use alloy_primitives::B256;
-use firehose_protos::ethereum_v2::{Block, BlockHeader};
+use firehose_protos::ethereum_v2::{eth_block::BlockHeaderRoots, Block};
 use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct BlockHeaderRoots {
-    pub receipt_root: B256,
-    pub transactions_root: B256,
-}
-
-impl TryFrom<BlockHeader> for BlockHeaderRoots {
-    type Error = BlockHeaderError;
-
-    fn try_from(header: BlockHeader) -> Result<Self, Self::Error> {
-        let receipt_root: [u8; 32] = header.receipt_root.as_slice().try_into().unwrap();
-        let transactions_root: [u8; 32] = header.transactions_root.as_slice().try_into().unwrap();
-
-        Ok(Self {
-            receipt_root: receipt_root.into(),
-            transactions_root: transactions_root.into(),
-        })
-    }
-}
 
 pub(crate) fn check_valid_header(
     block: &Block,
