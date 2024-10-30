@@ -16,7 +16,7 @@ tree_hash.workspace = true
 env_logger.workspace = true
 firehose-protos = { path = "../firehose-protos" }
 futures.workspace = true
-header_accumulator = { path = "../header-accumulator" }
+header-accumulator = { path = "../header-accumulator" }
 log.workspace = true
 object_store.workspace = true
 thiserror.workspace = true
