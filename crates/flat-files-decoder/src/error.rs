@@ -1,5 +1,5 @@
 use crate::dbin::DbinFileError;
-use crate::headers::error::BlockHeaderError;
+use crate::headers::BlockHeaderError;
 use thiserror::Error;
 use tokio::task::JoinError;
 
