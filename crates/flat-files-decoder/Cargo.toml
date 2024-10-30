@@ -27,6 +27,7 @@ serde_json.workspace = true
 simple-log.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["full"] }
+tracing.workspace = true
 zstd.workspace = true
 
 [dev-dependencies]
