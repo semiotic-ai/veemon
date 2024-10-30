@@ -1,10 +1,23 @@
-pub mod error;
+use std::fs::File;
 
-use crate::headers::error::BlockHeaderError;
 use alloy_primitives::B256;
 use firehose_protos::ethereum_v2::{Block, BlockHeader};
 use serde::{Deserialize, Serialize};
-use std::fs::File;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum BlockHeaderError {
+    #[error("Read error: {0}")]
+    ReadError(#[from] std::io::Error),
+    #[error("JSON Error: {0}")]
+    JsonError(#[from] serde_json::Error),
+    #[error("Mismatched roots: {0:?}")]
+    MismatchedRoots(Box<(BlockHeaderRoots, BlockHeaderRoots)>),
+    #[error("Missing header")]
+    MissingHeader,
+    #[error("Invalid total difficulty")]
+    InvalidTotalDifficulty,
+}
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BlockHeaderRoots {
