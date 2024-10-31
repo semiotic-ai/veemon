@@ -10,4 +10,3 @@ pub mod dbin;
 pub mod decoder;
 pub mod decompression;
 pub mod error;
-pub mod headers;

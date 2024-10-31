@@ -1,26 +1,27 @@
-use std::io::{self, BufReader, BufWriter};
+use std::{
+    fs::{self, File},
+    io::{self, BufReader, BufWriter, Cursor, Read, Write},
+    path::PathBuf,
+};
 
+use alloy_primitives::B256;
 use clap::Parser;
-use tracing::info;
+use firehose_protos::{
+    bstream,
+    ethereum_v2::{self, Block, BlockHeader},
+};
+use prost::Message;
+use serde::{Deserialize, Serialize};
+use tokio::join;
+use tracing::{error, info, trace};
+use zstd::stream::decode_all;
 
 use crate::{
     cli::{Cli, Commands},
+    dbin::DbinFile,
     decompression::Decompression,
     error::DecoderError,
 };
-
-use crate::dbin::DbinFile;
-use crate::headers::{BlockHeaderRoots, HeaderRecordWithNumber};
-use firehose_protos::ethereum_v2::Block;
-use prost::Message;
-use std::{
-    fs::{self, File},
-    io::{Cursor, Read, Write},
-    path::PathBuf,
-};
-use tokio::join;
-use tracing::{error, trace};
-use zstd::stream::decode_all;
 
 pub async fn run() -> Result<(), DecoderError> {
     let cli = Cli::parse();
@@ -60,8 +61,6 @@ pub async fn run() -> Result<(), DecoderError> {
         }
     }
 }
-
-const LAST_PREMERGE_BLOCK: usize = 15537393;
 
 /// Decodes and optionally verifies block flat files from a given directory or single file.
 ///
@@ -212,6 +211,56 @@ pub fn handle_buf(buf: &[u8], decompress: Decompression) -> Result<Vec<Block>, D
     Ok(blocks)
 }
 
+/// A struct to hold the receipt and transactions root for a `Block`.
+/// This struct is used to compare the receipt and transactions roots of a block
+/// with the receipt and transactions roots of another block.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BlockHeaderRoots {
+    receipt_root: B256,
+    transactions_root: B256,
+}
+
+impl TryFrom<&Block> for BlockHeaderRoots {
+    type Error = DecoderError;
+
+    fn try_from(block: &Block) -> Result<Self, Self::Error> {
+        block.header()?.try_into()
+    }
+}
+
+impl TryFrom<&BlockHeader> for BlockHeaderRoots {
+    type Error = DecoderError;
+
+    fn try_from(header: &BlockHeader) -> Result<Self, Self::Error> {
+        let receipt_root: [u8; 32] = header.receipt_root.as_slice().try_into()?;
+        let transactions_root: [u8; 32] = header.transactions_root.as_slice().try_into()?;
+
+        Ok(Self {
+            receipt_root: receipt_root.into(),
+            transactions_root: transactions_root.into(),
+        })
+    }
+}
+
+impl BlockHeaderRoots {
+    /// Checks if the receipt and transactions roots of a block header match the receipt and transactions roots of another block.
+    pub fn block_header_matches(&self, block: &Block) -> bool {
+        let block_header_roots = match block.try_into() {
+            Ok(block_header_roots) => block_header_roots,
+            Err(e) => {
+                error!("Failed to convert block to header roots: {e}");
+                return false;
+            }
+        };
+
+        self.block_header_roots_match(&block_header_roots)
+    }
+
+    fn block_header_roots_match(&self, block_header_roots: &BlockHeaderRoots) -> bool {
+        self == block_header_roots
+    }
+}
+
 fn handle_block(
     message: &Vec<u8>,
     output: Option<&str>,
@@ -224,8 +273,11 @@ fn handle_block(
         let header_file = File::open(header_file_path)?;
         let header_roots: BlockHeaderRoots = serde_json::from_reader(header_file)?;
 
-        // All `Ok` results indicate that the block header matches the header file.
-        header_roots.block_header_matches(&block)?;
+        if !header_roots.block_header_matches(&block) {
+            return Err(DecoderError::MatchRootsFailed {
+                block_number: block.number,
+            });
+        }
     }
 
     if block.number != 0 {
@@ -250,6 +302,33 @@ fn handle_block(
     Ok(block)
 }
 
+#[derive(Serialize, Deserialize)]
+struct HeaderRecordWithNumber {
+    block_hash: Vec<u8>,
+    block_number: u64,
+    total_difficulty: Vec<u8>,
+}
+
+impl TryFrom<&Block> for HeaderRecordWithNumber {
+    type Error = DecoderError;
+
+    fn try_from(block: &Block) -> Result<Self, Self::Error> {
+        let block_header = block.header()?;
+
+        let header_record_with_number = HeaderRecordWithNumber {
+            block_hash: block.hash.clone(),
+            total_difficulty: block_header
+                .total_difficulty
+                .as_ref()
+                .ok_or(Self::Error::InvalidTotalDifficulty)?
+                .bytes
+                .clone(),
+            block_number: block.number,
+        };
+        Ok(header_record_with_number)
+    }
+}
+
 /// Decode blocks from a reader and writes them, serialized, to a writer
 ///
 /// data can be piped into this function from stdin via `cargo run stream < ./example0017686312.dbin`.
@@ -259,7 +338,7 @@ fn handle_block(
 /// # Arguments
 ///
 /// * `end_block`: For blocks after the merge, Ethereum sync committee should be used. This is why the default block
-///   for this param is the MERGE_BLOCK (block 15537393)
+///   for this param is the LAST_PREMERGE_BLOCK (block 15537393)
 /// * `reader`: where bytes are read from
 /// * `writer`: where bytes written to
 pub async fn stream_blocks<R: Read, W: Write>(
@@ -267,15 +346,20 @@ pub async fn stream_blocks<R: Read, W: Write>(
     mut writer: W,
     end_block: Option<usize>,
 ) -> Result<(), DecoderError> {
+    const LAST_PREMERGE_BLOCK: usize = 15537393;
+
     let end_block = match end_block {
         Some(end_block) => end_block,
         None => LAST_PREMERGE_BLOCK,
     };
+
     let mut block_number = 0;
+
     loop {
         match DbinFile::read_message_stream(&mut reader) {
             Ok(message) => {
                 let block = decode_block_from_bytes(&message)?;
+
                 block_number = block.number as usize;
 
                 let receipts_check_process =
@@ -294,7 +378,7 @@ pub async fn stream_blocks<R: Read, W: Write>(
                 joint_return.0?;
                 joint_return.1?;
 
-                let header_record_with_number = HeaderRecordWithNumber::try_from(block)?;
+                let header_record_with_number = HeaderRecordWithNumber::try_from(&block)?;
                 let header_record_bin = bincode::serialize(&header_record_with_number)?;
 
                 let size = header_record_bin.len() as u32;
@@ -325,9 +409,8 @@ pub async fn stream_blocks<R: Read, W: Write>(
 }
 
 fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecoderError> {
-    let block_stream = firehose_protos::bstream::v1::Block::decode(bytes.as_slice())?;
-    let block =
-        firehose_protos::ethereum_v2::Block::decode(block_stream.payload_buffer.as_slice())?;
+    let block_stream = bstream::v1::Block::decode(bytes.as_slice())?;
+    let block = ethereum_v2::Block::decode(block_stream.payload_buffer.as_slice())?;
     Ok(block)
 }
 

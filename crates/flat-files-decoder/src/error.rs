@@ -24,8 +24,8 @@ pub enum DecoderError {
     JoinError(#[from] tokio::task::JoinError),
     #[error("Block header JSON Error: {0}")]
     JsonError(#[from] serde_json::Error),
-    #[error("Mismatched roots for block number {block_number}")]
-    MismatchedRoots { block_number: u64 },
+    #[error("Failed to match roots for block number {block_number}")]
+    MatchRootsFailed { block_number: u64 },
     #[error("Protobuf decode error: {0}")]
     ProtobufDecode(#[from] prost::DecodeError),
     #[error("Protos error: {0}")]
