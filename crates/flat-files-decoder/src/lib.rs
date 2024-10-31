@@ -357,6 +357,8 @@ mod tests {
         let block_stream = BstreamBlock::decode(message.as_slice()).unwrap();
         let mut block = Block::decode(block_stream.payload_buffer.as_slice()).unwrap();
 
+        assert!(block.receipt_root_is_verified());
+
         // Remove an item from the block to make the receipt root invalid
         block.transaction_traces.pop();
 
