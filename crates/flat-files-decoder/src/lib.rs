@@ -6,13 +6,15 @@
 //! of JSON-formatted block headers.
 
 pub mod dbin;
+pub mod decompression;
 pub mod error;
 pub mod headers;
 
-use crate::{error::DecoderError, headers::check_valid_header};
+use crate::error::DecoderError;
 use dbin::DbinFile;
+use decompression::Decompression;
 use firehose_protos::ethereum_v2::Block;
-use headers::HeaderRecordWithNumber;
+use headers::{BlockHeaderRoots, HeaderRecordWithNumber};
 use prost::Message;
 use std::{
     fs::{self, File},
@@ -20,36 +22,10 @@ use std::{
     path::PathBuf,
 };
 use tokio::join;
-use tracing::{error, info};
+use tracing::{error, info, trace};
 use zstd::stream::decode_all;
 
-const MERGE_BLOCK: usize = 15537393;
-
-#[derive(Clone, Copy, Debug, Default)]
-pub enum Decompression {
-    Zstd,
-    #[default]
-    None,
-}
-
-impl From<&str> for Decompression {
-    fn from(value: &str) -> Self {
-        match value {
-            "true" | "1" => Decompression::Zstd,
-            "false" | "0" => Decompression::None,
-            _ => Decompression::None,
-        }
-    }
-}
-
-impl From<bool> for Decompression {
-    fn from(value: bool) -> Self {
-        match value {
-            true => Decompression::Zstd,
-            false => Decompression::None,
-        }
-    }
-}
+const LAST_PREMERGE_BLOCK: usize = 15537393;
 
 /// Decodes and optionally verifies block flat files from a given directory or single file.
 ///
@@ -72,10 +48,10 @@ pub fn decode_flat_files(
     headers_dir: Option<&str>,
     decompress: Decompression,
 ) -> Result<Vec<Block>, DecoderError> {
-    let metadata = fs::metadata(&input).map_err(DecoderError::Io)?;
+    let metadata = fs::metadata(&input)?;
 
     if let Some(output) = output {
-        fs::create_dir_all(output).map_err(DecoderError::Io)?;
+        fs::create_dir_all(output)?;
     }
 
     if metadata.is_dir() {
@@ -93,11 +69,12 @@ fn decode_flat_files_dir(
     headers_dir: Option<&str>,
     decompress: Decompression,
 ) -> Result<Vec<Block>, DecoderError> {
-    let paths = fs::read_dir(input).map_err(DecoderError::Io)?;
+    info!("Processing directory: {}", input);
+    let paths = fs::read_dir(input)?;
 
     let mut blocks: Vec<Block> = vec![];
     for path in paths {
-        let path = path.map_err(DecoderError::Io)?;
+        let path = path?;
         match path.path().extension() {
             Some(ext) => {
                 if ext != "dbin" {
@@ -107,13 +84,13 @@ fn decode_flat_files_dir(
             None => continue,
         };
 
-        println!("Processing file: {}", path.path().display());
+        trace!("Processing file: {}", path.path().display());
         match handle_file(&path.path(), output, headers_dir, decompress) {
             Ok(file_blocks) => {
                 blocks.extend(file_blocks);
             }
             Err(err) => {
-                println!("Failed to process file: {}", err);
+                error!("Failed to process file: {}", err);
             }
         }
     }
@@ -144,12 +121,12 @@ pub fn handle_file(
     headers_dir: Option<&str>,
     decompress: Decompression,
 ) -> Result<Vec<Block>, DecoderError> {
-    let input_file = BufReader::new(File::open(path).map_err(DecoderError::Io)?);
+    let input_file = BufReader::new(File::open(path)?);
+
     // Check if decompression is required and read the file accordingly.
     let mut file_contents: Box<dyn Read> = match decompress {
         Decompression::Zstd => {
-            let decompressed_data = decode_all(input_file)
-                .map_err(|e| DecoderError::Io(std::io::Error::new(std::io::ErrorKind::Other, e)))?;
+            let decompressed_data = decode_all(input_file)?;
             Box::new(Cursor::new(decompressed_data))
         }
         Decompression::None => Box::new(input_file),
@@ -185,7 +162,7 @@ pub fn handle_file(
 ///
 pub fn handle_buf(buf: &[u8], decompress: Decompression) -> Result<Vec<Block>, DecoderError> {
     let buf = match decompress {
-        Decompression::Zstd => zstd::decode_all(buf).map_err(|_| DecoderError::DecompressError)?,
+        Decompression::Zstd => zstd::decode_all(buf)?,
         Decompression::None => buf.to_vec(),
     };
 
@@ -207,7 +184,12 @@ fn handle_block(
     let block = decode_block_from_bytes(message)?;
 
     if let Some(headers_dir) = headers_dir {
-        check_valid_header(&block, headers_dir)?;
+        let header_file_path = format!("{}/{}.json", headers_dir, block.number);
+        let header_file = File::open(header_file_path)?;
+        let header_roots: BlockHeaderRoots = serde_json::from_reader(header_file)?;
+
+        // All `Ok` results indicate that the block header matches the header file.
+        header_roots.block_header_matches(&block)?;
     }
 
     if block.number != 0 {
@@ -224,12 +206,9 @@ fn handle_block(
         let file_name = format!("{}/block-{}.json", output, block.number);
         let mut out_file = File::create(file_name)?;
 
-        let block_json = serde_json::to_string(&block)
-            .map_err(|err| DecoderError::ProtobufError(err.to_string()))?;
+        let block_json = serde_json::to_string(&block)?;
 
-        out_file
-            .write_all(block_json.as_bytes())
-            .map_err(DecoderError::Io)?;
+        out_file.write_all(block_json.as_bytes())?;
     }
 
     Ok(block)
@@ -254,7 +233,7 @@ pub async fn stream_blocks<R: Read, W: Write>(
 ) -> Result<(), DecoderError> {
     let end_block = match end_block {
         Some(end_block) => end_block,
-        None => MERGE_BLOCK,
+        None => LAST_PREMERGE_BLOCK,
     };
     let mut block_number = 0;
     loop {
@@ -276,17 +255,16 @@ pub async fn stream_blocks<R: Read, W: Write>(
                     });
 
                 let joint_return = join![receipts_check_process, transactions_check_process];
-                joint_return.0.map_err(DecoderError::JoinError)?;
-                joint_return.1.map_err(DecoderError::JoinError)?;
+                joint_return.0?;
+                joint_return.1?;
 
                 let header_record_with_number = HeaderRecordWithNumber::try_from(block)?;
-                let header_record_bin = bincode::serialize(&header_record_with_number)
-                    .map_err(|err| DecoderError::ProtobufError(err.to_string()))?;
+                let header_record_bin = bincode::serialize(&header_record_with_number)?;
 
                 let size = header_record_bin.len() as u32;
                 writer.write_all(&size.to_be_bytes())?;
                 writer.write_all(&header_record_bin)?;
-                writer.flush().map_err(DecoderError::Io)?;
+                writer.flush()?;
             }
             Err(e) => {
                 if let DecoderError::Io(ref e) = e {
@@ -311,10 +289,9 @@ pub async fn stream_blocks<R: Read, W: Write>(
 }
 
 fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecoderError> {
-    let block_stream = firehose_protos::bstream::v1::Block::decode(bytes.as_slice())
-        .map_err(|err| DecoderError::ProtobufError(err.to_string()))?;
-    let block = firehose_protos::ethereum_v2::Block::decode(block_stream.payload_buffer.as_slice())
-        .map_err(|err| DecoderError::ProtobufError(err.to_string()))?;
+    let block_stream = firehose_protos::bstream::v1::Block::decode(bytes.as_slice())?;
+    let block =
+        firehose_protos::ethereum_v2::Block::decode(block_stream.payload_buffer.as_slice())?;
     Ok(block)
 }
 

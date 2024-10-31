@@ -192,7 +192,8 @@ impl Block {
         }
     }
 
-    fn header(&self) -> Result<&BlockHeader, ProtosError> {
+    /// Returns a reference to the block header.
+    pub fn header(&self) -> Result<&BlockHeader, ProtosError> {
         self.header.as_ref().ok_or(ProtosError::MissingBlockHeader)
     }
 

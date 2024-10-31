@@ -1,4 +1,4 @@
-use flat_files_decoder::Decompression;
+use flat_files_decoder::decompression::Decompression;
 use futures::stream::{FuturesOrdered, StreamExt};
 use tokio::task;
 
