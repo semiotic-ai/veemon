@@ -205,8 +205,6 @@ mod tests {
             .map(ReceiptWithBloom::try_from)
             .collect::<Result<Vec<_>, _>>();
 
-        dbg!(&receipts_with_bloom);
-
         // computes the root and verify against existing data
         let mut hb: HashBuilder;
         //target_idxs are the logIndexes for receipts to get proofs from.
