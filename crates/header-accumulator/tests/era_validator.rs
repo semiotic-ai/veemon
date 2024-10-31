@@ -1,4 +1,4 @@
-use flat_files_decoder::{decode_flat_files, decompression::Decompression};
+use flat_files_decoder::{decoder::decode_flat_files, decompression::Decompression};
 use header_accumulator::{Epoch, EraValidateError, EraValidator, ExtHeaderRecord};
 use tree_hash::Hash256;
 use trin_validation::accumulator::PreMergeAccumulator;
