@@ -1,21 +1,6 @@
 use std::io::Read;
-use thiserror::Error;
 
-#[derive(Error, Debug)]
-pub enum DbinFileError {
-    #[error("Incorrect dbin bytes")]
-    InvalidDbinBytes,
-    #[error("I/O error: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("Invalid UTF8: {0}")]
-    InvalidUtf8(#[from] std::string::FromUtf8Error),
-    #[error("Unsupported version")]
-    UnsupportedDbinVersion,
-    #[error("Start of new dbin file")]
-    StartOfNewDbinFile,
-    #[error("dbin files with different versions")]
-    DifferingDbinVersions,
-}
+use crate::error::DecoderError;
 
 /// `DbinFile` is a struct that represents a simple file storage format to pack a stream of protobuf messages. It is defined by StreamingFast.
 ///
@@ -40,13 +25,13 @@ impl DbinFile {
     /// reads a DbinHeader
     ///
     /// It nests `read_partial_header` to read header. By itself, it reads the 4 magic bytes
-    fn read_header<R: Read>(read: &mut R) -> Result<DbinHeader, DbinFileError> {
+    fn read_header<R: Read>(read: &mut R) -> Result<DbinHeader, DecoderError> {
         let mut buf: [u8; 4] = [0; 4];
 
         read.read_exact(&mut buf)?;
 
         if &buf != b"dbin" {
-            return Err(DbinFileError::StartOfNewDbinFile);
+            return Err(DecoderError::StartOfNewDbinFile);
         }
 
         let dbin_header = Self::read_partial_header(read)?;
@@ -55,7 +40,7 @@ impl DbinFile {
     }
 
     /// Reads all the fields that make a DbinHeader
-    fn read_partial_header<R: Read>(read: &mut R) -> Result<DbinHeader, DbinFileError> {
+    fn read_partial_header<R: Read>(read: &mut R) -> Result<DbinHeader, DecoderError> {
         let version;
         let content_type;
         let content_version;
@@ -69,15 +54,15 @@ impl DbinFile {
             read.read_exact(&mut content_type_bytes)?;
 
             content_type = String::from_utf8(Vec::from(content_type_bytes))
-                .map_err(DbinFileError::InvalidUtf8)?;
+                .map_err(DecoderError::InvalidUtf8)?;
 
             let mut content_version_bytes: [u8; 2] = [0; 2];
             read.read_exact(&mut content_version_bytes)?;
 
             content_version = String::from_utf8(Vec::from(content_version_bytes))
-                .map_err(DbinFileError::InvalidUtf8)?;
+                .map_err(DecoderError::InvalidUtf8)?;
         } else {
-            return Err(DbinFileError::UnsupportedDbinVersion);
+            return Err(DecoderError::UnsupportedDbinVersion);
         }
 
         Ok(DbinHeader {
@@ -88,7 +73,7 @@ impl DbinFile {
     }
 
     /// Returns a `DbinFile` from a Reader
-    pub fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DbinFileError> {
+    pub fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DecoderError> {
         let dbin_header = Self::read_header(read)?;
         let mut messages: Vec<Vec<u8>> = vec![];
 
@@ -97,7 +82,7 @@ impl DbinFile {
                 Ok(message) => messages.push(message),
                 Err(e) => {
                     match e {
-                        DbinFileError::Io(io_error) => {
+                        DecoderError::Io(io_error) => {
                             if io_error.kind() == std::io::ErrorKind::UnexpectedEof {
                                 return Ok(DbinFile {
                                     header: DbinHeader {
@@ -115,7 +100,7 @@ impl DbinFile {
                                     || dbin_header.content_version
                                         != dbin_header_new.content_version
                                 {
-                                    return Err(DbinFileError::DifferingDbinVersions);
+                                    return Err(DecoderError::DifferingDbinVersions);
                                 }
                             }
                         }
@@ -130,12 +115,12 @@ impl DbinFile {
 
 impl DbinFile {
     /// Reads a single message
-    fn read_message<R: Read>(read: &mut R) -> Result<Vec<u8>, DbinFileError> {
+    fn read_message<R: Read>(read: &mut R) -> Result<Vec<u8>, DecoderError> {
         let mut size: [u8; 4] = [0; 4];
         read.read_exact(&mut size)?;
 
         if &size == b"dbin" {
-            return Err(DbinFileError::StartOfNewDbinFile);
+            return Err(DecoderError::StartOfNewDbinFile);
         }
 
         Ok(Self::read_content(size, read)?)
@@ -145,7 +130,7 @@ impl DbinFile {
     ///
     /// Messages are separated by "dbin" (magical 4 bytes) so each
     /// new occurrence of it marks the start of a new .dbin file
-    pub fn read_message_stream<R: Read>(read: &mut R) -> Result<Vec<u8>, DbinFileError> {
+    pub fn read_message_stream<R: Read>(read: &mut R) -> Result<Vec<u8>, DecoderError> {
         let mut size: [u8; 4] = [0; 4];
         read.read_exact(&mut size)?;
 

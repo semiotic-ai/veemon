@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use flat_files_decoder::{decode_flat_files, error::DecodeError, stream_blocks, Decompression};
+use flat_files_decoder::{decode_flat_files, error::DecoderError, stream_blocks, Decompression};
 use std::{
     io::{self, BufReader, BufWriter},
     process::ExitCode,
@@ -31,7 +31,7 @@ fn init_tracing() {
     );
 }
 
-async fn run() -> Result<(), DecodeError> {
+async fn run() -> Result<(), DecoderError> {
     let cli = Cli::parse();
 
     match cli.command {
