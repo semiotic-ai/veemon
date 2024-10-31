@@ -9,8 +9,8 @@ pub mod dbin;
 pub mod error;
 pub mod headers;
 
-use crate::{error::DecodeError, headers::check_valid_header};
-use dbin::{DbinFile, DbinFileError};
+use crate::{error::DecoderError, headers::check_valid_header};
+use dbin::DbinFile;
 use firehose_protos::ethereum_v2::Block;
 use headers::HeaderRecordWithNumber;
 use prost::Message;
@@ -71,11 +71,11 @@ pub fn decode_flat_files(
     output: Option<&str>,
     headers_dir: Option<&str>,
     decompress: Decompression,
-) -> Result<Vec<Block>, DecodeError> {
-    let metadata = fs::metadata(&input).map_err(DecodeError::IoError)?;
+) -> Result<Vec<Block>, DecoderError> {
+    let metadata = fs::metadata(&input).map_err(DecoderError::Io)?;
 
     if let Some(output) = output {
-        fs::create_dir_all(output).map_err(DecodeError::IoError)?;
+        fs::create_dir_all(output).map_err(DecoderError::Io)?;
     }
 
     if metadata.is_dir() {
@@ -83,7 +83,7 @@ pub fn decode_flat_files(
     } else if metadata.is_file() {
         handle_file(&PathBuf::from(input), output, headers_dir, decompress)
     } else {
-        Err(DecodeError::InvalidInput)
+        Err(DecoderError::InvalidInput)
     }
 }
 
@@ -92,12 +92,12 @@ fn decode_flat_files_dir(
     output: Option<&str>,
     headers_dir: Option<&str>,
     decompress: Decompression,
-) -> Result<Vec<Block>, DecodeError> {
-    let paths = fs::read_dir(input).map_err(DecodeError::IoError)?;
+) -> Result<Vec<Block>, DecoderError> {
+    let paths = fs::read_dir(input).map_err(DecoderError::Io)?;
 
     let mut blocks: Vec<Block> = vec![];
     for path in paths {
-        let path = path.map_err(DecodeError::IoError)?;
+        let path = path.map_err(DecoderError::Io)?;
         match path.path().extension() {
             Some(ext) => {
                 if ext != "dbin" {
@@ -143,14 +143,13 @@ pub fn handle_file(
     output: Option<&str>,
     headers_dir: Option<&str>,
     decompress: Decompression,
-) -> Result<Vec<Block>, DecodeError> {
-    let input_file = BufReader::new(File::open(path).map_err(DecodeError::IoError)?);
+) -> Result<Vec<Block>, DecoderError> {
+    let input_file = BufReader::new(File::open(path).map_err(DecoderError::Io)?);
     // Check if decompression is required and read the file accordingly.
     let mut file_contents: Box<dyn Read> = match decompress {
         Decompression::Zstd => {
-            let decompressed_data = decode_all(input_file).map_err(|e| {
-                DecodeError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e))
-            })?;
+            let decompressed_data = decode_all(input_file)
+                .map_err(|e| DecoderError::Io(std::io::Error::new(std::io::ErrorKind::Other, e)))?;
             Box::new(Cursor::new(decompressed_data))
         }
         Decompression::None => Box::new(input_file),
@@ -158,7 +157,7 @@ pub fn handle_file(
 
     let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
     if dbin_file.header.content_type != "ETH" {
-        return Err(DecodeError::InvalidContentType(
+        return Err(DecoderError::InvalidContentType(
             dbin_file.header.content_type,
         ));
     }
@@ -184,9 +183,9 @@ pub fn handle_file(
 /// * `buf`: A byte slice referencing the in-memory content of the flat file to be decoded.
 /// * `decompress`: A boolean indicating whether the input buffer should be decompressed.
 ///
-pub fn handle_buf(buf: &[u8], decompress: Decompression) -> Result<Vec<Block>, DecodeError> {
+pub fn handle_buf(buf: &[u8], decompress: Decompression) -> Result<Vec<Block>, DecoderError> {
     let buf = match decompress {
-        Decompression::Zstd => zstd::decode_all(buf).map_err(|_| DecodeError::DecompressError)?,
+        Decompression::Zstd => zstd::decode_all(buf).map_err(|_| DecoderError::DecompressError)?,
         Decompression::None => buf.to_vec(),
     };
 
@@ -204,7 +203,7 @@ fn handle_block(
     message: &Vec<u8>,
     output: Option<&str>,
     headers_dir: Option<&str>,
-) -> Result<Block, DecodeError> {
+) -> Result<Block, DecoderError> {
     let block = decode_block_from_bytes(message)?;
 
     if let Some(headers_dir) = headers_dir {
@@ -213,11 +212,11 @@ fn handle_block(
 
     if block.number != 0 {
         if !block.receipt_root_is_verified() {
-            return Err(DecodeError::ReceiptRoot);
+            return Err(DecoderError::ReceiptRoot);
         }
 
         if !block.transaction_root_is_verified() {
-            return Err(DecodeError::TransactionRoot);
+            return Err(DecoderError::TransactionRoot);
         }
     }
 
@@ -226,11 +225,11 @@ fn handle_block(
         let mut out_file = File::create(file_name)?;
 
         let block_json = serde_json::to_string(&block)
-            .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+            .map_err(|err| DecoderError::ProtobufError(err.to_string()))?;
 
         out_file
             .write_all(block_json.as_bytes())
-            .map_err(DecodeError::IoError)?;
+            .map_err(DecoderError::Io)?;
     }
 
     Ok(block)
@@ -252,7 +251,7 @@ pub async fn stream_blocks<R: Read, W: Write>(
     mut reader: R,
     mut writer: W,
     end_block: Option<usize>,
-) -> Result<(), DecodeError> {
+) -> Result<(), DecoderError> {
     let end_block = match end_block {
         Some(end_block) => end_block,
         None => MERGE_BLOCK,
@@ -267,30 +266,30 @@ pub async fn stream_blocks<R: Read, W: Write>(
                 let receipts_check_process =
                     spawn_check(&block, |b| match b.receipt_root_is_verified() {
                         true => Ok(()),
-                        false => Err(DecodeError::ReceiptRoot),
+                        false => Err(DecoderError::ReceiptRoot),
                     });
 
                 let transactions_check_process =
                     spawn_check(&block, |b| match b.transaction_root_is_verified() {
                         true => Ok(()),
-                        false => Err(DecodeError::TransactionRoot),
+                        false => Err(DecoderError::TransactionRoot),
                     });
 
                 let joint_return = join![receipts_check_process, transactions_check_process];
-                joint_return.0.map_err(DecodeError::JoinError)?;
-                joint_return.1.map_err(DecodeError::JoinError)?;
+                joint_return.0.map_err(DecoderError::JoinError)?;
+                joint_return.1.map_err(DecoderError::JoinError)?;
 
                 let header_record_with_number = HeaderRecordWithNumber::try_from(block)?;
                 let header_record_bin = bincode::serialize(&header_record_with_number)
-                    .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+                    .map_err(|err| DecoderError::ProtobufError(err.to_string()))?;
 
                 let size = header_record_bin.len() as u32;
                 writer.write_all(&size.to_be_bytes())?;
                 writer.write_all(&header_record_bin)?;
-                writer.flush().map_err(DecodeError::IoError)?;
+                writer.flush().map_err(DecoderError::Io)?;
             }
             Err(e) => {
-                if let DbinFileError::Io(ref e) = e {
+                if let DecoderError::Io(ref e) = e {
                     if e.kind() == std::io::ErrorKind::UnexpectedEof {
                         if block_number < end_block {
                             info!("Reached end of file, waiting for more blocks");
@@ -311,18 +310,18 @@ pub async fn stream_blocks<R: Read, W: Write>(
     Ok(())
 }
 
-fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecodeError> {
+fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecoderError> {
     let block_stream = firehose_protos::bstream::v1::Block::decode(bytes.as_slice())
-        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+        .map_err(|err| DecoderError::ProtobufError(err.to_string()))?;
     let block = firehose_protos::ethereum_v2::Block::decode(block_stream.payload_buffer.as_slice())
-        .map_err(|err| DecodeError::ProtobufError(err.to_string()))?;
+        .map_err(|err| DecoderError::ProtobufError(err.to_string()))?;
     Ok(block)
 }
 
 // Define a generic function to spawn a blocking task for a given check.
 fn spawn_check<F>(block: &Block, check: F) -> tokio::task::JoinHandle<()>
 where
-    F: FnOnce(&Block) -> Result<(), DecodeError> + Send + 'static,
+    F: FnOnce(&Block) -> Result<(), DecoderError> + Send + 'static,
 {
     let block_clone = block.clone();
     tokio::task::spawn_blocking(move || match check(&block_clone) {

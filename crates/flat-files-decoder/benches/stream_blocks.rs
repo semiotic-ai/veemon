@@ -4,7 +4,7 @@ use std::{
 };
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use flat_files_decoder::dbin::{DbinFile, DbinFileError};
+use flat_files_decoder::{dbin::DbinFile, error::DecoderError};
 use prost::Message;
 
 const ITERS_PER_FILE: usize = 10;
@@ -27,7 +27,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
             }
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
-            let mut message: Result<Vec<u8>, DbinFileError> = Err(DbinFileError::InvalidDbinBytes);
+            let mut message: Result<Vec<u8>, DecoderError> = Err(DecoderError::InvalidDbinBytes);
             loop {
                 b.iter(|| {
                     message = black_box(DbinFile::read_message_stream(&mut reader));
