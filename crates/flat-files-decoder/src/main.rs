@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
-use flat_files_decoder::{decode_flat_files, error::DecoderError, stream_blocks, Decompression};
+use flat_files_decoder::{
+    decode_flat_files, decompression::Decompression, error::DecoderError, stream_blocks,
+};
 use std::{
     io::{self, BufReader, BufWriter},
     process::ExitCode,

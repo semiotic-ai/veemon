@@ -1,4 +1,4 @@
-use flat_files_decoder::{decode_flat_files, Decompression};
+use flat_files_decoder::{decode_flat_files, decompression::Decompression};
 
 const BLOCK_NUMBER: usize = 0;
 
