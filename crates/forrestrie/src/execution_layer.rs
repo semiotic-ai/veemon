@@ -26,26 +26,32 @@ pub struct ReceiptJson {
 impl ReceiptJson {
     #[cfg(test)]
     fn fake() -> Self {
-        use alloy_primitives::{Address, Bytes};
-        use rand::{self, Rng};
+        use std::io::Read;
+
+        use alloy_primitives::{bytes, fixed_bytes, Address, Bytes};
+        use rand::{self, random, rngs::OsRng, RngCore};
 
         fn fake_log() -> Log {
             // generate random slice of bytes
-            let mut rng = rand::thread_rng();
+            let mut random_bytes = [0u8; 20];
+            OsRng.fill_bytes(&mut random_bytes);
+            // Create a 32-byte array initialized with zeros
+            let mut bytes = [0u8; 32];
+
+            // Insert the random bytes into the last 20 bytes of the array
+            bytes[12..].copy_from_slice(&random_bytes);
 
             // Generate a random u32
-            let random_u32: u32 = rng.gen();
-
-            Log::new(
-                Address::default(),
-                vec![],
-                Bytes::from(random_u32.to_be_bytes().to_vec()),
+            Log::new_unchecked(
+                Address::random(),
+                vec![fixed_bytes!(
+                    "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+                )],
+                Bytes::from(random_bytes),
             )
-            .unwrap()
         }
 
         let logs: Vec<Log> = (3..5).into_iter().map(|_| fake_log()).collect();
-        dbg!(&logs);
 
         ReceiptJson {
             tx_type: TxType::Eip1559, // Replace with any desired variant
@@ -53,15 +59,16 @@ impl ReceiptJson {
                 .to_string(),
             block_number: "0x1a".to_string(),
             logs,
-            cumulative_gas_used: U256::from(0x5208), // Mock gas used value
-            status: true,                            // Mock status as successful
-            logs_bloom: Bloom::default(),            // Mock an empty logs bloom
+            cumulative_gas_used: U256::from(0x5208),
+            status: true,
+            logs_bloom: Bloom::default(),
         }
     }
 }
 
 /// Represents a leaf in the trie for which a proof is to be generated, i.e., the target of the proof.
 /// The `nibbles` represent the path to the leaf in the trie, and the `value` is the data stored at the leaf.
+#[derive(Debug)]
 pub struct TargetLeaf {
     pub nibbles: Nibbles,
     pub value: Vec<u8>,
@@ -178,12 +185,8 @@ pub fn build_trie_with_proofs(receipts: &[ReceiptWithBloom], target_idxs: &[usiz
 
 #[cfg(test)]
 mod tests {
-    use primitive_types::H256;
-    use reth_trie_common::proof::verify_proof;
-
-    use std::cell::LazyCell;
-
     use super::*;
+    use reth_trie_common::proof::verify_proof;
 
     #[test]
     fn test_compute_receipts_trie_root_and_proof() {
@@ -199,20 +202,19 @@ mod tests {
             .map(ReceiptWithBloom::try_from)
             .collect::<Result<Vec<_>, _>>();
 
+        dbg!(&receipts_with_bloom);
+
         // computes the root and verify against existing data
         let mut hb: HashBuilder;
         //target_idxs are the logIndexes for receipts to get proofs from.
         // these values are arbitrary
-        let target_idxs = &[0, 1, 2];
+        let target_idxs = &[1];
         let mut targets: Vec<TargetLeaf> = Vec::new();
         let receipts_len;
 
         match receipts_with_bloom {
             Ok(receipts) => {
                 hb = build_trie_with_proofs(&receipts, target_idxs);
-                let calculated_root = H256::from(hb.root().0);
-                dbg!(&calculated_root);
-                // assert_eq!(calculated_root, receipts_root, "Roots do not match!");
 
                 let mut index_buffer = Vec::new();
                 let mut value_buffer = Vec::new();
@@ -241,16 +243,16 @@ mod tests {
         // verifies proof for retained targets
         let proof = hb.take_proof_nodes();
         for target in targets.iter() {
-            let proof1 = proof
-                .iter()
-                .filter_map(|(k, v)| target.nibbles.starts_with(k).then_some(v));
-
             assert_eq!(
                 verify_proof(
                     hb.root(),
                     target.nibbles.clone(),
                     Some(target.value.to_vec()),
-                    proof1.clone(),
+                    proof
+                        .clone()
+                        .matching_nodes_sorted(&target.nibbles)
+                        .iter()
+                        .map(|(_, node)| node)
                 ),
                 Ok(())
             );
