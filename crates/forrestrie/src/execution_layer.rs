@@ -26,10 +26,8 @@ pub struct ReceiptJson {
 impl ReceiptJson {
     #[cfg(test)]
     fn fake() -> Self {
-        use std::io::Read;
-
-        use alloy_primitives::{bytes, fixed_bytes, Address, Bytes};
-        use rand::{self, random, rngs::OsRng, RngCore};
+        use alloy_primitives::{bytes, fixed_bytes, Address};
+        use rand::{self, rngs::OsRng, RngCore};
 
         fn fake_log() -> Log {
             // generate random slice of bytes
@@ -41,17 +39,22 @@ impl ReceiptJson {
             // Insert the random bytes into the last 20 bytes of the array
             bytes[12..].copy_from_slice(&random_bytes);
 
-            // Generate a random u32
+            // Generate a static Log based on an actual log receipt
             Log::new_unchecked(
                 Address::random(),
-                vec![fixed_bytes!(
-                    "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
-                )],
-                Bytes::from(random_bytes),
+                vec![
+                    fixed_bytes!(
+                        "e1fffcc4923d04b559f4d29a8bfc6cda04eb5b0d3c460751c2402c5c5cc9109c"
+                    ),
+                    fixed_bytes!(
+                        "0000000000000000000000003328f7f4a1d1c57c35df56bbf0c9dcafca309c49"
+                    ),
+                ],
+                bytes!("0000000000000000000000000000000000000000000000000dcf09da3e1eb9f3"),
             )
         }
 
-        let logs: Vec<Log> = (3..5).into_iter().map(|_| fake_log()).collect();
+        let logs: Vec<Log> = (0..5).into_iter().map(|_| fake_log()).collect();
 
         ReceiptJson {
             tx_type: TxType::Eip1559, // Replace with any desired variant
@@ -202,13 +205,11 @@ mod tests {
             .map(ReceiptWithBloom::try_from)
             .collect::<Result<Vec<_>, _>>();
 
-        dbg!(&receipts_with_bloom);
-
         // computes the root and verify against existing data
         let mut hb: HashBuilder;
         //target_idxs are the logIndexes for receipts to get proofs from.
         // these values are arbitrary
-        let target_idxs = &[1];
+        let target_idxs = &[4];
         let mut targets: Vec<TargetLeaf> = Vec::new();
         let receipts_len;
 
@@ -239,6 +240,9 @@ mod tests {
                 panic!("Failed to convert receipts: {}", e);
             }
         }
+
+        // necessary to call this method to retain proofs
+        hb.root();
 
         // verifies proof for retained targets
         let proof = hb.take_proof_nodes();
