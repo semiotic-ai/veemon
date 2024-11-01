@@ -2165,7 +2165,6 @@ dependencies = [
  "futures",
  "hex",
  "http",
- "insta",
  "once_cell",
  "rustls",
  "serde",
@@ -2244,16 +2243,11 @@ dependencies = [
  "criterion",
  "firehose-protos",
  "prost",
- "prost-build",
- "prost-wkt-build",
  "rand",
- "rayon",
  "reth-primitives",
  "serde",
  "serde_json",
  "thiserror",
- "tokio",
- "tokio-test",
  "tracing",
  "tracing-subscriber",
  "zstd",
@@ -5921,19 +5915,6 @@ dependencies = [
  "pin-project-lite",
  "tokio",
  "tokio-util",
-]
-
-[[package]]
-name = "tokio-test"
-version = "0.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2468baabc3311435b55dd935f702f42cd1b8abb7e754fb7dfb16bd36aa88f9f7"
-dependencies = [
- "async-stream",
- "bytes",
- "futures-core",
- "tokio",
- "tokio-stream",
 ]
 
 [[package]]

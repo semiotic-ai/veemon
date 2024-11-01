@@ -1,8 +1,14 @@
+use std::{fs::File, io::BufReader};
+
 use firehose_protos::ethereum_v2::Block;
-use flat_files_decoder::{decoder::decode_flat_files, decompression::Decompression};
+use flat_files_decoder::{read_blocks_from_reader, Compression};
 use header_accumulator::{
     generate_inclusion_proof, verify_inclusion_proof, EraValidateError, ExtHeaderRecord,
 };
+
+fn create_test_reader(path: &str) -> BufReader<File> {
+    BufReader::new(File::open(path).unwrap())
+}
 
 #[test]
 fn test_inclusion_proof() -> Result<(), EraValidateError> {
@@ -10,11 +16,11 @@ fn test_inclusion_proof() -> Result<(), EraValidateError> {
     let mut all_blocks: Vec<Block> = Vec::new(); // Vector to hold all blocks
 
     for flat_file_number in (0..=8200).step_by(100) {
-        let file_name = format!(
+        let file = format!(
             "tests/ethereum_firehose_first_8200/{:010}.dbin",
             flat_file_number
         );
-        match decode_flat_files(file_name, None, None, Decompression::None) {
+        match read_blocks_from_reader(create_test_reader(&file), Compression::None) {
             Ok(blocks) => {
                 headers.extend(
                     blocks
