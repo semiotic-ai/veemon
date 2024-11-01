@@ -2,7 +2,6 @@ use std::env;
 
 use clap::{Parser, Subcommand};
 
-use flat_files_decoder::decompression::Decompression;
 use flat_head::era_verifier::verify_eras;
 use trin_validation::accumulator::PreMergeAccumulator;
 
@@ -39,7 +38,7 @@ enum Commands {
 
         #[clap(short = 'c', long, default_value = "true")]
         // Where to decompress files from zstd or not.
-        decompress: Decompression,
+        decompress: bool,
 
         #[clap(short = 'p', long)]
         // indicates if the store_url is compatible with some API. E.g., if `--compatible s3` is used,

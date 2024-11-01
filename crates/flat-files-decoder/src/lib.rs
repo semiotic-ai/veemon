@@ -8,5 +8,5 @@
 pub mod cli;
 pub mod dbin;
 pub mod decoder;
-pub mod decompression;
+mod decompression;
 mod error;

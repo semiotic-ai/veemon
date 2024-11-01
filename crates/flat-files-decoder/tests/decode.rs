@@ -1,4 +1,4 @@
-use flat_files_decoder::{decoder::decode_flat_files, decompression::Decompression};
+use flat_files_decoder::decoder::decode_flat_files;
 
 const BLOCK_NUMBER: usize = 0;
 
@@ -7,19 +7,18 @@ const TEST_ASSET_PATH: &str = "../../test-assets";
 #[test]
 fn test_decode_decompressed() {
     let file_name = format!("{TEST_ASSET_PATH}/{:010}.dbin", BLOCK_NUMBER);
-    let blocks = decode_flat_files(file_name, None, None, Decompression::None).unwrap();
+    let blocks = decode_flat_files(file_name, None, None, false.into()).unwrap();
     assert_eq!(blocks.len(), 100);
 }
 
 #[test]
 fn test_decode_compressed() {
     let file_name = format!("{TEST_ASSET_PATH}/{:010}.dbin.zst", BLOCK_NUMBER);
-    let blocks_compressed = decode_flat_files(file_name, None, None, Decompression::Zstd).unwrap();
+    let blocks_compressed = decode_flat_files(file_name, None, None, true.into()).unwrap();
     assert_eq!(blocks_compressed.len(), 100);
 
     let file_name = format!("{TEST_ASSET_PATH}/{:010}.dbin", BLOCK_NUMBER);
-    let blocks_decompressed =
-        decode_flat_files(file_name, None, None, Decompression::None).unwrap();
+    let blocks_decompressed = decode_flat_files(file_name, None, None, false.into()).unwrap();
     assert_eq!(blocks_compressed.len(), blocks_decompressed.len());
     for (b1, b2) in blocks_compressed.into_iter().zip(blocks_decompressed) {
         assert_eq!(b1.hash, b2.hash);
