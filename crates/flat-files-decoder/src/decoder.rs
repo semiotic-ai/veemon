@@ -1,11 +1,10 @@
 use std::{
     fs::{self, File},
-    io::{self, BufReader, BufWriter, Cursor, Read, Write},
+    io::{BufReader, Cursor, Read, Write},
     path::PathBuf,
 };
 
 use alloy_primitives::B256;
-use clap::Parser;
 use firehose_protos::{
     bstream,
     ethereum_v2::{self, Block, BlockHeader},
@@ -14,94 +13,11 @@ use prost::Message;
 use serde::{Deserialize, Serialize};
 use tokio::join;
 use tracing::{error, info, trace};
-use zstd::stream::decode_all;
 
-use crate::{
-    cli::{Cli, Commands},
-    dbin::DbinFile,
-    decompression::Decompression,
-    error::DecoderError,
-};
+use crate::{dbin::DbinFile, decompression::Decompression, error::DecoderError};
 
-pub async fn run() -> Result<(), DecoderError> {
-    let cli = Cli::parse();
-
-    match cli.command {
-        Commands::Stream {
-            decompression,
-            end_block,
-        } => match decompression {
-            Decompression::Zstd => {
-                let reader = zstd::stream::Decoder::new(io::stdin())?;
-                let writer = BufWriter::new(io::stdout().lock());
-                stream_blocks(reader, writer, end_block).await
-            }
-            Decompression::None => {
-                let reader = BufReader::with_capacity((64 * 2) << 20, io::stdin().lock());
-                let writer = BufWriter::new(io::stdout().lock());
-                stream_blocks(reader, writer, end_block).await
-            }
-        },
-        Commands::Decode {
-            input,
-            headers_dir,
-            output,
-            decompression,
-        } => {
-            let blocks = decode_flat_files(
-                input,
-                output.as_deref(),
-                headers_dir.as_deref(),
-                decompression,
-            )?;
-
-            info!("Total blocks: {}", blocks.len());
-
-            Ok(())
-        }
-    }
-}
-
-/// Decodes and optionally verifies block flat files from a given directory or single file.
-///
-/// This function processes input which can be a file or a directory containing multiple `.dbin` files.
-/// If `headers_dir` is provided, it verifies the block headers against the files found in this directory.
-/// These header files must be in JSON format and named after the block number they represent (e.g., `block-<block number>.json`).
-/// it can also handle `zstd` compressed flat files.
-///
-/// # Arguments
-///
-/// * `input`: A [`String`] specifying the path to the input directory or file.
-/// * `output`: An [`Option<&str>`] specifying the directory where decoded blocks should be written.
-///             If `None`, decoded blocks are not written to disk.
-/// * `headers_dir`: An [`Option<&str>`] specifying the directory containing header files for verification.
-///                  Must be a directory if provided.
-/// * `decompress`: A [`Decompression`] enum specifying if it is necessary to decompress from zstd.
-pub fn decode_flat_files(
-    input: String,
-    output: Option<&str>,
-    headers_dir: Option<&str>,
-    decompress: Decompression,
-) -> Result<Vec<Block>, DecoderError> {
-    let metadata = fs::metadata(&input)?;
-
-    if let Some(output) = output {
-        fs::create_dir_all(output)?;
-    }
-
-    if metadata.is_dir() {
-        decode_flat_files_dir(&input, output, headers_dir, decompress)
-    } else if metadata.is_file() {
-        handle_file(&PathBuf::from(input), output, headers_dir, decompress)
-    } else {
-        Err(DecoderError::InvalidInput)
-    }
-}
-
-fn decode_flat_files_dir(
+pub fn read_flat_files_dir(
     input: &str,
-    output: Option<&str>,
-    headers_dir: Option<&str>,
     decompress: Decompression,
 ) -> Result<Vec<Block>, DecoderError> {
     info!("Processing directory: {}", input);
@@ -120,7 +36,7 @@ fn decode_flat_files_dir(
         };
 
         trace!("Processing file: {}", path.path().display());
-        match handle_file(&path.path(), output, headers_dir, decompress) {
+        match read_flat_file(&path.path(), decompress) {
             Ok(file_blocks) => {
                 blocks.extend(file_blocks);
             }
@@ -133,55 +49,30 @@ fn decode_flat_files_dir(
     Ok(blocks)
 }
 
-/// Decodes and optionally verifies block flat files from a single file.
+/// Decodes and verifies block flat files from a single file.
 ///
-/// This function decodes flat files and, if an `output` directory is provided, writes the decoded blocks to this directory.
-/// If no `output` is specified, the decoded blocks are not written to disk. The function can also verify block headers
-/// against header files found in an optional `headers_dir`. These header files must be in JSON format and named after
-/// the block number they represent (e.g., `block-<block number>.json`). Additionally, the function supports handling `zstd` compressed
-/// flat files if decompression is required.
+/// This function decodes and verifies blocks contained within flat files.
+/// Additionally, the function supports handling `zstd` compressed flat files if decompression is required.
 ///
 /// # Arguments
 ///
 /// * `input`: A [`String`] specifying the path to the file.
-/// * `output`: An [`Option<&str>`] specifying the directory where decoded blocks should be written.
-///             If `None`, decoded blocks are not written to disk.
-/// * `headers_dir`: An [`Option<&str>`] specifying the directory containing header files for verification.
-///                  Must be a directory if provided.
 /// * `decompress`: A [`Decompression`] enum indicating whether decompression from `zstd` format is necessary.
 ///
-pub fn handle_file(
+pub fn read_flat_file(
     path: &PathBuf,
-    output: Option<&str>,
-    headers_dir: Option<&str>,
     decompress: Decompression,
 ) -> Result<Vec<Block>, DecoderError> {
     let input_file = BufReader::new(File::open(path)?);
 
-    // Check if decompression is required and read the file accordingly.
-    let mut file_contents: Box<dyn Read> = match decompress {
-        Decompression::Zstd => {
-            let decompressed_data = decode_all(input_file)?;
-            Box::new(Cursor::new(decompressed_data))
-        }
-        Decompression::None => Box::new(input_file),
-    };
-
-    let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
-    if dbin_file.header.content_type != "ETH" {
-        return Err(DecoderError::InvalidContentType(
-            dbin_file.header.content_type,
-        ));
-    }
-
-    let mut blocks: Vec<Block> = vec![];
-
-    for message in dbin_file.messages {
-        blocks.push(handle_block(&message, output, headers_dir)?);
-    }
+    let blocks = handle_buf(input_file.buffer(), decompress)?;
 
     Ok(blocks)
 }
+// what we want is:
+// read_flat_file
+// write_flat_file
+// read_and_write_flat_file
 
 /// Decodes a flat file from a buffer containing its contents and optionally decompresses it.
 ///
@@ -196,18 +87,34 @@ pub fn handle_file(
 /// * `decompress`: A boolean indicating whether the input buffer should be decompressed.
 ///
 pub fn handle_buf(buf: &[u8], decompress: Decompression) -> Result<Vec<Block>, DecoderError> {
+    const CONTENT_TYPE: &str = "ETH";
+
     let buf = match decompress {
         Decompression::Zstd => zstd::decode_all(buf)?,
         Decompression::None => buf.to_vec(),
     };
 
     let dbin_file = DbinFile::try_from_read(&mut Cursor::new(buf))?;
+    if dbin_file.header.content_type != CONTENT_TYPE {
+        return Err(DecoderError::InvalidContentType(
+            dbin_file.header.content_type,
+        ));
+    }
 
     let mut blocks: Vec<Block> = vec![];
 
     for message in dbin_file.messages {
-        blocks.push(handle_block(&message, None, None)?);
+        let block = decode_block_from_bytes(&message)?;
+
+        if !block_is_verified(&block) {
+            return Err(DecoderError::VerificationFailed {
+                block_number: block.number,
+            });
+        }
+
+        blocks.push(block);
     }
+
     Ok(blocks)
 }
 
@@ -261,45 +168,25 @@ impl BlockHeaderRoots {
     }
 }
 
-fn handle_block(
-    message: &Vec<u8>,
-    output: Option<&str>,
-    headers_dir: Option<&str>,
-) -> Result<Block, DecoderError> {
-    let block = decode_block_from_bytes(message)?;
-
-    if let Some(headers_dir) = headers_dir {
-        let header_file_path = format!("{}/{}.json", headers_dir, block.number);
-        let header_file = File::open(header_file_path)?;
-        let header_roots: BlockHeaderRoots = serde_json::from_reader(header_file)?;
-
-        if !header_roots.block_header_matches(&block) {
-            return Err(DecoderError::MatchRootsFailed {
-                block_number: block.number,
-            });
-        }
-    }
-
+fn block_is_verified(block: &Block) -> bool {
     if block.number != 0 {
         if !block.receipt_root_is_verified() {
-            return Err(DecoderError::ReceiptRoot);
+            error!(
+                "Receipt root verification failed for block {}",
+                block.number
+            );
+            return false;
         }
 
         if !block.transaction_root_is_verified() {
-            return Err(DecoderError::TransactionRoot);
+            error!(
+                "Transaction root verification failed for block {}",
+                block.number
+            );
+            return false;
         }
     }
-
-    if let Some(output) = output {
-        let file_name = format!("{}/block-{}.json", output, block.number);
-        let mut out_file = File::create(file_name)?;
-
-        let block_json = serde_json::to_string(&block)?;
-
-        out_file.write_all(block_json.as_bytes())?;
-    }
-
-    Ok(block)
+    true
 }
 
 #[derive(Serialize, Deserialize)]

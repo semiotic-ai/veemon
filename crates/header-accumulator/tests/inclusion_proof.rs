@@ -1,5 +1,5 @@
 use firehose_protos::ethereum_v2::Block;
-use flat_files_decoder::{decoder::decode_flat_files, decompression::Decompression};
+use flat_files_decoder::{cli::decode_flat_files, decompression::Decompression};
 use header_accumulator::{
     generate_inclusion_proof, verify_inclusion_proof, EraValidateError, ExtHeaderRecord,
 };

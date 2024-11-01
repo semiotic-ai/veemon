@@ -1,7 +1,8 @@
 use firehose_protos::{bstream::v1::Block as BstreamBlock, ethereum_v2::Block};
 use flat_files_decoder::{
+    cli::decode_flat_files,
     dbin::DbinFile,
-    decoder::{decode_flat_files, handle_buf, handle_file, stream_blocks},
+    decoder::{handle_buf, read_flat_file, stream_blocks},
     decompression::Decompression,
 };
 use prost::Message;
@@ -60,7 +61,7 @@ fn test_decode_compressed() {
 fn test_handle_file() {
     let path = PathBuf::from(format!("{TEST_ASSET_PATH}/example0017686312.dbin"));
 
-    let result = handle_file(&path, None, None, Decompression::None);
+    let result = read_flat_file(&path, Decompression::None);
 
     assert!(result.is_ok());
 }
@@ -69,7 +70,7 @@ fn test_handle_file() {
 fn test_handle_file_zstd() {
     let path = PathBuf::from(format!("{TEST_ASSET_PATH}/0000000000.dbin.zst"));
 
-    let result = handle_file(&path, None, None, Decompression::Zstd);
+    let result = read_flat_file(&path, Decompression::Zstd);
 
     assert!(result.is_ok());
     let blocks: Vec<Block> = result.unwrap();

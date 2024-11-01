@@ -14,8 +14,6 @@ pub enum DecoderError {
     InvalidDbinBytes,
     #[error("Invalid header")]
     InvalidHeader,
-    #[error("Invalid input")]
-    InvalidInput,
     #[error("Invalid block header total difficulty")]
     InvalidTotalDifficulty,
     #[error("Invalid UTF8: {0}")]
@@ -40,4 +38,6 @@ pub enum DecoderError {
     TryFromSliceError(#[from] std::array::TryFromSliceError),
     #[error("Unsupported version")]
     UnsupportedDbinVersion,
+    #[error("Block verification failed {block_number}")]
+    VerificationFailed { block_number: u64 },
 }
