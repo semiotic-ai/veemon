@@ -4,8 +4,8 @@ use thiserror::Error;
 pub enum DecoderError {
     #[error("Bin code error: {0}")]
     Bincode(#[from] bincode::Error),
-    #[error("dbin files with different versions")]
-    DifferingDbinVersions,
+    #[error("Invalid dbin header")]
+    InvalidDbinHeader,
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
     #[error("Invalid content type: {0}")]

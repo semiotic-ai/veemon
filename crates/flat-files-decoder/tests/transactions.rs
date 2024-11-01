@@ -15,7 +15,7 @@ fn example_file_first_tx() {
     let mut input_file =
         BufReader::new(File::open(format!("{TEST_ASSET_PATH}/example0017686312.dbin")).unwrap());
 
-    let dbin_file = DbinFile::try_from_read(&mut input_file).unwrap();
+    let dbin_file = DbinFile::try_from_reader(&mut input_file).unwrap();
 
     let message = dbin_file.messages.first().unwrap();
 
@@ -81,7 +81,7 @@ fn legacy_tx() {
     let mut input_file =
         BufReader::new(File::open(format!("{TEST_ASSET_PATH}/example0017686312.dbin")).unwrap());
 
-    let dbin_file = DbinFile::try_from_read(&mut input_file).unwrap();
+    let dbin_file = DbinFile::try_from_reader(&mut input_file).unwrap();
 
     let message = dbin_file.messages.first().unwrap();
 
@@ -128,7 +128,7 @@ fn create_tx() {
         File::open(format!("{TEST_ASSET_PATH}/example-create-17686085.dbin")).unwrap(),
     );
 
-    let dbin_file = DbinFile::try_from_read(&mut input_file).unwrap();
+    let dbin_file = DbinFile::try_from_reader(&mut input_file).unwrap();
 
     let message = dbin_file.messages.first().unwrap();
 

@@ -1,5 +1,7 @@
 use std::io::Read;
 
+use tracing::{error, info};
+
 use crate::error::DecoderError;
 
 /// `DbinFile` is a struct that represents a simple file storage format to pack a stream of protobuf messages. It is defined by StreamingFast.
@@ -11,7 +13,8 @@ pub struct DbinFile {
     pub messages: Vec<Vec<u8>>,
 }
 
-/// `DbinHeader` contains the fields that compose the header of the .dbin file.
+/// The header of a `.dbin` file.
+#[derive(PartialEq)]
 pub struct DbinHeader {
     /// Next single byte after the 4 magic bytes, file format version
     pub version: u8,
@@ -73,41 +76,36 @@ impl DbinFile {
     }
 
     /// Returns a `DbinFile` from a Reader
-    pub fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DecoderError> {
-        let dbin_header = Self::read_header(read)?;
-        let mut messages: Vec<Vec<u8>> = vec![];
+    pub fn try_from_reader<R: Read>(mut reader: R) -> Result<Self, DecoderError> {
+        let mut dbin = Self {
+            header: Self::read_header(&mut reader)?,
+            messages: vec![],
+        };
 
         loop {
-            match Self::read_message(read) {
-                Ok(message) => messages.push(message),
-                Err(e) => {
-                    match e {
-                        DecoderError::Io(io_error) => {
-                            if io_error.kind() == std::io::ErrorKind::UnexpectedEof {
-                                return Ok(DbinFile {
-                                    header: DbinHeader {
-                                        version: dbin_header.version,
-                                        content_type: dbin_header.content_type,
-                                        content_version: dbin_header.content_version,
-                                    },
-                                    messages,
-                                });
-                            } else if io_error.kind() == std::io::ErrorKind::Other {
-                                // Check that version, content_type, and content_version match the previous header
-                                let dbin_header_new = Self::read_partial_header(read)?;
-                                if dbin_header.version != dbin_header_new.version
-                                    || dbin_header.content_type != dbin_header_new.content_type
-                                    || dbin_header.content_version
-                                        != dbin_header_new.content_version
-                                {
-                                    return Err(DecoderError::DifferingDbinVersions);
-                                }
-                            }
-                        }
-                        // Catch all other variants of the error
-                        e => return Err(e),
+            match Self::read_message(&mut reader) {
+                Ok(message) => dbin.messages.push(message),
+                Err(e) => match e {
+                    DecoderError::Io(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
+                        info!("End of file reached");
+
+                        // Return the DbinFile with accumulated messages
+                        return Ok(dbin);
                     }
-                }
+                    DecoderError::Io(e) if e.kind() == std::io::ErrorKind::Other => {
+                        error!("Error reading message: {:?}", e);
+
+                        // Ensure header consistency
+                        let header_new = Self::read_partial_header(&mut reader)?;
+                        if dbin.header != header_new {
+                            return Err(DecoderError::InvalidDbinHeader);
+                        }
+                    }
+                    e => {
+                        error!("Unanticipated error reading message: {:?}", e);
+                        return Err(e);
+                    }
+                },
             }
         }
     }

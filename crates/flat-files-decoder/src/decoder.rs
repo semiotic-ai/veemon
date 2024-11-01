@@ -165,7 +165,7 @@ pub fn handle_file(
         Decompression::None => Box::new(input_file),
     };
 
-    let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
+    let dbin_file = DbinFile::try_from_reader(&mut file_contents)?;
     if dbin_file.header.content_type != "ETH" {
         return Err(DecoderError::InvalidDbinHeaderContentType(
             dbin_file.header.content_type,
@@ -199,7 +199,7 @@ pub fn handle_buf(buf: &[u8], decompress: Decompression) -> Result<Vec<Block>, D
         Decompression::None => buf.to_vec(),
     };
 
-    let dbin_file = DbinFile::try_from_read(&mut Cursor::new(buf))?;
+    let dbin_file = DbinFile::try_from_reader(&mut Cursor::new(buf))?;
 
     let mut blocks: Vec<Block> = vec![];
 
@@ -460,7 +460,7 @@ mod tests {
         let path = PathBuf::from(format!("{TEST_ASSET_PATH}/example0017686312.dbin"));
         let mut file = BufReader::new(File::open(path).expect("Failed to open file"));
         let dbin_file: DbinFile =
-            DbinFile::try_from_read(&mut file).expect("Failed to parse dbin file");
+            DbinFile::try_from_reader(&mut file).expect("Failed to parse dbin file");
 
         let message = dbin_file.messages[0].clone();
 
