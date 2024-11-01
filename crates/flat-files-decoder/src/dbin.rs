@@ -31,7 +31,7 @@ impl DbinFile {
         read.read_exact(&mut buf)?;
 
         if &buf != b"dbin" {
-            return Err(DecoderError::StartOfNewDbinFile);
+            return Err(DecoderError::InvalidDbinPrefix);
         }
 
         let dbin_header = Self::read_partial_header(read)?;
@@ -120,7 +120,7 @@ impl DbinFile {
         read.read_exact(&mut size)?;
 
         if &size == b"dbin" {
-            return Err(DecoderError::StartOfNewDbinFile);
+            return Err(DecoderError::InvalidDbinPrefix);
         }
 
         Ok(Self::read_content(size, read)?)

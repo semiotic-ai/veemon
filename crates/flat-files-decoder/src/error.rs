@@ -9,13 +9,9 @@ pub enum DecoderError {
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
     #[error("Invalid content type: {0}")]
-    InvalidContentType(String),
-    #[error("Incorrect dbin bytes")]
-    InvalidDbinBytes,
-    #[error("Invalid header")]
-    InvalidHeader,
-    #[error("Invalid input")]
-    InvalidInput,
+    InvalidDbinHeaderContentType(String),
+    #[error("Invalid dbin bytes prefix")]
+    InvalidDbinPrefix,
     #[error("Invalid block header total difficulty")]
     InvalidTotalDifficulty,
     #[error("Invalid UTF8: {0}")]
@@ -27,13 +23,11 @@ pub enum DecoderError {
     #[error("Failed to match roots for block number {block_number}")]
     MatchRootsFailed { block_number: u64 },
     #[error("Protobuf decode error: {0}")]
-    ProtobufDecode(#[from] prost::DecodeError),
+    ProtobufDecodeError(#[from] prost::DecodeError),
     #[error("Protos error: {0}")]
     ProtosError(#[from] firehose_protos::error::ProtosError),
     #[error("Invalid Receipt Root")]
     ReceiptRoot,
-    #[error("Start of new dbin file")]
-    StartOfNewDbinFile,
     #[error("Invalid Transaction Root")]
     TransactionRoot,
     #[error("TryFromSliceError: {0}")]

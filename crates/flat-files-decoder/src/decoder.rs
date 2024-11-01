@@ -91,10 +91,8 @@ pub fn decode_flat_files(
 
     if metadata.is_dir() {
         decode_flat_files_dir(&input, output, headers_dir, decompress)
-    } else if metadata.is_file() {
-        handle_file(&PathBuf::from(input), output, headers_dir, decompress)
     } else {
-        Err(DecoderError::InvalidInput)
+        handle_file(&PathBuf::from(input), output, headers_dir, decompress)
     }
 }
 
@@ -169,7 +167,7 @@ pub fn handle_file(
 
     let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
     if dbin_file.header.content_type != "ETH" {
-        return Err(DecoderError::InvalidContentType(
+        return Err(DecoderError::InvalidDbinHeaderContentType(
             dbin_file.header.content_type,
         ));
     }
