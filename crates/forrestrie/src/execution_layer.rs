@@ -1,3 +1,28 @@
+//! Execution Layer functionality to build a Merkle Patricia Trie (MPT) from Ethereum receipts
+//! and generate inclusion proofs for specified receipts within the trie. It includes data structures
+//! for parsing and handling receipt data, as well as utilities for encoding and decoding as required
+//! by the Ethereum specification..  
+//!
+//! ### Example
+//!
+//! ```rust
+//! // Assume `receipts_json` is a vector of deserialized receipt objects from a execution block given by a Ethereum node.
+//! let receipts_with_bloom: Vec<ReceiptWithBloom> = receipts_json
+//!     .iter()
+//!     .map(ReceiptWithBloom::try_from)
+//!     .collect::<Result<_, _>>()?;
+//!
+//! // Specify the indices of receipts for which proofs are needed.
+//! let target_indices = &[0, 2, 5];
+//!
+//! // Build the trie and obtain proofs.
+//! let hash_builder = build_trie_with_proofs(&receipts_with_bloom, target_indices);
+//!
+//! // Retrieve the root hash of the trie, and retain the proofs so they can be verified.
+//! let trie_root = hash_builder.root();
+//!
+//! ```
+
 use alloy_primitives::{Bloom, U256};
 use alloy_rlp::Encodable;
 use reth_primitives::{Log, Receipt, ReceiptWithBloom, TxType};
