@@ -121,14 +121,14 @@ pub fn decode_flat_files(
 
     if let Some(json_headers_dir) = json_headers_dir {
         for block in blocks.iter() {
-            check_block_against_json(&block, json_headers_dir)?;
+            check_block_against_json(block, json_headers_dir)?;
         }
     }
 
     if let Some(path) = output_path {
         fs::create_dir_all(path)?;
         for block in blocks.iter() {
-            write_block_to_json(&block, path)?;
+            write_block_to_json(block, path)?;
         }
     }
 
@@ -140,7 +140,7 @@ fn check_block_against_json(block: &Block, headers_dir: &str) -> Result<(), Deco
     let header_file = File::open(header_file_path)?;
     let header_roots: BlockHeaderRoots = serde_json::from_reader(header_file)?;
 
-    if !header_roots.block_header_matches(&block) {
+    if !header_roots.block_header_matches(block) {
         return Err(DecoderError::MatchRootsFailed {
             block_number: block.number,
         });

@@ -61,18 +61,23 @@ pub fn read_flat_files_dir(
 ///
 pub fn read_flat_file(
     path: &PathBuf,
-    decompress: Decompression,
+    compression: Decompression,
 ) -> Result<Vec<Block>, DecoderError> {
     let input_file = BufReader::new(File::open(path)?);
 
-    let blocks = handle_buf(input_file.buffer(), decompress)?;
+    // // Check if decompression is required and read the file accordingly.
+    // let file_contents: Box<dyn Read> = match decompress {
+    //     Decompression::Zstd => {
+    //         let decompressed_data = zstd::decode_all(input_file)?;
+    //         Box::new(Cursor::new(decompressed_data))
+    //     }
+    //     Decompression::None => Box::new(input_file),
+    // };
+
+    let blocks = handle_buf(input_file, compression)?;
 
     Ok(blocks)
 }
-// what we want is:
-// read_flat_file
-// write_flat_file
-// read_and_write_flat_file
 
 /// Decodes a flat file from a buffer containing its contents and optionally decompresses it.
 ///
@@ -86,15 +91,22 @@ pub fn read_flat_file(
 /// * `buf`: A byte slice referencing the in-memory content of the flat file to be decoded.
 /// * `decompress`: A boolean indicating whether the input buffer should be decompressed.
 ///
-pub fn handle_buf(buf: &[u8], decompress: Decompression) -> Result<Vec<Block>, DecoderError> {
+pub fn handle_buf<R: Read>(
+    reader: R,
+    compression: Decompression,
+) -> Result<Vec<Block>, DecoderError> {
     const CONTENT_TYPE: &str = "ETH";
 
-    let buf = match decompress {
-        Decompression::Zstd => zstd::decode_all(buf)?,
-        Decompression::None => buf.to_vec(),
+    // Check if decompression is required and read the file accordingly.
+    let mut file_contents: Box<dyn Read> = match compression {
+        Decompression::Zstd => {
+            let decompressed_data = zstd::decode_all(reader)?;
+            Box::new(Cursor::new(decompressed_data))
+        }
+        Decompression::None => Box::new(reader),
     };
 
-    let dbin_file = DbinFile::try_from_read(&mut Cursor::new(buf))?;
+    let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
     if dbin_file.header.content_type != CONTENT_TYPE {
         return Err(DecoderError::InvalidContentType(
             dbin_file.header.content_type,
@@ -295,8 +307,9 @@ pub async fn stream_blocks<R: Read, W: Write>(
     Ok(())
 }
 
-fn decode_block_from_bytes(bytes: &Vec<u8>) -> Result<Block, DecoderError> {
-    let block_stream = bstream::v1::Block::decode(bytes.as_slice())?;
+/// Decodes a block from a byte slice.
+fn decode_block_from_bytes(bytes: &[u8]) -> Result<Block, DecoderError> {
+    let block_stream = bstream::v1::Block::decode(bytes)?;
     let block = ethereum_v2::Block::decode(block_stream.payload_buffer.as_slice())?;
     Ok(block)
 }

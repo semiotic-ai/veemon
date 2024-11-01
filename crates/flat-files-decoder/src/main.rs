@@ -1,5 +1,5 @@
-use std::process::ExitCode;
 use flat_files_decoder::cli::run;
+use std::process::ExitCode;
 use tracing::{error, level_filters::LevelFilter, subscriber::set_global_default};
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 

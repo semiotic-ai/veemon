@@ -8,7 +8,7 @@ use flat_files_decoder::{
 use prost::Message;
 use std::{
     fs::File,
-    io::{BufReader, BufWriter, Cursor, Read, Write},
+    io::{BufReader, BufWriter, Cursor, Write},
     path::PathBuf,
 };
 
@@ -131,15 +131,15 @@ fn test_block_stream() {
 fn test_handle_buff() {
     let path = PathBuf::from(format!("{TEST_ASSET_PATH}/example0017686312.dbin"));
     let file = BufReader::new(File::open(path).expect("Failed to open file"));
-    let mut reader = BufReader::new(file);
+    // let mut reader = BufReader::new(file);
 
-    let mut buffer = Vec::new();
+    // let mut buffer = Vec::new();
 
-    reader
-        .read_to_end(&mut buffer)
-        .expect("Failed to read file");
+    // reader
+    //     .read_to_end(&mut buffer)
+    //     .expect("Failed to read file");
 
-    let result = handle_buf(&buffer, Decompression::None);
+    let result = handle_buf(file, false.into());
     if let Err(e) = result {
         panic!("handle_buf failed: {}", e);
     }
@@ -149,16 +149,16 @@ fn test_handle_buff() {
 #[test]
 fn test_handle_buff_decompress() {
     let path = PathBuf::from(format!("{TEST_ASSET_PATH}/0000000000.dbin.zst"));
-    let file = BufReader::new(File::open(path).expect("Failed to open file"));
-    let mut reader = BufReader::new(file);
+    // let file = BufReader::new(File::open(path).expect("Failed to open file"));
+    // let mut reader = BufReader::new(file);
 
-    let mut buffer = Vec::new();
+    // let mut buffer = Vec::new();
 
-    reader
-        .read_to_end(&mut buffer)
-        .expect("Failed to read file");
+    // reader
+    //     .read_to_end(&mut buffer)
+    //     .expect("Failed to read file");
 
-    let result = handle_buf(&buffer, Decompression::Zstd);
+    let result = read_flat_file(&path, Decompression::Zstd);
     assert!(
         result.is_ok(),
         "handle_buf should complete successfully with decompression"
