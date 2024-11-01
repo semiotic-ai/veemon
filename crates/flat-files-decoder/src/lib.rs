@@ -9,4 +9,4 @@ pub mod cli;
 pub mod dbin;
 pub mod decoder;
 pub mod decompression;
-pub mod error;
+mod error;
