@@ -152,35 +152,35 @@ where
 // builds the trie to generate proofs from the Receipts
 // generate a different root. Make sure that the source of receipts sorts them by `logIndex`
 pub fn build_trie_with_proofs(receipts: &[ReceiptWithBloom], target_idxs: &[usize]) -> HashBuilder {
-    let mut index_buffer = Vec::new();
-    let mut value_buffer = Vec::new();
-
     // Initialize ProofRetainer with the target nibbles (the keys for which we want proofs)
+    let receipts_len = receipts.len();
     let targets: Vec<Nibbles> = target_idxs
         .iter()
         .map(|&i| {
-            let index = adjust_index_for_rlp(i, receipts.len());
-            index_buffer.clear();
+            let index = adjust_index_for_rlp(i, receipts_len);
+            let mut index_buffer = Vec::new();
             index.encode(&mut index_buffer);
             Nibbles::unpack(&index_buffer)
         })
         .collect();
 
-    let proof_retainer: ProofRetainer = ProofRetainer::new(targets);
+    let proof_retainer = ProofRetainer::new(targets);
     let mut hb = HashBuilder::default().with_proof_retainer(proof_retainer);
 
-    let receipts_len = receipts.len();
-
     for i in 0..receipts_len {
-        index_buffer.clear();
-        value_buffer.clear();
-
+        // Adjust the index for RLP
         let index = adjust_index_for_rlp(i, receipts_len);
-        index.encode(&mut index_buffer);
 
+        // Encode the index into nibbles
+        let mut index_buffer = Vec::new();
+        index.encode(&mut index_buffer);
+        let index_nibbles = Nibbles::unpack(&index_buffer);
+
+        // Encode the receipt value
+        let mut value_buffer = Vec::new();
         receipts[index].encode_inner(&mut value_buffer, false);
-        // NOTICE: if the ProofRetainer is set, add_leaf automatically retains the proofs for the targets
-        hb.add_leaf(Nibbles::unpack(&index_buffer), &value_buffer);
+
+        hb.add_leaf(index_nibbles, &value_buffer);
     }
 
     hb
