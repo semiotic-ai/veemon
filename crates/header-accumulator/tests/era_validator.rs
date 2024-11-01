@@ -1,4 +1,4 @@
-use flat_files_decoder::{cli::decode_flat_files, decompression::Decompression};
+use flat_files_decoder::{cli::decode_flat_files, compression::Compression};
 use header_accumulator::{Epoch, EraValidateError, EraValidator, ExtHeaderRecord};
 use tree_hash::Hash256;
 use trin_validation::accumulator::PreMergeAccumulator;
@@ -8,7 +8,7 @@ fn test_era_validate() -> Result<(), EraValidateError> {
     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
     for number in (0..=8200).step_by(100) {
         let file_name = format!("tests/ethereum_firehose_first_8200/{:010}.dbin", number);
-        let blocks = decode_flat_files(file_name, None, None, Decompression::None).unwrap();
+        let blocks = decode_flat_files(file_name, None, None, Compression::None).unwrap();
         let successful_headers = blocks
             .iter()
             .cloned()

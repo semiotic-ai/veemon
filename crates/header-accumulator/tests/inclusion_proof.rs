@@ -1,5 +1,5 @@
 use firehose_protos::ethereum_v2::Block;
-use flat_files_decoder::{cli::decode_flat_files, decompression::Decompression};
+use flat_files_decoder::{cli::decode_flat_files, compression::Compression};
 use header_accumulator::{
     generate_inclusion_proof, verify_inclusion_proof, EraValidateError, ExtHeaderRecord,
 };
@@ -14,7 +14,7 @@ fn test_inclusion_proof() -> Result<(), EraValidateError> {
             "tests/ethereum_firehose_first_8200/{:010}.dbin",
             flat_file_number
         );
-        match decode_flat_files(file_name, None, None, Decompression::None) {
+        match decode_flat_files(file_name, None, None, Compression::None) {
             Ok(blocks) => {
                 headers.extend(
                     blocks

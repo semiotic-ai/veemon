@@ -9,8 +9,8 @@ use firehose_protos::ethereum_v2::Block;
 use tracing::info;
 
 use crate::{
-    decoder::{read_flat_file, read_flat_files_dir, stream_blocks, BlockHeaderRoots},
-    decompression::Decompression,
+    compression::Compression,
+    decoder::{read_flat_file, read_flat_files, stream_blocks, BlockHeaderRoots},
     error::DecoderError,
 };
 
@@ -27,7 +27,7 @@ pub enum Commands {
     Stream {
         /// decompress .dbin files if they are compressed with zstd
         #[clap(short, long, default_value = "false")]
-        decompression: Decompression,
+        decompression: Compression,
         /// the block to end streaming
         #[clap(short, long)]
         end_block: Option<usize>,
@@ -46,7 +46,7 @@ pub enum Commands {
         output: Option<String>,
         #[clap(short, long)]
         /// optionally decompress zstd compressed flat files
-        decompression: Decompression,
+        decompression: Compression,
     },
 }
 
@@ -58,12 +58,12 @@ pub async fn run() -> Result<(), DecoderError> {
             decompression,
             end_block,
         } => match decompression {
-            Decompression::Zstd => {
+            Compression::Zstd => {
                 let reader = zstd::stream::Decoder::new(io::stdin())?;
                 let writer = BufWriter::new(io::stdout().lock());
                 stream_blocks(reader, writer, end_block).await
             }
-            Decompression::None => {
+            Compression::None => {
                 let reader = BufReader::with_capacity((64 * 2) << 20, io::stdin().lock());
                 let writer = BufWriter::new(io::stdout().lock());
                 stream_blocks(reader, writer, end_block).await
@@ -108,13 +108,15 @@ pub fn decode_flat_files(
     input_path: String,
     output_path: Option<&str>,
     json_headers_dir: Option<&str>,
-    decompress: Decompression,
+    decompress: Compression,
 ) -> Result<Vec<Block>, DecoderError> {
     let metadata = fs::metadata(&input_path)?;
 
     // Get blocks depending on file or folder
     let blocks = if metadata.is_dir() {
-        read_flat_files_dir(&input_path, decompress)
+        info!("Processing directory: {}", input_path);
+        let paths = fs::read_dir(input_path)?;
+        read_flat_files(paths, decompress)
     } else {
         read_flat_file(&PathBuf::from(input_path), decompress)
     }?;

@@ -1,9 +1,9 @@
 use firehose_protos::{bstream::v1::Block as BstreamBlock, ethereum_v2::Block};
 use flat_files_decoder::{
     cli::decode_flat_files,
+    compression::Compression,
     dbin::DbinFile,
-    decoder::{handle_buf, read_flat_file, stream_blocks},
-    decompression::Decompression,
+    decoder::{handle_buffer, read_flat_file, stream_blocks},
 };
 use prost::Message;
 use std::{
@@ -29,19 +29,18 @@ fn test_dbin_try_from_read() {
 #[test]
 fn test_decode_decompressed() {
     let file_name = format!("{TEST_ASSET_PATH}/{:010}.dbin", BLOCK_NUMBER);
-    let blocks = decode_flat_files(file_name, None, None, Decompression::None).unwrap();
+    let blocks = decode_flat_files(file_name, None, None, Compression::None).unwrap();
     assert_eq!(blocks.len(), 100);
 }
 
 #[test]
 fn test_decode_compressed() {
     let file_name = format!("{TEST_ASSET_PATH}/{:010}.dbin.zst", BLOCK_NUMBER);
-    let blocks_compressed = decode_flat_files(file_name, None, None, Decompression::Zstd).unwrap();
+    let blocks_compressed = decode_flat_files(file_name, None, None, Compression::Zstd).unwrap();
     assert_eq!(blocks_compressed.len(), 100);
 
     let file_name = format!("{TEST_ASSET_PATH}/{:010}.dbin", BLOCK_NUMBER);
-    let blocks_decompressed =
-        decode_flat_files(file_name, None, None, Decompression::None).unwrap();
+    let blocks_decompressed = decode_flat_files(file_name, None, None, Compression::None).unwrap();
     assert_eq!(blocks_compressed.len(), blocks_decompressed.len());
     for (b1, b2) in blocks_compressed.into_iter().zip(blocks_decompressed) {
         assert_eq!(b1.hash, b2.hash);
@@ -61,7 +60,7 @@ fn test_decode_compressed() {
 fn test_handle_file() {
     let path = PathBuf::from(format!("{TEST_ASSET_PATH}/example0017686312.dbin"));
 
-    let result = read_flat_file(&path, Decompression::None);
+    let result = read_flat_file(&path, Compression::None);
 
     assert!(result.is_ok());
 }
@@ -70,7 +69,7 @@ fn test_handle_file() {
 fn test_handle_file_zstd() {
     let path = PathBuf::from(format!("{TEST_ASSET_PATH}/0000000000.dbin.zst"));
 
-    let result = read_flat_file(&path, Decompression::Zstd);
+    let result = read_flat_file(&path, Compression::Zstd);
 
     assert!(result.is_ok());
     let blocks: Vec<Block> = result.unwrap();
@@ -139,7 +138,7 @@ fn test_handle_buff() {
     //     .read_to_end(&mut buffer)
     //     .expect("Failed to read file");
 
-    let result = handle_buf(file, false.into());
+    let result = handle_buffer(file, false.into());
     if let Err(e) = result {
         panic!("handle_buf failed: {}", e);
     }
@@ -158,7 +157,7 @@ fn test_handle_buff_decompress() {
     //     .read_to_end(&mut buffer)
     //     .expect("Failed to read file");
 
-    let result = read_flat_file(&path, Decompression::Zstd);
+    let result = read_flat_file(&path, Compression::Zstd);
     assert!(
         result.is_ok(),
         "handle_buf should complete successfully with decompression"

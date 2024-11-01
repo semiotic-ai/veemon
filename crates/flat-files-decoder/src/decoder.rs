@@ -1,5 +1,5 @@
 use std::{
-    fs::{self, File},
+    fs::{File, ReadDir},
     io::{BufReader, Cursor, Read, Write},
     path::PathBuf,
 };
@@ -14,15 +14,12 @@ use serde::{Deserialize, Serialize};
 use tokio::join;
 use tracing::{error, info, trace};
 
-use crate::{dbin::DbinFile, decompression::Decompression, error::DecoderError};
+use crate::{compression::Compression, dbin::DbinFile, error::DecoderError};
 
-pub fn read_flat_files_dir(
-    input: &str,
-    decompress: Decompression,
+pub fn read_flat_files(
+    paths: ReadDir,
+    compression: Compression,
 ) -> Result<Vec<Block>, DecoderError> {
-    info!("Processing directory: {}", input);
-    let paths = fs::read_dir(input)?;
-
     let mut blocks: Vec<Block> = vec![];
     for path in paths {
         let path = path?;
@@ -36,7 +33,7 @@ pub fn read_flat_files_dir(
         };
 
         trace!("Processing file: {}", path.path().display());
-        match read_flat_file(&path.path(), decompress) {
+        match read_flat_file(&path.path(), compression) {
             Ok(file_blocks) => {
                 blocks.extend(file_blocks);
             }
@@ -61,20 +58,11 @@ pub fn read_flat_files_dir(
 ///
 pub fn read_flat_file(
     path: &PathBuf,
-    compression: Decompression,
+    compression: Compression,
 ) -> Result<Vec<Block>, DecoderError> {
     let input_file = BufReader::new(File::open(path)?);
 
-    // // Check if decompression is required and read the file accordingly.
-    // let file_contents: Box<dyn Read> = match decompress {
-    //     Decompression::Zstd => {
-    //         let decompressed_data = zstd::decode_all(input_file)?;
-    //         Box::new(Cursor::new(decompressed_data))
-    //     }
-    //     Decompression::None => Box::new(input_file),
-    // };
-
-    let blocks = handle_buf(input_file, compression)?;
+    let blocks = handle_buffer(input_file, compression)?;
 
     Ok(blocks)
 }
@@ -91,19 +79,18 @@ pub fn read_flat_file(
 /// * `buf`: A byte slice referencing the in-memory content of the flat file to be decoded.
 /// * `decompress`: A boolean indicating whether the input buffer should be decompressed.
 ///
-pub fn handle_buf<R: Read>(
+pub fn handle_buffer<R: Read>(
     reader: R,
-    compression: Decompression,
+    compression: Compression,
 ) -> Result<Vec<Block>, DecoderError> {
     const CONTENT_TYPE: &str = "ETH";
 
-    // Check if decompression is required and read the file accordingly.
     let mut file_contents: Box<dyn Read> = match compression {
-        Decompression::Zstd => {
+        Compression::Zstd => {
             let decompressed_data = zstd::decode_all(reader)?;
             Box::new(Cursor::new(decompressed_data))
         }
-        Decompression::None => Box::new(reader),
+        Compression::None => Box::new(reader),
     };
 
     let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
