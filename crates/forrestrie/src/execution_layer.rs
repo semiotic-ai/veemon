@@ -79,7 +79,7 @@ impl ReceiptJson {
             )
         }
 
-        let logs: Vec<Log> = (0..5).into_iter().map(|_| fake_log()).collect();
+        let logs: Vec<Log> = (0..5).map(|_| fake_log()).collect();
 
         ReceiptJson {
             tx_type: TxType::Eip1559, // Replace with any desired variant
@@ -221,8 +221,7 @@ mod tests {
         // TODO: instead of generating receipts, pick a small exempt from
         // the execution block that fits here. It should work better,
         // since faking logs requires the log to be properly rlp encoded
-        let block_receipts: ReceiptsFromBlock =
-            (0..10).into_iter().map(|_| ReceiptJson::fake()).collect();
+        let block_receipts: ReceiptsFromBlock = (0_i32..10).map(|_| ReceiptJson::fake()).collect();
 
         let receipts_with_bloom: Result<Vec<ReceiptWithBloom>, String> = block_receipts
             .result
