@@ -265,6 +265,7 @@ fn insert_api_key_if_provided<T>(request: &mut tonic::Request<T>, chain: Chain) 
 pub enum Chain {
     Ethereum,
     Beacon,
+    Arbitrum,
 }
 
 impl Chain {
@@ -272,6 +273,7 @@ impl Chain {
         match self {
             Self::Beacon => "BEACON_API_KEY",
             Self::Ethereum => "ETHEREUM_API_KEY",
+            Self::Arbitrum => "ARBITRUM_API_KEY",
         }
     }
 
@@ -284,6 +286,10 @@ impl Chain {
                 var("FIREHOSE_ETHEREUM_PORT")?,
             ),
             Self::Beacon => (var("FIREHOSE_BEACON_URL")?, var("FIREHOSE_BEACON_PORT")?),
+            Self::Arbitrum => (
+                var("FIREHOSE_ARBITRUM_URL")?,
+                var("FIREHOSE_ARBITRUM_PORT")?,
+            ),
         };
 
         Ok(format!("{}:{}", url, port).parse::<Uri>()?)
