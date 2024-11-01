@@ -435,9 +435,11 @@ mod tests {
 
     use super::*;
 
+    const TEST_ASSET_PATH: &str = "../../test-assets";
+
     #[test]
     fn test_handle_file() {
-        let path = PathBuf::from("example0017686312.dbin");
+        let path = PathBuf::from(format!("{TEST_ASSET_PATH}/example0017686312.dbin"));
 
         let result = handle_file(&path, None, None, Decompression::None);
 
@@ -446,7 +448,7 @@ mod tests {
 
     #[test]
     fn test_handle_file_zstd() {
-        let path = PathBuf::from("./tests/0000000000.dbin.zst");
+        let path = PathBuf::from(format!("{TEST_ASSET_PATH}/0000000000.dbin.zst"));
 
         let result = handle_file(&path, None, None, Decompression::Zstd);
 
@@ -457,7 +459,7 @@ mod tests {
 
     #[test]
     fn test_check_valid_root_fail() {
-        let path = PathBuf::from("example0017686312.dbin");
+        let path = PathBuf::from(format!("{TEST_ASSET_PATH}/example0017686312.dbin"));
         let mut file = BufReader::new(File::open(path).expect("Failed to open file"));
         let dbin_file: DbinFile =
             DbinFile::try_from_read(&mut file).expect("Failed to parse dbin file");
@@ -479,7 +481,10 @@ mod tests {
     fn test_block_stream() {
         let mut buffer = Vec::new();
         let cursor: Cursor<&mut Vec<u8>> = Cursor::new(&mut buffer);
-        let inputs = vec!["example-create-17686085.dbin", "example0017686312.dbin"];
+        let inputs = vec![
+            format!("{TEST_ASSET_PATH}/example-create-17686085.dbin"),
+            format!("{TEST_ASSET_PATH}/example0017686312.dbin"),
+        ];
         {
             let mut writer = BufWriter::new(cursor);
             for i in inputs {
@@ -504,7 +509,7 @@ mod tests {
 
     #[test]
     fn test_handle_buff() {
-        let path = PathBuf::from("example0017686312.dbin");
+        let path = PathBuf::from(format!("{TEST_ASSET_PATH}/example0017686312.dbin"));
         let file = BufReader::new(File::open(path).expect("Failed to open file"));
         let mut reader = BufReader::new(file);
 
@@ -523,7 +528,7 @@ mod tests {
 
     #[test]
     fn test_handle_buff_decompress() {
-        let path = PathBuf::from("tests/0000000000.dbin.zst");
+        let path = PathBuf::from(format!("{TEST_ASSET_PATH}/0000000000.dbin.zst"));
         let file = BufReader::new(File::open(path).expect("Failed to open file"));
         let mut reader = BufReader::new(file);
 

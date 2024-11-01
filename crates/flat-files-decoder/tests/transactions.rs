@@ -8,9 +8,12 @@ use reth_primitives::TransactionSigned;
 use reth_primitives::TxType;
 use std::{fs::File, io::BufReader, str::FromStr};
 
+const TEST_ASSET_PATH: &str = "../../test-assets";
+
 #[test]
 fn example_file_first_tx() {
-    let mut input_file = BufReader::new(File::open("example0017686312.dbin").unwrap());
+    let mut input_file =
+        BufReader::new(File::open(format!("{TEST_ASSET_PATH}/example0017686312.dbin")).unwrap());
 
     let dbin_file = DbinFile::try_from_read(&mut input_file).unwrap();
 
@@ -75,7 +78,8 @@ fn example_file_first_tx() {
 
 #[test]
 fn legacy_tx() {
-    let mut input_file = BufReader::new(File::open("example0017686312.dbin").unwrap());
+    let mut input_file =
+        BufReader::new(File::open(format!("{TEST_ASSET_PATH}/example0017686312.dbin")).unwrap());
 
     let dbin_file = DbinFile::try_from_read(&mut input_file).unwrap();
 
@@ -120,7 +124,9 @@ fn legacy_tx() {
 
 #[test]
 fn create_tx() {
-    let mut input_file = BufReader::new(File::open("example-create-17686085.dbin").unwrap());
+    let mut input_file = BufReader::new(
+        File::open(format!("{TEST_ASSET_PATH}/example-create-17686085.dbin")).unwrap(),
+    );
 
     let dbin_file = DbinFile::try_from_read(&mut input_file).unwrap();
 
