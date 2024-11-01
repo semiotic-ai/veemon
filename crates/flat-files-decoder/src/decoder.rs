@@ -21,29 +21,36 @@ pub fn read_flat_files(
     compression: Compression,
 ) -> Result<Vec<Block>, DecoderError> {
     let mut blocks: Vec<Block> = vec![];
+
     for path in paths {
         let path = path?;
-        match path.path().extension() {
-            Some(ext) => {
-                if ext != "dbin" {
-                    continue;
-                }
-            }
-            None => continue,
-        };
+
+        if file_extension_is_dbin(&path) {
+            continue;
+        }
 
         trace!("Processing file: {}", path.path().display());
+
         match read_flat_file(&path.path(), compression) {
-            Ok(file_blocks) => {
-                blocks.extend(file_blocks);
+            Ok(blocks_vec) => {
+                blocks.extend(blocks_vec);
             }
-            Err(err) => {
-                error!("Failed to process file: {}", err);
+            Err(e) => {
+                return Err(e);
             }
         }
     }
 
     Ok(blocks)
+}
+
+fn file_extension_is_dbin(entry: &std::fs::DirEntry) -> bool {
+    const DBIN_EXTENSION: &str = "dbin";
+
+    match entry.path().extension() {
+        Some(ext) => ext == DBIN_EXTENSION,
+        None => false,
+    }
 }
 
 /// Decodes and verifies block flat files from a single file.
