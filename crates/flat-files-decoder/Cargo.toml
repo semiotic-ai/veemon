@@ -7,32 +7,25 @@ edition = "2021"
 name = "flat_files_decoder"
 path = "src/lib.rs"
 
-[[bin]]
-name = "flat-files-decoder"
-path = "src/main.rs"
-
 [dependencies]
 alloy-primitives.workspace = true
 alloy-consensus.workspace = true
 alloy-eip2930.workspace = true
 bincode.workspace = true
-clap.workspace = true
 firehose-protos = { path = "../firehose-protos" }
 prost.workspace = true
-rand.workspace = true
-rayon.workspace = true
 reth-primitives.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["full"] }
 tracing.workspace = true
-tracing-subscriber = { workspace = true, features = ["json", "env-filter"] }
 zstd.workspace = true
 
 [dev-dependencies]
+clap.workspace = true
 criterion.workspace = true
-tokio-test.workspace = true
+rand.workspace = true
+tracing-subscriber = { workspace = true, features = ["json", "env-filter"] }
 
 [[bench]]
 name = "decoder"
@@ -41,7 +34,3 @@ harness = false
 [[bench]]
 name = "stream_blocks"
 harness = false
-
-[build-dependencies]
-prost-build.workspace = true
-prost-wkt-build.workspace = true
