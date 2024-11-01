@@ -5,8 +5,8 @@
 //!
 //! ### Example
 //!
-//! ```rust
-//! // Assume `receipts_json` is a vector of deserialized receipt objects from a execution block given by a Ethereum node.
+//! ```rust,ignore
+//! // Assume `receipts_json` is a vector of deserialized receipt objects from an execution block given by an Ethereum node.
 //! let receipts_with_bloom: Vec<ReceiptWithBloom> = receipts_json
 //!     .iter()
 //!     .map(ReceiptWithBloom::try_from)
@@ -20,7 +20,6 @@
 //!
 //! // Retrieve the root hash of the trie, and retain the proofs so they can be verified.
 //! let trie_root = hash_builder.root();
-//!
 //! ```
 
 use alloy_primitives::{Bloom, U256};
