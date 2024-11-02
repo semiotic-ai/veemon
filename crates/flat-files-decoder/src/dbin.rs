@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::{ffi::OsStr, io::Read};
 
 use crate::error::DecoderError;
 
@@ -151,5 +151,14 @@ impl DbinFile {
         let mut content: Vec<u8> = vec![0; size as usize];
         read.read_exact(&mut content)?;
         Ok(content)
+    }
+}
+
+pub fn file_extension_is_dbin(extension: Option<&OsStr>) -> bool {
+    const DBIN_EXTENSION: &str = "dbin";
+
+    match extension {
+        Some(ext) => ext == DBIN_EXTENSION,
+        None => false,
     }
 }

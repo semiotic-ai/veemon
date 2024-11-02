@@ -1,12 +1,16 @@
+use std::{fs::File, io::BufReader};
+
 use ethportal_api::Header;
-use flat_files_decoder::{cli::decode_flat_files, compression::Compression};
+use flat_files_decoder::{compression::Compression, decoder::handle_buffer};
+
+fn create_test_reader(path: &str) -> BufReader<File> {
+    BufReader::new(File::open(path).unwrap())
+}
 
 #[test]
 fn test_header_from_block() {
-    let blocks = decode_flat_files(
-        "tests/ethereum_firehose_first_8200/0000008200.dbin".to_string(),
-        None,
-        None,
+    let blocks = handle_buffer(
+        create_test_reader("tests/ethereum_firehose_first_8200/0000008200.dbin"),
         Compression::None,
     )
     .unwrap();

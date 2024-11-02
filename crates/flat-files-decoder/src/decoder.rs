@@ -1,7 +1,5 @@
 use std::{
-    fs::{File, ReadDir},
-    io::{BufReader, Cursor, Read},
-    path::PathBuf,
+    io::{Cursor, Read},
     sync::{
         atomic::{AtomicU64, Ordering},
         Arc,
@@ -19,64 +17,6 @@ use tokio_stream::wrappers::ReceiverStream;
 use tracing::{error, info, trace};
 
 use crate::{compression::Compression, dbin::DbinFile, error::DecoderError};
-
-pub fn read_flat_files(
-    paths: ReadDir,
-    compression: Compression,
-) -> Result<Vec<Block>, DecoderError> {
-    let mut blocks: Vec<Block> = vec![];
-
-    for path in paths {
-        let path = path?;
-
-        if file_extension_is_dbin(&path) {
-            continue;
-        }
-
-        trace!("Processing file: {}", path.path().display());
-
-        match read_flat_file(&path.path(), compression) {
-            Ok(blocks_vec) => {
-                blocks.extend(blocks_vec);
-            }
-            Err(e) => {
-                return Err(e);
-            }
-        }
-    }
-
-    Ok(blocks)
-}
-
-fn file_extension_is_dbin(entry: &std::fs::DirEntry) -> bool {
-    const DBIN_EXTENSION: &str = "dbin";
-
-    match entry.path().extension() {
-        Some(ext) => ext == DBIN_EXTENSION,
-        None => false,
-    }
-}
-
-/// Decodes and verifies block flat files from a single file.
-///
-/// This function decodes and verifies blocks contained within flat files.
-/// Additionally, the function supports handling `zstd` compressed flat files if decompression is required.
-///
-/// # Arguments
-///
-/// * `input`: A [`String`] specifying the path to the file.
-/// * `decompress`: A [`Decompression`] enum indicating whether decompression from `zstd` format is necessary.
-///
-pub fn read_flat_file(
-    path: &PathBuf,
-    compression: Compression,
-) -> Result<Vec<Block>, DecoderError> {
-    let input_file = BufReader::new(File::open(path)?);
-
-    let blocks = handle_buffer(input_file, compression)?;
-
-    Ok(blocks)
-}
 
 /// Decodes a flat file from a buffer containing its contents and optionally decompresses it.
 ///
