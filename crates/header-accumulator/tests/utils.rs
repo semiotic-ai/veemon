@@ -1,7 +1,7 @@
 use std::{fs::File, io::BufReader};
 
 use ethportal_api::Header;
-use flat_files_decoder::{compression::Compression, decoder::handle_buffer};
+use flat_files_decoder::decoder::{handle_buffer, Compression};
 
 fn create_test_reader(path: &str) -> BufReader<File> {
     BufReader::new(File::open(path).unwrap())

@@ -1,14 +1,13 @@
-use flat_files_decoder::compression::Compression;
-use futures::stream::{FuturesOrdered, StreamExt};
-use tokio::task;
-
 use firehose_protos::ethereum_v2::Block;
+use flat_files_decoder::decoder::Compression;
+use futures::stream::{FuturesOrdered, StreamExt};
 use header_accumulator::{EraValidator, ExtHeaderRecord};
-use tokio::sync::mpsc;
+use tokio::{sync::mpsc, task};
 use tree_hash::Hash256;
 use trin_validation::accumulator::PreMergeAccumulator;
 
 use crate::store::{self, Store};
+
 pub const MAX_EPOCH_SIZE: usize = 8192;
 pub const FINAL_EPOCH: usize = 1896;
 pub const MERGE_BLOCK: usize = 15537394;
@@ -21,13 +20,13 @@ pub async fn verify_eras(
     compatible: Option<String>,
     start_epoch: usize,
     end_epoch: Option<usize>,
-    decompress: Compression,
+    compression: Compression,
 ) -> Result<Vec<Hash256>, anyhow::Error> {
     let mut validated_epochs = Vec::new();
     let (tx, mut rx) = mpsc::channel(5);
 
     let blocks_store: store::Store =
-        store::new(store_url, decompress, compatible).expect("failed to create blocks store");
+        store::new(store_url, compression, compatible).expect("failed to create blocks store");
 
     for epoch in start_epoch..=end_epoch.unwrap_or(start_epoch + 1) {
         let tx = tx.clone();
@@ -35,7 +34,7 @@ pub async fn verify_eras(
         let store = blocks_store.clone();
 
         task::spawn(async move {
-            match get_blocks_from_store(epoch, &store, decompress).await {
+            match get_blocks_from_store(epoch, &store, compression).await {
                 Ok(blocks) => {
                     let (successful_headers, _): (Vec<_>, Vec<_>) = blocks
                         .iter()

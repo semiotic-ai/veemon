@@ -1,8 +1,7 @@
 use firehose_protos::{bstream::v1::Block as BstreamBlock, ethereum_v2::Block};
 use flat_files_decoder::{
-    compression::Compression,
     dbin::DbinFile,
-    decoder::{handle_buffer, stream_blocks},
+    decoder::{handle_buffer, stream_blocks, Compression},
 };
 use futures::StreamExt;
 use prost::Message;

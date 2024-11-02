@@ -1,6 +1,6 @@
 use std::{fs::File, io::BufReader};
 
-use flat_files_decoder::{compression::Compression, decoder::handle_buffer};
+use flat_files_decoder::decoder::{handle_buffer, Compression};
 use header_accumulator::{Epoch, EraValidateError, EraValidator, ExtHeaderRecord};
 use tree_hash::Hash256;
 use trin_validation::accumulator::PreMergeAccumulator;

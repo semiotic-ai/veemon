@@ -5,7 +5,6 @@
 //! block header. Additionally, it can optionally verify the block headers against a directory
 //! of JSON-formatted block headers.
 
-pub mod compression;
 pub mod dbin;
 pub mod decoder;
 pub mod error;

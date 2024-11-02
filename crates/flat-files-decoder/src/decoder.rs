@@ -16,7 +16,33 @@ use serde::{Deserialize, Serialize};
 use tokio_stream::wrappers::ReceiverStream;
 use tracing::{error, info, trace};
 
-use crate::{compression::Compression, dbin::DbinFile, error::DecoderError};
+use crate::{dbin::DbinFile, error::DecoderError};
+
+#[derive(Clone, Copy, Debug, Default)]
+pub enum Compression {
+    Zstd,
+    #[default]
+    None,
+}
+
+impl From<&str> for Compression {
+    fn from(value: &str) -> Self {
+        match value {
+            "true" | "1" => Compression::Zstd,
+            "false" | "0" => Compression::None,
+            _ => Compression::None,
+        }
+    }
+}
+
+impl From<bool> for Compression {
+    fn from(value: bool) -> Self {
+        match value {
+            true => Compression::Zstd,
+            false => Compression::None,
+        }
+    }
+}
 
 /// Decodes a flat file from a buffer containing its contents and optionally decompresses it.
 ///

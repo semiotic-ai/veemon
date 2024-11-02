@@ -1,8 +1,7 @@
 use std::env;
 
 use clap::{Parser, Subcommand};
-
-use flat_files_decoder::compression::Compression;
+use flat_files_decoder::decoder::Compression;
 use flat_head::era_verifier::verify_eras;
 use trin_validation::accumulator::PreMergeAccumulator;
 

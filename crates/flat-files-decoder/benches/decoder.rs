@@ -1,7 +1,7 @@
 extern crate rand;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use flat_files_decoder::{compression::Compression, decoder::handle_buffer};
+use flat_files_decoder::decoder::{handle_buffer, Compression};
 use std::{
     fs::{self, File},
     io::BufReader,

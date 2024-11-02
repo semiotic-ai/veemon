@@ -7,9 +7,10 @@ use std::{
 use clap::{Parser, Subcommand};
 use firehose_protos::ethereum_v2::Block;
 use flat_files_decoder::{
-    compression::Compression,
     dbin,
-    decoder::{handle_buffer, stream_blocks, BlockHeaderRoots, HeaderRecordWithNumber},
+    decoder::{
+        handle_buffer, stream_blocks, BlockHeaderRoots, Compression, HeaderRecordWithNumber,
+    },
     error::DecoderError,
 };
 use futures::StreamExt;
