@@ -6,11 +6,14 @@ use std::{
 
 use clap::{Parser, Subcommand};
 use firehose_protos::ethereum_v2::Block;
+use futures::StreamExt;
 use tracing::info;
 
 use crate::{
     compression::Compression,
-    decoder::{read_flat_file, read_flat_files, stream_blocks, BlockHeaderRoots},
+    decoder::{
+        read_flat_file, read_flat_files, stream_blocks, BlockHeaderRoots, HeaderRecordWithNumber,
+    },
     error::DecoderError,
 };
 
@@ -27,10 +30,10 @@ pub enum Commands {
     Stream {
         /// decompress .dbin files if they are compressed with zstd
         #[clap(short, long, default_value = "false")]
-        decompression: Compression,
+        compression: Compression,
         /// the block to end streaming
         #[clap(short, long)]
-        end_block: Option<usize>,
+        end_block: Option<u64>,
     },
     /// Decode files from input to output
     Decode {
@@ -46,7 +49,7 @@ pub enum Commands {
         output: Option<String>,
         #[clap(short, long)]
         /// optionally decompress zstd compressed flat files
-        decompression: Compression,
+        compression: Compression,
     },
 }
 
@@ -55,25 +58,42 @@ pub async fn run() -> Result<(), DecoderError> {
 
     match cli.command {
         Commands::Stream {
-            decompression,
+            compression,
             end_block,
-        } => match decompression {
-            Compression::Zstd => {
-                let reader = zstd::stream::Decoder::new(io::stdin())?;
-                let writer = BufWriter::new(io::stdout().lock());
-                stream_blocks(reader, writer, end_block).await
+        } => {
+            let mut stream = match compression {
+                Compression::Zstd => {
+                    let reader = zstd::stream::Decoder::new(io::stdin())?;
+                    let reader = Box::new(reader) as Box<dyn io::Read>;
+                    stream_blocks(reader, end_block)
+                }
+                Compression::None => {
+                    let reader = BufReader::with_capacity((64 * 2) << 20, io::stdin().lock());
+                    let reader = Box::new(reader) as Box<dyn io::Read>;
+                    stream_blocks(reader, end_block)
+                }
             }
-            Compression::None => {
-                let reader = BufReader::with_capacity((64 * 2) << 20, io::stdin().lock());
-                let writer = BufWriter::new(io::stdout().lock());
-                stream_blocks(reader, writer, end_block).await
+            .await?;
+
+            let mut writer = BufWriter::new(io::stdout().lock());
+
+            while let Some(block) = stream.next().await {
+                let header_record_with_number = HeaderRecordWithNumber::try_from(&block)?;
+                let header_record_bin = bincode::serialize(&header_record_with_number)?;
+
+                let size = header_record_bin.len() as u32;
+                writer.write_all(&size.to_be_bytes())?;
+                writer.write_all(&header_record_bin)?;
+                writer.flush()?;
             }
-        },
+
+            Ok(())
+        }
         Commands::Decode {
             input,
             headers_dir,
             output,
-            decompression,
+            compression: decompression,
         } => {
             let blocks = decode_flat_files(
                 input,

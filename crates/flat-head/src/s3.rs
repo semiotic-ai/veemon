@@ -3,7 +3,7 @@ use header_accumulator::{Epoch, EraValidator, ExtHeaderRecord, MAX_EPOCH_SIZE};
 use std::env;
 use trin_validation::accumulator::PreMergeAccumulator;
 
-use flat_files_decoder::{decoder::handle_buffer, compression::Compression};
+use flat_files_decoder::{compression::Compression, decoder::handle_buffer};
 
 use object_store::{aws::AmazonS3Builder, path::Path, ObjectStore};
 

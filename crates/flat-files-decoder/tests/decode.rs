@@ -5,6 +5,7 @@ use flat_files_decoder::{
     dbin::DbinFile,
     decoder::{handle_buffer, read_flat_file, stream_blocks},
 };
+use futures::StreamExt;
 use prost::Message;
 use std::{
     fs::File,
@@ -96,8 +97,8 @@ fn test_check_valid_root_fail() {
     assert!(!block.receipt_root_is_verified());
 }
 
-#[test]
-fn test_block_stream() {
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_block_stream() {
     let mut buffer = Vec::new();
     let cursor: Cursor<&mut Vec<u8>> = Cursor::new(&mut buffer);
     let inputs = vec![
@@ -117,27 +118,24 @@ fn test_block_stream() {
     cursor.set_position(0);
 
     let reader = BufReader::new(cursor);
-    let mut in_buffer = Vec::new();
-    let writer = BufWriter::new(Cursor::new(&mut in_buffer));
 
-    matches!(
-        tokio_test::block_on(stream_blocks(reader, writer, None)),
-        Ok(())
-    );
+    let mut blocks = Vec::new();
+
+    let mut stream = stream_blocks(reader, None).await.unwrap();
+
+    while let Some(block) = stream.next().await {
+        blocks.push(block);
+    }
+
+    assert_eq!(blocks.len(), 2);
+    assert_eq!(blocks[0].number, 17686164);
+    assert_eq!(blocks[1].number, 17686312);
 }
 
 #[test]
-fn test_handle_buff() {
+fn test_handle_buffer() {
     let path = PathBuf::from(format!("{TEST_ASSET_PATH}/example0017686312.dbin"));
     let file = BufReader::new(File::open(path).expect("Failed to open file"));
-    // let mut reader = BufReader::new(file);
-
-    // let mut buffer = Vec::new();
-
-    // reader
-    //     .read_to_end(&mut buffer)
-    //     .expect("Failed to read file");
-
     let result = handle_buffer(file, false.into());
     if let Err(e) = result {
         panic!("handle_buf failed: {}", e);
@@ -146,17 +144,8 @@ fn test_handle_buff() {
 }
 
 #[test]
-fn test_handle_buff_decompress() {
+fn test_handle_buffer_decompress() {
     let path = PathBuf::from(format!("{TEST_ASSET_PATH}/0000000000.dbin.zst"));
-    // let file = BufReader::new(File::open(path).expect("Failed to open file"));
-    // let mut reader = BufReader::new(file);
-
-    // let mut buffer = Vec::new();
-
-    // reader
-    //     .read_to_end(&mut buffer)
-    //     .expect("Failed to read file");
-
     let result = read_flat_file(&path, Compression::Zstd);
     assert!(
         result.is_ok(),

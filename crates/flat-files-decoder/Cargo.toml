@@ -18,6 +18,7 @@ alloy-eip2930.workspace = true
 bincode.workspace = true
 clap.workspace = true
 firehose-protos = { path = "../firehose-protos" }
+futures.workspace = true
 prost.workspace = true
 rand.workspace = true
 rayon.workspace = true
@@ -25,14 +26,16 @@ reth-primitives.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["full"] }
+tokio = { workspace = true, features = ["rt-multi-thread"] }
+tokio-stream.workspace = true
 tracing.workspace = true
 tracing-subscriber = { workspace = true, features = ["json", "env-filter"] }
 zstd.workspace = true
 
 [dev-dependencies]
 criterion.workspace = true
-insta.workspace = true
+env_logger.workspace = true
+insta = { workspace = true, features = ["json"] }
 tokio-test.workspace = true
 
 [[bench]]

@@ -132,7 +132,7 @@ impl DbinFile {
     ///
     /// Messages are separated by "dbin" (magical 4 bytes) so each
     /// new occurrence of it marks the start of a new .dbin file
-    pub fn read_message_stream<R: Read>(read: &mut R) -> Result<Vec<u8>, DecoderError> {
+    pub fn read_message_from_stream<R: Read>(read: &mut R) -> Result<Vec<u8>, DecoderError> {
         let mut size: [u8; 4] = [0; 4];
         read.read_exact(&mut size)?;
 

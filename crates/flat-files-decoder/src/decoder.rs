@@ -1,7 +1,11 @@
 use std::{
     fs::{File, ReadDir},
-    io::{BufReader, Cursor, Read, Write},
+    io::{BufReader, Cursor, Read},
     path::PathBuf,
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc,
+    },
 };
 
 use alloy_primitives::B256;
@@ -11,7 +15,7 @@ use firehose_protos::{
 };
 use prost::Message;
 use serde::{Deserialize, Serialize};
-use tokio::join;
+use tokio_stream::wrappers::ReceiverStream;
 use tracing::{error, info, trace};
 
 use crate::{compression::Compression, dbin::DbinFile, error::DecoderError};
@@ -195,8 +199,9 @@ fn block_is_verified(block: &Block) -> bool {
     true
 }
 
+/// A struct to hold the block hash, block number, and total difficulty of a block.
 #[derive(Serialize, Deserialize)]
-struct HeaderRecordWithNumber {
+pub struct HeaderRecordWithNumber {
     block_hash: Vec<u8>,
     block_number: u64,
     total_difficulty: Vec<u8>,
@@ -233,61 +238,86 @@ impl TryFrom<&Block> for HeaderRecordWithNumber {
 /// * `end_block`: For blocks after the merge, Ethereum sync committee should be used. This is why the default block
 ///   for this param is the LAST_PREMERGE_BLOCK (block 15537393)
 /// * `reader`: where bytes are read from
-/// * `writer`: where bytes written to
-pub async fn stream_blocks<R: Read, W: Write>(
+pub async fn stream_blocks<R: Read>(
     mut reader: R,
-    mut writer: W,
-    end_block: Option<usize>,
-) -> Result<(), DecoderError> {
-    const LAST_PREMERGE_BLOCK: usize = 15537393;
+    // mut stream: impl futures::Stream<Item = Vec<u8>>,
+    // compression: Compression,
+    end_block: Option<u64>,
+) -> Result<impl futures::Stream<Item = Block>, DecoderError> {
+    let (stream_tx, stream_rx) = tokio::sync::mpsc::channel::<Block>(8192);
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<Vec<u8>>(8192);
 
-    let end_block = match end_block {
-        Some(end_block) => end_block,
-        None => LAST_PREMERGE_BLOCK,
-    };
+    let block_number = Arc::new(AtomicU64::new(0));
+    let block_number_clone = Arc::clone(&block_number);
 
-    let mut block_number = 0;
+    const LAST_PREMERGE_BLOCK: u64 = 15537393;
+
+    let end_block = end_block.unwrap_or(LAST_PREMERGE_BLOCK);
+
+    tokio::spawn(async move {
+        while let Some(message) = rx.recv().await {
+            trace!("Received message");
+            let block = match decode_block_from_bytes(&message) {
+                Ok(block) => block,
+                Err(e) => {
+                    error!("Error decoding block: {e}");
+                    break;
+                }
+            };
+
+            block_number_clone.store(block.number, Ordering::SeqCst);
+
+            let receipts_check_process = spawn_check(&block, |b| {
+                if b.receipt_root_is_verified() {
+                    Ok(())
+                } else {
+                    Err(DecoderError::ReceiptRoot)
+                }
+            });
+
+            let transactions_check_process = spawn_check(&block, |b| {
+                if b.transaction_root_is_verified() {
+                    Ok(())
+                } else {
+                    Err(DecoderError::TransactionRoot)
+                }
+            });
+
+            let joint_return = tokio::try_join![receipts_check_process, transactions_check_process];
+
+            if let Err(e) = joint_return {
+                error!("{e}");
+                break;
+            }
+
+            if let Err(e) = stream_tx.send(block).await {
+                error!("Error sending block to stream: {e}");
+                break;
+            }
+        }
+    });
 
     loop {
-        match DbinFile::read_message_stream(&mut reader) {
+        let current_block_number = block_number.load(Ordering::SeqCst);
+        // trace!("Block: {}", current_block_number);
+        // while let Some(message: Vec<u8>) = rx.recv().await {
+        //    trace!("Received message");
+
+        match DbinFile::read_message_from_stream(&mut reader) {
             Ok(message) => {
-                let block = decode_block_from_bytes(&message)?;
-
-                block_number = block.number as usize;
-
-                let receipts_check_process =
-                    spawn_check(&block, |b| match b.receipt_root_is_verified() {
-                        true => Ok(()),
-                        false => Err(DecoderError::ReceiptRoot),
-                    });
-
-                let transactions_check_process =
-                    spawn_check(&block, |b| match b.transaction_root_is_verified() {
-                        true => Ok(()),
-                        false => Err(DecoderError::TransactionRoot),
-                    });
-
-                let joint_return = join![receipts_check_process, transactions_check_process];
-                joint_return.0?;
-                joint_return.1?;
-
-                let header_record_with_number = HeaderRecordWithNumber::try_from(&block)?;
-                let header_record_bin = bincode::serialize(&header_record_with_number)?;
-
-                let size = header_record_bin.len() as u32;
-                writer.write_all(&size.to_be_bytes())?;
-                writer.write_all(&header_record_bin)?;
-                writer.flush()?;
+                if let Err(e) = tx.send(message).await {
+                    error!("Error sending message to stream: {e}");
+                    break;
+                }
             }
             Err(e) => {
                 if let DecoderError::Io(ref e) = e {
                     if e.kind() == std::io::ErrorKind::UnexpectedEof {
-                        if block_number < end_block {
+                        if current_block_number < end_block {
                             info!("Reached end of file, waiting for more blocks");
-                            // More blocks to read
                             continue;
                         } else {
-                            // All blocks have been read
+                            info!("All blocks have been read");
                             break;
                         }
                     }
@@ -298,7 +328,10 @@ pub async fn stream_blocks<R: Read, W: Write>(
             }
         }
     }
-    Ok(())
+
+    drop(tx);
+
+    Ok(ReceiverStream::new(stream_rx))
 }
 
 /// Decodes a block from a byte slice.
