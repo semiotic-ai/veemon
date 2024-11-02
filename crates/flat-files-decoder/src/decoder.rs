@@ -13,6 +13,7 @@ use firehose_protos::{
 };
 use prost::Message;
 use serde::{Deserialize, Serialize};
+use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tracing::{error, info, trace};
 
@@ -275,65 +276,29 @@ pub async fn stream_blocks(
     reader: Reader,
     end_block: EndBlock,
 ) -> Result<impl futures::Stream<Item = Block>, DecoderError> {
-    let (stream_tx, stream_rx) = tokio::sync::mpsc::channel::<Block>(8192);
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<Vec<u8>>(8192);
+    let (block_stream_tx, block_stream_rx) = tokio::sync::mpsc::channel::<Block>(8192);
+    let (bytes_tx, bytes_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(8192);
 
-    let block_number = Arc::new(AtomicU64::new(0));
-    let block_number_clone = Arc::clone(&block_number);
+    let current_block_number = Arc::new(AtomicU64::new(0));
+    let current_block_number_clone = Arc::clone(&current_block_number);
 
+    // THIS ALL NEEDS FIXING
     let end_block = end_block.block_number();
 
-    tokio::spawn(async move {
-        while let Some(message) = rx.recv().await {
-            trace!("Received message");
-            let block = match decode_block_from_bytes(&message) {
-                Ok(block) => block,
-                Err(e) => {
-                    error!("Error decoding block: {e}");
-                    break;
-                }
-            };
-
-            block_number_clone.store(block.number, Ordering::SeqCst);
-
-            let receipts_check_process = spawn_check(&block, |b| {
-                if b.receipt_root_is_verified() {
-                    Ok(())
-                } else {
-                    Err(DecoderError::ReceiptRoot)
-                }
-            });
-
-            let transactions_check_process = spawn_check(&block, |b| {
-                if b.transaction_root_is_verified() {
-                    Ok(())
-                } else {
-                    Err(DecoderError::TransactionRoot)
-                }
-            });
-
-            let joint_return = tokio::try_join![receipts_check_process, transactions_check_process];
-
-            if let Err(e) = joint_return {
-                error!("{e}");
-                break;
-            }
-
-            if let Err(e) = stream_tx.send(block).await {
-                error!("Error sending block to stream: {e}");
-                break;
-            }
-        }
-    });
+    tokio::spawn(decode_blocks_stream(
+        bytes_rx,
+        block_stream_tx,
+        current_block_number_clone,
+    ));
 
     let mut reader = reader.into_reader()?;
 
     loop {
-        let current_block_number = block_number.load(Ordering::SeqCst);
+        let current_block_number = current_block_number.load(Ordering::SeqCst);
 
         match DbinFile::read_message_from_stream(&mut reader) {
             Ok(message) => {
-                if let Err(e) = tx.send(message).await {
+                if let Err(e) = bytes_tx.send(message).await {
                     error!("Error sending message to stream: {e}");
                     break;
                 }
@@ -357,9 +322,56 @@ pub async fn stream_blocks(
         }
     }
 
-    drop(tx);
+    drop(bytes_tx);
 
-    Ok(ReceiverStream::new(stream_rx))
+    Ok(ReceiverStream::new(block_stream_rx))
+}
+
+async fn decode_blocks_stream(
+    mut rx: mpsc::Receiver<Vec<u8>>,
+    stream_tx: mpsc::Sender<Block>,
+    current_block_number: Arc<AtomicU64>,
+) {
+    while let Some(message) = rx.recv().await {
+        trace!("Received message");
+        let block = match decode_block_from_bytes(&message) {
+            Ok(block) => block,
+            Err(e) => {
+                error!("Error decoding block: {e}");
+                break;
+            }
+        };
+
+        current_block_number.store(block.number, Ordering::SeqCst);
+
+        let receipts_check_process = spawn_check(&block, |b| {
+            if b.receipt_root_is_verified() {
+                Ok(())
+            } else {
+                Err(DecoderError::ReceiptRoot)
+            }
+        });
+
+        let transactions_check_process = spawn_check(&block, |b| {
+            if b.transaction_root_is_verified() {
+                Ok(())
+            } else {
+                Err(DecoderError::TransactionRoot)
+            }
+        });
+
+        let joint_return = tokio::try_join![receipts_check_process, transactions_check_process];
+
+        if let Err(e) = joint_return {
+            error!("{e}");
+            break;
+        }
+
+        if let Err(e) = stream_tx.send(block).await {
+            error!("Error sending block to stream: {e}");
+            break;
+        }
+    }
 }
 
 /// Decodes a block from a byte slice.

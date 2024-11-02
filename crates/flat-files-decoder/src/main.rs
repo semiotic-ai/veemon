@@ -1,5 +1,5 @@
 use std::{
-    fs::{self, File},
+    fs::{self, DirEntry, File},
     io::{self, BufReader, BufWriter, Write},
     process::ExitCode,
 };
@@ -43,13 +43,13 @@ fn init_tracing() {
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
-pub struct Cli {
+struct Cli {
     #[clap(subcommand)]
-    pub command: Commands,
+    command: Commands,
 }
 
 #[derive(Subcommand, Debug)]
-pub enum Commands {
+enum Commands {
     /// Stream data continuously
     Stream {
         /// decompress .dbin files if they are compressed with zstd
@@ -77,7 +77,7 @@ pub enum Commands {
     },
 }
 
-pub async fn run() -> Result<(), DecoderError> {
+async fn run() -> Result<(), DecoderError> {
     let cli = Cli::parse();
 
     match cli.command {
@@ -243,6 +243,6 @@ fn read_flat_files(path: &str, compression: Compression) -> Result<Vec<Block>, D
     Ok(blocks)
 }
 
-fn file_extension_is_dbin(entry: &std::fs::DirEntry) -> bool {
+fn file_extension_is_dbin(entry: &DirEntry) -> bool {
     dbin::file_extension_is_dbin(entry.path().extension())
 }
