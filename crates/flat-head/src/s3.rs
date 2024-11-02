@@ -3,7 +3,7 @@ use header_accumulator::{Epoch, EraValidator, ExtHeaderRecord, MAX_EPOCH_SIZE};
 use std::env;
 use trin_validation::accumulator::PreMergeAccumulator;
 
-use flat_files_decoder::decoder::{handle_buffer, Compression};
+use flat_files_decoder::decoder::{handle_reader, Compression};
 
 use object_store::{aws::AmazonS3Builder, path::Path, ObjectStore};
 
@@ -58,7 +58,7 @@ pub async fn s3_fetch(
         let bytes = result.bytes().await.unwrap();
 
         // Use `as_ref` to get a &[u8] from `bytes` and pass it to `handle_buf`
-        match handle_buffer(bytes.as_ref(), Compression::None) {
+        match handle_reader(bytes.as_ref(), Compression::None) {
             Ok(blocks) => {
                 let (successful_headers, _): (Vec<_>, Vec<_>) = blocks
                     .iter()

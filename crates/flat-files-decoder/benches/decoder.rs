@@ -1,7 +1,7 @@
 extern crate rand;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use flat_files_decoder::decoder::{handle_buffer, Compression};
+use flat_files_decoder::decoder::{handle_reader, Compression};
 use std::{
     fs::{self, File},
     io::BufReader,
@@ -28,7 +28,7 @@ fn bench(c: &mut Criterion) {
 
             b.iter(|| {
                 let reader = BufReader::new(File::open(path.as_os_str()).unwrap());
-                handle_buffer(black_box(reader), Compression::None)
+                handle_reader(black_box(reader), Compression::None)
             });
         }
     });

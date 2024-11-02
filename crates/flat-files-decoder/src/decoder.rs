@@ -1,5 +1,5 @@
 use std::{
-    io::{Cursor, Read},
+    io::{BufReader, Cursor, Read},
     sync::{
         atomic::{AtomicU64, Ordering},
         Arc,
@@ -56,7 +56,7 @@ impl From<bool> for Compression {
 /// * `buf`: A byte slice referencing the in-memory content of the flat file to be decoded.
 /// * `decompress`: A boolean indicating whether the input buffer should be decompressed.
 ///
-pub fn handle_buffer<R: Read>(
+pub fn handle_reader<R: Read>(
     reader: R,
     compression: Compression,
 ) -> Result<Vec<Block>, DecoderError> {
@@ -193,6 +193,73 @@ impl TryFrom<&Block> for HeaderRecordWithNumber {
     }
 }
 
+/// Reader enum to handle different types of readers
+/// It can be a BufReader or a StdIn reader with or without compression
+/// The BufReader is used when the data is already loaded into memory,
+/// assuming that the data is not compressed.
+#[derive(Debug)]
+pub enum Reader {
+    Buf(BufReader<Cursor<Vec<u8>>>),
+    StdIn(Compression),
+}
+
+impl Reader {
+    fn into_reader(self) -> Result<Box<dyn Read>, DecoderError> {
+        use Reader::*;
+
+        let reader = match self {
+            StdIn(compression) => match compression {
+                Compression::Zstd => {
+                    let reader = zstd::stream::Decoder::new(std::io::stdin())?;
+                    Box::new(reader) as Box<dyn Read>
+                }
+                Compression::None => {
+                    let reader = BufReader::with_capacity((64 * 2) << 20, std::io::stdin().lock());
+                    Box::new(reader) as Box<dyn Read>
+                }
+            },
+            Buf(reader) => Box::new(reader) as Box<dyn Read>,
+        };
+
+        Ok(reader)
+    }
+}
+
+impl TryFrom<Reader> for Box<dyn Read> {
+    type Error = DecoderError;
+
+    fn try_from(reader: Reader) -> Result<Self, Self::Error> {
+        reader.into_reader()
+    }
+}
+
+/// Enum to handle the end block of the stream
+/// It can be the merge block or a specific block number
+pub enum EndBlock {
+    MergeBlock,
+    Block(u64),
+}
+
+impl EndBlock {
+    fn block_number(&self) -> u64 {
+        const LAST_PREMERGE_BLOCK: u64 = 15537393;
+
+        match self {
+            EndBlock::MergeBlock => LAST_PREMERGE_BLOCK,
+            EndBlock::Block(block_number) => *block_number,
+        }
+    }
+}
+
+impl From<Option<u64>> for EndBlock {
+    fn from(value: Option<u64>) -> Self {
+        match value {
+            Some(block_number) => EndBlock::Block(block_number),
+            None => EndBlock::MergeBlock,
+        }
+    }
+}
+
 /// Decode blocks from a reader and writes them, serialized, to a writer
 ///
 /// data can be piped into this function from stdin via `cargo run stream < ./example0017686312.dbin`.
@@ -204,11 +271,9 @@ impl TryFrom<&Block> for HeaderRecordWithNumber {
 /// * `end_block`: For blocks after the merge, Ethereum sync committee should be used. This is why the default block
 ///   for this param is the LAST_PREMERGE_BLOCK (block 15537393)
 /// * `reader`: where bytes are read from
-pub async fn stream_blocks<R: Read>(
-    mut reader: R,
-    // mut stream: impl futures::Stream<Item = Vec<u8>>,
-    // compression: Compression,
-    end_block: Option<u64>,
+pub async fn stream_blocks(
+    reader: Reader,
+    end_block: EndBlock,
 ) -> Result<impl futures::Stream<Item = Block>, DecoderError> {
     let (stream_tx, stream_rx) = tokio::sync::mpsc::channel::<Block>(8192);
     let (tx, mut rx) = tokio::sync::mpsc::channel::<Vec<u8>>(8192);
@@ -216,9 +281,7 @@ pub async fn stream_blocks<R: Read>(
     let block_number = Arc::new(AtomicU64::new(0));
     let block_number_clone = Arc::clone(&block_number);
 
-    const LAST_PREMERGE_BLOCK: u64 = 15537393;
-
-    let end_block = end_block.unwrap_or(LAST_PREMERGE_BLOCK);
+    let end_block = end_block.block_number();
 
     tokio::spawn(async move {
         while let Some(message) = rx.recv().await {
@@ -263,11 +326,10 @@ pub async fn stream_blocks<R: Read>(
         }
     });
 
+    let mut reader = reader.into_reader()?;
+
     loop {
         let current_block_number = block_number.load(Ordering::SeqCst);
-        // trace!("Block: {}", current_block_number);
-        // while let Some(message: Vec<u8>) = rx.recv().await {
-        //    trace!("Received message");
 
         match DbinFile::read_message_from_stream(&mut reader) {
             Ok(message) => {

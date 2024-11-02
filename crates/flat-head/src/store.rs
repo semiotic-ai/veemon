@@ -1,6 +1,6 @@
 use anyhow::Context;
 use bytes::Bytes;
-use flat_files_decoder::decoder::{handle_buffer, Compression};
+use flat_files_decoder::decoder::{handle_reader, Compression};
 use object_store::{
     aws::AmazonS3Builder, gcp::GoogleCloudStorageBuilder, http::HttpBuilder,
     local::LocalFileSystem, path::Path, ClientOptions, ObjectStore,
@@ -159,5 +159,5 @@ impl ReadOptions {
 }
 
 async fn handle_from_bytes(bytes: Bytes, decompress: Compression) -> Result<Vec<Block>, ReadError> {
-    handle_buffer(bytes.as_ref(), decompress).map_err(|e| ReadError::DecodeError(e.to_string()))
+    handle_reader(bytes.as_ref(), decompress).map_err(|e| ReadError::DecodeError(e.to_string()))
 }

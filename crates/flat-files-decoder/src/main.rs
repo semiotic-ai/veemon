@@ -9,7 +9,7 @@ use firehose_protos::ethereum_v2::Block;
 use flat_files_decoder::{
     dbin,
     decoder::{
-        handle_buffer, stream_blocks, BlockHeaderRoots, Compression, HeaderRecordWithNumber,
+        handle_reader, stream_blocks, BlockHeaderRoots, Compression, HeaderRecordWithNumber, Reader,
     },
     error::DecoderError,
 };
@@ -85,19 +85,7 @@ pub async fn run() -> Result<(), DecoderError> {
             compression,
             end_block,
         } => {
-            let mut stream = match compression {
-                Compression::Zstd => {
-                    let reader = zstd::stream::Decoder::new(io::stdin())?;
-                    let reader = Box::new(reader) as Box<dyn io::Read>;
-                    stream_blocks(reader, end_block)
-                }
-                Compression::None => {
-                    let reader = BufReader::with_capacity((64 * 2) << 20, io::stdin().lock());
-                    let reader = Box::new(reader) as Box<dyn io::Read>;
-                    stream_blocks(reader, end_block)
-                }
-            }
-            .await?;
+            let mut stream = stream_blocks(Reader::StdIn(compression), end_block.into()).await?;
 
             let mut writer = BufWriter::new(io::stdout().lock());
 
@@ -223,7 +211,7 @@ fn write_block_to_json(block: &Block, output: &str) -> Result<(), DecoderError> 
 fn read_flat_file(path: &str, compression: Compression) -> Result<Vec<Block>, DecoderError> {
     let reader = BufReader::new(File::open(path)?);
 
-    let blocks = handle_buffer(reader, compression)?;
+    let blocks = handle_reader(reader, compression)?;
 
     Ok(blocks)
 }

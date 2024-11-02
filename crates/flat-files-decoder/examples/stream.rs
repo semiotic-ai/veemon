@@ -3,7 +3,7 @@ use std::{
     io::{BufReader, BufWriter, Cursor, Write},
 };
 
-use flat_files_decoder::decoder::stream_blocks;
+use flat_files_decoder::decoder::{stream_blocks, Reader};
 use futures::StreamExt;
 
 const TEST_ASSET_PATH: &str = "test-assets";
@@ -26,14 +26,16 @@ async fn main() {
             writer.flush().expect("failed to flush output");
         }
     }
-    let mut cursor = Cursor::new(&buffer);
+    let mut cursor = Cursor::new(buffer);
     cursor.set_position(0);
 
     let reader = BufReader::new(cursor);
 
     let mut blocks = Vec::new();
 
-    let mut stream = stream_blocks(reader, None).await.unwrap();
+    let mut stream = stream_blocks(Reader::Buf(reader), None.into())
+        .await
+        .unwrap();
 
     while let Some(block) = stream.next().await {
         blocks.push(block);
