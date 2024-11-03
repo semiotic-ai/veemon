@@ -1,10 +1,8 @@
-//! # Flat Files Decoder for Firehose
+//! # Flat Files Decoder
 //!
-//! This crate offers utility functions for reading and verifying flat files stored on disk.
-//! The verifier checks computed receipts and transaction roots against those specified in the
-//! block header. Additionally, it can optionally verify the block headers against a directory
-//! of JSON-formatted block headers.
+//! This crate offers utility functions for reading and verifying flat files
 
 pub mod dbin;
 pub mod decoder;
 pub mod error;
+pub mod reader;

@@ -4,7 +4,7 @@ use std::{
 };
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use flat_files_decoder::{dbin::DbinFile, error::DecoderError};
+use flat_files_decoder::{dbin::DbinHeader, error::DecoderError};
 use prost::Message;
 
 const ITERS_PER_FILE: usize = 10;
@@ -30,7 +30,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
             let mut message: Result<Vec<u8>, DecoderError> = Err(DecoderError::DbinBytesInvalid);
             loop {
                 b.iter(|| {
-                    message = black_box(DbinFile::read_message_from_stream(&mut reader));
+                    message = black_box(DbinHeader::read_message_from_stream(&mut reader));
                 });
                 match message {
                     Ok(_) => continue,
@@ -57,7 +57,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
             loop {
-                let message = match DbinFile::read_message_from_stream(&mut reader) {
+                let message = match DbinHeader::read_message_from_stream(&mut reader) {
                     Ok(message) => message,
                     Err(_) => {
                         break;
@@ -88,7 +88,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
             loop {
-                let message = match DbinFile::read_message_from_stream(&mut reader) {
+                let message = match DbinHeader::read_message_from_stream(&mut reader) {
                     Ok(message) => message,
                     Err(_) => {
                         break;
@@ -121,7 +121,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
             loop {
-                let message = match DbinFile::read_message_from_stream(&mut reader) {
+                let message = match DbinHeader::read_message_from_stream(&mut reader) {
                     Ok(message) => message,
                     Err(_) => {
                         break;
@@ -155,7 +155,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
             loop {
-                let message = match DbinFile::read_message_from_stream(&mut reader) {
+                let message = match DbinHeader::read_message_from_stream(&mut reader) {
                     Ok(message) => message,
                     Err(_) => {
                         break;

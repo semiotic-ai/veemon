@@ -17,7 +17,10 @@ use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tracing::{error, info, trace};
 
-use crate::{dbin::DbinFile, error::DecoderError};
+use crate::{
+    dbin::{DbinFile, DbinHeader},
+    error::DecoderError,
+};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub enum Compression {
@@ -55,8 +58,7 @@ impl From<bool> for Compression {
 /// # Arguments
 ///
 /// * `buf`: A byte slice referencing the in-memory content of the flat file to be decoded.
-/// * `decompress`: A boolean indicating whether the input buffer should be decompressed.
-///
+/// * `compression`: A boolean indicating whether the input buffer should be decompressed.
 pub fn handle_reader<R: Read>(
     reader: R,
     compression: Compression,
@@ -296,7 +298,7 @@ pub async fn stream_blocks(
     loop {
         let current_block_number = current_block_number.load(Ordering::SeqCst);
 
-        match DbinFile::read_message_from_stream(&mut reader) {
+        match DbinHeader::read_message_from_stream(&mut reader) {
             Ok(message) => {
                 if let Err(e) = bytes_tx.send(message).await {
                     error!("Error sending message to stream: {e}");

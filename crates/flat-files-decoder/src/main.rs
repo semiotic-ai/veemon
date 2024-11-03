@@ -7,11 +7,11 @@ use std::{
 use clap::{Parser, Subcommand};
 use firehose_protos::ethereum_v2::Block;
 use flat_files_decoder::{
-    dbin,
     decoder::{
         handle_reader, stream_blocks, BlockHeaderRoots, Compression, HeaderRecordWithNumber, Reader,
     },
     error::DecoderError,
+    reader,
 };
 use futures::StreamExt;
 use tracing::{error, info, level_filters::LevelFilter, subscriber::set_global_default, trace};
@@ -244,5 +244,5 @@ fn read_flat_files(path: &str, compression: Compression) -> Result<Vec<Block>, D
 }
 
 fn file_extension_is_dbin(entry: &DirEntry) -> bool {
-    dbin::file_extension_is_dbin(entry.path().extension())
+    reader::BlockFileReader::file_extension_is_dbin(entry.path().extension())
 }
