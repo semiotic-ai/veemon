@@ -4,40 +4,42 @@ use thiserror::Error;
 pub enum DecoderError {
     #[error("Bin code error: {0}")]
     Bincode(#[from] bincode::Error),
-    #[error("dbin files with different versions")]
+    #[error("Incorrect dbin bytes")]
+    DbinBytesInvalid,
+    #[error("Invalid dbin content type: {0}")]
+    DbinContentTypeInvalid(String),
+    #[error("Start of new dbin file")]
+    DbinMagicBytesInvalid,
+    #[error("Unsupported version")]
+    DbinVersionUnsupported,
+    #[error("Dbin files with different versions")]
     DifferingDbinVersions,
+    #[error("Protos error: {0}")]
+    FirehoseProtosError(#[from] firehose_protos::error::ProtosError),
+    #[error("Unsupported format: {0:?}")]
+    FormatUnsupported(Option<String>),
+    #[error("Invalid header")]
+    HeaderInvalid,
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("Invalid content type: {0}")]
-    InvalidContentType(String),
-    #[error("Incorrect dbin bytes")]
-    InvalidDbinBytes,
-    #[error("Invalid header")]
-    InvalidHeader,
-    #[error("Invalid block header total difficulty")]
-    InvalidTotalDifficulty,
-    #[error("Invalid UTF8: {0}")]
-    InvalidUtf8(#[from] std::string::FromUtf8Error),
-    #[error("Join error: {0}")]
-    JoinError(#[from] tokio::task::JoinError),
-    #[error("Block header JSON Error: {0}")]
-    JsonError(#[from] serde_json::Error),
+    #[error("{0}")]
+    Json(#[from] serde_json::Error),
     #[error("Failed to match roots for block number {block_number}")]
     MatchRootsFailed { block_number: u64 },
     #[error("Protobuf decode error: {0}")]
     ProtobufDecode(#[from] prost::DecodeError),
-    #[error("Protos error: {0}")]
-    ProtosError(#[from] firehose_protos::error::ProtosError),
     #[error("Invalid Receipt Root")]
-    ReceiptRoot,
-    #[error("Start of new dbin file")]
-    StartOfNewDbinFile,
+    ReceiptRootInvalid,
+    #[error("{0}")]
+    TokioJoin(#[from] tokio::task::JoinError),
+    #[error("Invalid block header total difficulty")]
+    TotalDifficultyInvalid,
     #[error("Invalid Transaction Root")]
-    TransactionRoot,
+    TransactionRootInvalid,
     #[error("TryFromSliceError: {0}")]
-    TryFromSliceError(#[from] std::array::TryFromSliceError),
-    #[error("Unsupported version")]
-    UnsupportedDbinVersion,
+    TryFromSlice(#[from] std::array::TryFromSliceError),
+    #[error("{0}")]
+    Utf8(#[from] std::string::FromUtf8Error),
     #[error("Block verification failed {block_number}")]
     VerificationFailed { block_number: u64 },
 }

@@ -27,7 +27,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
             }
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
-            let mut message: Result<Vec<u8>, DecoderError> = Err(DecoderError::InvalidDbinBytes);
+            let mut message: Result<Vec<u8>, DecoderError> = Err(DecoderError::DbinBytesInvalid);
             loop {
                 b.iter(|| {
                     message = black_box(DbinFile::read_message_from_stream(&mut reader));

@@ -73,7 +73,7 @@ pub fn handle_reader<R: Read>(
 
     let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
     if dbin_file.header.content_type != CONTENT_TYPE {
-        return Err(DecoderError::InvalidContentType(
+        return Err(DecoderError::DbinContentTypeInvalid(
             dbin_file.header.content_type,
         ));
     }
@@ -185,7 +185,7 @@ impl TryFrom<&Block> for HeaderRecordWithNumber {
             total_difficulty: block_header
                 .total_difficulty
                 .as_ref()
-                .ok_or(Self::Error::InvalidTotalDifficulty)?
+                .ok_or(Self::Error::TotalDifficultyInvalid)?
                 .bytes
                 .clone(),
             block_number: block.number,
@@ -348,7 +348,7 @@ async fn decode_blocks_stream(
             if b.receipt_root_is_verified() {
                 Ok(())
             } else {
-                Err(DecoderError::ReceiptRoot)
+                Err(DecoderError::ReceiptRootInvalid)
             }
         });
 
@@ -356,7 +356,7 @@ async fn decode_blocks_stream(
             if b.transaction_root_is_verified() {
                 Ok(())
             } else {
-                Err(DecoderError::TransactionRoot)
+                Err(DecoderError::TransactionRootInvalid)
             }
         });
 

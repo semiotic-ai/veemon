@@ -2,14 +2,21 @@ use std::{ffi::OsStr, io::Read};
 
 use crate::error::DecoderError;
 
-/// `DbinFile` is a struct that represents a simple file storage format to pack a stream of protobuf messages. It is defined by StreamingFast.
+/// The bytes of a dbin file minus the header
+pub type DbinMessages = Vec<Vec<u8>>;
+
+/// Each dbin message message is length-prefixed as 4 bytes big-endian uint32
+const DBIN_MAGIC_BYTES: &[u8; 4] = b"dbin";
+
+type DbinMagicBytes = [u8; 4];
+
+/// `DbinFile` is a struct representing a simple file storage format to pack a stream of protobuf messages, defined by StreamingFast.
 ///
 /// For more information, see [the dbin format documentation](https://github.com/streamingfast/dbin?tab=readme-ov-file).
 #[derive(Debug)]
 pub struct DbinFile {
     pub header: DbinHeader,
-    /// Rest of the bytes of the file, each message is length-prefixed as 4 bytes big-endian uin32
-    pub messages: Vec<Vec<u8>>,
+    pub messages: DbinMessages,
 }
 
 /// `DbinHeader` contains the fields that compose the header of the .dbin file.
@@ -18,27 +25,30 @@ pub struct DbinHeader {
     /// Next single byte after the 4 magic bytes, file format version
     pub version: u8,
     /// Next 3 bytes, content type like 'ETH', 'EOS', or something else
+    // WHY USE String here?
     pub content_type: String,
     /// Next 2 bytes, 10-based string representation of content version, ranges in '00'-'99'
     pub content_version: String,
 }
 
 impl DbinFile {
-    /// reads a DbinHeader
-    ///
-    /// It nests `read_partial_header` to read header. By itself, it reads the 4 magic bytes
+    /// Reads a DbinHeader, which is used as the starting point for interpreting .dbin file contents.
     fn read_header<R: Read>(read: &mut R) -> Result<DbinHeader, DecoderError> {
+        // Read the 4 magic bytes
         let mut buf: [u8; 4] = [0; 4];
-
         read.read_exact(&mut buf)?;
 
-        if &buf != b"dbin" {
-            return Err(DecoderError::StartOfNewDbinFile);
+        if !DbinFile::magic_bytes_valid(&buf) {
+            return Err(DecoderError::DbinMagicBytesInvalid);
         }
 
         let dbin_header = Self::read_partial_header(read)?;
 
         Ok(dbin_header)
+    }
+
+    fn magic_bytes_valid(bytes: &DbinMagicBytes) -> bool {
+        bytes == DBIN_MAGIC_BYTES
     }
 
     /// Reads all the fields that make a DbinHeader
@@ -55,16 +65,16 @@ impl DbinFile {
             let mut content_type_bytes: [u8; 3] = [0; 3];
             read.read_exact(&mut content_type_bytes)?;
 
-            content_type = String::from_utf8(Vec::from(content_type_bytes))
-                .map_err(DecoderError::InvalidUtf8)?;
+            content_type =
+                String::from_utf8(Vec::from(content_type_bytes)).map_err(DecoderError::Utf8)?;
 
             let mut content_version_bytes: [u8; 2] = [0; 2];
             read.read_exact(&mut content_version_bytes)?;
 
-            content_version = String::from_utf8(Vec::from(content_version_bytes))
-                .map_err(DecoderError::InvalidUtf8)?;
+            content_version =
+                String::from_utf8(Vec::from(content_version_bytes)).map_err(DecoderError::Utf8)?;
         } else {
-            return Err(DecoderError::UnsupportedDbinVersion);
+            return Err(DecoderError::DbinVersionUnsupported);
         }
 
         Ok(DbinHeader {
@@ -122,7 +132,7 @@ impl DbinFile {
         read.read_exact(&mut size)?;
 
         if &size == b"dbin" {
-            return Err(DecoderError::StartOfNewDbinFile);
+            return Err(DecoderError::DbinMagicBytesInvalid);
         }
 
         Ok(Self::read_content(size, read)?)

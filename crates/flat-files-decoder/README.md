@@ -60,8 +60,14 @@ This will output decoded header records as bytes into `stdout`
 
 2. To check a folder of dbin files:
 
-```bash
-cargo run decode --input ./input_files/
+```terminal
+cargo run decode --input ./input_files/ -- compression
+```
+
+So, if using test data from a `test-assets/` folder in the root of the `veemon` repo:
+
+```terminal
+cargo run -p flat-files-decoder decode --input test-assets/benchmark_files/pre_merge --compression true
 ```
 
 This will store the block headers as json format in the output folder. 
