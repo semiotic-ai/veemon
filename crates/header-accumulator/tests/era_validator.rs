@@ -1,6 +1,6 @@
 use std::{fs::File, io::BufReader};
 
-use flat_files_decoder::decoder::{handle_reader, Compression};
+use flat_files_decoder::decoder::{decode_reader, Compression};
 use header_accumulator::{Epoch, EraValidateError, EraValidator, ExtHeaderRecord};
 use tree_hash::Hash256;
 use trin_validation::accumulator::PreMergeAccumulator;
@@ -15,7 +15,7 @@ fn test_era_validate() -> Result<(), EraValidateError> {
     for number in (0..=8200).step_by(100) {
         let file_name = format!("tests/ethereum_firehose_first_8200/{:010}.dbin", number);
         let reader = create_test_reader(&file_name);
-        let blocks = handle_reader(reader, Compression::None).unwrap();
+        let blocks = decode_reader(reader, Compression::None).unwrap();
         let successful_headers = blocks
             .iter()
             .cloned()

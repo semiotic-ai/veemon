@@ -59,7 +59,7 @@ impl From<bool> for Compression {
 ///
 /// * `buf`: A byte slice referencing the in-memory content of the flat file to be decoded.
 /// * `compression`: A boolean indicating whether the input buffer should be decompressed.
-pub fn handle_reader<R: Read>(
+pub fn decode_reader<R: Read>(
     reader: R,
     compression: Compression,
 ) -> Result<Vec<Block>, DecoderError> {

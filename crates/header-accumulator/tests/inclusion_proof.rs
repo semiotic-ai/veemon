@@ -1,7 +1,7 @@
 use std::{fs::File, io::BufReader};
 
 use firehose_protos::ethereum_v2::Block;
-use flat_files_decoder::decoder::{handle_reader, Compression};
+use flat_files_decoder::decoder::{decode_reader, Compression};
 use header_accumulator::{
     generate_inclusion_proof, verify_inclusion_proof, EraValidateError, ExtHeaderRecord,
 };
@@ -20,7 +20,7 @@ fn test_inclusion_proof() -> Result<(), EraValidateError> {
             "tests/ethereum_firehose_first_8200/{:010}.dbin",
             flat_file_number
         );
-        match handle_reader(create_test_reader(&file), Compression::None) {
+        match decode_reader(create_test_reader(&file), Compression::None) {
             Ok(blocks) => {
                 headers.extend(
                     blocks

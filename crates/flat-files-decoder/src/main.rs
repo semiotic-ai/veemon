@@ -8,7 +8,7 @@ use clap::{Parser, Subcommand};
 use firehose_protos::ethereum_v2::Block;
 use flat_files_decoder::{
     decoder::{
-        handle_reader, stream_blocks, BlockHeaderRoots, Compression, HeaderRecordWithNumber, Reader,
+        decode_reader, stream_blocks, BlockHeaderRoots, Compression, HeaderRecordWithNumber, Reader,
     },
     error::DecoderError,
     reader,
@@ -215,7 +215,7 @@ fn write_block_to_json(block: &Block, output: &str) -> Result<(), DecoderError> 
 fn read_flat_file(path: &str, compression: Compression) -> Result<Vec<Block>, DecoderError> {
     let reader = BufReader::new(File::open(path)?);
 
-    let blocks = handle_reader(reader, compression)?;
+    let blocks = decode_reader(reader, compression)?;
 
     Ok(blocks)
 }
