@@ -8,6 +8,8 @@ name = "forrestrie"
 path = "src/lib.rs"
 
 [dependencies]
+alloy-rlp.workspace = true
+alloy-primitives.workspace = true
 bls.workspace = true
 ethportal-api.workspace = true
 firehose-protos = { path = "../firehose-protos" }
@@ -17,11 +19,17 @@ primitive-types.workspace = true
 prost.workspace = true
 prost-wkt.workspace = true
 prost-wkt-types.workspace = true
+reth-trie-common.workspace = true
+reth-primitives.workspace = true
 serde = { workspace = true, features = ["derive"] }
 ssz_types.workspace = true
 tonic.workspace = true
 tree_hash = "0.6.0"
 types.workspace = true
+
+[dev-dependencies]
+rand.workspace = true
+fake.workspace = true
 
 [build-dependencies]
 prost-build.workspace = true
