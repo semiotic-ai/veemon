@@ -1,7 +1,7 @@
 //! Execution Layer functionality to build a Merkle Patricia Trie (MPT) from Ethereum receipts
 //! and generate inclusion proofs for specified receipts within the trie. It includes data structures
 //! for parsing and handling receipt data, as well as utilities for encoding and decoding as required
-//! by the Ethereum specification..  
+//! by the Ethereum specification.
 //!
 //! ### Example
 //!
