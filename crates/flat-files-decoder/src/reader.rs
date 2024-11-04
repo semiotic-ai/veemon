@@ -1,7 +1,7 @@
 use std::{ffi::OsStr, io::Read};
 
 use crate::{
-    dbin::{DbinFile, DBIN_EXTENSION},
+    dbin::{self, DbinFile},
     error::DecoderError,
 };
 
@@ -33,7 +33,7 @@ impl BlockFileReader {
     /// Check whether an optional reference to an [`OsStr`] represents a `.dbin` file extension.
     pub fn file_extension_is_dbin(extension: Option<&OsStr>) -> bool {
         match extension {
-            Some(ext) => ext == DBIN_EXTENSION,
+            Some(ext) => ext == dbin::EXTENSION,
             None => false,
         }
     }
