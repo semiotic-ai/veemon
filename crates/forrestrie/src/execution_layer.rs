@@ -159,17 +159,20 @@ where
 /// # Example
 ///
 /// ```no_run
+/// # use reth_primitives::ReceiptWithBloom;
+/// # use forrestrie::execution_layer::build_trie_with_proofs;
+/// # let receipts_json = vec![];
 /// // Assume `receipts_json` is a vector of deserialized receipt objects from an execution block given by an Ethereum node.
 /// let receipts_with_bloom: Vec<ReceiptWithBloom> = receipts_json
 ///     .iter()
 ///     .map(ReceiptWithBloom::try_from)
-///     .collect::<Result<_, _>>()?;
+///     .collect::<Result<_, _>>().unwrap();
 ///
 /// // Specify the indices of receipts for which proofs are needed.
 /// let target_indices = &[0, 2, 5];
 ///
 /// // Build the trie and obtain proofs.
-/// let hash_builder = build_trie_with_proofs(&receipts_with_bloom, target_indices);
+/// let mut hash_builder = build_trie_with_proofs(&receipts_with_bloom, target_indices);
 ///
 /// // Retrieve the root hash of the trie, and retain the proofs so they can be verified.
 /// let trie_root = hash_builder.root();
