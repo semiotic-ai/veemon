@@ -217,9 +217,6 @@ mod tests {
 
     #[test]
     fn test_compute_receipts_trie_root_and_proof() {
-        // TODO: instead of generating receipts, pick a small exempt from
-        // the execution block that fits here. It should work better,
-        // since faking logs requires the log to be properly rlp encoded
         let block_receipts: ReceiptsFromBlock = (0_i32..10).map(|_| ReceiptJson::fake()).collect();
 
         let receipts_with_bloom: Result<Vec<ReceiptWithBloom>, String> = block_receipts
