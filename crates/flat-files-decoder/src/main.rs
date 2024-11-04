@@ -50,28 +50,32 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Decode files from input to output
+    /// Decodes files from an input folder and can save them to an output folder
     Decode {
-        /// input folder where flat files are stored
+        /// Path to the input folder containing flat files
         #[clap(short, long)]
         input: String,
+
+        /// Optional path to a folder containing headers for validating decoded blocks
         #[clap(long)]
-        /// folder where valid headers are stored so decoded blocks can be validated against
-        /// their headers.
         headers_dir: Option<String>,
-        /// output folder where decoded headers will be stored as .json
+
+        /// Optional path to an output folder for saving decoded headers as .json files
         #[clap(short, long)]
         output: Option<String>,
-        #[clap(short, long)]
-        /// optionally decompress zstd compressed flat files
-        compression: Compression,
-    },
-    /// Stream data continuously
-    Stream {
-        /// decompress .dbin files if they are compressed with zstd
+
+        /// Enables decompression for zstd-compressed flat files
         #[clap(short, long, default_value = "false")]
         compression: Compression,
-        /// the block to end streaming
+    },
+
+    /// Stream data continuously
+    Stream {
+        /// Decompresses .dbin files if they are zstd-compressed
+        #[clap(short, long, default_value = "false")]
+        compression: Compression,
+
+        /// Block number to end the streaming process
         #[clap(short, long)]
         end_block: Option<u64>,
     },
