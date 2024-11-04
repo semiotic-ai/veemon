@@ -13,7 +13,6 @@ fn main() {
     config.extern_path(".google.protobuf.Timestamp", "::prost_wkt_types::Timestamp");
 
     tonic_build::configure()
-        .protoc_arg("--experimental_allow_proto3_optional")
         .build_client(true)
         .file_descriptor_set_path(out_dir.join("descriptors.bin"))
         .compile_protos_with_config(
