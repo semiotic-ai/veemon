@@ -1,5 +1,5 @@
 use std::{
-    fs::{self, DirEntry, File},
+    fs::{self, File},
     io::{self, BufReader, BufWriter, Write},
     process::ExitCode,
 };
@@ -11,7 +11,6 @@ use flat_files_decoder::{
         decode_reader, stream_blocks, BlockHeaderRoots, Compression, HeaderRecordWithNumber, Reader,
     },
     error::DecoderError,
-    reader,
 };
 use futures::StreamExt;
 use tracing::{error, info, level_filters::LevelFilter, subscriber::set_global_default, trace};
@@ -82,10 +81,12 @@ enum Commands {
 }
 
 async fn run() -> Result<(), DecoderError> {
+    use Commands::*;
+
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Stream {
+        Stream {
             compression,
             end_block,
         } => {
@@ -105,7 +106,7 @@ async fn run() -> Result<(), DecoderError> {
 
             Ok(())
         }
-        Commands::Decode {
+        Decode {
             input,
             headers_dir,
             output,
@@ -228,7 +229,7 @@ fn read_flat_files(path: &str, compression: Compression) -> Result<Vec<Block>, D
     for path in read_dir {
         let path = path?;
 
-        if file_extension_is_dbin(&path) {
+        if flat_files_decoder::dbin::dir_entry_extension_is_dbin(&path) {
             continue;
         }
 
@@ -245,8 +246,4 @@ fn read_flat_files(path: &str, compression: Compression) -> Result<Vec<Block>, D
     }
 
     Ok(blocks)
-}
-
-fn file_extension_is_dbin(entry: &DirEntry) -> bool {
-    reader::BlockFileReader::file_extension_is_dbin(entry.path().extension())
 }

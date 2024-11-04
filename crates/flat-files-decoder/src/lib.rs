@@ -5,4 +5,3 @@
 pub mod dbin;
 pub mod decoder;
 pub mod error;
-pub mod reader;

@@ -1,12 +1,15 @@
-use std::io::{self, Read};
+use std::{
+    fs::DirEntry,
+    io::{self, Read},
+};
 
 use crate::error::DecoderError;
 
 /// Dbin file type extension
-pub const EXTENSION: &str = "dbin";
+const EXTENSION: &str = "dbin";
 
 /// The bytes of a dbin file minus the header
-pub type DbinMessages = Vec<Vec<u8>>;
+type DbinMessages = Vec<Vec<u8>>;
 
 /// Each dbin message is length-prefixed as 4 bytes big-endian uint32
 const MAGIC_BYTES: &[u8; 4] = b"dbin";
@@ -162,6 +165,14 @@ impl DbinHeader {
         read.read_exact(&mut buf)?;
         Ok(buf[0])
     }
+}
+
+/// Checks if the file extension is `.dbin`.
+pub fn dir_entry_extension_is_dbin(entry: &DirEntry) -> bool {
+    entry
+        .path()
+        .extension()
+        .map_or(false, |ext| ext == EXTENSION)
 }
 
 fn read_magic_bytes<R: Read>(read: &mut R) -> Result<MagicBytes, DecoderError> {
