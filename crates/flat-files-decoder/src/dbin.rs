@@ -9,7 +9,10 @@ use crate::error::DecoderError;
 const EXTENSION: &str = "dbin";
 
 /// The bytes of a dbin file minus the header
-type DbinMessages = Vec<Vec<u8>>;
+type DbinMessages = Vec<DbinMessage>;
+
+/// The bytes of a dbin message
+type DbinMessage = Vec<u8>;
 
 /// Each dbin message is length-prefixed as 4 bytes big-endian uint32
 const MAGIC_BYTES: &[u8; 4] = b"dbin";
@@ -37,11 +40,15 @@ const SUPPORTED_DBIN_VERSION: u8 = 0;
 /// For more information, see [the dbin format documentation](https://github.com/streamingfast/dbin?tab=readme-ov-file).
 #[derive(Debug)]
 pub struct DbinFile {
-    pub header: DbinHeader,
-    pub messages: DbinMessages,
+    header: DbinHeader,
+    messages: DbinMessages,
 }
 
 impl DbinFile {
+    pub fn content_type(&self) -> &str {
+        &self.header.content_type
+    }
+
     /// Reads and parses a `.dbin` file from a `Read` source.
     pub fn try_from_read<R: Read>(mut read: R) -> Result<Self, DecoderError> {
         let header = DbinHeader::try_from_read(&mut read)?;
@@ -66,7 +73,7 @@ impl DbinFile {
 
             let message_length = u32::from_be_bytes(bytes) as usize;
 
-            match Self::read_message(read, message_length) {
+            match read_message(read, message_length) {
                 Ok(message) => messages.push(message),
                 // Return error if EOF occurs in the middle of a message
                 Err(DecoderError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
@@ -78,79 +85,40 @@ impl DbinFile {
 
         Ok(messages)
     }
+}
 
-    /// Reads a single message, assuming the size-prefix format defined by `.dbin`.
-    fn read_message<R: Read>(read: &mut R, length: usize) -> Result<Vec<u8>, DecoderError> {
-        let mut message = vec![0; length];
-        read.read_exact(&mut message)?;
-        Ok(message)
+// implement iterator for DbinFile so that we can iterate over the messages
+impl IntoIterator for DbinFile {
+    type Item = Vec<u8>;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.messages.into_iter()
     }
 }
 
 /// Header of a `.dbin` file, containing metadata such as version, content type, and content version.
 #[derive(Debug)]
-pub struct DbinHeader {
+struct DbinHeader {
     /// File format version, the next single byte after the 4 [`DbinMagicBytes`]
-    pub version: u8,
+    version: u8,
     /// Content type like 'ETH', 'EOS', or something else; the next 3 bytes
-    pub content_type: String,
-    /// Content version, represented as 10-based string, ranges in '00'-'99'; the next 2 bytes
-    pub content_version: String,
+    content_type: String,
 }
 
 impl DbinHeader {
+    /// Checks if the version is supported.
     fn is_supported_version(&self) -> bool {
-        self.version == SUPPORTED_DBIN_VERSION
+        is_supported_version(self.version)
     }
 
     /// Reads and validates the `.dbin` header from the given [`Read`] source.
     fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DecoderError> {
         let magic_bytes = read_magic_bytes(read)?;
-        if !Self::magic_bytes_valid(&magic_bytes) {
+        if !magic_bytes_valid(&magic_bytes) {
             return Err(DecoderError::DbinMagicBytesInvalid);
         }
-        Self::try_from_read_inner(read)
-    }
-
-    /// Reads and constructs a [`DbinHeader`] from the remaining fields after the magic bytes.
-    fn try_from_read_inner<R: Read>(read: &mut R) -> Result<Self, DecoderError> {
-        let version = Self::read_version_field(read)?;
-        let content_type = Self::read_string_field(read, HEADER_CONTENT_TYPE_SIZE)?;
-        let content_version = Self::read_string_field(read, HEADER_CONTENT_VERSION_SIZE)?;
-
-        Ok(DbinHeader {
-            version,
-            content_type,
-            content_version,
-        })
-    }
-
-    fn magic_bytes_valid(bytes: &MagicBytes) -> bool {
-        bytes == MAGIC_BYTES
-    }
-
-    /// Reads message bytes
-    fn read_message<R: Read>(read: &mut R, size: usize) -> Result<Vec<u8>, DecoderError> {
-        let mut message = vec![0; size];
-        read.read_exact(&mut message)?;
-        Ok(message)
-    }
-
-    /// Reads from a stream of messages, returning the next message.
-    ///
-    /// Messages are separated by "dbin" (magical 4 bytes) so each
-    /// new occurrence of it marks the start of a new `.dbin` file
-    pub fn read_message_from_stream<R: Read>(read: &mut R) -> Result<Vec<u8>, DecoderError> {
-        let mut magic_bytes = read_magic_bytes(read)?;
-
-        if Self::magic_bytes_valid(&magic_bytes) {
-            _ = Self::try_from_read_inner(read)?;
-            magic_bytes = read_magic_bytes(read)?;
-        }
-
-        let message_size = u32::from_be_bytes(magic_bytes) as usize;
-
-        Self::read_message(read, message_size)
+        read_header(read)
     }
 
     fn read_string_field<R: Read>(read: &mut R, size: usize) -> Result<String, DecoderError> {
@@ -175,8 +143,143 @@ pub fn dir_entry_extension_is_dbin(entry: &DirEntry) -> bool {
         .map_or(false, |ext| ext == EXTENSION)
 }
 
+fn is_supported_version(version: u8) -> bool {
+    version == SUPPORTED_DBIN_VERSION
+}
+
+fn magic_bytes_valid(bytes: &MagicBytes) -> bool {
+    bytes == MAGIC_BYTES
+}
+
+/// Reads and constructs a [`DbinHeader`] from the remaining fields after the magic bytes.
+fn read_header<R: Read>(read: &mut R) -> Result<DbinHeader, DecoderError> {
+    let version = match DbinHeader::read_version_field(read) {
+        Ok(version) if is_supported_version(version) => version,
+        Ok(_) => return Err(DecoderError::DbinVersionUnsupported),
+        Err(e) => return Err(e),
+    };
+
+    let content_type = DbinHeader::read_string_field(read, HEADER_CONTENT_TYPE_SIZE)?;
+
+    // Content version, represented as 10-based string, ranges in '00'-'99'; the next 2 bytes
+    let _content_version = DbinHeader::read_string_field(read, HEADER_CONTENT_VERSION_SIZE)?;
+
+    Ok(DbinHeader {
+        version,
+        content_type,
+    })
+}
+
 fn read_magic_bytes<R: Read>(read: &mut R) -> Result<MagicBytes, DecoderError> {
-    let mut buf = [0; PREFIX_SIZE];
-    read.read_exact(&mut buf)?;
-    Ok(buf)
+    let bytes = read_message(read, PREFIX_SIZE)?;
+    match bytes.try_into() {
+        Ok(magic_bytes) => Ok(magic_bytes),
+        Err(_) => Err(DecoderError::DbinMagicBytesInvalid),
+    }
+}
+
+/// Reads a single message, assuming the size-prefix format defined by `.dbin`.
+fn read_message<R: Read>(read: &mut R, length: usize) -> Result<DbinMessage, DecoderError> {
+    let mut message = vec![0; length];
+    read.read_exact(&mut message)?;
+    Ok(message)
+}
+
+/// Reads from a stream of messages, returning the next message.
+///
+/// Messages are separated by "dbin" (magical 4 bytes) so each
+/// new occurrence of it marks the start of a new `.dbin` file
+pub fn read_message_from_stream<R: Read>(read: &mut R) -> Result<DbinMessage, DecoderError> {
+    let mut magic_bytes = read_magic_bytes(read)?;
+
+    if magic_bytes_valid(&magic_bytes) {
+        _ = read_header(read)?;
+        magic_bytes = read_magic_bytes(read)?;
+    }
+
+    let message_size = u32::from_be_bytes(magic_bytes) as usize;
+
+    read_message(read, message_size)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn test_valid_header_parsing() {
+        let data = [b'd', b'b', b'i', b'n', 0u8, b'E', b'T', b'H', b'0', b'1'];
+        let mut cursor = Cursor::new(data);
+
+        let header = DbinHeader::try_from_read(&mut cursor).expect("Failed to parse header");
+        assert_eq!(header.version, SUPPORTED_DBIN_VERSION);
+        assert_eq!(header.content_type, "ETH");
+    }
+
+    #[test]
+    fn test_unsupported_version() {
+        let data = [b'd', b'b', b'i', b'n', 1u8, b'E', b'T', b'H', b'0', b'1'];
+        let mut cursor = Cursor::new(data);
+
+        let result = DbinHeader::try_from_read(&mut cursor);
+        assert!(matches!(result, Err(DecoderError::DbinVersionUnsupported)));
+    }
+
+    #[test]
+    fn test_invalid_magic_bytes() {
+        let data = [b'x', b'y', b'z', b'n', 0u8, b'E', b'T', b'H', b'0', b'1'];
+        let mut cursor = Cursor::new(data);
+
+        let result = DbinHeader::try_from_read(&mut cursor);
+        assert!(matches!(result, Err(DecoderError::DbinMagicBytesInvalid)));
+    }
+
+    #[test]
+    fn test_read_messages() {
+        let mut data = vec![];
+        data.extend_from_slice(&[b'd', b'b', b'i', b'n', 0u8, b'E', b'T', b'H', b'0', b'1']);
+        data.extend_from_slice(&(4u32.to_be_bytes())); // message length
+        data.extend_from_slice(b"test");
+
+        let mut cursor = Cursor::new(data);
+        let dbin_file = DbinFile::try_from_read(&mut cursor).expect("Failed to read dbin file");
+
+        assert_eq!(dbin_file.messages.len(), 1);
+        assert_eq!(dbin_file.messages[0], b"test");
+    }
+
+    #[test]
+    fn test_end_of_file_handling() {
+        let mut data = vec![];
+        data.extend_from_slice(&[b'd', b'b', b'i', b'n', 0u8, b'E', b'T', b'H', b'0', b'1']);
+        data.extend_from_slice(&(4u32.to_be_bytes())); // message length
+        data.extend_from_slice(b"test");
+
+        // truncate to simulate EOF after header
+        let mut cursor = Cursor::new(&data[..data.len() - 2]);
+
+        let result = DbinFile::try_from_read(&mut cursor);
+        assert!(
+            matches!(result, Err(DecoderError::Io(ref e)) if e.kind() == io::ErrorKind::UnexpectedEof)
+        );
+    }
+
+    #[test]
+    fn test_iterator_behavior() {
+        let mut data = vec![];
+        data.extend_from_slice(&[b'd', b'b', b'i', b'n', 0u8, b'E', b'T', b'H', b'0', b'1']);
+        data.extend_from_slice(&(4u32.to_be_bytes())); // message length
+        data.extend_from_slice(b"test");
+        data.extend_from_slice(&(3u32.to_be_bytes())); // message length
+        data.extend_from_slice(b"123");
+
+        let mut cursor = Cursor::new(data);
+        let dbin_file = DbinFile::try_from_read(&mut cursor).expect("Failed to read dbin file");
+
+        let messages: Vec<_> = dbin_file.into_iter().collect();
+        assert_eq!(messages.len(), 2);
+        assert_eq!(messages[0], b"test");
+        assert_eq!(messages[1], b"123");
+    }
 }

@@ -26,7 +26,7 @@ fn test_dbin_try_from_read() {
 
     let dbin_file = DbinFile::try_from_read(&mut reader).unwrap();
 
-    insta::assert_debug_snapshot!(dbin_file.header.content_type, @r###""ETH""###);
+    insta::assert_debug_snapshot!(dbin_file.content_type(), @r###""ETH""###);
 }
 
 #[test]
@@ -84,7 +84,7 @@ fn test_check_valid_root_fail() {
     let dbin_file: DbinFile =
         DbinFile::try_from_read(&mut file).expect("Failed to parse dbin file");
 
-    let message = dbin_file.messages[0].clone();
+    let message = dbin_file.into_iter().next().unwrap();
 
     let block_stream = BstreamBlock::decode(message.as_slice()).unwrap();
     let mut block = Block::decode(block_stream.payload_buffer.as_slice()).unwrap();

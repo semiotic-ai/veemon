@@ -18,7 +18,7 @@ use tokio_stream::wrappers::ReceiverStream;
 use tracing::{error, info, trace};
 
 use crate::{
-    dbin::{DbinFile, DbinHeader},
+    dbin::{read_message_from_stream, DbinFile},
     error::DecoderError,
 };
 
@@ -74,15 +74,15 @@ pub fn decode_reader<R: Read>(
     };
 
     let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
-    if dbin_file.header.content_type != CONTENT_TYPE {
+    if dbin_file.content_type() != CONTENT_TYPE {
         return Err(DecoderError::DbinContentTypeInvalid(
-            dbin_file.header.content_type,
+            dbin_file.content_type().to_string(),
         ));
     }
 
     let mut blocks: Vec<Block> = vec![];
 
-    for message in dbin_file.messages {
+    for message in dbin_file {
         let block = decode_block_from_bytes(&message)?;
 
         if !block_is_verified(&block) {
@@ -298,7 +298,7 @@ pub async fn stream_blocks(
     loop {
         let current_block_number = current_block_number.load(Ordering::SeqCst);
 
-        match DbinHeader::read_message_from_stream(&mut reader) {
+        match read_message_from_stream(&mut reader) {
             Ok(message) => {
                 if let Err(e) = bytes_tx.send(message).await {
                     error!("Error sending message to stream: {e}");
