@@ -15,7 +15,7 @@ use prost::Message;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
-use tracing::{error, info, trace};
+use tracing::{error, info};
 
 use crate::{
     dbin::{read_message_from_stream, DbinFile},
@@ -31,9 +31,8 @@ pub enum Compression {
 
 impl From<&str> for Compression {
     fn from(value: &str) -> Self {
-        match value {
+        match value.to_lowercase().as_str() {
             "true" | "1" => Compression::Zstd,
-            "false" | "0" => Compression::None,
             _ => Compression::None,
         }
     }
@@ -48,17 +47,18 @@ impl From<bool> for Compression {
     }
 }
 
-/// Decodes a flat file from a buffer containing its contents and optionally decompresses it.
+/// Decodes a flat file from an in-memory reader, optionally decompressing it if specified.
 ///
-/// Decodes flat files that are already loaded into memory, without direct file system access.
-/// It can handle both compressed (if `zstd` decompression is specified) and uncompressed data. Upon successful
-/// decoding, it returns a vector of all the blocks contained within the flat file. The actual number of blocks
-/// returned depends on the format and content of the flat file—ranging from a single block to multiple blocks.
+/// This function processes flat files that are already loaded into memory, supporting both
+/// compressed (Zstd) and uncompressed data. If the data is successfully decoded, it returns a
+/// vector of `Block` structs representing the blocks contained within the file. The number of
+/// blocks returned depends on the file's content and format, which may include one or more blocks.
 ///
 /// # Arguments
 ///
-/// * `buf`: A byte slice referencing the in-memory content of the flat file to be decoded.
-/// * `compression`: A boolean indicating whether the input buffer should be decompressed.
+/// * `reader`: A readable source of the file contents, implementing the `Read` trait.
+/// * `compression`: The compression type applied to the flat file's data, if any. Accepts `Compression::Zstd`
+///   for Zstd-compressed data, or `Compression::None` for uncompressed data.
 pub fn decode_reader<R: Read>(
     reader: R,
     compression: Compression,
@@ -66,10 +66,7 @@ pub fn decode_reader<R: Read>(
     const CONTENT_TYPE: &str = "ETH";
 
     let mut file_contents: Box<dyn Read> = match compression {
-        Compression::Zstd => {
-            let decompressed_data = zstd::decode_all(reader)?;
-            Box::new(Cursor::new(decompressed_data))
-        }
+        Compression::Zstd => Box::new(Cursor::new(zstd::decode_all(reader)?)),
         Compression::None => Box::new(reader),
     };
 
@@ -80,21 +77,19 @@ pub fn decode_reader<R: Read>(
         ));
     }
 
-    let mut blocks: Vec<Block> = vec![];
-
-    for message in dbin_file {
-        let block = decode_block_from_bytes(&message)?;
-
-        if !block_is_verified(&block) {
-            return Err(DecoderError::VerificationFailed {
-                block_number: block.number,
-            });
-        }
-
-        blocks.push(block);
-    }
-
-    Ok(blocks)
+    dbin_file
+        .into_iter()
+        .map(|message| {
+            let block = decode_block_from_bytes(&message)?;
+            if !block_is_verified(&block) {
+                Err(DecoderError::VerificationFailed {
+                    block_number: block.number,
+                })
+            } else {
+                Ok(block)
+            }
+        })
+        .collect()
 }
 
 /// A struct to hold the receipt and transactions root for a `Block`.
@@ -131,19 +126,13 @@ impl TryFrom<&BlockHeader> for BlockHeaderRoots {
 impl BlockHeaderRoots {
     /// Checks if the receipt and transactions roots of a block header match the receipt and transactions roots of another block.
     pub fn block_header_matches(&self, block: &Block) -> bool {
-        let block_header_roots = match block.try_into() {
-            Ok(block_header_roots) => block_header_roots,
+        match block.try_into() {
+            Ok(other) => self == &other,
             Err(e) => {
                 error!("Failed to convert block to header roots: {e}");
-                return false;
+                false
             }
-        };
-
-        self.block_header_roots_match(&block_header_roots)
-    }
-
-    fn block_header_roots_match(&self, block_header_roots: &BlockHeaderRoots) -> bool {
-        self == block_header_roots
+        }
     }
 }
 
@@ -180,19 +169,17 @@ impl TryFrom<&Block> for HeaderRecordWithNumber {
     type Error = DecoderError;
 
     fn try_from(block: &Block) -> Result<Self, Self::Error> {
-        let block_header = block.header()?;
-
-        let header_record_with_number = HeaderRecordWithNumber {
+        Ok(HeaderRecordWithNumber {
             block_hash: block.hash.clone(),
-            total_difficulty: block_header
+            block_number: block.number,
+            total_difficulty: block
+                .header()?
                 .total_difficulty
                 .as_ref()
                 .ok_or(Self::Error::TotalDifficultyInvalid)?
                 .bytes
                 .clone(),
-            block_number: block.number,
-        };
-        Ok(header_record_with_number)
+        })
     }
 }
 
@@ -208,23 +195,16 @@ pub enum Reader {
 
 impl Reader {
     fn into_reader(self) -> Result<Box<dyn Read>, DecoderError> {
-        use Reader::*;
-
-        let reader = match self {
-            StdIn(compression) => match compression {
-                Compression::Zstd => {
-                    let reader = zstd::stream::Decoder::new(std::io::stdin())?;
-                    Box::new(reader) as Box<dyn Read>
-                }
-                Compression::None => {
-                    let reader = BufReader::with_capacity((64 * 2) << 20, std::io::stdin().lock());
-                    Box::new(reader) as Box<dyn Read>
-                }
+        match self {
+            Reader::StdIn(compression) => match compression {
+                Compression::Zstd => Ok(Box::new(zstd::stream::Decoder::new(std::io::stdin())?)),
+                Compression::None => Ok(Box::new(BufReader::with_capacity(
+                    (64 * 2) << 20,
+                    std::io::stdin().lock(),
+                ))),
             },
-            Buf(reader) => Box::new(reader) as Box<dyn Read>,
-        };
-
-        Ok(reader)
+            Reader::Buf(reader) => Ok(Box::new(reader)),
+        }
     }
 }
 
@@ -246,7 +226,6 @@ pub enum EndBlock {
 impl EndBlock {
     fn block_number(&self) -> u64 {
         const LAST_PREMERGE_BLOCK: u64 = 15537393;
-
         match self {
             EndBlock::MergeBlock => LAST_PREMERGE_BLOCK,
             EndBlock::Block(block_number) => *block_number,
@@ -256,76 +235,64 @@ impl EndBlock {
 
 impl From<Option<u64>> for EndBlock {
     fn from(value: Option<u64>) -> Self {
-        match value {
-            Some(block_number) => EndBlock::Block(block_number),
-            None => EndBlock::MergeBlock,
-        }
+        value.map_or(EndBlock::MergeBlock, EndBlock::Block)
     }
 }
 
-/// Decode blocks from a reader and writes them, serialized, to a writer
+/// Streams decoded blocks from an input reader, stopping when a specified end block is reached.
 ///
-/// data can be piped into this function from stdin via `cargo run stream < ./example0017686312.dbin`.
-/// It also has a check for end_block. By default, it stops the stream reading when MERGE_BLOCK
-/// is reached.
+/// This asynchronous function continuously reads block data from the provided reader, decoding
+/// each block and streaming it as [`Block`] items. It supports handling incoming data in chunks
+/// and sends each decoded block through a stream channel, allowing for efficient, concurrent processing.
+///
+/// The function will continue reading until it reaches an `UnexpectedEof` error, which may indicate
+/// the end of the file, or until it has processed the specified `end_block`. If the end of the file
+/// is reached before `end_block`, it will wait for more blocks to be available, allowing for a continuous
+/// stream when data is appended.
 ///
 /// # Arguments
 ///
-/// * `end_block`: For blocks after the merge, Ethereum sync committee should be used. This is why the default block
-///   for this param is the LAST_PREMERGE_BLOCK (block 15537393)
-/// * `reader`: where bytes are read from
+/// * `reader`: A [`Reader`] enum that specifies the source of the block data. The reader can be a
+///   [`BufReader`] or a `StdIn` reader with or without compression.
+/// * `end_block`: Specifies the block number at which to stop streaming. By default, this is set to
+///   `LAST_PREMERGE_BLOCK` (block 15537393), which marks the last block before the Ethereum merge.
+///
+/// # Returns
+///
+/// Returns a stream ([`futures::Stream`]) of [`Block`] items. Each item in the stream represents a decoded
+/// block from the input data.
 pub async fn stream_blocks(
     reader: Reader,
     end_block: EndBlock,
 ) -> Result<impl futures::Stream<Item = Block>, DecoderError> {
     let (block_stream_tx, block_stream_rx) = tokio::sync::mpsc::channel::<Block>(8192);
     let (bytes_tx, bytes_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(8192);
-
     let current_block_number = Arc::new(AtomicU64::new(0));
-    let current_block_number_clone = Arc::clone(&current_block_number);
-
-    // THIS ALL NEEDS FIXING
-    let end_block = end_block.block_number();
 
     tokio::spawn(decode_blocks_stream(
         bytes_rx,
         block_stream_tx,
-        current_block_number_clone,
+        Arc::clone(&current_block_number),
     ));
 
     let mut reader = reader.into_reader()?;
+    let end_block = end_block.block_number();
 
     loop {
-        let current_block_number = current_block_number.load(Ordering::SeqCst);
-
         match read_message_from_stream(&mut reader) {
-            Ok(message) => {
-                if let Err(e) = bytes_tx.send(message).await {
-                    error!("Error sending message to stream: {e}");
-                    break;
+            Ok(message) => bytes_tx.send(message).await?,
+            Err(DecoderError::Io(e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
+                if current_block_number.load(Ordering::SeqCst) < end_block {
+                    info!("Reached end of file, waiting for more blocks");
+                    continue;
                 }
-            }
-            Err(e) => {
-                if let DecoderError::Io(ref e) = e {
-                    if e.kind() == std::io::ErrorKind::UnexpectedEof {
-                        if current_block_number < end_block {
-                            info!("Reached end of file, waiting for more blocks");
-                            continue;
-                        } else {
-                            info!("All blocks have been read");
-                            break;
-                        }
-                    }
-                }
-
-                error!("Error reading dbin file: {}", e);
                 break;
             }
+            Err(e) => return Err(e),
         }
     }
 
     drop(bytes_tx);
-
     Ok(ReceiverStream::new(block_stream_rx))
 }
 
@@ -333,47 +300,28 @@ async fn decode_blocks_stream(
     mut rx: mpsc::Receiver<Vec<u8>>,
     stream_tx: mpsc::Sender<Block>,
     current_block_number: Arc<AtomicU64>,
-) {
+) -> Result<(), DecoderError> {
     while let Some(message) = rx.recv().await {
-        trace!("Received message");
-        let block = match decode_block_from_bytes(&message) {
-            Ok(block) => block,
+        match decode_block_from_bytes(&message) {
+            Ok(block) => {
+                current_block_number.store(block.number, Ordering::SeqCst);
+
+                let block = Arc::new(block);
+
+                if spawn_checks(&block).await.is_ok() {
+                    stream_tx
+                        .send(Arc::try_unwrap(block).unwrap()) // Safe to unwrap since we have a single reference.
+                        .await
+                        .unwrap();
+                }
+            }
             Err(e) => {
-                error!("Error decoding block: {e}");
-                break;
+                return Err(e);
             }
         };
-
-        current_block_number.store(block.number, Ordering::SeqCst);
-
-        let receipts_check_process = spawn_check(&block, |b| {
-            if b.receipt_root_is_verified() {
-                Ok(())
-            } else {
-                Err(DecoderError::ReceiptRootInvalid)
-            }
-        });
-
-        let transactions_check_process = spawn_check(&block, |b| {
-            if b.transaction_root_is_verified() {
-                Ok(())
-            } else {
-                Err(DecoderError::TransactionRootInvalid)
-            }
-        });
-
-        let joint_return = tokio::try_join![receipts_check_process, transactions_check_process];
-
-        if let Err(e) = joint_return {
-            error!("{e}");
-            break;
-        }
-
-        if let Err(e) = stream_tx.send(block).await {
-            error!("Error sending block to stream: {e}");
-            break;
-        }
     }
+
+    Ok(())
 }
 
 /// Decodes a block from a byte slice.
@@ -383,16 +331,30 @@ fn decode_block_from_bytes(bytes: &[u8]) -> Result<Block, DecoderError> {
     Ok(block)
 }
 
-// Define a generic function to spawn a blocking task for a given check.
-fn spawn_check<F>(block: &Block, check: F) -> tokio::task::JoinHandle<()>
+async fn spawn_checks(block: &Arc<Block>) -> Result<((), ()), DecoderError> {
+    Ok(tokio::try_join!(
+        verify_async(
+            block.clone(),
+            |b| b.receipt_root_is_verified(),
+            DecoderError::ReceiptRootInvalid
+        ),
+        verify_async(
+            block.clone(),
+            |b| b.transaction_root_is_verified(),
+            DecoderError::TransactionRootInvalid
+        ),
+    )?)
+}
+
+async fn verify_async<F>(
+    block: Arc<Block>,
+    check: F,
+    error: DecoderError,
+) -> Result<(), DecoderError>
 where
-    F: FnOnce(&Block) -> Result<(), DecoderError> + Send + 'static,
+    F: FnOnce(&Block) -> bool + Send + 'static,
 {
-    let block_clone = block.clone();
-    tokio::task::spawn_blocking(move || match check(&block_clone) {
-        Ok(_) => {}
-        Err(err) => {
-            error!("{}", err);
-        }
-    })
+    tokio::task::spawn_blocking(move || if check(&block) { Ok(()) } else { Err(error) })
+        .await
+        .unwrap_or_else(|e| Err(e.into()))
 }

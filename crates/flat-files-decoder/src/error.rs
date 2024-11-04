@@ -1,4 +1,5 @@
 use thiserror::Error;
+use tokio::sync::mpsc::error::SendError;
 
 #[derive(Debug, Error)]
 pub enum DecoderError {
@@ -26,6 +27,8 @@ pub enum DecoderError {
     Json(#[from] serde_json::Error),
     #[error("Failed to match roots for block number {block_number}")]
     MatchRootsFailed { block_number: u64 },
+    #[error("{0}")]
+    MpscSend(#[from] SendError<Vec<u8>>),
     #[error("Protobuf decode error: {0}")]
     ProtobufDecode(#[from] prost::DecodeError),
     #[error("Invalid Receipt Root")]
