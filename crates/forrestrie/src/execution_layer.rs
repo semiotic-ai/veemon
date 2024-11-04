@@ -2,25 +2,6 @@
 //! and generate inclusion proofs for specified receipts within the trie. It includes data structures
 //! for parsing and handling receipt data, as well as utilities for encoding and decoding as required
 //! by the Ethereum specification.
-//!
-//! ### Example
-//!
-//! ```rust,ignore
-//! // Assume `receipts_json` is a vector of deserialized receipt objects from an execution block given by an Ethereum node.
-//! let receipts_with_bloom: Vec<ReceiptWithBloom> = receipts_json
-//!     .iter()
-//!     .map(ReceiptWithBloom::try_from)
-//!     .collect::<Result<_, _>>()?;
-//!
-//! // Specify the indices of receipts for which proofs are needed.
-//! let target_indices = &[0, 2, 5];
-//!
-//! // Build the trie and obtain proofs.
-//! let hash_builder = build_trie_with_proofs(&receipts_with_bloom, target_indices);
-//!
-//! // Retrieve the root hash of the trie, and retain the proofs so they can be verified.
-//! let trie_root = hash_builder.root();
-//! ```
 
 use alloy_primitives::{Bloom, U256};
 use alloy_rlp::Encodable;
@@ -175,6 +156,24 @@ where
 
 /// builds the trie to generate proofs from the Receipts
 /// generate a different root. Make sure that the source of receipts sorts them by `logIndex`
+/// # Example
+///
+/// ```no_run
+/// // Assume `receipts_json` is a vector of deserialized receipt objects from an execution block given by an Ethereum node.
+/// let receipts_with_bloom: Vec<ReceiptWithBloom> = receipts_json
+///     .iter()
+///     .map(ReceiptWithBloom::try_from)
+///     .collect::<Result<_, _>>()?;
+///
+/// // Specify the indices of receipts for which proofs are needed.
+/// let target_indices = &[0, 2, 5];
+///
+/// // Build the trie and obtain proofs.
+/// let hash_builder = build_trie_with_proofs(&receipts_with_bloom, target_indices);
+///
+/// // Retrieve the root hash of the trie, and retain the proofs so they can be verified.
+/// let trie_root = hash_builder.root();
+/// ```
 pub fn build_trie_with_proofs(receipts: &[ReceiptWithBloom], target_idxs: &[usize]) -> HashBuilder {
     // Initialize ProofRetainer with the target nibbles (the keys for which we want proofs)
     let receipts_len = receipts.len();
