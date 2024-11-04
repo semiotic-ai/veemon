@@ -173,8 +173,8 @@ where
     TxType::try_from(tx_type_value).map_err(|_| serde::de::Error::custom("Invalid tx_type value"))
 }
 
-// builds the trie to generate proofs from the Receipts
-// generate a different root. Make sure that the source of receipts sorts them by `logIndex`
+/// builds the trie to generate proofs from the Receipts
+/// generate a different root. Make sure that the source of receipts sorts them by `logIndex`
 pub fn build_trie_with_proofs(receipts: &[ReceiptWithBloom], target_idxs: &[usize]) -> HashBuilder {
     // Initialize ProofRetainer with the target nibbles (the keys for which we want proofs)
     let receipts_len = receipts.len();
