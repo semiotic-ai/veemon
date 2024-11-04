@@ -6,13 +6,11 @@ use std::{
     },
 };
 
-use alloy_primitives::B256;
 use firehose_protos::{
     bstream,
-    ethereum_v2::{self, Block, BlockHeader},
+    ethereum_v2::{self, Block},
 };
 use prost::Message;
-use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tracing::{error, info};
@@ -92,50 +90,6 @@ pub fn decode_reader<R: Read>(
         .collect()
 }
 
-/// A struct to hold the receipt and transactions root for a `Block`.
-/// This struct is used to compare the receipt and transactions roots of a block
-/// with the receipt and transactions roots of another block.
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct BlockHeaderRoots {
-    receipt_root: B256,
-    transactions_root: B256,
-}
-
-impl TryFrom<&Block> for BlockHeaderRoots {
-    type Error = DecoderError;
-
-    fn try_from(block: &Block) -> Result<Self, Self::Error> {
-        block.header()?.try_into()
-    }
-}
-
-impl TryFrom<&BlockHeader> for BlockHeaderRoots {
-    type Error = DecoderError;
-
-    fn try_from(header: &BlockHeader) -> Result<Self, Self::Error> {
-        let receipt_root: [u8; 32] = header.receipt_root.as_slice().try_into()?;
-        let transactions_root: [u8; 32] = header.transactions_root.as_slice().try_into()?;
-
-        Ok(Self {
-            receipt_root: receipt_root.into(),
-            transactions_root: transactions_root.into(),
-        })
-    }
-}
-
-impl BlockHeaderRoots {
-    /// Checks if the receipt and transactions roots of a block header match the receipt and transactions roots of another block.
-    pub fn block_header_matches(&self, block: &Block) -> bool {
-        match block.try_into() {
-            Ok(other) => self == &other,
-            Err(e) => {
-                error!("Failed to convert block to header roots: {e}");
-                false
-            }
-        }
-    }
-}
-
 fn block_is_verified(block: &Block) -> bool {
     if block.number != 0 {
         if !block.receipt_root_is_verified() {
@@ -155,32 +109,6 @@ fn block_is_verified(block: &Block) -> bool {
         }
     }
     true
-}
-
-/// A struct to hold the block hash, block number, and total difficulty of a block.
-#[derive(Serialize, Deserialize)]
-pub struct HeaderRecordWithNumber {
-    block_hash: Vec<u8>,
-    block_number: u64,
-    total_difficulty: Vec<u8>,
-}
-
-impl TryFrom<&Block> for HeaderRecordWithNumber {
-    type Error = DecoderError;
-
-    fn try_from(block: &Block) -> Result<Self, Self::Error> {
-        Ok(HeaderRecordWithNumber {
-            block_hash: block.hash.clone(),
-            block_number: block.number,
-            total_difficulty: block
-                .header()?
-                .total_difficulty
-                .as_ref()
-                .ok_or(Self::Error::TotalDifficultyInvalid)?
-                .bytes
-                .clone(),
-        })
-    }
 }
 
 /// Reader enum to handle different types of readers
@@ -265,8 +193,8 @@ pub async fn stream_blocks(
     reader: Reader,
     end_block: EndBlock,
 ) -> Result<impl futures::Stream<Item = Block>, DecoderError> {
-    let (block_stream_tx, block_stream_rx) = tokio::sync::mpsc::channel::<Block>(8192);
-    let (bytes_tx, bytes_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(8192);
+    let (block_stream_tx, block_stream_rx) = mpsc::channel::<Block>(8192);
+    let (bytes_tx, bytes_rx) = mpsc::channel::<Vec<u8>>(8192);
     let current_block_number = Arc::new(AtomicU64::new(0));
 
     tokio::spawn(decode_blocks_stream(
