@@ -13,6 +13,7 @@ use trin_validation::{
     historical_roots_acc::HistoricalRootsAccumulator,
 };
 
+/// A proof that contains the block number
 #[derive(Clone)]
 pub struct InclusionProof {
     block_number: u64,
@@ -20,6 +21,7 @@ pub struct InclusionProof {
 }
 
 impl InclusionProof {
+    /// Takes a header and turns the proof into a proovable header
     pub fn with_header(self, header: Header) -> Result<ProovableHeader, EraValidateError> {
         if self.block_number != header.number {
             Err(EraValidateError::HeaderMismatch {
@@ -41,20 +43,17 @@ impl From<InclusionProof> for PreMergeAccumulatorProof {
     }
 }
 
-/// generates an inclusion proof over headers, given blocks between `start_block` and `end_block`
+/// Generates inclusion proofs for headers, given a list epochs that contains
+/// the headers to be prooven
 ///
 /// # Arguments
 ///
-/// * `ext_headers`-  A mutable [`Vec<ExtHeaderRecord>`]. The Vector can be any size, however, it must be in chunks of 8192 blocks to work properly
-///   to function without error
-/// * `start_block` -  The starting point of blocks that are to be included in the proofs. This interval is inclusive.
-/// * `end_epoch` -  The ending point of blocks that are to be included in the proofs. This interval is inclusive.
+/// * `epochs`-  A list of epochs [`Vec<Epoch>`].
+/// * `headers_to_prove` - A list of headers [`Vec<Header>`]
 pub fn generate_inclusion_proofs(
     epochs: Vec<Epoch>,
     headers_to_prove: Vec<Header>,
 ) -> Result<Vec<InclusionProof>, EraValidateError> {
-    // We need to load blocks from an entire epoch to be able to generate inclusion proofs
-    // First compute epoch accumulators and the Merkle tree for all the epochs of interest
     let mut inclusion_proof_vec: Vec<InclusionProof> = Vec::new();
     let epoch_list: Vec<_> = epochs.iter().map(|epoch| epoch.number()).collect();
     let accumulators: Vec<_> = epochs
@@ -80,6 +79,15 @@ pub fn generate_inclusion_proofs(
     Ok(inclusion_proof_vec)
 }
 
+/// Generates an inclusion proof for the header, given the epochs that contains
+/// the header to be prooven
+///
+/// Returns an error if the header is not inside the epoch.
+///
+/// # Arguments
+///
+/// * `header`- Header to be prooven
+/// * `epoch` - Epoch in which the header is located
 pub fn generate_inclusion_proof(
     header: Header,
     epoch: Epoch,
@@ -110,12 +118,12 @@ fn do_generate_inclusion_proof(
         .map_err(|_| EraValidateError::ProofGenerationFailure)
 }
 
-/// verifies an inclusion proof generate by [`generate_inclusion_proof`]
+/// Verifies a list of proovable headers
 ///
-/// * `blocks`-  A [`Vec<Block>`]. The blocks included in the inclusion proof interval, set in `start_block` and `end_block` of [`generate_inclusion_proof`]
-/// * `pre_merge_accumulator_file`- An instance of [`PreMergeAccumulator`] which is a file that maintains a record of historical epoch
-///   it is used to verify canonical-ness of headers accumulated from the `blocks`
-/// * `inclusion_proof` -  The inclusion proof generated from [`generate_inclusion_proof`].
+/// * `pre_merge_accumulator_file`- An optional instance of [`PreMergeAccumulator`]
+///     which is a file that maintains a record of historical epoch it is used to
+///     verify canonical-ness of headers accumulated from the `blocks`
+/// * `header_proofs`-  A [`Vec<ProovableHeader>`].
 pub fn verify_inclusion_proofs(
     pre_merge_accumulator_file: Option<PreMergeAccumulator>,
     header_proofs: Vec<ProovableHeader>,
@@ -127,29 +135,29 @@ pub fn verify_inclusion_proofs(
     };
 
     for proovable_header in header_proofs {
-        verify_inclusion_proof(
-            &header_validator,
-            proovable_header.header,
-            proovable_header.proof,
-        )?;
+        verify_inclusion_proof(&header_validator, proovable_header)?;
     }
 
     Ok(())
 }
 
+/// A header with an inclusion proof attached
 pub struct ProovableHeader {
     header: Header,
     proof: InclusionProof,
 }
 
+/// Verifies if a proof is contained in the header validator
 pub fn verify_inclusion_proof(
     header_validator: &HeaderValidator,
-    header: Header,
-    proof: InclusionProof,
+    proovable_header: ProovableHeader,
 ) -> Result<(), EraValidateError> {
-    let proof = BlockHeaderProof::PreMergeAccumulatorProof(proof.into());
+    let proof = BlockHeaderProof::PreMergeAccumulatorProof(proovable_header.proof.into());
 
-    let hwp = HeaderWithProof { header, proof };
+    let hwp = HeaderWithProof {
+        header: proovable_header.header,
+        proof,
+    };
 
     header_validator
         .validate_header_with_proof(&hwp)
