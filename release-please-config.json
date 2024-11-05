@@ -8,7 +8,6 @@
   "packages": {
     "crates/firehose-client": {},
     "crates/flat-files-decoder": {},
-    "crates/flat-head": {},
     "crates/forrestrie": {},
     "crates/forrestrie-examples": {},
     "crates/header-accumulator": {},
