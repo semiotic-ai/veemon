@@ -1,7 +1,7 @@
 //! # Receipts proof given an EL block's `receipt_root``
 //!
 //! This example shows how to generate an inclusion proof for a set of receipts of a EL block;
-//!
+
 use firehose_client::client::{Chain, FirehoseClient};
 use firehose_protos::ethereum_v2::{self, eth_block::FullReceipt, Block};
 use forrestrie::execution_layer::{build_trie_with_proofs, TargetLeaves};
@@ -20,14 +20,7 @@ async fn main() {
         .unwrap();
     let eth1_block: Block = ethereum_v2::Block::try_from(response.into_inner()).unwrap();
 
-    let receipts: Vec<FullReceipt> = eth1_block
-        .transaction_traces
-        .iter()
-        .filter_map(|trace| {
-            // Attempt to convert each trace into a FullReceipt
-            FullReceipt::try_from(trace).ok() // Collect only successful conversions
-        })
-        .collect();
+    let receipts: Vec<FullReceipt> = eth1_block.full_receipts().unwrap();
 
     let receipts_with_bloom: Vec<ReceiptWithBloom> = receipts
         .iter()
