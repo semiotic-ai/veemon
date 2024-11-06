@@ -159,6 +159,12 @@ impl Block {
         Ok(calculate_transaction_root(&transactions))
     }
 
+    /// Converts the transaction traces of the current block into a vector of `FullReceipt` objects.
+    ///
+    /// # Arguments
+    ///
+    /// * `block` reference to the block containing the `Vec<FullReceipt>`
+    ///
     pub fn full_receipts(&self) -> Result<Vec<FullReceipt>, ProtosError> {
         self.transaction_traces
             .iter()
