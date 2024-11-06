@@ -3,13 +3,13 @@
 //! Demonstrates how to fetch a single block from Ethereum firehose.
 
 use firehose_client::client::{Chain, FirehoseClient};
-use firehose_protos::ethereum_v2::Block as FirehoseEthBlock;
+use firehose_protos::EthBlock as Block;
 
 #[tokio::main]
 async fn main() {
     let mut client = FirehoseClient::new(Chain::Ethereum);
     let response = client.fetch_block(20672593).await.unwrap().unwrap();
-    let block = FirehoseEthBlock::try_from(response.into_inner()).unwrap();
+    let block = Block::try_from(response.into_inner()).unwrap();
 
     assert_eq!(block.number, 20672593);
     assert_eq!(

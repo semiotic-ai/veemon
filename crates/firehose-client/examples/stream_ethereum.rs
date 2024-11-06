@@ -2,7 +2,7 @@
 //!
 //! This example demonstrates how to stream Ethereum blocks using the Firehose client.
 use firehose_client::client::{Chain, FirehoseClient};
-use firehose_protos::ethereum_v2::Block as FirehoseEthBlock;
+use firehose_protos::EthBlock as Block;
 use futures::StreamExt;
 
 #[tokio::main]
@@ -18,7 +18,7 @@ async fn main() {
         .await
         .unwrap();
 
-    let mut blocks: Vec<FirehoseEthBlock> = Vec::with_capacity(TOTAL_BLOCKS as usize);
+    let mut blocks: Vec<Block> = Vec::with_capacity(TOTAL_BLOCKS as usize);
 
     while let Some(block) = stream.next().await {
         blocks.push(block);

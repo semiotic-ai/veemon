@@ -24,7 +24,7 @@
 //!
 use ethportal_api::Header;
 use firehose_client::client::{Chain, FirehoseClient};
-use firehose_protos::ethereum_v2;
+use firehose_protos::EthBlock;
 use forrestrie::{
     beacon_block::{
         HistoricalDataProofs, BEACON_BLOCK_BODY_PROOF_DEPTH, EXECUTION_PAYLOAD_FIELD_INDEX,
@@ -72,7 +72,7 @@ async fn main() {
         .await
         .unwrap()
         .unwrap();
-    let eth1_block = ethereum_v2::Block::try_from(response.into_inner()).unwrap();
+    let eth1_block = EthBlock::try_from(response.into_inner()).unwrap();
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // And get the Beacon block.

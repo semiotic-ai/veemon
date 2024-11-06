@@ -1,8 +1,7 @@
 //! Firehose Beacon-related data structures and operations.
 //! See the protobuffer definitions section of the README for more information.
 //!
-use firehose_protos::error::ProtosError;
-use firehose_protos::firehose::v2::{Response, SingleBlockResponse};
+use firehose_protos::{ProtosError, Response, SingleBlockResponse};
 use primitive_types::{H256, U256};
 use prost::Message;
 use ssz_types::{length::Fixed, Bitfield, FixedVector};

@@ -3,7 +3,7 @@
 //!
 use alloy_primitives::FixedBytes;
 use firehose_client::client::{Chain, FirehoseClient};
-use firehose_protos::ethereum_v2::Block;
+use firehose_protos::EthBlock as Block;
 
 const BLOCK_NUMBER: u64 = 20672593;
 

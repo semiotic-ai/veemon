@@ -57,9 +57,9 @@ enum ForkStep {
   reserved 5 ;
 }
 
-
+// Work with generic blocks messages using streaming APIs.
+//
 // General response and structs
-
 message Block {
   uint64 number = 1;
   string id = 2;
