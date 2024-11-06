@@ -5,8 +5,9 @@
 //!
 use firehose_client::client::{Chain, FirehoseClient};
 use firehose_protos::ethereum_v2::{self, eth_block::FullReceipt, Block};
-use forrestrie::execution_layer::build_trie_with_proofs;
+use forrestrie::execution_layer::{build_trie_with_proofs, TargetLeaf, TargetLeaves};
 use reth_primitives::ReceiptWithBloom;
+use reth_trie_common::proof::verify_proof;
 
 const EXECUTION_BLOCK_NUMBER: u64 = 20759937;
 
@@ -34,7 +35,10 @@ async fn main() {
         .map(|full_receipt| full_receipt.receipt.clone())
         .collect();
 
-    let mut hb = build_trie_with_proofs(&receipts_with_bloom, &[1, 2, 3]);
+    // These are de indexes of receipts on which proofs have to be generated
+    let target_idxs = &[1, 2, 3];
+    let targets = TargetLeaves::from_indices(target_idxs, &receipts_with_bloom).unwrap();
+    let mut hb = build_trie_with_proofs(&receipts_with_bloom, target_idxs);
 
     // produces the root, which matches the root of the blocks.
     // hb.root() also calculates the proofs and store them in the HashBuilder.
@@ -42,4 +46,21 @@ async fn main() {
 
     let calc_root = eth1_block.calculate_receipt_root();
     println!("roots: {:?},  {:?}", root, calc_root);
+
+    // proofs can be taken and sorted, so each proof matches one of the target.
+    // each proof of a specific target receipt is provided in `take_proof_nodes()`
+    // and can be stored or verified singularly
+    let proof = hb.take_proof_nodes();
+    for target in targets {
+        let _verification = verify_proof(
+            hb.root(),
+            target.nibbles.clone(),
+            Some(target.value.to_vec()),
+            proof
+                .clone()
+                .matching_nodes_sorted(&target.nibbles)
+                .iter()
+                .map(|(_, node)| node),
+        );
+    }
 }
