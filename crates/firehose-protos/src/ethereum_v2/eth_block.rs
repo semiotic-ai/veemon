@@ -267,6 +267,7 @@ impl Block {
     }
 }
 
+/// Work with the [`reth_primitives::ReceiptWithBloom`] combined with the matching state root.
 pub struct FullReceipt {
     receipt: ReceiptWithBloom,
     state_root: Vec<u8>,
