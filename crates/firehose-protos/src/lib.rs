@@ -24,7 +24,7 @@ mod bstream {
 
 pub use bstream::v1::Block as BstreamBlock;
 pub use error::ProtosError;
-pub use ethereum_v2::{Block as EthBlock, BlockHeader};
+pub use ethereum_v2::{eth_block::FullReceipt, Block as EthBlock, BlockHeader};
 pub(crate) use firehose_v2::single_block_request::BlockNumber;
 
 /// Work with the Firehose v2 API.
