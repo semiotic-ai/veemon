@@ -791,9 +791,9 @@ message GasChange {
     REASON_CONTRACT_CREATION2 = 7;
     // REASON_DELEGATE_CALL is the amount of gas that will be charged for a 'DELEGATECALL' opcode executed by the EVM
     REASON_DELEGATE_CALL = 8;
-    // REASON_EVENT_LOG is the amount of gas that will be charged for a 'LOG<N>' opcode executed by the EVM
+    // REASON_EVENT_LOG is the amount of gas that will be charged for a `LOG<N>` opcode executed by the EVM
     REASON_EVENT_LOG = 9;
-    // REASON_EXT_CODE_COPY is the amount of gas that will be charged for a 'LOG<N>' opcode executed by the EVM
+    // REASON_EXT_CODE_COPY is the amount of gas that will be charged for a `LOG<N>` opcode executed by the EVM
     REASON_EXT_CODE_COPY = 10;
     // REASON_FAILED_EXECUTION is the burning of the remaining gas when the execution failed without a revert
     REASON_FAILED_EXECUTION = 11;
