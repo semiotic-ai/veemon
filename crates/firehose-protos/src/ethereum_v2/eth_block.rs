@@ -159,7 +159,13 @@ impl Block {
         Ok(calculate_transaction_root(&transactions))
     }
 
-    fn full_receipts(&self) -> Result<Vec<FullReceipt>, ProtosError> {
+    /// Converts the transaction traces of the current block into a vector of `FullReceipt` objects.
+    ///
+    /// # Arguments
+    ///
+    /// * `block` reference to the block containing the `Vec<FullReceipt>`
+    ///
+    pub fn full_receipts(&self) -> Result<Vec<FullReceipt>, ProtosError> {
         self.transaction_traces
             .iter()
             .map(FullReceipt::try_from)
@@ -261,7 +267,7 @@ impl Block {
     }
 }
 
-struct FullReceipt {
+pub struct FullReceipt {
     receipt: ReceiptWithBloom,
     state_root: Vec<u8>,
 }
@@ -330,6 +336,11 @@ impl FullReceipt {
     /// [`ReceiptWithBloom`] `encode_inner` method.
     fn encode_byzantium_and_later_receipt(&self, encoded: &mut Vec<u8>) {
         self.receipt.encode_inner(encoded, false);
+    }
+
+    /// Returns a reference to the [`ReceiptWithBloom`] for this [`FullReceipt`]
+    pub fn get_receipt_wb(&self) -> &ReceiptWithBloom {
+        &self.receipt
     }
 
     /// Encodes receipt header using [RLP serialization](https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp)
