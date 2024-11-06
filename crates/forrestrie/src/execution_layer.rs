@@ -132,7 +132,6 @@ impl TargetLeaves {
     }
 }
 
-// Implement IntoIterator for TargetLeaves
 impl IntoIterator for TargetLeaves {
     type Item = TargetLeaf;
     type IntoIter = IntoIter<TargetLeaf>;
