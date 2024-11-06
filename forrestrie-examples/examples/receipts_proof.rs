@@ -24,7 +24,7 @@ async fn main() {
 
     let receipts_with_bloom: Vec<ReceiptWithBloom> = receipts
         .iter()
-        .map(|full_receipt| full_receipt.receipt.clone())
+        .map(|full_receipt| full_receipt.get_receipt_wb().clone())
         .collect();
 
     // These are the indexes of receipts for which proofs need to be generated
