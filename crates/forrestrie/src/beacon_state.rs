@@ -37,9 +37,9 @@ pub const CAPELLA_START_SLOT: usize = CAPELLA_START_EPOCH * SLOTS_PER_EPOCH;
 /// The first era of the Deneb fork.
 pub const CAPELLA_START_ERA: usize =
     (CAPELLA_START_EPOCH * SLOTS_PER_EPOCH) / SLOTS_PER_HISTORICAL_ROOT;
-/// https://beaconcha.in/slot/8626176
+/// <https://beaconcha.in/slot/8626176>
 pub const DENEB_START_SLOT: usize = 8626176;
-/// https://beaconcha.in/slot/8626176
+/// <https://beaconcha.in/slot/8626176>
 pub const FIRST_EXECUTION_BLOCK_DENEB: usize = 19426587;
 /// The offset between the Ethereum block number and the Beacon block number at the start of the Deneb fork,
 /// i.e. the difference between the first execution block number in the Deneb fork and the start slot number of the Deneb fork.
