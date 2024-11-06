@@ -2317,6 +2317,8 @@ dependencies = [
  "prost-wkt",
  "prost-wkt-types",
  "reqwest",
+ "reth-primitives",
+ "reth-trie-common",
  "serde",
  "serde_json",
  "ssz_types 0.6.0",

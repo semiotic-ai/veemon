@@ -8,6 +8,7 @@ use alloy_rlp::Encodable;
 use reth_primitives::{Log, Receipt, ReceiptWithBloom, TxType};
 use reth_trie_common::{proof::ProofRetainer, root::adjust_index_for_rlp, HashBuilder, Nibbles};
 use serde::{Deserialize, Deserializer, Serialize};
+use std::vec::IntoIter;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ReceiptJson {
@@ -86,6 +87,57 @@ impl TargetLeaf {
     // Constructor to create a new TargetLeaf
     pub fn new(nibbles: Nibbles, value: Vec<u8>) -> Self {
         TargetLeaf { nibbles, value }
+    }
+}
+
+pub struct TargetLeaves(Vec<TargetLeaf>);
+
+impl TargetLeaves {
+    fn new() -> Self {
+        TargetLeaves(Vec::new())
+    }
+
+    pub fn from_indices(
+        target_idxs: &[usize],
+        receipts: &[ReceiptWithBloom],
+    ) -> Result<Self, &'static str> {
+        let mut index_buffer = Vec::new();
+        let mut value_buffer = Vec::new();
+        let mut targets = TargetLeaves::new();
+        let receipts_len = receipts.len();
+
+        for &target_idx in target_idxs {
+            if target_idx >= receipts_len {
+                return Err("Index out of bounds");
+            }
+
+            index_buffer.clear();
+            value_buffer.clear();
+
+            // Adjust the index and encode it
+            let index = adjust_index_for_rlp(target_idx, receipts_len);
+            index.encode(&mut index_buffer);
+
+            // Generate nibble path from the index buffer
+            let nibble = Nibbles::unpack(&index_buffer);
+
+            // Encode the receipt and create TargetLeaf
+            receipts[index].encode_inner(&mut value_buffer, false);
+            targets
+                .0
+                .push(TargetLeaf::new(nibble, value_buffer.clone()));
+        }
+
+        Ok(targets)
+    }
+}
+
+impl IntoIterator for TargetLeaves {
+    type Item = TargetLeaf;
+    type IntoIter = IntoIter<TargetLeaf>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 
@@ -232,30 +284,14 @@ mod tests {
         //target_idxs are the logIndexes for receipts to get proofs from.
         // these values are arbitrary
         let target_idxs = &[4];
-        let mut targets: Vec<TargetLeaf> = Vec::new();
-        let receipts_len;
+        let targets: TargetLeaves;
 
         match receipts_with_bloom {
             Ok(receipts) => {
                 hb = build_trie_with_proofs(&receipts, target_idxs);
 
-                let mut index_buffer = Vec::new();
-                let mut value_buffer = Vec::new();
-
                 // build some of the targets to get proofs for them
-                receipts_len = receipts.len();
-                for i in target_idxs {
-                    index_buffer.clear();
-                    value_buffer.clear();
-
-                    let index = adjust_index_for_rlp(*i, receipts_len);
-                    index.encode(&mut index_buffer);
-
-                    let nibble = Nibbles::unpack(&index_buffer);
-
-                    receipts[index].encode_inner(&mut value_buffer, false);
-                    targets.push(TargetLeaf::new(nibble, value_buffer.clone()));
-                }
+                targets = TargetLeaves::from_indices(target_idxs, &receipts).unwrap();
             }
             Err(e) => {
                 // Handle the error (e.g., by logging or panicking)
@@ -268,7 +304,7 @@ mod tests {
 
         // verifies proof for retained targets
         let proof = hb.take_proof_nodes();
-        for target in targets.iter() {
+        for target in targets {
             assert_eq!(
                 verify_proof(
                     hb.root(),

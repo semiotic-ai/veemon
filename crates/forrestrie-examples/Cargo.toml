@@ -17,6 +17,8 @@ prost.workspace = true
 prost-wkt.workspace = true
 prost-wkt-types.workspace = true
 reqwest = { workspace = true, features = ["json"] }
+reth-primitives.workspace = true
+reth-trie-common.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 ssz_types.workspace = true
