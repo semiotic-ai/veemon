@@ -159,7 +159,7 @@ impl Block {
         Ok(calculate_transaction_root(&transactions))
     }
 
-    fn full_receipts(&self) -> Result<Vec<FullReceipt>, ProtosError> {
+    pub fn full_receipts(&self) -> Result<Vec<FullReceipt>, ProtosError> {
         self.transaction_traces
             .iter()
             .map(FullReceipt::try_from)
@@ -261,8 +261,8 @@ impl Block {
     }
 }
 
-struct FullReceipt {
-    receipt: ReceiptWithBloom,
+pub struct FullReceipt {
+    pub receipt: ReceiptWithBloom,
     state_root: Vec<u8>,
 }
 
