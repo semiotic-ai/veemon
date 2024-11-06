@@ -1,5 +1,14 @@
 # Flat Files Decoder
 
+## Overview
+
+Check out the crate documentation in your browser by running, from
+the root of the `veemon` workspace:
+
+```terminal
+cd crates/flat-files-decoder && cargo doc --open
+```
+
 ## Running CLI Example
 
 ### Commands
