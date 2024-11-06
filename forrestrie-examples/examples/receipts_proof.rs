@@ -3,7 +3,7 @@
 //! This example shows how to generate an inclusion proof for a set of receipts of a EL block;
 
 use firehose_client::client::{Chain, FirehoseClient};
-use firehose_protos::ethereum_v2::{self, eth_block::FullReceipt, Block};
+use firehose_protos::{EthBlock as Block, FullReceipt};
 use forrestrie::execution_layer::{build_trie_with_proofs, TargetLeaves};
 use reth_primitives::ReceiptWithBloom;
 use reth_trie_common::proof::verify_proof;
@@ -18,7 +18,7 @@ async fn main() {
         .await
         .unwrap()
         .unwrap();
-    let eth1_block: Block = ethereum_v2::Block::try_from(response.into_inner()).unwrap();
+    let eth1_block: Block = Block::try_from(response.into_inner()).unwrap();
 
     let receipts: Vec<FullReceipt> = eth1_block.full_receipts().unwrap();
 
