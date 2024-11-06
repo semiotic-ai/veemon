@@ -8,7 +8,7 @@ use ethportal_api::{
     },
     Header,
 };
-use firehose_protos::ethereum_v2::Block;
+use firehose_protos::EthBlock as Block;
 use tree_hash::Hash256;
 use trin_validation::{
     accumulator::PreMergeAccumulator, header_validator::HeaderValidator,

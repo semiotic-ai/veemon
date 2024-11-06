@@ -8,6 +8,8 @@ option go_package = "github.com/streamingfast/firehose-ethereum/types/pb/sf/ethe
 
 import "google/protobuf/timestamp.proto";
 
+// Extract Ethereum Execution Layer blocks. 
+//
 // Block is the representation of the tracing of a block in the Ethereum
 // blockchain. A block is a collection of [TransactionTrace] that are grouped
 // together and processed as an atomic unit. Each [TransactionTrace] is composed
@@ -134,6 +136,7 @@ message Block {
   int32 ver = 1;
 }
 
+// Work with the `BlockHeader`s of EVM blocks.
 message BlockHeader {
   bytes parent_hash = 1;
 

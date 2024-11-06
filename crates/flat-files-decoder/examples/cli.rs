@@ -6,7 +6,7 @@ use std::{
 
 use alloy_primitives::B256;
 use clap::{Parser, Subcommand};
-use firehose_protos::ethereum_v2::{Block, BlockHeader};
+use firehose_protos::{BlockHeader, EthBlock as Block};
 use flat_files_decoder::{
     read_blocks_from_reader, stream_blocks, Compression, DecoderError, Reader,
 };
@@ -276,7 +276,7 @@ impl TryFrom<&Block> for HeaderRecordWithNumber {
     }
 }
 
-/// A struct to hold the receipt and transactions root for a `Block`.
+/// A struct to hold the receipt and transactions root for an [`Block`].
 /// This struct is used to compare the receipt and transactions roots of a block
 /// with the receipt and transactions roots of another block.
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]

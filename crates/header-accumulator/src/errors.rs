@@ -1,5 +1,5 @@
 use alloy_primitives::map::HashSet;
-use firehose_protos::error::ProtosError;
+use firehose_protos::ProtosError;
 
 /// Possible errors while interacting with the lib
 #[derive(thiserror::Error, Debug)]

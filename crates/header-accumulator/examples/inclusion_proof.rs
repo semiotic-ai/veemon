@@ -1,6 +1,6 @@
 use std::{fs::File, io::BufReader};
 
-use firehose_protos::ethereum_v2::Block;
+use firehose_protos::EthBlock as Block;
 use flat_files_decoder::{read_blocks_from_reader, Compression};
 use header_accumulator::{
     generate_inclusion_proof, verify_inclusion_proof, EraValidateError, ExtHeaderRecord,

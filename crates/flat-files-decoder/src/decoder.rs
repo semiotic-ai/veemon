@@ -1,9 +1,6 @@
 use std::io::{BufReader, Cursor, Read};
 
-use firehose_protos::{
-    bstream,
-    ethereum_v2::{self, Block},
-};
+use firehose_protos::{BstreamBlock, EthBlock as Block};
 use prost::Message;
 use tracing::{error, info};
 
@@ -214,7 +211,7 @@ pub fn stream_blocks(
 
 /// Decodes a block from a byte slice.
 fn decode_block_from_bytes(bytes: &[u8]) -> Result<Block, DecoderError> {
-    let block_stream = bstream::v1::Block::decode(bytes)?;
-    let block = ethereum_v2::Block::decode(block_stream.payload_buffer.as_slice())?;
+    let block_stream = BstreamBlock::decode(bytes)?;
+    let block = Block::decode(block_stream.payload_buffer.as_slice())?;
     Ok(block)
 }

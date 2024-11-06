@@ -12,7 +12,7 @@ use tracing::error;
 
 use crate::{
     error::ProtosError,
-    firehose::v2::{Response, SingleBlockResponse},
+    firehose_v2::{Response, SingleBlockResponse},
 };
 
 impl TryFrom<&Block> for Header {

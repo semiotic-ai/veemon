@@ -64,10 +64,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
                     }
                 };
                 b.iter(|| {
-                    black_box(firehose_protos::bstream::v1::Block::decode(
-                        message.as_slice(),
-                    ))
-                    .unwrap();
+                    black_box(firehose_protos::BstreamBlock::decode(message.as_slice())).unwrap();
                 });
             }
         }
@@ -95,9 +92,9 @@ fn read_decode_check_bench(c: &mut Criterion) {
                     }
                 };
                 let block_stream =
-                    firehose_protos::bstream::v1::Block::decode(message.as_slice()).unwrap();
+                    firehose_protos::BstreamBlock::decode(message.as_slice()).unwrap();
                 b.iter(|| {
-                    black_box(firehose_protos::ethereum_v2::Block::decode(
+                    black_box(firehose_protos::EthBlock::decode(
                         block_stream.payload_buffer.as_slice(),
                     ))
                     .unwrap();
@@ -128,11 +125,10 @@ fn read_decode_check_bench(c: &mut Criterion) {
                     }
                 };
                 let block_stream =
-                    firehose_protos::bstream::v1::Block::decode(message.as_slice()).unwrap();
-                let block = firehose_protos::ethereum_v2::Block::decode(
-                    block_stream.payload_buffer.as_slice(),
-                )
-                .unwrap();
+                    firehose_protos::BstreamBlock::decode(message.as_slice()).unwrap();
+                let block =
+                    firehose_protos::EthBlock::decode(block_stream.payload_buffer.as_slice())
+                        .unwrap();
                 b.iter(|| {
                     black_box(block.receipt_root_is_verified());
                 });
@@ -162,11 +158,10 @@ fn read_decode_check_bench(c: &mut Criterion) {
                     }
                 };
                 let block_stream =
-                    firehose_protos::bstream::v1::Block::decode(message.as_slice()).unwrap();
-                let block = firehose_protos::ethereum_v2::Block::decode(
-                    block_stream.payload_buffer.as_slice(),
-                )
-                .unwrap();
+                    firehose_protos::BstreamBlock::decode(message.as_slice()).unwrap();
+                let block =
+                    firehose_protos::EthBlock::decode(block_stream.payload_buffer.as_slice())
+                        .unwrap();
                 b.iter(|| {
                     black_box(block.transaction_root_is_verified());
                 });

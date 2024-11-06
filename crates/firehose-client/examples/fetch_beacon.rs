@@ -3,8 +3,8 @@
 //! Demonstrates how to fetch a single block from Beacon Firehose, using the `Fetch` API.
 
 use firehose_client::client::{Chain, FirehoseClient};
-use firehose_protos::ethereum_v2::Block as FirehoseEthBlock;
-use forrestrie::beacon_v1::{block::Body, Block as FirehoseBeaconBlock};
+use firehose_protos::EthBlock;
+use forrestrie::beacon_v1::{block::Body, Block as BeaconBlock};
 
 #[tokio::main]
 async fn main() {
@@ -17,7 +17,7 @@ async fn main() {
         .unwrap()
         .unwrap();
 
-    let block = FirehoseEthBlock::try_from(response.into_inner()).unwrap();
+    let block = EthBlock::try_from(response.into_inner()).unwrap();
 
     assert_eq!(block.number, 20672593);
     assert_eq!(
@@ -30,7 +30,7 @@ async fn main() {
     // we don't have a way to map the block number of the execution block to the slot number
     // of the Beacon block.
     let response = beacon_client.fetch_block(9881091).await.unwrap().unwrap();
-    let block = FirehoseBeaconBlock::try_from(response.into_inner()).unwrap();
+    let block = BeaconBlock::try_from(response.into_inner()).unwrap();
 
     assert_eq!(block.slot, 9881091);
 

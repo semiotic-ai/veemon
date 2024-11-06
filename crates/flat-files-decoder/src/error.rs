@@ -10,7 +10,7 @@ pub enum DecoderError {
     #[error("Invalid flat file content type: {0}")]
     ContentTypeInvalid(String),
     #[error("Protos error: {0}")]
-    FirehoseProtosError(#[from] firehose_protos::error::ProtosError),
+    FirehoseProtosError(#[from] firehose_protos::ProtosError),
     #[error("Unsupported format: {0:?}")]
     FormatUnsupported(Option<String>),
     #[error("Invalid header")]

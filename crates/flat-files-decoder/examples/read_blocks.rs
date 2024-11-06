@@ -3,7 +3,7 @@ use std::{
     io::{BufReader, BufWriter, Cursor, Write},
 };
 
-use firehose_protos::ethereum_v2::Block;
+use firehose_protos::EthBlock as Block;
 use flat_files_decoder::{stream_blocks, EndBlock, Reader};
 
 fn main() {

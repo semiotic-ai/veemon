@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+/// Custom error variants for Verifiable Extraction protobuffer types.
 #[derive(Error, Debug)]
 pub enum ProtosError {
     #[error("Block conversion error")]

@@ -3,13 +3,7 @@ use std::str::FromStr;
 use crate::error::ClientError;
 use dotenvy::{dotenv, var};
 use firehose_protos::{
-    ethereum_v2::Block as FirehoseEthBlock,
-    firehose::v2::{
-        fetch_client::FetchClient,
-        single_block_request::{BlockNumber, Reference},
-        stream_client::StreamClient,
-        Request, SingleBlockRequest, SingleBlockResponse,
-    },
+    EthBlock as Block, FetchClient, Request, SingleBlockRequest, SingleBlockResponse, StreamClient,
 };
 use forrestrie::beacon_v1::Block as FirehoseBeaconBlock;
 use tokio_stream::wrappers::ReceiverStream;
@@ -137,8 +131,8 @@ impl FirehoseClient {
         &mut self,
         start: u64,
         total: u64,
-    ) -> Result<impl futures::Stream<Item = FirehoseEthBlock>, ClientError> {
-        let (tx, rx) = tokio::sync::mpsc::channel::<FirehoseEthBlock>(8192);
+    ) -> Result<impl futures::Stream<Item = Block>, ClientError> {
+        let (tx, rx) = tokio::sync::mpsc::channel::<Block>(8192);
 
         let chain = self.chain;
         let client = self.get_streaming_client().await?;
@@ -160,7 +154,7 @@ impl FirehoseClient {
                     if blocks % 100 == 0 && blocks != 0 {
                         trace!("Blocks fetched: {}", blocks);
                     }
-                    match FirehoseEthBlock::try_from(block_msg) {
+                    match Block::try_from(block_msg) {
                         Ok(block) => {
                             blocks += 1;
                             tx.clone().send(block).await.unwrap();
@@ -237,10 +231,7 @@ impl From<BlocksRequested> for bool {
 /// Create a [`SingleBlockRequest`] for the given *number*.
 /// Number is slot number for beacon blocks.
 fn create_single_block_fetch_request(num: u64) -> tonic::Request<SingleBlockRequest> {
-    tonic::Request::new(SingleBlockRequest {
-        reference: Some(Reference::BlockNumber(BlockNumber { num })),
-        ..Default::default()
-    })
+    tonic::Request::new(SingleBlockRequest::new(num))
 }
 
 trait FirehoseRequest {
