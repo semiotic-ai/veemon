@@ -27,7 +27,7 @@ async fn main() {
         .map(|full_receipt| full_receipt.receipt.clone())
         .collect();
 
-    // These are de indexes of receipts on which proofs have to be generated
+    // These are the indexes of receipts for which proofs need to be generated
     let target_idxs = &[1, 2, 3];
     let targets = TargetLeaves::from_indices(target_idxs, &receipts_with_bloom).unwrap();
     let mut hb = build_trie_with_proofs(&receipts_with_bloom, target_idxs);
