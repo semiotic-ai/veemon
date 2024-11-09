@@ -24,7 +24,7 @@
 //! let proof = body.compute_merkle_proof(EXECUTION_PAYLOAD_INDEX).unwrap();
 //! ```
 //!
-use firehose_client::client::{Chain, FirehoseClient};
+use firehose_client::{Chain, FirehoseClient};
 use forrestrie::{
     beacon_block::{
         HistoricalDataProofs, BEACON_BLOCK_BODY_PROOF_DEPTH, EXECUTION_PAYLOAD_FIELD_INDEX,

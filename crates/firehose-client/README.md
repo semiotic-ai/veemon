@@ -1,4 +1,7 @@
-# Firehose Ethereum Rust Client
+# Firehose Rust Client
+
+Extract blocks from [StreamingFast Firehose](https://firehose.streamingfast.io/)
+programatically in Rust.
 
 ## gRPC Endpoints
 
@@ -7,9 +10,11 @@
 Use environment variables to provide Firehose Ethereum and Firehose
 Beacon providers of your choice.
 
-To do this, place a `.env` file in the root of `veemon`. See the
-`.env.example` file in the root of this repository for what you'll need,
-depending on your requirements.
+To do this, place a `.env` file in the root of the `veemon` repository. 
+See the `.env.example` file, also in the root of this repository, for what
+you'll need, depending on your requirements. You may have access to a
+Firehose provider and/or may need to use a provider. For example, you can
+use [Pinax](https://app.pinax.network/) as an endpoint provider.
 
 ## firehose-ethereum and firehose-beacon gRPC
 

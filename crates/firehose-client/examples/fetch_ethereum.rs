@@ -2,7 +2,7 @@
 //!
 //! Demonstrates how to fetch a single block from Ethereum firehose.
 
-use firehose_client::client::{Chain, FirehoseClient};
+use firehose_client::{Chain, FirehoseClient};
 use firehose_protos::EthBlock as Block;
 
 #[tokio::main]

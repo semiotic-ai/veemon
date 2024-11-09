@@ -13,6 +13,7 @@ use tonic::{
 };
 use tracing::{error, info, trace};
 
+/// Work with the fetch and streaming APIs supported by [StreamingFast Firehose](https://firehose.streamingfast.io/).
 pub struct FirehoseClient {
     chain: Chain,
     fetch_client: Option<FetchClient<Channel>>,
@@ -127,7 +128,7 @@ impl FirehoseClient {
         Ok(ReceiverStream::new(rx))
     }
 
-    pub async fn stream_ethereum_with_retry(
+    pub async fn stream_blocks(
         &mut self,
         start: u64,
         total: u64,
@@ -252,6 +253,7 @@ fn insert_api_key_if_provided<T>(request: &mut tonic::Request<T>, chain: Chain) 
     }
 }
 
+/// Extract blocks with [`FirehoseClient`] from an extendable union of chain variants.
 #[derive(Clone, Copy, Debug)]
 pub enum Chain {
     Ethereum,
