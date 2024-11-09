@@ -2,7 +2,7 @@
 //!
 //! This example shows how to generate an inclusion proof for a set of receipts of a EL block;
 
-use firehose_client::client::{Chain, FirehoseClient};
+use firehose_client::{Chain, FirehoseClient};
 use firehose_protos::{EthBlock as Block, FullReceipt};
 use forrestrie::execution_layer::{build_trie_with_proofs, TargetLeaves};
 use reth_primitives::ReceiptWithBloom;
