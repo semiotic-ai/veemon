@@ -23,7 +23,7 @@
 //! for the era.
 //!
 use ethportal_api::Header;
-use firehose_client::client::{Chain, FirehoseClient};
+use firehose_client::{Chain, FirehoseClient};
 use firehose_protos::EthBlock;
 use forrestrie::{
     beacon_block::{

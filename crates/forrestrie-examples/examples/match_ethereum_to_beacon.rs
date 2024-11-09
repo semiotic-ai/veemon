@@ -29,7 +29,7 @@
 //! comparison until the correct Beacon slot is found.
 //!
 
-use firehose_client::client::{Chain, FirehoseClient};
+use firehose_client::{Chain, FirehoseClient};
 use forrestrie::{
     beacon_state::ETHEREUM_BEACON_DENEB_OFFSET,
     beacon_v1::{block, Block as FirehoseBeaconBlock},
