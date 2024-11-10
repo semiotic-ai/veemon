@@ -1,6 +1,7 @@
-//! # Receipts proof given an EL block's `receipt_root``
+//! # Receipts proof given an EL block's `receipt_root`
 //!
-//! This example shows how to generate an inclusion proof for a set of receipts of a EL block;
+//! This example shows how to generate an inclusion proof for a set of receipts of an EL block.
+//!
 
 use firehose_client::{Chain, FirehoseClient};
 use firehose_protos::{EthBlock as Block, FullReceipt};
