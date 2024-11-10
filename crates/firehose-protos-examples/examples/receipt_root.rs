@@ -1,6 +1,3 @@
-//! This example demonstrates how to calculate the receipts root of a block and
-//! compare it to the receipts root in the block header.
-//!
 use alloy_primitives::FixedBytes;
 use firehose_client::{Chain, FirehoseClient};
 use firehose_protos::EthBlock as Block;
