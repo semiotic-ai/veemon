@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import 'sf/ethereum/type/v2/type.proto';
+
+package mydata.v1;
+
+message HeaderAccumulator {
+  string root = 1;
+}
+
+message Hashes {
+  repeated string hashes = 1;
+}
+
+message Header {
+  string block_hash = 1;
+  uint64 block_number = 2;
+  sf.ethereum.type.v2.BigInt total_difficulty = 3;
+}
+
