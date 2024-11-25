@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use std::fmt::Display;
 
 use alloy_consensus::{TxEip1559, TxEip2930, TxLegacy};

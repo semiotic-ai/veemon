@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use super::{Block, BlockHeader, TransactionReceipt, TransactionTrace};
 use alloy_primitives::{hex, Address, Bloom, FixedBytes, Uint, B256};
 use alloy_rlp::{Encodable, Header as RlpHeader};

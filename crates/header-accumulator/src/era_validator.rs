@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use ethportal_api::types::execution::accumulator::EpochAccumulator;
 use tree_hash::{Hash256, TreeHash};
 use trin_validation::accumulator::{HistoricalEpochRoots, PreMergeAccumulator};
@@ -42,7 +45,7 @@ impl EraValidator {
     /// All pre-merge blocks (which are numbered before [`FINAL_EPOCH`]), are validated using
     /// the [Header Accumulator](https://github.com/ethereum/portal-network-specs/blob/8ad5bc33cb0d4485d2eab73bf2decc43e7566a8f/history-network.md#the-header-accumulator)
     ///
-    /// For block post merge, the sync-committee should be used to validate block headers   
+    /// For block post merge, the sync-committee should be used to validate block headers
     /// in the canonical blockchain. So this function is not useful for those.
     pub fn validate_era(&self, epoch: &Epoch) -> Result<Hash256, EraValidateError> {
         if epoch.number() > FINAL_EPOCH {

@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Example: Stream Beacon Blocks
 //!
 //! Demonstrates how to stream a range of blocks from Firehose Beacon

@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use alloy_primitives::{hex, Address, Bytes, B256};
 use reth_primitives::LogData;
 

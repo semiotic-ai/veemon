@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Empty Slot Block Hashes
 //!
 //! This example demonstrates that empty Beacon slots - slots with no execution block -

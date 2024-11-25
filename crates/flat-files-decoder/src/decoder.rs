@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use std::io::{BufReader, Cursor, Read};
 
 use firehose_protos::{BstreamBlock, EthBlock as Block};
@@ -139,7 +142,7 @@ impl TryFrom<Reader> for Box<dyn Read> {
 
 /// Set the end block for the range of blocks to read, decode, and verify.
 ///
-/// Enum to handle the end block of the stream.    
+/// Enum to handle the end block of the stream.
 /// It can be the merge block, i.e. the last pre-merge block, or a specific block number.
 pub enum EndBlock {
     /// The last pre-merge block.

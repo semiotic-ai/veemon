@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Verify Block Inclusion Proof
 //!
 //! In Ethereum's Beacon Chain, execution layer payloads are included in the block body.
@@ -13,7 +16,7 @@
 //! ```
 //!
 //! Similarly, the block body root is derived as follows:
-//!     
+//!
 //! ```rust
 //! let block_body_hash = block_body.tree_hash_root();
 //! ```

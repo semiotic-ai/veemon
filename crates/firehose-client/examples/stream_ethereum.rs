@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Example: Stream Ethereum Blocks
 //!
 //! This example demonstrates how to stream Ethereum blocks using the Firehose client.

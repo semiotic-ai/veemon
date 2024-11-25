@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Historical Summary Proof Given Historical Summaries Root
 //!
 //! This example demonstrates how to prove the inclusion of historical summaries in the beacon state.

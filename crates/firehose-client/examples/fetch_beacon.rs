@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Fetch Beacon Block
 //!
 //! Demonstrates how to fetch a single block from Beacon Firehose, using the `Fetch` API.

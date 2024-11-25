@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 extern crate rand;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};

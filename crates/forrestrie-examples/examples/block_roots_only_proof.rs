@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Inclusion Proofs for Block Roots Only
 //!
 //! For this test, we want to prove that a block_root is included in the `block_summary_root`
@@ -5,7 +8,7 @@
 //! A [`HistoricalSummary`] contains the roots of two Merkle trees, `block_summary_root` and
 //! `state_summary_root`.
 //! We are interested in the `block_summary_root` tree, whose leaves consists of the
-//! [`BeaconBlockHeader`] roots for one era (8192 consecutive slots).  
+//! [`BeaconBlockHeader`] roots for one era (8192 consecutive slots).
 //! For this test, we are using the state at the first [`Slot`] of an era to build the proof.
 //! We chose this [`Slot`] because it is the first [`Slot`] of an era, and all of the
 //! [`BeaconBlockHeader`] roots needed to construct the [`HistoricalSummary`] for this era are

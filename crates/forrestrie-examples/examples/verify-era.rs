@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! In this example, we verify a complete era of both beacon blocks and execution blocks.
 //! We first fetch a complete era of beacon blocks (8192 beacon blocks), compute the associated historical summary and
 //! compare it against the historical summary from a current consensus stated. We also extract the

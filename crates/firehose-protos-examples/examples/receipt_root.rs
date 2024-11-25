@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use alloy_primitives::FixedBytes;
 use firehose_client::{Chain, FirehoseClient};
 use firehose_protos::EthBlock as Block;

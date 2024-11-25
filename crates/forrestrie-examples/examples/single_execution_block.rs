@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Prove Inclusion of a Single Execution Layer Block in the Canonical History of the Blockchain
 //!
 //! This example demonstrates how to prove the inclusion of a single execution layer block in the canonical

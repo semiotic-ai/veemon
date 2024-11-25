@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Historical and state roots proof
 //!
 //! This example demonstrates how to prove the inclusion of historical state roots in the beacon state.
