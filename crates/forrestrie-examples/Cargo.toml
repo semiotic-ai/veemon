@@ -20,8 +20,11 @@ reqwest = { workspace = true, features = ["json"] }
 reth-primitives.workspace = true
 reth-trie-common.workspace = true
 serde = { workspace = true, features = ["derive"] }
+snap = "1.1.1"
+ssz_types = "0.8.0"
+ethereum_ssz = "0.7.1"
+ethereum_ssz_derive = "0.7.1"
 serde_json.workspace = true
-ssz_types.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tonic.workspace = true
 tracing.workspace = true
