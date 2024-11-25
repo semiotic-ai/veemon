@@ -15,11 +15,13 @@ use trin_validation::{
     historical_roots_acc::HistoricalRootsAccumulator,
 };
 
+const PROOF_SIZE: usize = 15;
+
 /// A proof that contains the block number
 #[derive(Clone)]
 pub struct InclusionProof {
     block_number: u64,
-    proof: [Hash256; 15],
+    proof: [Hash256; PROOF_SIZE],
 }
 
 impl InclusionProof {
