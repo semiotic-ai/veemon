@@ -16,6 +16,8 @@ use types::{
     Validator, Vector,
 };
 
+/// The merge block, inclusive, i.e., the block number below already counts to be post-merge.
+pub const MERGE_BLOCK: u64 = 15537394;
 /// The number of slots in an epoch.
 pub const SLOTS_PER_EPOCH: usize = 32;
 /// The number of slots in an era.
