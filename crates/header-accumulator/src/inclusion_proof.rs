@@ -56,7 +56,7 @@ pub fn generate_inclusion_proofs(
     epochs: Vec<Epoch>,
     headers_to_prove: Vec<Header>,
 ) -> Result<Vec<InclusionProof>, EraValidateError> {
-    let mut inclusion_proof_vec: Vec<InclusionProof> = Vec::new();
+    let mut inclusion_proof_vec: Vec<InclusionProof> = Vec::with_capacity(headers_to_prove.len());
     let epoch_list: Vec<_> = epochs.iter().map(|epoch| epoch.number()).collect();
     let accumulators: Vec<_> = epochs
         .into_iter()
