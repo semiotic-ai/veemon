@@ -3,7 +3,9 @@ use crate::{epoch::MAX_EPOCH_SIZE, errors::EraValidateError, Epoch};
 use ethportal_api::{
     types::execution::{
         accumulator::EpochAccumulator,
-        header_with_proof::{BlockHeaderProof, HeaderWithProof, PreMergeAccumulatorProof},
+        header_with_proof::{
+            BlockHeaderProof, HeaderWithProof as PortalHeaderWithProof, PreMergeAccumulatorProof,
+        },
     },
     Header,
 };
@@ -21,15 +23,15 @@ pub struct InclusionProof {
 }
 
 impl InclusionProof {
-    /// Takes a header and turns the proof into a proovable header
-    pub fn with_header(self, header: Header) -> Result<ProovableHeader, EraValidateError> {
+    /// Takes a header and turns the proof into a provable header
+    pub fn with_header(self, header: Header) -> Result<HeaderWithProof, EraValidateError> {
         if self.block_number != header.number {
             Err(EraValidateError::HeaderMismatch {
                 expected_number: self.block_number,
                 block_number: header.number,
             })
         } else {
-            Ok(ProovableHeader {
+            Ok(HeaderWithProof {
                 proof: self,
                 header,
             })
@@ -118,15 +120,15 @@ fn do_generate_inclusion_proof(
         .map_err(|_| EraValidateError::ProofGenerationFailure)
 }
 
-/// Verifies a list of proovable headers
+/// Verifies a list of provable headers
 ///
 /// * `pre_merge_accumulator_file`- An optional instance of [`PreMergeAccumulator`]
 ///     which is a file that maintains a record of historical epoch it is used to
 ///     verify canonical-ness of headers accumulated from the `blocks`
-/// * `header_proofs`-  A [`Vec<ProovableHeader>`].
+/// * `header_proofs`-  A [`Vec<HeaderWithProof>`].
 pub fn verify_inclusion_proofs(
     pre_merge_accumulator_file: Option<PreMergeAccumulator>,
-    header_proofs: Vec<ProovableHeader>,
+    header_proofs: Vec<HeaderWithProof>,
 ) -> Result<(), EraValidateError> {
     let pre_merge_acc = pre_merge_accumulator_file.unwrap_or_default();
     let header_validator = HeaderValidator {
@@ -134,15 +136,15 @@ pub fn verify_inclusion_proofs(
         historical_roots_acc: HistoricalRootsAccumulator::default(),
     };
 
-    for proovable_header in header_proofs {
-        verify_inclusion_proof(&header_validator, proovable_header)?;
+    for provable_header in header_proofs {
+        verify_inclusion_proof(&header_validator, provable_header)?;
     }
 
     Ok(())
 }
 
 /// A header with an inclusion proof attached
-pub struct ProovableHeader {
+pub struct HeaderWithProof {
     header: Header,
     proof: InclusionProof,
 }
@@ -150,12 +152,12 @@ pub struct ProovableHeader {
 /// Verifies if a proof is contained in the header validator
 pub fn verify_inclusion_proof(
     header_validator: &HeaderValidator,
-    proovable_header: ProovableHeader,
+    provable_header: HeaderWithProof,
 ) -> Result<(), EraValidateError> {
-    let proof = BlockHeaderProof::PreMergeAccumulatorProof(proovable_header.proof.into());
+    let proof = BlockHeaderProof::PreMergeAccumulatorProof(provable_header.proof.into());
 
-    let hwp = HeaderWithProof {
-        header: proovable_header.header,
+    let hwp = PortalHeaderWithProof {
+        header: provable_header.header,
         proof,
     };
 
