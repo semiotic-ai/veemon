@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Fetch Ethereum Block
 //!
 //! Demonstrates how to fetch a single block from Ethereum firehose.

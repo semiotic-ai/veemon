@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use std::io::{self, Read};
 
 use crate::error::DecoderError;
@@ -31,7 +34,7 @@ const SUPPORTED_DBIN_VERSION: u8 = 0;
 
 /// Work with a `.dbin` flat file.
 ///
-/// Developed by StreamingFast, dbin is a simple file storage format to pack a stream of protobuffer messages.    
+/// Developed by StreamingFast, dbin is a simple file storage format to pack a stream of protobuffer messages.
 /// For more information, see [the dbin format documentation](https://github.com/streamingfast/dbin?tab=readme-ov-file).
 #[derive(Debug)]
 pub struct DbinFile {

@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Proof for  single block to be part of an era of beacon blocks using the [`HistoricalBatch`].
 //!
 //! Notice that A [`HistoricalBatch`]` isn't an accumulator, it is a list of block_roots and state_roots

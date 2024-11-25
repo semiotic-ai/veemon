@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use once_cell::sync::Lazy;
 
 use tonic::transport::ClientTlsConfig;

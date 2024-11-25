@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Firehose Beacon-related data structures and operations.
 //! See the protobuffer definitions section of the README for more information.
 //!

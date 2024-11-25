@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Execution Layer functionality to build a Merkle Patricia Trie (MPT) from Ethereum receipts
 //! and generate inclusion proofs for specified receipts within the trie. It includes data structures
 //! for parsing and handling receipt data, as well as utilities for encoding and decoding as required

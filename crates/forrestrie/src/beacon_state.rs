@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
 use serde::{Deserialize, Serialize};

@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::BlockNumber;
 
 use super::{single_block_request::Reference, SingleBlockRequest};

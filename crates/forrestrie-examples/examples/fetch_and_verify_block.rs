@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Beacon Block and Header Root Consistency
 //!
 //! In Ethereum's Beacon chain, the beacon block root and the block header root should match

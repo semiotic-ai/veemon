@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use thiserror::Error;
 
 /// Get custom error variants for issues with reading, decoding, and verifying flat files.

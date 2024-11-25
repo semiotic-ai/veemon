@@ -1,8 +1,11 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Block Roots Proofs
 //!
 //! We want to prove that a block_root is included in a [`HistoricalSummary`] from the [`BeaconState`] historical_summaries List.
 //! A [`HistoricalSummary`] contains the roots of two Merkle trees, block_summary_root and state_summary root.
-//! We are interested in the block_summary tree, whose leaves consists of the [`BeaconBlockHeader`] roots for one era (8192 consecutive slots).  
+//! We are interested in the block_summary tree, whose leaves consists of the [`BeaconBlockHeader`] roots for one era (8192 consecutive slots).
 //! For example, we could have used the state at [`Slot`] 8790016, which is the first [`Slot`] of era 1073, to build the proof.
 //! Because it is the first [`Slot`] of an era, all of the [`BeaconBlockHeader`] roots needed to construct the
 //! [`HistoricalSummary`] for this era are available in state.block_roots.

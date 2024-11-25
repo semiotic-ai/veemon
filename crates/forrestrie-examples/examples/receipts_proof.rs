@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Receipts proof given an EL block's `receipt_root`
 //!
 //! This example shows how to generate an inclusion proof for a set of receipts of an EL block.

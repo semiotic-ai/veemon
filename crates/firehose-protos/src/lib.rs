@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! # Verifiable Extraction Protocol Buffers in Rust
 //!
 //! This module provides Rust implementations of StreamingFast's protocol buffer definitions,
