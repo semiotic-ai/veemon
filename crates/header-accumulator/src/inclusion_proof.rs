@@ -83,7 +83,7 @@ pub fn generate_inclusion_proofs(
     Ok(inclusion_proof_vec)
 }
 
-/// Generates an inclusion proof for the header, given the epochs that contains
+/// Generates an inclusion proof for the header, given the epoch that contains
 /// the header to be proven
 ///
 /// Returns an error if the header is not inside the epoch.
