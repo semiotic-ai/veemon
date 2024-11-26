@@ -25,7 +25,9 @@ impl<E: EthSpec> TryFrom<Attestation> for types::AttestationBase<E> {
         Ok(Self {
             aggregation_bits: BitList::from_bytes(aggregation_bits.as_slice().into())
                 .map_err(|e| ProtosError::SszTypesError(format!("{:?}", e)))?,
-            data: data.ok_or(ProtosError::NullAttestationData)?.try_into()?,
+            data: data
+                .ok_or(ProtosError::AttestationDataMissing)?
+                .try_into()?,
             signature: bls::generics::GenericAggregateSignature::deserialize(signature.as_slice())
                 .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
         })
@@ -48,8 +50,8 @@ impl TryFrom<AttestationData> for types::AttestationData {
             slot: slot.into(),
             index: committee_index,
             beacon_block_root: H256::from_slice(beacon_block_root.as_slice()),
-            source: source.ok_or(ProtosError::NullCheckpoint)?.into(),
-            target: target.ok_or(ProtosError::NullCheckpoint)?.into(),
+            source: source.ok_or(ProtosError::CheckpointMissing)?.into(),
+            target: target.ok_or(ProtosError::CheckpointMissing)?.into(),
         })
     }
 }
@@ -63,8 +65,8 @@ impl<E: EthSpec> TryFrom<AttesterSlashing> for types::AttesterSlashingBase<E> {
             attestation_2,
         }: AttesterSlashing,
     ) -> Result<Self, Self::Error> {
-        let attestation_1 = attestation_1.ok_or(ProtosError::NullSigner)?;
-        let attestation_2 = attestation_2.ok_or(ProtosError::NullSigner)?;
+        let attestation_1 = attestation_1.ok_or(ProtosError::SignerMissing)?;
+        let attestation_2 = attestation_2.ok_or(ProtosError::SignerMissing)?;
 
         Ok(Self {
             attestation_1: attestation_1.try_into()?,
@@ -190,7 +192,7 @@ impl TryFrom<Deposit> for types::Deposit {
                 .map(|v| H256::from_slice(v.as_slice()))
                 .collect::<Vec<_>>()
                 .into(),
-            data: data.ok_or(ProtosError::NullDepositData)?.try_into()?,
+            data: data.ok_or(ProtosError::DepositDataMissing)?.try_into()?,
         })
     }
 }
@@ -246,7 +248,7 @@ impl<E: EthSpec> TryFrom<IndexedAttestation> for types::IndexedAttestationBase<E
         Ok(IndexedAttestationBase {
             attesting_indices: attesting_indices.into(),
             data: data
-                .ok_or(ProtosError::NullIndexedAttestationData)?
+                .ok_or(ProtosError::IndexedAttestationDataMissing)?
                 .try_into()?,
             signature: bls::generics::GenericAggregateSignature::deserialize(signature.as_slice())
                 .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
@@ -264,8 +266,12 @@ impl TryFrom<ProposerSlashing> for types::ProposerSlashing {
         }: ProposerSlashing,
     ) -> Result<Self, Self::Error> {
         Ok(Self {
-            signed_header_1: signed_header_1.ok_or(ProtosError::NullSigner)?.try_into()?,
-            signed_header_2: signed_header_2.ok_or(ProtosError::NullSigner)?.try_into()?,
+            signed_header_1: signed_header_1
+                .ok_or(ProtosError::SignerMissing)?
+                .try_into()?,
+            signed_header_2: signed_header_2
+                .ok_or(ProtosError::SignerMissing)?
+                .try_into()?,
         })
     }
 }
@@ -278,7 +284,7 @@ impl TryFrom<SignedBeaconBlockHeader> for types::SignedBeaconBlockHeader {
     ) -> Result<Self, Self::Error> {
         Ok(Self {
             message: message
-                .ok_or(ProtosError::NullSignedBeaconBlockHeaderMessage)?
+                .ok_or(ProtosError::SignedBeaconBlockHeaderMessageMissing)?
                 .into(),
             signature: bls::generics::GenericSignature::deserialize(signature.as_slice())
                 .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
@@ -294,7 +300,7 @@ impl TryFrom<SignedBlsToExecutionChange> for types::SignedBlsToExecutionChange {
     ) -> Result<Self, Self::Error> {
         Ok(Self {
             message: message
-                .ok_or(ProtosError::NullBlsToExecutionChange)?
+                .ok_or(ProtosError::BlsToExecutionChangeMissing)?
                 .try_into()?,
             signature: bls::generics::GenericSignature::deserialize(signature.as_slice())
                 .expect("Failed to deserialize signature"),
@@ -309,7 +315,7 @@ impl TryFrom<SignedVoluntaryExit> for types::SignedVoluntaryExit {
         SignedVoluntaryExit { message, signature }: SignedVoluntaryExit,
     ) -> Result<Self, Self::Error> {
         Ok(Self {
-            message: message.ok_or(ProtosError::NullVoluntaryExit)?.into(),
+            message: message.ok_or(ProtosError::VoluntaryExitMissing)?.into(),
             signature: bls::generics::GenericSignature::deserialize(signature.as_slice())
                 .map_err(|e| ProtosError::Bls(format!("{:?}", e)))?,
         })
@@ -320,7 +326,7 @@ impl TryFrom<SingleBlockResponse> for Block {
     type Error = ProtosError;
 
     fn try_from(response: SingleBlockResponse) -> Result<Self, Self::Error> {
-        let any = response.block.ok_or(ProtosError::NullBlock)?;
+        let any = response.block.ok_or(ProtosError::BlockMissingInResponse)?;
         let block = Block::decode(any.value.as_ref())?;
         Ok(block)
     }
@@ -330,7 +336,7 @@ impl TryFrom<Response> for Block {
     type Error = ProtosError;
 
     fn try_from(response: Response) -> Result<Self, Self::Error> {
-        let any = response.block.ok_or(ProtosError::NullBlock)?;
+        let any = response.block.ok_or(ProtosError::BlockMissingInResponse)?;
         let block = Block::decode(any.value.as_ref())?;
         Ok(block)
     }
@@ -451,7 +457,7 @@ impl TryFrom<DenebBody> for types::BeaconBlockBodyDeneb<MainnetEthSpec> {
                 .transpose()?
                 .unwrap_or_else(types::SyncAggregate::new),
             execution_payload: execution_payload
-                .ok_or(ProtosError::NullExecutionPayload)
+                .ok_or(ProtosError::ExecutionPayloadMissing)
                 .and_then(types::ExecutionPayloadDeneb::try_from)?
                 .into(),
             bls_to_execution_changes: bls_to_execution_changes

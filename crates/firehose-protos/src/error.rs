@@ -3,93 +3,85 @@ use thiserror::Error;
 /// Custom error variants for Verifiable Extraction protobuffer types.
 #[derive(Error, Debug)]
 pub enum ProtosError {
+    /// Invalid access tuple storage key.
+    #[error("Invalid access tuple storage key: {0}")]
+    AccessTupleStorageKeyInvalid(String),
+
+    /// Missing attestation data.
+    #[error("Null attestation data")]
+    AttestationDataMissing,
+
+    /// Invalid BigInt.
+    #[error("Invalid BigInt: {0}")]
+    BigIntInvalid(String),
+
     /// Error converting protobuffer to block type.
     #[error("Block conversion error")]
     BlockConversionError,
+
+    /// Converted block missing block header.
+    #[error("BlockHeaderMissing")]
+    BlockHeaderMissing,
+
+    /// Block response missing block.
+    #[error("Null block field in block response")]
+    BlockMissingInResponse,
 
     /// [BLS signature](https://en.wikipedia.org/wiki/BLS_digital_signature) error.
     #[error("BLS error: {0}")]
     Bls(String),
 
+    /// Missing BLS to Execution Change
+    #[error("Null BlsToExecutionChange")]
+    BlsToExecutionChangeMissing,
+
+    /// Checkpoint missing.
+    #[error("Null checkpoint")]
+    CheckpointMissing,
+
     /// [prost] library decode error.
     #[error("Error in decoding block: {0}")]
     DecodeError(#[from] prost::DecodeError),
+
+    /// Missing deposit data.
+    #[error("Null deposit data")]
+    DepositDataMissing,
+
+    /// Missing execution payload.
+    #[error("Null execution payload")]
+    ExecutionPayloadMissing,
 
     /// Graffiti invalid when decoding block.
     #[error("GraffitiInvalid")]
     GraffitiInvalid,
 
-    /// Invalid access tuple storage key.
-    #[error("Invalid access tuple storage key: {0}")]
-    InvalidAccessTupleStorageKey(String),
-
-    /// Invalid BigInt.
-    #[error("Invalid BigInt: {0}")]
-    InvalidBigInt(String),
-
-    /// Invalid log address.
-    #[error("Invalid log address: {0}")]
-    InvalidLogAddress(String),
-
-    /// Invalid log topic.
-    #[error("Invalid log topic: {0}")]
-    InvalidLogTopic(String),
-
-    /// Invalid trace signature for ECDSA component.
-    #[error("Invalid trace signature {0:?} component: {1}")]
-    InvalidTraceSignature(String, String),
-
-    /// Invalid transaction receipt logs bloom.
-    #[error("Invalid transaction receipt logs bloom: {0}")]
-    InvalidTransactionReceiptLogsBloom(String),
+    /// Missing indexed attestation data.
+    #[error("Null indexed attestation data")]
+    IndexedAttestationDataMissing,
 
     /// Invalid KZG commitment.
     #[error("KzgCommitmentInvalid")]
     KzgCommitmentInvalid,
 
-    /// Converted block missing block header.
-    #[error("MissingBlockHeader")]
-    MissingBlockHeader,
+    /// Invalid log address.
+    #[error("Invalid log address: {0}")]
+    LogAddressInvalid(String),
 
-    /// Missing attestation data.
-    #[error("Null attestation data")]
-    NullAttestationData,
-
-    /// Missing indexed attestation data.
-    #[error("Null indexed attestation data")]
-    NullIndexedAttestationData,
-
-    /// Block response missing block.
-    #[error("Null block field in block response")]
-    NullBlock,
-
-    /// Missing BLS to Execution Change
-    #[error("Null BlsToExecutionChange")]
-    NullBlsToExecutionChange,
-
-    /// Checkpoint missing.
-    #[error("Null checkpoint")]
-    NullCheckpoint,
-
-    /// Missing deposit data.
-    #[error("Null deposit data")]
-    NullDepositData,
-
-    /// Missing execution payload.
-    #[error("Null execution payload")]
-    NullExecutionPayload,
-
-    /// Missing signer
-    #[error("Null signer")]
-    NullSigner,
+    /// Invalid log topic.
+    #[error("Invalid log topic: {0}")]
+    LogTopicInvalid(String),
 
     /// Missing signed Beacon block header message.
     #[error("Null SignedBeaconBlockHeader Message")]
-    NullSignedBeaconBlockHeaderMessage,
+    SignedBeaconBlockHeaderMessageMissing,
 
-    /// Missing voluntary exit.
-    #[error("Null voluntary exit")]
-    NullVoluntaryExit,
+    /// Missing signer
+    #[error("Null signer")]
+    SignerMissing,
+
+    /// Invalid trace signature for ECDSA component.
+    #[error("Invalid trace signature {0:?} component: {1}")]
+    TraceSignatureInvalid(String, String),
 
     /// SSZ Types error.
     #[error("SSZ Types error: {0}")]
@@ -99,6 +91,10 @@ pub enum ProtosError {
     #[error("Transaction missing call")]
     TransactionMissingCall,
 
+    /// Invalid transaction receipt logs bloom.
+    #[error("Invalid transaction receipt logs bloom: {0}")]
+    TransactionReceiptLogsBloomInvalid(String),
+
     /// Transaction trace missing receipt.
     #[error("Transaction trace missing receipt")]
     TransactionTraceMissingReceipt,
@@ -106,4 +102,8 @@ pub enum ProtosError {
     /// Transaction type conversion error.
     #[error("TxTypeConversionError: {0}")]
     TxTypeConversion(String),
+
+    /// Missing voluntary exit.
+    #[error("Null voluntary exit")]
+    VoluntaryExitMissing,
 }

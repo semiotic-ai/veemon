@@ -75,7 +75,7 @@ impl TransactionTrace {
 
             // If V is outside the expected range, return an error.
             _ => {
-                return Err(ProtosError::InvalidTraceSignature(
+                return Err(ProtosError::TraceSignatureInvalid(
                     EcdsaComponent::V.to_string(),
                     v.to_string(),
                 ))
@@ -149,13 +149,13 @@ impl TryFrom<&TransactionTrace> for Signature {
 
         // Extract the R value from the trace and ensure it's a valid 32-byte array.
         let r_bytes: [u8; 32] = trace.r.as_slice().try_into().map_err(|_| {
-            Self::Error::InvalidTraceSignature(R.to_string(), hex::encode(&trace.r))
+            Self::Error::TraceSignatureInvalid(R.to_string(), hex::encode(&trace.r))
         })?;
         let r = U256::from_be_bytes(r_bytes);
 
         // Extract the S value from the trace and ensure it's a valid 32-byte array.
         let s_bytes: [u8; 32] = trace.s.as_slice().try_into().map_err(|_| {
-            Self::Error::InvalidTraceSignature(S.to_string(), hex::encode(&trace.s))
+            Self::Error::TraceSignatureInvalid(S.to_string(), hex::encode(&trace.s))
         })?;
         let s = U256::from_be_bytes(s_bytes);
 
@@ -272,7 +272,7 @@ impl TryFrom<&BigInt> for u128 {
     fn try_from(value: &BigInt) -> Result<Self, Self::Error> {
         let slice = value.bytes.as_slice();
         let n =
-            U128::try_from_be_slice(slice).ok_or(ProtosError::InvalidBigInt(hex::encode(slice)))?;
+            U128::try_from_be_slice(slice).ok_or(ProtosError::BigIntInvalid(hex::encode(slice)))?;
         Ok(u128::from_le_bytes(n.to_le_bytes()))
     }
 }

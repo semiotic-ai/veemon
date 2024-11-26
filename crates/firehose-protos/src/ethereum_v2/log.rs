@@ -28,7 +28,7 @@ impl TryFrom<&Log> for Address {
             .address
             .as_slice()
             .try_into()
-            .map_err(|_| Self::Error::InvalidLogAddress(hex::encode(log.address.clone())))?;
+            .map_err(|_| Self::Error::LogAddressInvalid(hex::encode(log.address.clone())))?;
         Ok(Address::from(slice))
     }
 }
@@ -36,7 +36,7 @@ impl TryFrom<&Log> for Address {
 impl Log {
     fn to_topics(&self) -> Result<Vec<B256>, ProtosError> {
         fn to_b256(slice: &[u8]) -> Result<B256, ProtosError> {
-            B256::try_from(slice).map_err(|_| ProtosError::InvalidLogTopic(hex::encode(slice)))
+            B256::try_from(slice).map_err(|_| ProtosError::LogTopicInvalid(hex::encode(slice)))
         }
 
         self.topics
@@ -105,7 +105,7 @@ mod tests {
 
         let error = Address::try_from(&fake_log).unwrap_err();
 
-        assert!(matches!(error, ProtosError::InvalidLogAddress(_)));
+        assert!(matches!(error, ProtosError::LogAddressInvalid(_)));
     }
 
     #[test]
@@ -114,7 +114,7 @@ mod tests {
 
         let error = fake_log.to_topics().unwrap_err();
 
-        assert!(matches!(error, ProtosError::InvalidLogTopic(_)));
+        assert!(matches!(error, ProtosError::LogTopicInvalid(_)));
     }
 
     #[test]

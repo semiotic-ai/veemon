@@ -98,7 +98,9 @@ fn decode_block<M>(response: M) -> Result<Block, ProtosError>
 where
     M: MessageWithBlock,
 {
-    let any = response.block().ok_or(ProtosError::NullBlock)?;
+    let any = response
+        .block()
+        .ok_or(ProtosError::BlockMissingInResponse)?;
     let block = Block::decode(any.value.as_ref())?;
     Ok(block)
 }
@@ -200,7 +202,7 @@ impl Block {
 
     /// Returns a reference to the block header.
     pub fn header(&self) -> Result<&BlockHeader, ProtosError> {
-        self.header.as_ref().ok_or(ProtosError::MissingBlockHeader)
+        self.header.as_ref().ok_or(ProtosError::BlockHeaderMissing)
     }
 
     fn is_pre_byzantium(&self) -> bool {
@@ -310,7 +312,7 @@ impl TryFrom<&TransactionReceipt> for Bloom {
         logs_bloom
             .try_into()
             .map(|array: [u8; BLOOM_SIZE]| Bloom(FixedBytes(array)))
-            .map_err(|_| Self::Error::InvalidTransactionReceiptLogsBloom(hex::encode(logs_bloom)))
+            .map_err(|_| Self::Error::TransactionReceiptLogsBloomInvalid(hex::encode(logs_bloom)))
     }
 }
 

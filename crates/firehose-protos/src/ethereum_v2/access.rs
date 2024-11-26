@@ -28,7 +28,7 @@ fn convert_to_b256(key: &Vec<u8>) -> Result<B256, ProtosError> {
     let key_bytes: [u8; 32] = key
         .as_slice()
         .try_into()
-        .map_err(|_| ProtosError::InvalidAccessTupleStorageKey(hex::encode(key.clone())))?;
+        .map_err(|_| ProtosError::AccessTupleStorageKeyInvalid(hex::encode(key.clone())))?;
     Ok(B256::from(key_bytes))
 }
 
@@ -80,7 +80,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            ProtosError::InvalidAccessTupleStorageKey(_)
+            ProtosError::AccessTupleStorageKeyInvalid(_)
         ));
     }
 }
