@@ -8,6 +8,7 @@ fn main() {
     let mut config = Config::new();
     config.type_attribute(".", "#[derive(serde::Serialize, serde::Deserialize)]");
     config.type_attribute(".", "#[allow(clippy::enum_variant_names)]");
+    config.type_attribute(".", "#[allow(missing_docs)]");
 
     // Map Google protobuf types to prost_wkt_types
     config.extern_path(".google.protobuf.Any", "::prost_wkt_types::Any");
