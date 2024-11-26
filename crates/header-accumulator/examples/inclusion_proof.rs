@@ -35,20 +35,20 @@ fn main() -> Result<(), EraValidateError> {
 
     let start_block = 301;
     let end_block = 402;
-    let headers_to_proof: Vec<_> = headers[start_block..end_block]
+    let headers_to_prove: Vec<_> = headers[start_block..end_block]
         .iter()
         .map(|ext| ext.full_header.as_ref().unwrap().clone())
         .collect();
     let epoch: Epoch = headers.try_into().unwrap();
 
-    let inclusion_proof = generate_inclusion_proofs(vec![epoch], headers_to_proof.clone())
+    let inclusion_proof = generate_inclusion_proofs(vec![epoch], headers_to_prove.clone())
         .unwrap_or_else(|e| {
             println!("Error occurred: {}", e);
             std::process::exit(1);
         });
-    assert_eq!(inclusion_proof.len(), headers_to_proof.len());
+    assert_eq!(inclusion_proof.len(), headers_to_prove.len());
 
-    let proof_headers = headers_to_proof
+    let proof_headers = headers_to_prove
         .into_iter()
         .zip(inclusion_proof)
         .map(|(header, proof)| proof.with_header(header))
