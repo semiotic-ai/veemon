@@ -28,4 +28,8 @@ jobs:
             -ignore '.github/*.yml' \
             -ignore '.github/workflows/*.yaml' \
             -ignore '.github/*.yaml' \
+            -ignore 'crates/forrestrie/protos/type.proto' \
+            -ignore 'crates/firehose-protos/protos/bstream.proto' \
+            -ignore 'crates/firehose-protos/protos/block.proto' \
+            -ignore 'crates/firehose-protos/protos/firehose.proto' \
             .
