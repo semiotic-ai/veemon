@@ -12,6 +12,8 @@
 //! Alternatively, for tools for ingesting these block types from flat files, check out
 //! [`veemon/flat-files-decoder`](../flat-files-decoder/index.html).
 
+#![deny(missing_docs)]
+
 mod error;
 mod ethereum_v2;
 mod firehose_v2;

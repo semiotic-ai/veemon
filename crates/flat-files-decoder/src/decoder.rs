@@ -9,7 +9,9 @@ use crate::{dbin::read_block_from_reader, error::DecoderError, DbinFile};
 /// Work with data compression, including zstd.
 #[derive(Clone, Copy, Debug, Default)]
 pub enum Compression {
+    /// Zstd compression.
     Zstd,
+    /// No compression.
     #[default]
     None,
 }
@@ -104,7 +106,9 @@ fn block_is_verified(block: &Block) -> bool {
 /// - [`Reader::StdIn`]: A reader that reads from standard input, with or without compression
 #[derive(Debug)]
 pub enum Reader {
+    /// A [`BufReader`] that reads from a byte slice
     Buf(BufReader<Cursor<Vec<u8>>>),
+    /// A reader that reads from standard input, with or without compression
     StdIn(Compression),
 }
 
@@ -138,7 +142,9 @@ impl TryFrom<Reader> for Box<dyn Read> {
 /// Enum to handle the end block of the stream.    
 /// It can be the merge block, i.e. the last pre-merge block, or a specific block number.
 pub enum EndBlock {
+    /// The last pre-merge block.
     MergeBlock,
+    /// A specific block number.
     Block(u64),
 }
 

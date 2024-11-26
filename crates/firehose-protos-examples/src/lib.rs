@@ -25,3 +25,5 @@
 //! cargo run -p firehose-protos-examples --example receipt_root
 //! ```
 //!
+
+#![deny(missing_docs)]
