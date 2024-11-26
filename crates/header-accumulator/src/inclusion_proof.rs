@@ -48,7 +48,7 @@ impl From<InclusionProof> for PreMergeAccumulatorProof {
 }
 
 /// Generates inclusion proofs for headers, given a list epochs that contains
-/// the headers to be prooven
+/// the headers to be proven
 ///
 /// # Arguments
 ///
@@ -84,13 +84,13 @@ pub fn generate_inclusion_proofs(
 }
 
 /// Generates an inclusion proof for the header, given the epochs that contains
-/// the header to be prooven
+/// the header to be proven
 ///
 /// Returns an error if the header is not inside the epoch.
 ///
 /// # Arguments
 ///
-/// * `header`- Header to be prooven
+/// * `header`- Header to be proven
 /// * `epoch` - Epoch in which the header is located
 pub fn generate_inclusion_proof(
     header: Header,
