@@ -6,7 +6,7 @@
 //! extracted block headers.
 
 use ethportal_api::Header;
-use firehose_client::client::{Chain, FirehoseClient};
+use firehose_client::{Chain, FirehoseClient};
 use firehose_protos::EthBlock;
 use forrestrie::{
     beacon_state::{HeadState, CAPELLA_START_ERA, HISTORY_TREE_DEPTH, SLOTS_PER_HISTORICAL_ROOT},
