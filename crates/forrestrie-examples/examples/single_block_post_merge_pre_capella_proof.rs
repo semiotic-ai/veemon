@@ -1,7 +1,7 @@
 //! Proof for  single block to be part of an era of beacon blocks using the [`HistoricalBatch`].
 //!
 //! Notice that A [`HistoricalBatch`]` isn't an accumulator, it is a list of block_roots and state_roots
-//! So each root in the [`HistoricalRoots`] corresponds to hash_tree_root(historical_batch).
+//! So each root in the [`HistoricalRootsAccumulator`] corresponds to hash_tree_root(historical_batch).
 //! The batch is used to verify era against the accumulator. A block can be verified against an
 //! [`HistoricalBatch`], hence chaining the proofs
 use std::fs;
