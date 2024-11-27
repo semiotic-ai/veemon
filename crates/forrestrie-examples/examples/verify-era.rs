@@ -140,7 +140,7 @@ async fn main() {
     // `HistoricalSummary` was introduced in Capella and the block we're proving inclusion for is in
     // the post-Capella era.
     // For pre-Capella states, we would use the same method, only using the historical_roots field.
-    let era_index = era as usize - CAPELLA_START_ERA;
+    let era_index = era - CAPELLA_START_ERA;
 
     // Get the historical summary for the era from the consensus state.
     let head_state = state_handle.await.unwrap();
