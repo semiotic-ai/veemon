@@ -27,6 +27,9 @@ async fn main() {
     // construct proof from historical batch
     // In this example a slot that is inside the `HistoricalBatch`
     // was picked: https://beaconcha.in/slot/4685828
+    // NOTICE: we can also use the block roots themselves inside the the HistoricalBatch
+    // to figure out the slot by using the beacon chain explorer, for example:
+    // https://beaconcha.in/slot/58bbce808c399069fdd3e02e7906cd382ba8ffac8c1625a9d801ffa6a4120c98
     const EPOCH_SIZE: i32 = 8192;
     let slot = 4685828;
     let historical_root_index: i32 = slot % EPOCH_SIZE;
