@@ -1,43 +1,48 @@
-//! Proof for beacon blocks from merge until capella
+//! Proof for an era of beacon blocks using the [`HistoricalBatch`].
 //!
-use std::{env, fs};
+use std::{env, fs, str::FromStr};
 
 use ethportal_api::{
     consensus::beacon_state::HistoricalBatch,
-    types::execution::header_with_proof::{BeaconBlockProof, HistoricalRootsBlockProof},
+    types::execution::header_with_proof::HistoricalRootsBlockProof,
 };
-use forrestrie::beacon_state::{
-    HeadState, HISTORICAL_SUMMARIES_FIELD_INDEX, HISTORICAL_SUMMARIES_INDEX,
-};
-use merkle_proof::verify_merkle_proof;
-use reth_primitives::revm_primitives::B256;
-use snap::raw::Decoder;
-use ssz::{Decode, DecodeError, Encode};
+
+use reth_primitives::revm_primitives::{alloy_primitives::BlockHash, B256};
+use ssz::Decode;
 use ssz_types::FixedVector;
+use trin_validation::{
+    historical_roots_acc::HistoricalRootsAccumulator, merkle::proof::verify_merkle_proof,
+};
 use types::{light_client_update::CURRENT_SYNC_COMMITTEE_PROOF_LEN, MainnetEthSpec};
 
 #[tokio::main]
 async fn main() {
     // Load a historical batch.
-
-    let compressed =
-        fs::read("./crates/forrestrie-examples/assets/historical_batch-573-c847a969.ssz")
-            .expect("Cannot read test file");
-    let mut decoder = Decoder::new();
-    let decompressed = decoder
-        .decompress_vec(&compressed)
-        .expect("Decompression failed");
-    let hist_batch =
-        HistoricalBatch::from_ssz_bytes(&decompressed).expect("Deserialization failed");
-    assert_eq!(decompressed, hist_batch.as_ssz_bytes());
+    // A historical batch has to be generated from beacon blocks or retrieved
+    // from some source that already calculated these
+    let bytes =
+        fs::read("./crates/forrestrie-examples/assets/historical_batch-573-c847a969.ssz").unwrap();
+    let hist_batch = HistoricalBatch::from_ssz_bytes(&bytes).unwrap();
     // construct proof from historical batch
-    // let historical_roots_proof = hist_batch.build_block_root_proof(0);
+    let historical_roots_proof = hist_batch.build_block_root_proof(0);
 
-    // // construct the proof
-    // let proof = HistoricalRootsBlockProof {
-    //     beacon_block_proof: FixedVector::from_elem(B256::default()),
-    //     beacon_block_root: B256::default(),
-    //     historical_roots_proof: FixedVector::from_elem(B256::default()),
-    //     slot: 0,
-    // };
+    // // verify the proof
+    let epoch_size = 8192;
+    let slot = 4_698_112;
+    let block_root_index = slot % epoch_size;
+    let historical_root_index: i32 = slot / epoch_size;
+    let hist_acc = HistoricalRootsAccumulator::default();
+    let historical_root = hist_acc.historical_roots[historical_root_index as usize];
+
+    let gen_index = 2 * epoch_size + block_root_index;
+
+    let result = verify_merkle_proof(
+        B256::from_str("0x5273538177993fb75d8d27a00f32cd6cf583755062e97a45eb362cac356e3088")
+            .unwrap(),
+        &historical_roots_proof,
+        14,
+        gen_index as usize,
+        historical_root,
+    );
+    println!("result of verifying proof: {:?}", result);
 }

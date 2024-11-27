@@ -2330,6 +2330,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tree_hash 0.6.0",
+ "trin-validation",
  "types",
 ]
 
