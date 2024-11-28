@@ -2,6 +2,7 @@ use super::{Block, BlockHeader, TransactionReceipt, TransactionTrace};
 use alloy_primitives::{hex, Address, Bloom, FixedBytes, Uint, B256};
 use alloy_rlp::{Encodable, Header as RlpHeader};
 use ethportal_api::types::execution::header::Header;
+use firehose_rs::{FromResponse, HasNumberOrSlot, Response, SingleBlockResponse};
 use prost::Message;
 use prost_wkt_types::Any;
 use reth_primitives::{
@@ -10,10 +11,7 @@ use reth_primitives::{
 use reth_trie_common::root::ordered_trie_root_with_encoder;
 use tracing::error;
 
-use crate::{
-    error::ProtosError,
-    firehose_v2::{Response, SingleBlockResponse},
-};
+use crate::error::ProtosError;
 
 impl TryFrom<&Block> for Header {
     type Error = ProtosError;
@@ -357,6 +355,20 @@ impl FullReceipt {
             list: true,
             payload_length,
         }
+    }
+}
+
+impl FromResponse for Block {
+    type Error = ProtosError;
+
+    fn from_response(msg: Response) -> Result<Self, ProtosError> {
+        Self::try_from(msg)
+    }
+}
+
+impl HasNumberOrSlot for Block {
+    fn number_or_slot(&self) -> u64 {
+        self.number
     }
 }
 

@@ -14,6 +14,7 @@ alloy-eip2930.workspace = true
 alloy-primitives.workspace = true
 alloy-rlp.workspace = true
 ethportal-api.workspace = true
+firehose-rs.workspace = true
 primitive-types.workspace = true
 prost.workspace = true
 prost-wkt.workspace = true

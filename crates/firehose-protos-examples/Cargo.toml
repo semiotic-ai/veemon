@@ -5,6 +5,7 @@ edition = "2021"
 
 [dev-dependencies]
 alloy-primitives.workspace = true
-firehose-client = { path = "../firehose-client" }
+firehose-client = { git = "https://github.com/semiotic-ai/firehose-client.git", branch = "main" }
 firehose-protos = { path = "../firehose-protos" }
+firehose-rs.workspace = true
 tokio.workspace = true
