@@ -32,11 +32,9 @@
 //! comparison until the correct Beacon slot is found.
 //!
 
+use beacon_protos::{Block as FirehoseBeaconBlock, Body};
 use firehose_client::{Chain, FirehoseClient};
-use forrestrie::{
-    beacon_state::ETHEREUM_BEACON_DENEB_OFFSET,
-    beacon_v1::{block, Block as FirehoseBeaconBlock},
-};
+use forrestrie::beacon_state::ETHEREUM_BEACON_DENEB_OFFSET;
 use std::cmp::Ordering::*;
 use tracing::info;
 use tracing_subscriber::FmtSubscriber;
@@ -74,7 +72,7 @@ async fn main() {
         let response = beacon_client.fetch_block(mid).await.unwrap().unwrap();
         let block = FirehoseBeaconBlock::try_from(response.into_inner()).unwrap();
 
-        let Some(block::Body::Deneb(body)) = &block.body else {
+        let Some(Body::Deneb(body)) = &block.body else {
             panic!("Unsupported block version!");
         };
 
@@ -113,7 +111,7 @@ async fn try_final_fetches(low: u64, high: u64, client: &mut FirehoseClient) -> 
 
         let block = FirehoseBeaconBlock::try_from(response.into_inner()).unwrap();
 
-        let Some(block::Body::Deneb(body)) = &block.body else {
+        let Some(Body::Deneb(body)) = &block.body else {
             return None;
         };
 

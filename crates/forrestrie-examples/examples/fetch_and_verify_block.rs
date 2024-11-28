@@ -27,8 +27,8 @@
 //! assert_eq!(block_root, block_header_root);
 //! ```
 //!
+use beacon_protos::Block as FirehoseBeaconBlock;
 use firehose_client::{Chain, FirehoseClient};
-use forrestrie::beacon_v1::Block as FirehoseBeaconBlock;
 use tree_hash::TreeHash;
 use types::{BeaconBlock, MainnetEthSpec};
 

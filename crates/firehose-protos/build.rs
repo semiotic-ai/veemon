@@ -22,11 +22,7 @@ fn main() {
         .file_descriptor_set_path(out_dir.join("descriptors.bin"))
         .compile_protos_with_config(
             config,
-            &[
-                "protos/block.proto",
-                "protos/bstream.proto",
-                "protos/firehose.proto",
-            ],
+            &["protos/block.proto", "protos/bstream.proto"],
             &["protos/"],
         )
         .unwrap();

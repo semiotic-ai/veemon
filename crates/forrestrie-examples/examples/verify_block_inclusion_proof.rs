@@ -27,12 +27,10 @@
 //! let proof = body.compute_merkle_proof(EXECUTION_PAYLOAD_INDEX).unwrap();
 //! ```
 //!
+use beacon_protos::Block as FirehoseBeaconBlock;
 use firehose_client::{Chain, FirehoseClient};
-use forrestrie::{
-    beacon_block::{
-        HistoricalDataProofs, BEACON_BLOCK_BODY_PROOF_DEPTH, EXECUTION_PAYLOAD_FIELD_INDEX,
-    },
-    beacon_v1::Block as FirehoseBeaconBlock,
+use forrestrie::beacon_block::{
+    HistoricalDataProofs, BEACON_BLOCK_BODY_PROOF_DEPTH, EXECUTION_PAYLOAD_FIELD_INDEX,
 };
 use merkle_proof::verify_merkle_proof;
 use tree_hash::TreeHash;

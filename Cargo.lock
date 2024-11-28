@@ -842,6 +842,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
+name = "beacon-protos"
+version = "0.1.1"
+source = "git+https://github.com/semiotic-ai/beacon-protos.git?branch=main#ce68a3b7cef376887d0583dcc9e2234ffc5abb7f"
+dependencies = [
+ "bls",
+ "firehose-rs",
+ "primitive-types",
+ "prost",
+ "prost-build",
+ "prost-wkt",
+ "prost-wkt-types",
+ "serde",
+ "ssz_types 0.6.0",
+ "thiserror 2.0.3",
+ "tonic",
+ "tonic-build",
+ "tree_hash 0.6.0",
+ "types",
+]
+
+[[package]]
 name = "bimap"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2166,6 +2187,7 @@ dependencies = [
  "alloy-primitives 0.8.13",
  "alloy-rlp",
  "ethportal-api",
+ "firehose-rs",
  "hex",
  "primitive-types",
  "prost",
@@ -2301,23 +2323,14 @@ dependencies = [
  "alloy-primitives 0.8.13",
  "alloy-rlp",
  "bls",
- "ethportal-api",
  "fake",
- "firehose-protos",
- "futures",
  "merkle_proof",
  "primitive-types",
- "prost",
- "prost-build",
- "prost-wkt",
- "prost-wkt-types",
  "rand",
  "reth-primitives",
  "reth-trie-common",
  "serde",
  "ssz_types 0.6.0",
- "tonic",
- "tonic-build",
  "tree_hash 0.6.0",
  "types",
 ]
@@ -2326,6 +2339,7 @@ dependencies = [
 name = "forrestrie-examples"
 version = "0.1.1"
 dependencies = [
+ "beacon-protos",
  "bls",
  "ethereum_ssz 0.7.1",
  "ethereum_ssz_derive 0.7.1",

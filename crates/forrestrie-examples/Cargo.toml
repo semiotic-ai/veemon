@@ -4,9 +4,10 @@ version = "0.1.1"
 edition = "2021"
 
 [dev-dependencies]
+beacon-protos.workspace = true
 bls.workspace = true
 ethportal-api.workspace = true
-firehose-client = { git = "https://github.com/semiotic-ai/firehose-client.git", branch = "main" }
+firehose-client.workspace = true
 firehose-protos = { path = "../firehose-protos" }
 forrestrie = { path = "../forrestrie" }
 futures.workspace = true

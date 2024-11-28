@@ -25,6 +25,7 @@
 //! the block roots tree hash root, which can then be compared to the tree hash root in the historical summary
 //! for the era.
 //!
+use beacon_protos::{Block, BlockRoot, Body};
 use ethportal_api::Header;
 use firehose_client::{Chain, FirehoseClient};
 use firehose_protos::EthBlock;
@@ -36,7 +37,6 @@ use forrestrie::{
         compute_block_roots_proof_only, HeadState, CAPELLA_START_ERA, HISTORY_TREE_DEPTH,
         SLOTS_PER_HISTORICAL_ROOT,
     },
-    beacon_v1::{self, BlockRoot},
 };
 use futures::StreamExt;
 use merkle_proof::verify_merkle_proof;
@@ -85,7 +85,7 @@ async fn main() {
         .await
         .unwrap()
         .unwrap();
-    let beacon_block = beacon_v1::Block::try_from(response.into_inner()).unwrap();
+    let beacon_block = Block::try_from(response.into_inner()).unwrap();
     assert_eq!(beacon_block.slot, BEACON_SLOT_NUMBER);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,7 +111,7 @@ async fn main() {
         lighthouse_beacon_block_root.as_bytes(),
         beacon_block.root.as_slice()
     );
-    let Some(beacon_v1::block::Body::Deneb(body)) = beacon_block.body else {
+    let Some(Body::Deneb(body)) = beacon_block.body else {
         panic!("Unsupported block version!");
     };
     let block_body: BeaconBlockBodyDeneb<MainnetEthSpec> = body.try_into().unwrap();
@@ -155,7 +155,7 @@ async fn main() {
     println!("Requesting 8192 blocks for the era... (this takes a while)");
     let num_blocks = SLOTS_PER_HISTORICAL_ROOT as u64;
     let mut stream = beacon_client
-        .stream_beacon_with_retry((era * SLOTS_PER_HISTORICAL_ROOT) as u64, num_blocks)
+        .stream_blocks::<Block>((era * SLOTS_PER_HISTORICAL_ROOT) as u64, num_blocks)
         .await
         .unwrap();
     let mut block_roots: Vec<Hash256> = Vec::with_capacity(SLOTS_PER_HISTORICAL_ROOT);

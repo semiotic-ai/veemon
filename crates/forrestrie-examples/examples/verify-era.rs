@@ -8,12 +8,12 @@
 //! blocks using the extracted block numbers and verify the execution block data against the
 //! extracted block headers.
 
+use beacon_protos::Block;
 use ethportal_api::Header;
 use firehose_client::{Chain, FirehoseClient};
 use firehose_protos::EthBlock;
-use forrestrie::{
-    beacon_state::{HeadState, CAPELLA_START_ERA, HISTORY_TREE_DEPTH, SLOTS_PER_HISTORICAL_ROOT},
-    beacon_v1::{self},
+use forrestrie::beacon_state::{
+    HeadState, CAPELLA_START_ERA, HISTORY_TREE_DEPTH, SLOTS_PER_HISTORICAL_ROOT,
 };
 use futures::StreamExt;
 use tree_hash::TreeHash;
@@ -55,7 +55,7 @@ async fn main() {
     println!("Requesting 8192 blocks for the era... (this takes a while)");
     let num_blocks = SLOTS_PER_HISTORICAL_ROOT as u64;
     let mut stream = beacon_client
-        .stream_beacon_with_retry((era * SLOTS_PER_HISTORICAL_ROOT) as u64, num_blocks)
+        .stream_blocks::<Block>((era * SLOTS_PER_HISTORICAL_ROOT) as u64, num_blocks)
         .await
         .unwrap();
 
@@ -72,7 +72,7 @@ async fn main() {
         // Get the exeuction block number and blockhash.
         let lighthouse_beacon_block = BeaconBlock::<MainnetEthSpec>::try_from(block.clone())
             .expect("Failed to convert Beacon block to Lighthouse BeaconBlock");
-        let Some(beacon_v1::block::Body::Deneb(body)) = block.body else {
+        let Some(beacon_protos::Body::Deneb(body)) = block.body else {
             panic!("Unsupported block version!");
         };
         let block_body: BeaconBlockBodyDeneb<MainnetEthSpec> = body.try_into().unwrap();
