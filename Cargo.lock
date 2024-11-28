@@ -2305,6 +2305,8 @@ name = "forrestrie-examples"
 version = "0.1.1"
 dependencies = [
  "bls",
+ "ethereum_ssz 0.7.1",
+ "ethereum_ssz_derive 0.7.1",
  "ethportal-api",
  "firehose-client",
  "firehose-protos",
@@ -2321,12 +2323,14 @@ dependencies = [
  "reth-trie-common",
  "serde",
  "serde_json",
- "ssz_types 0.6.0",
+ "snap",
+ "ssz_types 0.8.0",
  "tokio",
  "tonic",
  "tracing",
  "tracing-subscriber",
  "tree_hash 0.6.0",
+ "trin-validation",
  "types",
 ]
 
@@ -5402,6 +5406,12 @@ dependencies = [
  "arbitrary",
  "serde",
 ]
+
+[[package]]
+name = "snap"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b6b67fb9a61334225b5b790716f609cd58395f895b3fe8b328786812a40bc3b"
 
 [[package]]
 name = "socket2"
