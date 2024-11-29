@@ -93,10 +93,12 @@ impl From<Epoch> for EpochAccumulator {
 }
 
 impl Epoch {
+    /// Get the epoch number
     pub fn number(&self) -> usize {
         self.number
     }
 
+    /// Get an iterator over the epoch data
     pub fn iter(&self) -> std::slice::Iter<'_, HeaderRecord> {
         self.data.iter()
     }
