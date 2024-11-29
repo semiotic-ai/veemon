@@ -6,6 +6,7 @@
     "cargo-workspace"
   ],
   "packages": {
+    "crates/vee": {},
     "crates/flat-files-decoder": {},
     "crates/header-accumulator": {},
     "crates/firehose-protos": {},
