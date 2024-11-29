@@ -86,7 +86,7 @@ impl DbinFile {
     }
 }
 
-// implement iterator for DbinFile so that we can iterate over the messages
+/// implement iterator for DbinFile so that we can iterate over the messages
 impl IntoIterator for DbinFile {
     type Item = Vec<u8>;
     type IntoIter = std::vec::IntoIter<Self::Item>;
