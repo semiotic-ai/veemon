@@ -13,7 +13,3 @@ Representation of the tracing of a block in the Ethereum blockchain.
 ### [`bstream.proto`](https://github.com/streamingfast/bstream/blob/develop/proto/sf/bstream/v1/bstream.proto)
 
 `Block` type from the Streamingfast block streaming Handlers library. Lower level building block of dfuse.
-
-### [`firehose.proto`](https://github.com/streamingfast/proto/blob/develop/sf/firehose/v2/firehose.proto)
-
-Firehose fetch and streaming, client and server gRPC implementation.
