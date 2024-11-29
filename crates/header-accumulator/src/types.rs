@@ -14,9 +14,13 @@ use crate::errors::EraValidateError;
 /// You can extract the full header as an option
 #[derive(Clone)]
 pub struct ExtHeaderRecord {
+    /// Block hash
     pub block_hash: B256,
+    /// Total difficulty
     pub total_difficulty: Uint<256, 4>,
+    /// Block number
     pub block_number: u64,
+    /// Full header
     pub full_header: Option<Header>,
 }
 

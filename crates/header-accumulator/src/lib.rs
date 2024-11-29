@@ -7,6 +7,8 @@
 //! against header accumulators. This process is used to verify the
 //! authenticity of these blocks.
 
+#![deny(missing_docs)]
+
 mod epoch;
 mod era_validator;
 mod errors;
