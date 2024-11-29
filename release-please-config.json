@@ -6,10 +6,7 @@
     "cargo-workspace"
   ],
   "packages": {
-    "crates/firehose-client": {},
     "crates/flat-files-decoder": {},
-    "crates/forrestrie": {},
-    "crates/forrestrie-examples": {},
     "crates/header-accumulator": {},
     "crates/firehose-protos": {},
     "crates/firehose-protos-examples": {}
