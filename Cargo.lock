@@ -1882,7 +1882,7 @@ checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 [[package]]
 name = "firehose-client"
 version = "0.1.1"
-source = "git+https://github.com/semiotic-ai/firehose-client.git?branch=main#977b9178ff7c4cbb1d620c439461486d98c5b86e"
+source = "git+https://github.com/semiotic-ai/firehose-client.git?branch=main#edf275a0eb9ddca94fea70f6f06be41627636ac1"
 dependencies = [
  "dotenvy",
  "firehose-rs",
@@ -1890,8 +1890,6 @@ dependencies = [
  "http",
  "once_cell",
  "rustls",
- "serde",
- "serde_derive",
  "thiserror 2.0.3",
  "tokio",
  "tokio-stream",
@@ -1939,7 +1937,7 @@ dependencies = [
 [[package]]
 name = "firehose-rs"
 version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/firehose-rs.git?branch=main#55851f4e89ba4191c0dab83b3391d9c3b5bbbcf1"
+source = "git+https://github.com/semiotic-ai/firehose-rs.git?branch=main#d6ac5c1f3228fffc4cfb0f1cf623a948477cf167"
 dependencies = [
  "prost",
  "prost-build",
