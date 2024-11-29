@@ -10,7 +10,7 @@ alloy-primitives.workspace = true
 base64.workspace = true
 clap.workspace = true
 ethportal-api.workspace = true
-firehose-protos = { path = "../firehose-protos" }
+firehose-protos.workspace = true
 log.workspace = true
 primitive-types.workspace = true
 rlp.workspace = true
@@ -21,5 +21,5 @@ trin-validation.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
-flat-files-decoder = { path = "../flat-files-decoder" }
+flat-files-decoder.workspace = true
 tempfile.workspace = true
