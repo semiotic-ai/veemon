@@ -1882,7 +1882,7 @@ checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 [[package]]
 name = "firehose-client"
 version = "0.1.1"
-source = "git+https://github.com/semiotic-ai/firehose-client.git?branch=main#d10f89a3dc2c8a3c76ce2dc3a4a7f81e13eeac24"
+source = "git+https://github.com/semiotic-ai/firehose-client.git?branch=main#977b9178ff7c4cbb1d620c439461486d98c5b86e"
 dependencies = [
  "dotenvy",
  "firehose-rs",
@@ -2322,13 +2322,13 @@ dependencies = [
  "ethportal-api",
  "firehose-protos",
  "flat-files-decoder",
- "log",
  "primitive-types",
  "rlp",
  "serde",
  "serde_json",
  "tempfile",
  "thiserror 2.0.3",
+ "tracing",
  "tree_hash",
  "trin-validation",
 ]

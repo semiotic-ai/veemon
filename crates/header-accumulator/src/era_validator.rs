@@ -61,7 +61,7 @@ impl EraValidator {
         if root == valid_root {
             Ok(root)
         } else {
-            log::error!(
+            tracing::error!(
                 "the valid hash is: {:?} and the provided hash was: {:?}",
                 valid_root,
                 root
