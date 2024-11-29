@@ -12,10 +12,10 @@ bincode = "1.3.3"
 clap = { version = "4.4.10", features = ["derive"] }
 criterion = { version = "0.5.1", features = ["html_reports"] }
 ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.2.2", tag = "v0.1.0-alpha.51" }
-firehose-protos = { path = "crates/firehose-protos" }
+firehose-protos = { path = "crates/firehose-protos", version = "0.1.0" }
 firehose-rs = { git = "https://github.com/semiotic-ai/firehose-rs.git", branch = "main" }
-flat-files-decoder = { path = "crates/flat-files-decoder" }
-header-accumulator = { path = "crates/header-accumulator" }
+flat-files-decoder = { path = "crates/flat-files-decoder", version = "0.1.0" }
+header-accumulator = { path = "crates/header-accumulator", version = "0.1.0" }
 hex = "0.4.3"
 log = "0.4.20"
 primitive-types = "0.12.2"
