@@ -1,11 +1,8 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-//! # Flat Files Decoder
-//!
-//! Read, decode, and verify blockchain block flat files.
-
 #![deny(missing_docs)]
+#![doc = include_str!("../README.md")]
 
 mod dbin;
 mod decoder;

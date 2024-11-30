@@ -1,5 +1,7 @@
 # Flat Files Decoder
 
+Read, decode, and verify blockchain block flat files.
+
 ## Overview
 
 Check out the crate documentation in your browser by running, from

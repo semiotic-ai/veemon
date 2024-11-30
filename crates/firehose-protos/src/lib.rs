@@ -1,21 +1,8 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-//! # Verifiable Extraction Protocol Buffers in Rust
-//!
-//! This module provides Rust implementations of StreamingFast's protocol buffer definitions,
-//! enabling efficient encoding and decoding of data for Ethereum blockchain services and Firehose,
-//! StreamingFast’s framework for streaming blockchain data.
-//!
-//! ## Usage
-//!
-//! Check out [`veemon/firehose-client`](../firehose_client/index.html) for a high-level client
-//! that you can use with chain data endpoint providers like Pinax or StremaingFast.
-//!
-//! Alternatively, for tools for ingesting these block types from flat files, check out
-//! [`veemon/flat-files-decoder`](../flat-files-decoder/index.html).
-
 #![deny(missing_docs)]
+#![doc = include_str!("../README.md")]
 
 mod error;
 mod ethereum_v2;

@@ -1,8 +1,7 @@
-# `firehose-protos`
+# Verifiable Extraction Protocol Buffers in Rust
 
-StreamingFast's Firehose protocol buffers compiled to Rust,
-used in [header-accumulator](./../header-accumulator/Readme.md)
-and [flat-files-decoder](./../flat-files-decoder/Readme.md).
+This module provides Rust implementations of StreamingFast's Firehose protocol buffer
+definitions, enabling efficient encoding and decoding of data for Ethereum blockchains via StreamingFast’s framework for streaming blockchain data.
 
 ## Protobuffer definitions
 
@@ -13,3 +12,11 @@ Representation of the tracing of a block in the Ethereum blockchain.
 ### [`bstream.proto`](https://github.com/streamingfast/bstream/blob/develop/proto/sf/bstream/v1/bstream.proto)
 
 `Block` type from the Streamingfast block streaming Handlers library. Lower level building block of dfuse.
+
+## Usage
+
+To ingest these block types from flat files, check out
+[`veemon/crates/flat-files-decoder`](../flat-files-decoder/index.html).
+
+For a high-level Rust client to use with Firehose endpoint providers like Pinax or StremaingFast,
+check out [`semiotic-ai/firehose-client`](https://github.com/semiotic-ai/firehose-client).

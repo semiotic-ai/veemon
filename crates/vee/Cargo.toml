@@ -11,3 +11,6 @@ name = "vee"
 firehose-protos.workspace = true
 flat-files-decoder.workspace = true
 header-accumulator.workspace = true
+
+[dev-dependencies]
+tree_hash = "0.8.0"
