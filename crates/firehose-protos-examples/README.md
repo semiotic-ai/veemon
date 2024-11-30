@@ -1,14 +1,26 @@
 # Firehose Protos Examples
 
-Here's an example of how to run one of the examples in the `firehose-protos-examples` crate:
+Examples that use methods implemented on the Rust-compiled Firehose
+protobuffer types from [Firehose Protos](../firehose_protos/index.html).
+
+## Running Examples
+
+To run the examples, you need access to a Firehose provider for each chain from which you want
+to extract data - an endpoint and an API key (if the latter is required).
+
+If you need access to a Firehose provider, we suggest using [Pinax](https://app.pinax.network/).
+
+Add your endpoint and API key to a `.env` file in the root of the repository. See `.env.examples` for
+a configuration template.
+
+To run individual examples, use the following command:
 
 ```terminal
-cd crates/firehose-protos-examples && cargo run -- --examples receipt_root
+cargo run -p firehose-protos-examples --example <example_name>
 ```
 
-Use environment variables to provide Firehose Ethereum and Firehose
-Beacon providers of your choice.
+So, for example, to run the `receipt_root` example:
 
-To do this, place a `.env` file in the root of `veemon`. See the
-`.env.example` file in the root of this repository for what you'll need,
-depending on your requirements.
+```terminal
+cargo run -p firehose-protos-examples --example receipt_root
+```

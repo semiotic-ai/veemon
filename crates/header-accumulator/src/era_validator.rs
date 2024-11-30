@@ -15,6 +15,12 @@ pub struct EraValidator {
     historical_epochs: HistoricalEpochRoots,
 }
 
+impl Default for EraValidator {
+    fn default() -> Self {
+        PreMergeAccumulator::default().into()
+    }
+}
+
 impl From<PreMergeAccumulator> for EraValidator {
     fn from(value: PreMergeAccumulator) -> Self {
         Self {
