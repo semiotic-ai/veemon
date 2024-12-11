@@ -2,17 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::{Block, BlockHeader, TransactionReceipt, TransactionTrace};
-use alloy_consensus::Receipt;
-use alloy_primitives::{hex, Address, Bloom, FixedBytes, Uint, B256};
+use alloy_consensus::{proofs::calculate_transaction_root, Receipt, ReceiptWithBloom};
+use alloy_primitives::{hex, Address, Bloom, FixedBytes, Log, Uint, B256};
 use alloy_rlp::{Encodable, Header as RlpHeader};
+use alloy_trie::root::ordered_trie_root_with_encoder;
 use ethportal_api::types::execution::header::Header;
 use firehose_rs::{FromResponse, HasNumberOrSlot, Response, SingleBlockResponse};
 use prost::Message;
 use prost_wkt_types::Any;
-use reth_primitives::{
-    proofs::{calculate_transaction_root, ordered_trie_root_with_encoder},
-    Log, ReceiptWithBloom, TransactionSigned,
-};
+use reth_primitives::TransactionSigned;
 use tracing::error;
 
 use crate::error::ProtosError;
@@ -288,7 +286,7 @@ impl TryFrom<&TransactionTrace> for FullReceipt {
         let receipt = Receipt {
             status: trace.is_success().into(),
             logs,
-            cumulative_gas_used: trace_receipt.cumulative_gas_used as u128,
+            cumulative_gas_used: trace_receipt.cumulative_gas_used,
         };
 
         let logs_bloom = Bloom::try_from(trace_receipt)?;

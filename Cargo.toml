@@ -3,19 +3,20 @@ members = ["crates/*"]
 resolver = "2"
 
 [workspace.dependencies]
-alloy-primitives = "0.8.15"
-alloy-consensus = "0.8.3"
+alloy-primitives = "0.8.16"
+alloy-consensus = "0.9.1"
 alloy-eip2930 = "0.1.0"
 alloy-rlp = "0.3.10"
+alloy-trie = "0.7.8"
 base64 = "0.22.1"
 bincode = "1.3.3"
 clap = { version = "4.5.23", features = ["derive"] }
 criterion = { version = "0.5.1", features = ["html_reports"] }
 ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.4.0" }
-firehose-protos = { path = "crates/firehose-protos", version = "0.1.0" }
+firehose-protos = { path = "crates/firehose-protos" }
 firehose-rs = { git = "https://github.com/semiotic-ai/firehose-rs.git", branch = "main" }
-decoder = { path = "crates/decoder", version = "0.1.0" }
-header-accumulator = { path = "crates/header-accumulator", version = "0.1.0" }
+decoder = { path = "crates/decoder" }
+header-accumulator = { path = "crates/header-accumulator" }
 prost = "0.13.4"
 prost-build = "0.13.4"
 prost-wkt = "0.6.0"
