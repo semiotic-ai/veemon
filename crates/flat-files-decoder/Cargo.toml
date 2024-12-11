@@ -14,7 +14,6 @@ alloy-eip2930.workspace = true
 bincode.workspace = true
 firehose-protos.workspace = true
 prost.workspace = true
-reth-primitives.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 thiserror.workspace = true
