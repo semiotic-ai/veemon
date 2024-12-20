@@ -11,8 +11,6 @@ base64.workspace = true
 clap.workspace = true
 ethportal-api.workspace = true
 firehose-protos.workspace = true
-primitive-types.workspace = true
-rlp.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 tracing.workspace = true

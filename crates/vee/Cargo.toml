@@ -13,4 +13,4 @@ decoder.workspace = true
 header-accumulator.workspace = true
 
 [dev-dependencies]
-tree_hash = "0.8.0"
+tree_hash.workspace = true

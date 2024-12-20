@@ -15,19 +15,16 @@ alloy-primitives.workspace = true
 alloy-rlp.workspace = true
 ethportal-api.workspace = true
 firehose-rs.workspace = true
-primitive-types.workspace = true
 prost.workspace = true
 prost-wkt.workspace = true
 prost-wkt-types.workspace = true
 reth-primitives.workspace = true
-reth-trie-common.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 tonic.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
-hex.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
 
