@@ -14,7 +14,7 @@ criterion = { version = "0.5.1", features = ["html_reports"] }
 ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.2.2", tag = "v0.1.0-alpha.51" }
 firehose-protos = { path = "crates/firehose-protos", version = "0.1.0" }
 firehose-rs = { git = "https://github.com/semiotic-ai/firehose-rs.git", branch = "main" }
-flat-files-decoder = { path = "crates/flat-files-decoder", version = "0.1.0" }
+decoder = { path = "crates/decoder", version = "0.1.0" }
 header-accumulator = { path = "crates/header-accumulator", version = "0.1.0" }
 hex = "0.4.3"
 primitive-types = "0.12.2"

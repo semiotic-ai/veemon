@@ -8,7 +8,7 @@ Check out the crate documentation in your browser by running, from
 the root of the `veemon` workspace:
 
 ```terminal
-cd crates/flat-files-decoder && cargo doc --open
+cd crates/decoder && cargo doc --open
 ```
 
 ## Running CLI Example
@@ -35,11 +35,11 @@ Here are some examples of how to use the commands:
 1. To stream data continuously from `stdin`:
 
 ```terminal
-cargo run -p flat-files-decoder --example cli stream
+cargo run -p decoder --example cli stream
 ```
 
 ```terminal
-cat example0017686312.dbin | cargo run -p flat-files-decoder --example cli stream
+cat example0017686312.dbin | cargo run -p decoder --example cli stream
 ```
 
 This will output decoded header records as bytes into `stdout`
@@ -47,13 +47,13 @@ This will output decoded header records as bytes into `stdout`
 1. To check a folder of dbin files:
 
 ```terminal
-cargo run -p flat-files-decoder --example cli decode --input ./input_files/ --compression true
+cargo run -p decoder --example cli decode --input ./input_files/ --compression true
 ```
 
 So, if using test data from a `test-assets/` folder in the root of the `veemon` repo:
 
 ```terminal
-cargo run -p flat-files-decoder --example cli decode --input test-assets/benchmark_files/pre_merge
+cargo run -p decoder --example cli decode --input test-assets/benchmark_files/pre_merge
 ```
 
 This will store the block headers as json format in the output folder. 

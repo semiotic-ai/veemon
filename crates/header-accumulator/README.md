@@ -43,12 +43,12 @@ cd crates/header-accumulator && cargo doc --open
 
 The main objective of this library is to provide a tool for verifying
 blocks from [StreamingFast Firehose](https://firehose.streamingfast.io/).
-It works in conjunction with [flat-files-decoder](https://github.com/semiotic-ai/flat-files-decoder)
+It works in conjunction with [decoder](https://github.com/semiotic-ai/decoder)
 to offer a comprehensive solution.
 
 ## Testing
 
-Some tests depend on [flat-files-decoder](../flat-files-decoder/README.md) as a development dependency.
+Some tests depend on [decoder](../decoder/README.md) as a development dependency.
 
 Run all tests with:
 
