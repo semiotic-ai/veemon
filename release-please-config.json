@@ -7,7 +7,7 @@
   ],
   "packages": {
     "crates/vee": {},
-    "crates/flat-files-decoder": {},
+    "crates/decoder": {},
     "crates/header-accumulator": {},
     "crates/firehose-protos": {},
     "crates/firehose-protos-examples": {}

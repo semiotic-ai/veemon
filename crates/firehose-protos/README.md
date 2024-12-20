@@ -16,7 +16,7 @@ Representation of the tracing of a block in the Ethereum blockchain.
 ## Usage
 
 To ingest these block types from flat files, check out
-[`veemon/crates/flat-files-decoder`](../flat-files-decoder/index.html).
+[`veemon/crates/decoder`](../decoder/index.html).
 
 For a high-level Rust client to use with Firehose endpoint providers like Pinax or StremaingFast,
 check out [`semiotic-ai/firehose-client`](https://github.com/semiotic-ai/firehose-client).
