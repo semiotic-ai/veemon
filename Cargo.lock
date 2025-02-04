@@ -1633,7 +1633,7 @@ dependencies = [
 
 [[package]]
 name = "decoder"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "alloy-consensus 0.11.0",
  "alloy-eip2930",
@@ -2099,7 +2099,7 @@ dependencies = [
 
 [[package]]
 name = "firehose-protos"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "alloy-consensus 0.11.0",
  "alloy-eip2930",
@@ -2124,7 +2124,7 @@ dependencies = [
 
 [[package]]
 name = "firehose-protos-examples"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "alloy-primitives",
  "firehose-client",
@@ -2493,7 +2493,7 @@ dependencies = [
 
 [[package]]
 name = "header-accumulator"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "alloy-primitives",
  "base64 0.22.1",
@@ -5652,7 +5652,7 @@ checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
 
 [[package]]
 name = "vee"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "decoder",
  "firehose-protos",
