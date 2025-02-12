@@ -14,7 +14,6 @@ async fn main() {
     let block = Block::try_from(response.into_inner()).unwrap();
 
     let calculated_receipts_root = block.calculate_receipt_root().unwrap();
-
     // Compare the calculated receipts root to the receipts root in the block header
     assert_eq!(
         FixedBytes::<32>::from_slice(block.header.as_ref().unwrap().receipt_root.as_slice()),
