@@ -11,6 +11,7 @@ name = "firehose_protos"
 [dependencies]
 alloy-consensus.workspace = true
 alloy-eip2930.workspace = true
+alloy-eips.workspace = true
 alloy-primitives.workspace = true
 alloy-rlp.workspace = true
 alloy-trie.workspace = true
