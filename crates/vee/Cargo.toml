@@ -1,8 +1,8 @@
 [package]
-name = "vee"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
+name = "vee"
 [lib]
 path = "src/lib.rs"
 name = "vee"
@@ -13,4 +13,4 @@ decoder.workspace = true
 header-accumulator.workspace = true
 
 [dev-dependencies]
-tree_hash = "0.8.0"
+tree_hash.workspace = true
