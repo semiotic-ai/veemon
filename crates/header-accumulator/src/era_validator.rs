@@ -1,8 +1,9 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use alloy_primitives::FixedBytes;
 use ethportal_api::types::execution::accumulator::EpochAccumulator;
-use tree_hash::{Hash256, TreeHash};
+use tree_hash::TreeHash;
 use trin_validation::accumulator::{HistoricalEpochRoots, PreMergeAccumulator};
 
 use crate::{
@@ -35,7 +36,10 @@ impl EraValidator {
     /// # Arguments
     ///
     /// * `epochs`-  An array of [`Epoch`].
-    pub fn validate_eras(&self, epochs: &[&Epoch]) -> Result<Vec<Hash256>, EraValidateError> {
+    pub fn validate_eras(
+        &self,
+        epochs: &[&Epoch],
+    ) -> Result<Vec<FixedBytes<32>>, EraValidateError> {
         let mut validated_epochs = Vec::new();
         for epoch in epochs {
             let root = self.validate_era(epoch)?;
@@ -53,7 +57,7 @@ impl EraValidator {
     ///
     /// For block post merge, the sync-committee should be used to validate block headers
     /// in the canonical blockchain. So this function is not useful for those.
-    pub fn validate_era(&self, epoch: &Epoch) -> Result<Hash256, EraValidateError> {
+    pub fn validate_era(&self, epoch: &Epoch) -> Result<FixedBytes<32>, EraValidateError> {
         if epoch.number() > FINAL_EPOCH {
             return Err(EraValidateError::EpochPostMerge(epoch.number()));
         }

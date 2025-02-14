@@ -3,41 +3,41 @@ members = ["crates/*"]
 resolver = "2"
 
 [workspace.dependencies]
-alloy-primitives = "0.8.10"
+alloy-primitives = "0.8.20"
 alloy-consensus = "0.4.2"
 alloy-eip2930 = "0.1.0"
-alloy-rlp = "0.3.9"
-base64 = "0.21.7"
+alloy-rlp = "0.3.11"
+base64 = "0.22.1"
 bincode = "1.3.3"
-clap = { version = "4.4.10", features = ["derive"] }
+clap = { version = "4.5.23", features = ["derive"] }
 criterion = { version = "0.5.1", features = ["html_reports"] }
-ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.2.2", tag = "v0.1.0-alpha.51" }
-firehose-protos = { path = "crates/firehose-protos", version = "0.1.0" }
+ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.4.0" }
+firehose-protos = { path = "crates/firehose-protos" }
 firehose-rs = { git = "https://github.com/semiotic-ai/firehose-rs.git", branch = "main" }
-decoder = { path = "crates/decoder", version = "0.1.0" }
-header-accumulator = { path = "crates/header-accumulator", version = "0.1.0" }
+decoder = { path = "crates/decoder" }
+header-accumulator = { path = "crates/header-accumulator" }
 hex = "0.4.3"
 primitive-types = "0.12.2"
-prost = "0.13.1"
-prost-build = "0.13.1"
+prost = "0.13.4"
+prost-build = "0.13.4"
 prost-wkt = "0.6.0"
 prost-wkt-types = "0.6.0"
-rand = "0.8.5"
+rand = "0.9.0"
 reth-primitives = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0" }
 reth-trie-common = { git = "https://github.com/paradigmxyz/reth", version = "1.1.0", tag = "v1.1.0" }
 rlp = "0.5.2"
-serde = "1.0.208"
-serde_json = "1.0.127"
-tempfile = "3.0"
-thiserror = "2.0.0"
-tokio = "1.39.2"
-tonic = "0.12.0"
-tonic-build = "0.12.0"
-tracing = "0.1.40"
-tracing-subscriber = "0.3.18"
+serde = "1.0.216"
+serde_json = "1.0.133"
+tempfile = "3.14.0"
+thiserror = "2.0.8"
+tokio = "1.42.0"
+tonic = "0.12.3"
+tonic-build = "0.12.3"
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
 tree_hash = "0.8.0"
-trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0", tag = "v0.1.0-alpha.51" }
-zstd = "0.13.0"
+trin-validation = { git = "https://github.com/ethereum/trin.git", version = "0.1.0" }
+zstd = "0.13.2"
 
 [profile.dev.build-override]
 opt-level = 3

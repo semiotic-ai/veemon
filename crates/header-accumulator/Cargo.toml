@@ -1,6 +1,6 @@
 [package]
 name = "header-accumulator"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -11,8 +11,6 @@ base64.workspace = true
 clap.workspace = true
 ethportal-api.workspace = true
 firehose-protos.workspace = true
-primitive-types.workspace = true
-rlp.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 tracing.workspace = true
