@@ -1,6 +1,6 @@
 [package]
 name = "vee"
-version = "0.1.1"
+version = "0.1.0"
 edition = "2021"
 
 [lib]
@@ -13,4 +13,4 @@ decoder.workspace = true
 header-accumulator.workspace = true
 
 [dev-dependencies]
-tree_hash.workspace = true
+tree_hash = "0.8.0"

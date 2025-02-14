@@ -3,7 +3,6 @@
 
 use crate::{epoch::MAX_EPOCH_SIZE, errors::EraValidateError, Epoch};
 
-use alloy_primitives::FixedBytes;
 use ethportal_api::{
     types::execution::{
         accumulator::EpochAccumulator,
@@ -13,6 +12,7 @@ use ethportal_api::{
     },
     Header,
 };
+use tree_hash::Hash256;
 use trin_validation::{
     accumulator::PreMergeAccumulator, header_validator::HeaderValidator,
     historical_roots_acc::HistoricalRootsAccumulator,
@@ -24,7 +24,7 @@ const PROOF_SIZE: usize = 15;
 #[derive(Clone)]
 pub struct InclusionProof {
     block_number: u64,
-    proof: [FixedBytes<32>; PROOF_SIZE],
+    proof: [Hash256; PROOF_SIZE],
 }
 
 impl InclusionProof {
