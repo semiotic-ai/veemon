@@ -254,7 +254,11 @@ impl TryFrom<&TransactionTrace> for TransactionSigned {
         let signature = PrimitiveSignature::try_from(trace)?;
         let hash = FixedBytes::from_slice(trace.hash.as_slice());
 
-        Ok(TransactionSigned::new(transaction, signature, hash))
+        Ok(TransactionSigned {
+            transaction,
+            signature,
+            hash: hash.into(),
+        })
     }
 }
 
