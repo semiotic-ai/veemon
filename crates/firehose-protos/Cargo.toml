@@ -13,7 +13,6 @@ alloy-consensus.workspace = true
 alloy-eip2930.workspace = true
 alloy-primitives.workspace = true
 alloy-rlp.workspace = true
-alloy-trie.workspace = true
 ethportal-api.workspace = true
 firehose-rs.workspace = true
 prost.workspace = true
