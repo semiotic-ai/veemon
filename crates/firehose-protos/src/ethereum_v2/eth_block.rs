@@ -2,15 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::{Block, BlockHeader, TransactionReceipt, TransactionTrace};
-use alloy_consensus::{proofs::calculate_transaction_root, Receipt, ReceiptWithBloom};
-use alloy_primitives::{hex, Address, Bloom, FixedBytes, Log, Uint, B256};
-use alloy_rlp::{Encodable, Header as RlpHeader};
-use alloy_trie::root::ordered_trie_root_with_encoder;
+use alloy_consensus::Receipt;
+use alloy_eips::Typed2718;
+use alloy_primitives::{hex, Address, Bloom, FixedBytes, Uint, B256};
+use alloy_rlp::{BufMut, Encodable, Header as RlpHeader};
 use ethportal_api::types::execution::header::Header;
 use firehose_rs::{FromResponse, HasNumberOrSlot, Response, SingleBlockResponse};
 use prost::Message;
 use prost_wkt_types::Any;
 use reth_primitives::TransactionSigned;
+use reth_primitives::{
+    proofs::{calculate_transaction_root, ordered_trie_root_with_encoder},
+    Log, ReceiptWithBloom, TransactionSigned,
+};
 use tracing::error;
 
 use crate::error::ProtosError;
@@ -152,8 +156,7 @@ impl Block {
     ///
     pub fn calculate_receipt_root(&self) -> Result<B256, ProtosError> {
         let receipts = self.full_receipts()?;
-        let encoder = self.full_receipt_encoder();
-        Ok(ordered_trie_root_with_encoder(&receipts, encoder))
+        return Ok(calculate_receipt_root(&receipts));
     }
 
     fn calculate_transaction_root(&self) -> Result<FixedBytes<32>, ProtosError> {
@@ -192,12 +195,8 @@ impl Block {
     ///
     /// A function that encodes a [`FullReceipt`] into an RLP format, writing the result to a mutable `Vec<u8>`.
     ///
-    fn full_receipt_encoder(&self) -> fn(&FullReceipt, &mut Vec<u8>) {
-        if self.is_pre_byzantium() {
-            |r: &FullReceipt, out: &mut Vec<u8>| r.encode_pre_byzantium_receipt(out)
-        } else {
-            |r: &FullReceipt, out: &mut Vec<u8>| r.encode_byzantium_and_later_receipt(out)
-        }
+    fn full_receipt_encoder(&self) -> impl Fn(&FullReceipt, &mut dyn BufMut) {
+        |r: &FullReceipt, out: &mut dyn BufMut| r.receipt.encode(out)
     }
 
     /// Returns a reference to the block header.
