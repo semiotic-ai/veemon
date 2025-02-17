@@ -155,7 +155,7 @@ impl Block {
     ///
     pub fn calculate_receipt_root(&self) -> Result<B256, ProtosError> {
         let receipts = self.full_receipts()?;
-        return Ok(calculate_receipt_root(&receipts));
+        Ok(calculate_receipt_root(&receipts))
     }
 
     fn calculate_transaction_root(&self) -> Result<FixedBytes<32>, ProtosError> {
