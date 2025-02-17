@@ -269,14 +269,14 @@ impl Block {
 
 /// Work with the [`alloy_consensus::ReceiptWithBloom`] combined with the matching state root.
 pub struct FullReceipt {
-    ty: TxType,
+    tx_type: TxType,
     receipt: ReceiptWithBloom,
     state_root: Vec<u8>,
 }
 
 impl Typed2718 for FullReceipt {
     fn ty(&self) -> u8 {
-        self.ty.ty()
+        self.tx_type.ty()
     }
 }
 
@@ -293,12 +293,12 @@ impl Encodable2718 for FullReceipt {
 }
 impl Eip2718EncodableReceipt for FullReceipt {
     fn eip2718_encoded_length_with_bloom(&self, bloom: &Bloom) -> usize {
-        self.receipt.receipt.rlp_encoded_length_with_bloom(bloom) + (!self.ty.is_legacy()) as usize
+        self.receipt.receipt.rlp_encoded_length_with_bloom(bloom) + (!self.tx_type.is_legacy()) as usize
     }
 
     fn eip2718_encode_with_bloom(&self, bloom: &Bloom, out: &mut dyn BufMut) {
-        if !self.ty.is_legacy() {
-            out.put_u8(self.ty.try_into().unwrap());
+        if !self.tx_type.is_legacy() {
+            out.put_u8(self.tx_type.try_into().unwrap());
         }
         self.receipt.receipt.rlp_encode_with_bloom(bloom, out);
     }
@@ -308,7 +308,7 @@ impl RlpEncodableReceipt for FullReceipt {
     fn rlp_encoded_length_with_bloom(&self, bloom: &alloy_primitives::Bloom) -> usize {
         let mut payload_length = self.eip2718_encoded_length_with_bloom(bloom);
 
-        if !self.ty.is_legacy() {
+        if !self.tx_type.is_legacy() {
             payload_length += alloy_rlp::Header {
                 list: false,
                 payload_length: self.eip2718_encoded_length_with_bloom(bloom),
@@ -324,7 +324,7 @@ impl RlpEncodableReceipt for FullReceipt {
         bloom: &alloy_primitives::Bloom,
         out: &mut dyn alloy_rlp::BufMut,
     ) {
-        if !self.ty.is_legacy() {
+        if !self.tx_type.is_legacy() {
             alloy_rlp::Header {
                 list: false,
                 payload_length: self.eip2718_encoded_length_with_bloom(bloom),
@@ -352,7 +352,7 @@ impl TryFrom<&TransactionTrace> for FullReceipt {
         let logs_bloom = Bloom::try_from(trace_receipt)?;
 
         Ok(Self {
-            ty: trace.r#type().try_into().unwrap(),
+            tx_type: trace.r#type().try_into().unwrap(),
             receipt: ReceiptWithBloom {
                 receipt,
                 logs_bloom,
