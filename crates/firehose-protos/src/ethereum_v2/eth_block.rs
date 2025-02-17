@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::{Block, BlockHeader, TransactionReceipt, TransactionTrace};
-use alloy_consensus::{proofs::calculate_transaction_root, Receipt, ReceiptWithBloom};
+use alloy_consensus::{
+    proofs::{calculate_receipt_root, calculate_transaction_root},
+    Eip2718EncodableReceipt, Receipt, ReceiptWithBloom, RlpEncodableReceipt, TxType,
+};
+use alloy_eips::Typed2718;
 use alloy_primitives::{hex, Address, Bloom, FixedBytes, Log, Uint, B256};
-use alloy_rlp::{Encodable, Header as RlpHeader};
-use alloy_trie::root::ordered_trie_root_with_encoder;
+use alloy_rlp::{BufMut, Encodable, Header as RlpHeader};
 use ethportal_api::types::execution::header::Header;
 use firehose_rs::{FromResponse, HasNumberOrSlot, Response, SingleBlockResponse};
 use prost::Message;
@@ -152,8 +155,7 @@ impl Block {
     ///
     pub fn calculate_receipt_root(&self) -> Result<B256, ProtosError> {
         let receipts = self.full_receipts()?;
-        let encoder = self.full_receipt_encoder();
-        Ok(ordered_trie_root_with_encoder(&receipts, encoder))
+        Ok(calculate_receipt_root(&receipts))
     }
 
     fn calculate_transaction_root(&self) -> Result<FixedBytes<32>, ProtosError> {
@@ -192,12 +194,8 @@ impl Block {
     ///
     /// A function that encodes a [`FullReceipt`] into an RLP format, writing the result to a mutable `Vec<u8>`.
     ///
-    fn full_receipt_encoder(&self) -> fn(&FullReceipt, &mut Vec<u8>) {
-        if self.is_pre_byzantium() {
-            |r: &FullReceipt, out: &mut Vec<u8>| r.encode_pre_byzantium_receipt(out)
-        } else {
-            |r: &FullReceipt, out: &mut Vec<u8>| r.encode_byzantium_and_later_receipt(out)
-        }
+    fn full_receipt_encoder(&self) -> impl Fn(&FullReceipt, &mut dyn BufMut) {
+        |r: &FullReceipt, out: &mut dyn BufMut| r.receipt.encode(out)
     }
 
     /// Returns a reference to the block header.
@@ -269,10 +267,72 @@ impl Block {
     }
 }
 
-/// Work with the [`reth_primitives::ReceiptWithBloom`] combined with the matching state root.
+/// Work with the [`alloy_consensus::ReceiptWithBloom`] combined with the matching state root.
 pub struct FullReceipt {
+    tx_type: TxType,
     receipt: ReceiptWithBloom,
     state_root: Vec<u8>,
+}
+
+impl Typed2718 for FullReceipt {
+    fn ty(&self) -> u8 {
+        self.tx_type.ty()
+    }
+}
+
+use alloy_eips::eip2718::Encodable2718;
+
+impl Encodable2718 for FullReceipt {
+    fn encode_2718_len(&self) -> usize {
+        self.eip2718_encoded_length_with_bloom(&self.receipt.logs_bloom)
+    }
+
+    fn encode_2718(&self, out: &mut dyn alloy_rlp::BufMut) {
+        self.eip2718_encode_with_bloom(&self.receipt.logs_bloom, out);
+    }
+}
+impl Eip2718EncodableReceipt for FullReceipt {
+    fn eip2718_encoded_length_with_bloom(&self, bloom: &Bloom) -> usize {
+        self.receipt.receipt.rlp_encoded_length_with_bloom(bloom) + (!self.tx_type.is_legacy()) as usize
+    }
+
+    fn eip2718_encode_with_bloom(&self, bloom: &Bloom, out: &mut dyn BufMut) {
+        if !self.tx_type.is_legacy() {
+            out.put_u8(self.tx_type.try_into().unwrap());
+        }
+        self.receipt.receipt.rlp_encode_with_bloom(bloom, out);
+    }
+}
+
+impl RlpEncodableReceipt for FullReceipt {
+    fn rlp_encoded_length_with_bloom(&self, bloom: &alloy_primitives::Bloom) -> usize {
+        let mut payload_length = self.eip2718_encoded_length_with_bloom(bloom);
+
+        if !self.tx_type.is_legacy() {
+            payload_length += alloy_rlp::Header {
+                list: false,
+                payload_length: self.eip2718_encoded_length_with_bloom(bloom),
+            }
+            .length();
+        }
+
+        payload_length
+    }
+
+    fn rlp_encode_with_bloom(
+        &self,
+        bloom: &alloy_primitives::Bloom,
+        out: &mut dyn alloy_rlp::BufMut,
+    ) {
+        if !self.tx_type.is_legacy() {
+            alloy_rlp::Header {
+                list: false,
+                payload_length: self.eip2718_encoded_length_with_bloom(bloom),
+            }
+            .encode(out)
+        }
+        self.eip2718_encode_with_bloom(bloom, out);
+    }
 }
 
 impl TryFrom<&TransactionTrace> for FullReceipt {
@@ -292,6 +352,7 @@ impl TryFrom<&TransactionTrace> for FullReceipt {
         let logs_bloom = Bloom::try_from(trace_receipt)?;
 
         Ok(Self {
+            tx_type: trace.r#type().try_into().unwrap(),
             receipt: ReceiptWithBloom {
                 receipt,
                 logs_bloom,
