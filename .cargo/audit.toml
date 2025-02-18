@@ -1,0 +1,5 @@
+[advisories]
+ignore = [
+    # Waiting on trin ethportal-api to fix this issue with the validator crate
+    "RUSTSEC-2024-0421",
+]

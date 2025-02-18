@@ -2,16 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::{Block, BlockHeader, TransactionReceipt, TransactionTrace};
-use alloy_primitives::{hex, Address, Bloom, FixedBytes, Uint, B256};
+use alloy_consensus::{proofs::calculate_transaction_root, Receipt, ReceiptWithBloom};
+use alloy_primitives::{hex, Address, Bloom, FixedBytes, Log, Uint, B256};
 use alloy_rlp::{Encodable, Header as RlpHeader};
+use alloy_trie::root::ordered_trie_root_with_encoder;
 use ethportal_api::types::execution::header::Header;
 use firehose_rs::{FromResponse, HasNumberOrSlot, Response, SingleBlockResponse};
 use prost::Message;
 use prost_wkt_types::Any;
-use reth_primitives::{
-    proofs::calculate_transaction_root, Log, Receipt, ReceiptWithBloom, TransactionSigned,
-};
-use reth_trie_common::root::ordered_trie_root_with_encoder;
+use reth_primitives::TransactionSigned;
 use tracing::error;
 
 use crate::error::ProtosError;
@@ -280,23 +279,23 @@ impl TryFrom<&TransactionTrace> for FullReceipt {
     type Error = ProtosError;
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
-        let tx_type = trace.try_into()?;
-
         let trace_receipt = trace.receipt()?;
 
         let logs = trace_receipt.logs()?;
 
         let receipt = Receipt {
-            success: trace.is_success(),
-            tx_type,
+            status: trace.is_success().into(),
             logs,
             cumulative_gas_used: trace_receipt.cumulative_gas_used,
         };
 
-        let bloom = Bloom::try_from(trace_receipt)?;
+        let logs_bloom = Bloom::try_from(trace_receipt)?;
 
         Ok(Self {
-            receipt: ReceiptWithBloom { receipt, bloom },
+            receipt: ReceiptWithBloom {
+                receipt,
+                logs_bloom,
+            },
             state_root: trace_receipt.state_root.to_vec(),
         })
     }
@@ -332,14 +331,14 @@ impl FullReceipt {
         self.rlp_header().encode(encoded);
         self.state_root.as_slice().encode(encoded);
         Encodable::encode(&self.receipt.receipt.cumulative_gas_used, encoded);
-        self.receipt.bloom.encode(encoded);
+        self.receipt.logs_bloom.encode(encoded);
         self.receipt.receipt.logs.encode(encoded);
     }
 
     /// For Byzantium and later: only encode the inner receipt contents using the `reth_primitives`
     /// [`ReceiptWithBloom`] `encode_inner` method.
     fn encode_byzantium_and_later_receipt(&self, encoded: &mut Vec<u8>) {
-        self.receipt.encode_inner(encoded, false);
+        self.receipt.encode(encoded);
     }
 
     /// Returns a reference to the [`ReceiptWithBloom`] for this [`FullReceipt`]
@@ -351,7 +350,7 @@ impl FullReceipt {
     fn rlp_header(&self) -> RlpHeader {
         let payload_length = self.state_root.as_slice().length()
             + self.receipt.receipt.cumulative_gas_used.length()
-            + self.receipt.bloom.length()
+            + self.receipt.logs_bloom.length()
             + self.receipt.receipt.logs.length();
 
         RlpHeader {

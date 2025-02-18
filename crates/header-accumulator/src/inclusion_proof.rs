@@ -119,7 +119,7 @@ fn do_generate_inclusion_proof(
 ) -> Result<InclusionProof, EraValidateError> {
     PreMergeAccumulator::construct_proof(header, epoch_accumulator)
         .map(|proof| InclusionProof {
-            proof: proof.proof,
+            proof,
             block_number: header.number,
         })
         .map_err(|_| EraValidateError::ProofGenerationFailure)
