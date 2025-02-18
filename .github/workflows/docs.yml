@@ -19,23 +19,6 @@ concurrency:
 jobs:
   deploy-pages:
     environment:
-
-    
-          
-            
-    
-
-          
-          Expand Down
-          
-            
-    
-
-          
-          Expand Up
-    
-    @@ -65,10 +61,10 @@ jobs:
-  
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
