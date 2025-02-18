@@ -1,14 +1,15 @@
+#![allow(deprecated)]
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 use std::fmt::Display;
 
-use alloy_consensus::{TxEip1559, TxEip2930, TxLegacy, TxType, TypedTransaction};
+use alloy_consensus::{TxEip1559, TxEip2930, TxLegacy};
 use alloy_eip2930::{AccessList, AccessListItem};
 use alloy_primitives::{
-    hex, Address, Bytes, ChainId, FixedBytes, PrimitiveSignature, TxKind, Uint, U128, U256,
+    hex, Address, Bytes, ChainId, FixedBytes, Parity, TxKind, Uint, U128, U256,
 };
-use reth_primitives::{Transaction, TransactionSigned};
+use reth_primitives::{Signature, Transaction, TransactionSigned, TxType};
 use tracing::debug;
 
 use crate::error::ProtosError;
@@ -62,7 +63,7 @@ impl TransactionTrace {
         self.status == 1
     }
 
-    fn parity(&self) -> Result<bool, ProtosError> {
+    fn parity(&self) -> Result<Parity, ProtosError> {
         // Extract the first byte of the V value (Ethereum's V value).
         let v = self.v();
 
@@ -85,7 +86,7 @@ impl TransactionTrace {
             }
         };
 
-        Ok(parity)
+        Ok(parity.into())
     }
 
     pub(crate) fn receipt(&self) -> Result<&TransactionReceipt, ProtosError> {
@@ -144,7 +145,7 @@ impl TryFrom<&TransactionTrace> for TxKind {
     }
 }
 
-impl TryFrom<&TransactionTrace> for PrimitiveSignature {
+impl TryFrom<&TransactionTrace> for Signature {
     type Error = ProtosError;
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
@@ -165,11 +166,11 @@ impl TryFrom<&TransactionTrace> for PrimitiveSignature {
         // Extract the Y parity from the V value.
         let odd_y_parity = trace.parity()?;
 
-        Ok(Self::new(r, s, odd_y_parity))
+        Ok(Signature::new(r, s, odd_y_parity))
     }
 }
 
-impl TryFrom<&TransactionTrace> for TxType {
+impl TryFrom<&TransactionTrace> for reth_primitives::TxType {
     type Error = ProtosError;
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
@@ -180,11 +181,11 @@ impl TryFrom<&TransactionTrace> for TxType {
     }
 }
 
-impl TryFrom<&TransactionTrace> for TypedTransaction {
+impl TryFrom<&TransactionTrace> for Transaction {
     type Error = ProtosError;
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
-        let tx_type = TxType::try_from(trace)?;
+        let tx_type = reth_primitives::TxType::try_from(trace)?;
         let nonce = trace.nonce;
         let gas_price = get_u128_or_default(&trace.gas_price)?;
         let gas_limit = trace.gas_limit;
@@ -192,8 +193,8 @@ impl TryFrom<&TransactionTrace> for TypedTransaction {
         let value = Uint::from(get_u128_or_default(&trace.value)?);
         let input = Bytes::copy_from_slice(trace.input.as_slice());
 
-        let transaction: TypedTransaction = match tx_type {
-            TxType::Legacy => Self::Legacy(TxLegacy {
+        let transaction: Transaction = match tx_type {
+            TxType::Legacy => Transaction::Legacy(TxLegacy {
                 chain_id: get_legacy_chain_id(trace),
                 nonce,
                 gas_price,
@@ -202,7 +203,7 @@ impl TryFrom<&TransactionTrace> for TypedTransaction {
                 value,
                 input,
             }),
-            TxType::Eip2930 => Self::Eip2930(TxEip2930 {
+            TxType::Eip2930 => Transaction::Eip2930(TxEip2930 {
                 chain_id: CHAIN_ID,
                 nonce,
                 gas_price,
@@ -212,7 +213,7 @@ impl TryFrom<&TransactionTrace> for TypedTransaction {
                 access_list: AccessList::try_from(trace)?,
                 input,
             }),
-            TxType::Eip1559 => Self::Eip1559(TxEip1559 {
+            TxType::Eip1559 => Transaction::Eip1559(TxEip1559 {
                 chain_id: CHAIN_ID,
                 nonce,
                 gas_limit,
@@ -243,18 +244,15 @@ impl TryFrom<&TransactionTrace> for TransactionSigned {
     type Error = ProtosError;
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
-        let typed_tx = TypedTransaction::try_from(trace)?;
-        let transaction = match typed_tx {
-            TypedTransaction::Legacy(tx) => Transaction::Legacy(tx),
-            TypedTransaction::Eip2930(tx) => Transaction::Eip2930(tx),
-            TypedTransaction::Eip1559(tx) => Transaction::Eip1559(tx),
-            TypedTransaction::Eip4844(tx) => Transaction::Eip4844(tx.into()),
-            TypedTransaction::Eip7702(tx) => Transaction::Eip7702(tx),
-        };
-        let signature = PrimitiveSignature::try_from(trace)?;
+        let transaction = Transaction::try_from(trace)?;
+        let signature = Signature::try_from(trace)?;
         let hash = FixedBytes::from_slice(trace.hash.as_slice());
 
-        Ok(TransactionSigned::new(transaction, signature, hash))
+        Ok(TransactionSigned {
+            transaction,
+            signature,
+            hash,
+        })
     }
 }
 
@@ -344,13 +342,13 @@ mod tests {
             ..Default::default()
         };
 
-        let signature = PrimitiveSignature::try_from(&trace).unwrap();
+        let signature = Signature::try_from(&trace).unwrap();
         assert_eq!(signature.r(), U256::from(1));
         assert_eq!(signature.s(), U256::from(1));
-        assert!(!trace.parity().unwrap());
+        assert!(!trace.parity().unwrap().y_parity());
 
         trace.v = vec![28];
-        assert!(trace.parity().unwrap());
+        assert!(trace.parity().unwrap().y_parity());
     }
 
     #[test]
@@ -374,9 +372,9 @@ mod tests {
             ..Default::default()
         };
 
-        let tx = TypedTransaction::try_from(&trace).unwrap();
+        let tx = Transaction::try_from(&trace).unwrap();
         match tx {
-            TypedTransaction::Legacy(tx) => {
+            Transaction::Legacy(tx) => {
                 assert_eq!(tx.nonce, 1);
                 assert_eq!(tx.gas_price, 1);
                 assert_eq!(tx.gas_limit, 21000);
@@ -387,13 +385,13 @@ mod tests {
 
         // EIP-2930 transaction
         trace.r#type = Type::TrxTypeAccessList as i32;
-        let tx = TypedTransaction::try_from(&trace).unwrap();
-        assert!(matches!(tx, TypedTransaction::Eip2930(_)));
+        let tx = Transaction::try_from(&trace).unwrap();
+        assert!(matches!(tx, Transaction::Eip2930(_)));
 
         // EIP-1559 transaction
         trace.r#type = Type::TrxTypeDynamicFee as i32;
-        let tx = TypedTransaction::try_from(&trace).unwrap();
-        assert!(matches!(tx, TypedTransaction::Eip1559(_)));
+        let tx = Transaction::try_from(&trace).unwrap();
+        assert!(matches!(tx, Transaction::Eip1559(_)));
     }
 
     #[test]
