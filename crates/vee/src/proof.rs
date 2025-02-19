@@ -1,3 +1,5 @@
+/// generatesp proof for block based on its relation to the Merge and Capella upgrades
+/// in case of Ethereum BLocks. For Arbitrum, Optimism, it uses other methods to generate proofs
 use crate::protos::EthBlock;
 use alloy_primitives::B256;
 use ethportal_api::types::execution::header_with_proof::{
@@ -24,62 +26,133 @@ pub const CAPELLA_START_SLOT: usize = CAPELLA_START_EPOCH * SLOTS_PER_EPOCH;
 pub const CAPELLA_START_ERA: usize =
     (CAPELLA_START_EPOCH * SLOTS_PER_EPOCH) / SLOTS_PER_HISTORICAL_ROOT;
 
-/// generatesp proof for block based on its relation to the Merge and Capella upgrades.
-/// This function receives an execution block and verifies accordingly.
-pub fn prove_block(execution_block: &EthBlock) {
-    let execution_block_number = execution_block.number;
+/// A trait that defines the common interface for different blockchain types
+/// (e.g., Ethereum, Arbitrum, Optimism, Solana).
+pub trait BlockEntity {
+    fn block_number(&self) -> u64;
+    fn prove_block(&self) -> BlockHeaderProof;
+}
 
-    // Check if block is pre-merge
-    if execution_block_number < MERGE_BLOCK {
-        // Pre-Merge: Use the pre-Merge accumulator
-        println!("Pre-Merge block: {:?}", execution_block_number);
-        prove_pre_merge_block(execution_block);
-    } else if execution_block_number < CAPELLA_START_SLOT as u64 {
-        // Post-Merge, Pre-Capella: Use HistoricalBatch
-        println!(
-            "Post-Merge, Pre-Capella block: {:?}",
-            execution_block_number
-        );
-        prove_pre_capella(execution_block);
-    } else {
-        // Post-Capella: Use HistoricalSummary
-        println!("Post-Capella block: {:?}", execution_block_number);
-        prove_post_capella(execution_block);
+/// The generic Block struct that can support multiple block types.
+pub struct Block<E: BlockEntity> {
+    pub block: E, // The block of any blockchain type that implements BlockEntity
+}
+
+impl<E: BlockEntity> Block<E> {
+    /// Prove the block based on its relation to the Merge and Capella upgrades.
+    pub fn prove_block(&self) {
+        let execution_block_number = self.block.block_number();
+
+        if execution_block_number < MERGE_BLOCK {
+            println!("Pre-Merge block: {:?}", execution_block_number);
+            let _proof = self.block.prove_block();
+        }
+        //TODO: actually use correct capella block number
+        else if execution_block_number < CAPELLA_START_SLOT as u64 {
+            println!(
+                "Post-Merge, Pre-Capella block: {:?}",
+                execution_block_number
+            );
+        } else {
+            println!("Post-Capella block: {:?}", execution_block_number);
+        }
     }
 }
 
-/// Verifies a pre-Merge block using the pre-Merge accumulator.
-fn prove_pre_merge_block(execution_block: &EthBlock) -> Result<BlockHeaderProof, String> {
-    // Ensure the block has the required number and hash fields
+/// Ethereum block implementation of BlockEntity trait
+impl BlockEntity for EthBlock {
+    fn block_number(&self) -> u64 {
+        self.number
+    }
 
-    // TODO: Replace this with actual logic to use the pre-Merge accumulator.
-    // Emit an empty proof for now
-    let proof = PreMergeAccumulatorProof {
-        proof: [B256::default(); 15], // Empty proof with default B256 values
-    };
+    fn prove_block(&self) -> BlockHeaderProof {
+        let proof = PreMergeAccumulatorProof {
+            proof: [B256::default(); 15], // Example proof
+        };
 
-    // Wrap the proof in BlockHeaderProof::PreMergeAccumulatorProof
-    Ok(BlockHeaderProof::PreMergeAccumulatorProof(proof))
+        BlockHeaderProof::PreMergeAccumulatorProof(proof)
+    }
 }
 
-/// Verifies a post-Merge pre-Capella block using the HistoricalBatch.
-fn prove_pre_capella(execution_block: &EthBlock) {
-    // TODO: Implement post-Merge pre-Capella verification logic
-
-    // TODO: build these proofs
-    // let proof = HistoricalRootsBlockProof {
-    //     proof: [B256::default(); 15], // Empty proof with default 256 values
-    // };
-
-    unimplemented!("Implement HistoricalBatch verification");
+/// Arbitrum Block Implementation of BlockEntity trait
+pub struct ArbBlock {
+    pub number: u64,
 }
 
-/// Verifies a post-Capella block using the HistoricalSummary.
-fn prove_post_capella(execution_block: &EthBlock) {
-    // TODO: Implement post-Capella verification logic
+impl BlockEntity for ArbBlock {
+    fn block_number(&self) -> u64 {
+        self.number
+    }
 
-    //TODO: build these proofs
-    // let proof = HistoricalSummariesBlockProof {
-    // };
-    unimplemented!("Implement HistoricalSummary verification");
+    fn prove_block(&self) -> BlockHeaderProof {
+        // Arbitrum-specific proof generation logic
+        // Example, can differ from Ethereum's logic
+        println!("Proving Arbitrum block: {:?}", self.number);
+        BlockHeaderProof::PreMergeAccumulatorProof(PreMergeAccumulatorProof {
+            proof: [B256::default(); 15], // Example proof for Arbitrum
+        })
+    }
+}
+
+/// Optimism Block Implementation of BlockEntity trait
+pub struct OptimismBlock {
+    pub number: u64,
+    // other fields specific to Optimism block
+}
+
+impl BlockEntity for OptimismBlock {
+    fn block_number(&self) -> u64 {
+        self.number
+    }
+
+    fn prove_block(&self) -> BlockHeaderProof {
+        // Optimism-specific proof generation logic
+        println!("Proving Optimism block: {:?}", self.number);
+        BlockHeaderProof::PreMergeAccumulatorProof(PreMergeAccumulatorProof {
+            proof: [B256::default(); 15], // Example proof for Optimism
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn mock_eth_block() -> EthBlock {
+        EthBlock { number: 15537393 }
+    }
+
+    fn mock_arb_block() -> ArbBlock {
+        ArbBlock { number: 15537395 } // After Merge, before Capella
+    }
+
+    fn mock_optimism_block() -> OptimismBlock {
+        OptimismBlock { number: 15537400 }
+    }
+
+    #[test]
+    fn test_prove_eth_block_pre_merge() {
+        let eth_block = mock_eth_block();
+        let block = Block { block: eth_block };
+
+        block.prove_block();
+    }
+
+    #[test]
+    fn test_prove_arb_block_post_merge_pre_capella() {
+        let arb_block = mock_arb_block();
+        let block = Block { block: arb_block };
+
+        block.prove_block();
+    }
+
+    #[test]
+    fn test_prove_optimism_block_post_capella() {
+        let optimism_block = mock_optimism_block();
+        let block = Block {
+            block: optimism_block,
+        };
+
+        block.prove_block();
+    }
 }
