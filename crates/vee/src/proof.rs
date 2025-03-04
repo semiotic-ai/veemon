@@ -1,5 +1,7 @@
-/// generatesp proof for block based on its relation to the Merge and Capella upgrades
-/// in case of Ethereum BLocks. For Arbitrum, Optimism, it uses other methods to generate proofs
+/*
+generatesp proof for block based on its relation to the Merge and Capella upgrades
+in case of Ethereum BLocks. For Arbitrum, Optimism, it uses other methods to generate proofs
+*/
 use crate::protos::EthBlock;
 use alloy_primitives::B256;
 use ethportal_api::types::execution::header_with_proof::{
@@ -8,122 +10,159 @@ use ethportal_api::types::execution::header_with_proof::{
     PreMergeAccumulatorProof,
 };
 
-/// The maximum number of block roots that can be stored in a [`BeaconState`]'s `block_roots` list.
-pub const SLOTS_PER_HISTORICAL_ROOT: usize = 8192;
 /// The merge block, inclusive, i.e., the block number below already counts to be post-merge.
 pub const MERGE_BLOCK: u64 = 15537394;
-/// The number of slots in an epoch.
-pub const SLOTS_PER_EPOCH: usize = 32;
-/// The number of slots in an era.
-pub const SLOTS_PER_ERA: usize = SLOTS_PER_HISTORICAL_ROOT;
-/// Slots are 0-indexed.
-/// See, for example, `https://beaconcha.in/slot/0`.
-pub const CAPELLA_START_EPOCH: usize = 194048;
-/// See [Upgrading Ethereum](https://eth2book.info/capella/part4/history/) for more information.
-/// The first slot number of the Deneb fork.
-pub const CAPELLA_START_SLOT: usize = CAPELLA_START_EPOCH * SLOTS_PER_EPOCH;
-/// The first era of the Deneb fork.
-pub const CAPELLA_START_ERA: usize =
-    (CAPELLA_START_EPOCH * SLOTS_PER_EPOCH) / SLOTS_PER_HISTORICAL_ROOT;
+/// The first block after Shanghai-capella block
+pub const CAPELLA_START_BLOCK: u64 = 17_034_870;
 
-/// A trait that defines the common interface for different blockchain types
-/// (e.g., Ethereum, Arbitrum, Optimism, Solana).
-pub trait BlockEntity {
+/// A trait for EVM-based blockchains (Ethereum, Arbitrum, Optimism, etc.)
+pub trait EvmBlock {
     fn block_number(&self) -> u64;
+    fn chain_id(&self) -> EvmChain;
     fn prove_block(&self) -> BlockHeaderProof;
 }
 
-/// The generic Block struct that can support multiple block types.
-pub struct Block<E: BlockEntity> {
-    pub block: E, // The block of any blockchain type that implements BlockEntity
+/// Enum to differentiate which EVM chain it is
+#[derive(Debug)]
+pub enum EvmChain {
+    Ethereum,
+    Arbitrum,
+    Optimism,
 }
 
-impl<E: BlockEntity> Block<E> {
-    /// Prove the block based on its relation to the Merge and Capella upgrades.
-    pub fn prove_block(&self) {
-        let execution_block_number = self.block.block_number();
+/// A trait for Solana-based blockchains
+pub trait SolanaBlock {}
 
-        if execution_block_number < MERGE_BLOCK {
-            println!("Pre-Merge block: {:?}", execution_block_number);
-            let _proof = self.block.prove_block();
+/// Define a `Block` enum that can store either an **EVM block (generic) or a Solana block**
+pub enum Block<E: EvmBlock> {
+    Evm(E),
+    Solana(SolanaBlockImpl),
+}
+
+impl<E: EvmBlock> Block<E> {
+    pub fn block_number(&self) -> Option<u64> {
+        match self {
+            Block::Evm(block) => Some(block.block_number()),
+            Block::Solana(_) => None, // Solana blocks don't have block numbers
         }
-        //TODO: actually use correct capella block number
-        else if execution_block_number < CAPELLA_START_SLOT as u64 {
-            println!(
-                "Post-Merge, Pre-Capella block: {:?}",
-                execution_block_number
-            );
-        } else {
-            println!("Post-Capella block: {:?}", execution_block_number);
+    }
+
+    pub fn prove_block(&self) -> Option<BlockHeaderProof> {
+        match self {
+            Block::Evm(block) => Some(block.prove_block()),
+            Block::Solana(_) => None, // Solana proof logic would go here
+        }
+    }
+
+    pub fn chain_id(&self) -> Option<EvmChain> {
+        match self {
+            Block::Evm(block) => Some(block.chain_id()),
+            Block::Solana(_) => None,
         }
     }
 }
 
-/// Ethereum block implementation of BlockEntity trait
-impl BlockEntity for EthBlock {
+/// Implement EvmBlock for EthereumBlock
+pub struct EthereumBlock {
+    pub number: u64,
+}
+
+impl EvmBlock for EthereumBlock {
     fn block_number(&self) -> u64 {
         self.number
     }
 
-    fn prove_block(&self) -> BlockHeaderProof {
-        let proof = PreMergeAccumulatorProof {
-            proof: [B256::default(); 15], // Example proof
-        };
+    fn chain_id(&self) -> EvmChain {
+        EvmChain::Ethereum
+    }
 
-        BlockHeaderProof::PreMergeAccumulatorProof(proof)
+    fn prove_block(&self) -> BlockHeaderProof {
+        let execution_block_number = self.block_number();
+
+        if execution_block_number < MERGE_BLOCK {
+            println!("Pre-Merge Ethereum block: {:?}", execution_block_number);
+            todo!()
+        } else if execution_block_number < CAPELLA_START_BLOCK {
+            println!(
+                "Post-Merge, Pre-Capella Ethereum block: {:?}",
+                execution_block_number
+            );
+            todo!()
+        } else {
+            println!("Post-Capella Ethereum block: {:?}", execution_block_number);
+            todo!()
+        }
     }
 }
 
-/// Arbitrum Block Implementation of BlockEntity trait
+/// Implement EvmBlock for ArbBlock
 pub struct ArbBlock {
     pub number: u64,
 }
 
-impl BlockEntity for ArbBlock {
+impl EvmBlock for ArbBlock {
     fn block_number(&self) -> u64 {
         self.number
     }
 
+    fn chain_id(&self) -> EvmChain {
+        EvmChain::Arbitrum
+    }
+
     fn prove_block(&self) -> BlockHeaderProof {
-        // Arbitrum-specific proof generation logic
-        // Example, can differ from Ethereum's logic
         println!("Proving Arbitrum block: {:?}", self.number);
         BlockHeaderProof::PreMergeAccumulatorProof(PreMergeAccumulatorProof {
-            proof: [B256::default(); 15], // Example proof for Arbitrum
+            proof: [B256::default(); 15],
         })
     }
 }
 
-/// Optimism Block Implementation of BlockEntity trait
+/// Implement EvmBlock for OptimismBlock
 pub struct OptimismBlock {
     pub number: u64,
-    // other fields specific to Optimism block
 }
 
-impl BlockEntity for OptimismBlock {
+impl EvmBlock for OptimismBlock {
     fn block_number(&self) -> u64 {
         self.number
     }
 
+    fn chain_id(&self) -> EvmChain {
+        EvmChain::Optimism
+    }
+
     fn prove_block(&self) -> BlockHeaderProof {
-        // Optimism-specific proof generation logic
         println!("Proving Optimism block: {:?}", self.number);
         BlockHeaderProof::PreMergeAccumulatorProof(PreMergeAccumulatorProof {
-            proof: [B256::default(); 15], // Example proof for Optimism
+            proof: [B256::default(); 15],
         })
     }
 }
+
+/// Implement SolanaBlock for SolanaBlockImpl
+pub struct SolanaBlockImpl;
+
+impl SolanaBlock for SolanaBlockImpl {}
+// TODO: implement receipt trait
+// where we can retrieve specific block data
+// for generating the proof
+// tip: check parquet nozzle files, for receipt related matadata that
+// is filled in each row
+// tip 2: metadata_db can have additional receipt information if configure to.
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
-    fn mock_eth_block() -> EthBlock {
-        EthBlock { number: 15537393 }
+    fn mock_eth_block() -> EthereumBlock {
+        EthereumBlock {
+            number: MERGE_BLOCK,
+        }
     }
 
     fn mock_arb_block() -> ArbBlock {
-        ArbBlock { number: 15537395 } // After Merge, before Capella
+        ArbBlock { number: 15537395 }
     }
 
     fn mock_optimism_block() -> OptimismBlock {
@@ -132,27 +171,23 @@ mod tests {
 
     #[test]
     fn test_prove_eth_block_pre_merge() {
-        let eth_block = mock_eth_block();
-        let block = Block { block: eth_block };
-
+        let block = Block::Evm(EthereumBlock {
+            number: MERGE_BLOCK,
+        });
         block.prove_block();
     }
 
     #[test]
     fn test_prove_arb_block_post_merge_pre_capella() {
         let arb_block = mock_arb_block();
-        let block = Block { block: arb_block };
-
+        let block = Block::Evm(arb_block);
         block.prove_block();
     }
 
     #[test]
     fn test_prove_optimism_block_post_capella() {
         let optimism_block = mock_optimism_block();
-        let block = Block {
-            block: optimism_block,
-        };
-
+        let block = Block::Evm(optimism_block);
         block.prove_block();
     }
 }
