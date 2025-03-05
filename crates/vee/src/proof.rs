@@ -1,8 +1,10 @@
-/*
-generatesp proof for block based on its relation to the Merge and Capella upgrades
-in case of Ethereum BLocks. For Arbitrum, Optimism, it uses other methods to generate proofs
-*/
-use crate::protos::EthBlock;
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
+//! Generates proof for block based on its relation to the Merge and Capella upgrades
+//! in case of Ethereum BLocks. For Arbitrum, Optimism, it uses other methods to generate proofs
+
+//use crate::protos::EthBlock;
 use alloy_primitives::B256;
 use ethportal_api::types::execution::header_with_proof::{
     BlockHeaderProof,
@@ -10,64 +12,127 @@ use ethportal_api::types::execution::header_with_proof::{
     PreMergeAccumulatorProof,
 };
 
-/// The merge block, inclusive, i.e., the block number below already counts to be post-merge.
+/// The merge block, inclusive, i.e., the block number below already counts as post-merge.
 pub const MERGE_BLOCK: u64 = 15537394;
-/// The first block after Shanghai-capella block
+/// The first block after Shanghai-Capella block
 pub const CAPELLA_START_BLOCK: u64 = 17_034_870;
 
-/// A trait for EVM-based blockchains (Ethereum, Arbitrum, Optimism, etc.)
-pub trait EvmBlock {
+/// A trait for EVM-based blockchains (Ethereum, Arbitrum, Optimism, etc.).
+pub trait AnyBlock {
+    /// return height of given block
     fn block_number(&self) -> u64;
+    /// Returns the chain id
     fn chain_id(&self) -> EvmChain;
+    /// Generates a proof for the block
     fn prove_block(&self) -> BlockHeaderProof;
 }
 
-/// Enum to differentiate which EVM chain it is
+/// Enum to differentiate which EVM chain it is.
 #[derive(Debug)]
 pub enum EvmChain {
+    /// layer 1 ethereum
     Ethereum,
+    ///arbiturm, layer 2
     Arbitrum,
+    ///optimism layer 2
     Optimism,
 }
 
-/// A trait for Solana-based blockchains
-pub trait SolanaBlock {}
-
-/// Define a `Block` enum that can store either an **EVM block (generic) or a Solana block**
-pub enum Block<E: EvmBlock> {
-    Evm(E),
-    Solana(SolanaBlockImpl),
+/// Enum to differentiate Non-EVM chains.
+/// Currently only Solana, but can be extended to include more.
+#[derive(Debug)]
+pub enum NonEvmChain {
+    ///Solana type
+    Solana,
+    // Future chains can be added here (e.g., Aptos, Sui)
 }
 
-impl<E: EvmBlock> Block<E> {
+/// Represents a blockchain block that can be either an EVM block or a Non-EVM block.
+///
+/// This enum allows for storing different blockchain block types while maintaining a common interface.
+/// It uses generics to store any type that implements the `AnyBlock` trait and provides
+/// a separate variant for Non-EVM chains.
+///
+/// # Variants
+/// - `Evm(E)`: Stores an EVM-based block (Ethereum, Arbitrum, Optimism, etc.).
+/// - `NonEvm(NonEvmChain)`: Represents a block from a non-EVM chain.
+pub enum Block<E: AnyBlock> {
+    /// An EVM-based block, such as Ethereum, Arbitrum, or Optimism.
+    Evm(E),
+    /// A Non-EVM blockchain block (e.g., Solana, Sui, Aptos).
+    NonEvm(NonEvmChain),
+}
+
+impl<E: AnyBlock> Block<E> {
+    /// Retrieves the block number of the stored block.
+    ///
+    /// - Returns `Some(block_number)` for EVM-based blocks.
+    /// - Returns `None` for Non-EVM blocks, as they may not have numeric block heights.
+    ///
+    /// # Example
+    /// ```
+    /// let eth_block = Block::Evm(EthereumBlock { number: 15537394 });
+    /// assert_eq!(eth_block.block_number(), Some(15537394));
+    ///
+    /// let solana_block = Block::NonEvm(NonEvmChain::Solana);
+    /// assert_eq!(solana_block.block_number(), None);
+    /// ```
     pub fn block_number(&self) -> Option<u64> {
         match self {
             Block::Evm(block) => Some(block.block_number()),
-            Block::Solana(_) => None, // Solana blocks don't have block numbers
+            Block::NonEvm(_) => None, // Non-EVM chains don't necessarily use block numbers.
         }
     }
 
+    /// Generates a proof for the stored block.
+    ///
+    /// - Returns `Some(BlockHeaderProof)` for EVM-based blocks.
+    /// - Returns `None` for Non-EVM blocks, as proof mechanisms differ.
+    ///
+    /// # Example
+    /// ```
+    /// let eth_block = Block::Evm(EthereumBlock { number: 15537394 });
+    /// let proof = eth_block.prove_block();
+    /// assert!(proof.is_some());
+    ///
+    /// let solana_block = Block::NonEvm(NonEvmChain::Solana);
+    /// let proof = solana_block.prove_block();
+    /// assert!(proof.is_none());
+    /// ```
     pub fn prove_block(&self) -> Option<BlockHeaderProof> {
         match self {
             Block::Evm(block) => Some(block.prove_block()),
-            Block::Solana(_) => None, // Solana proof logic would go here
+            Block::NonEvm(_) => None, // Non-EVM proof logic would go here.
         }
     }
 
+    /// Retrieves the chain type of the stored block.
+    ///
+    /// - Returns `Some(EvmChain)` for EVM blocks (Ethereum, Arbitrum, Optimism).
+    /// - Returns `None` for Non-EVM chains.
+    ///
+    /// # Example
+    /// ```
+    /// let eth_block = Block::Evm(EthereumBlock { number: 15537394 });
+    /// assert_eq!(eth_block.chain_id(), Some(EvmChain::Ethereum));
+    ///
+    /// let solana_block = Block::NonEvm(NonEvmChain::Solana);
+    /// assert_eq!(solana_block.chain_id(), None);
+    /// ```
     pub fn chain_id(&self) -> Option<EvmChain> {
         match self {
             Block::Evm(block) => Some(block.chain_id()),
-            Block::Solana(_) => None,
+            Block::NonEvm(_) => None,
         }
     }
 }
 
-/// Implement EvmBlock for EthereumBlock
-pub struct EthereumBlock {
+/// Implement AnyBlock for EthereumBlock
+struct EthereumBlock {
     pub number: u64,
 }
 
-impl EvmBlock for EthereumBlock {
+impl AnyBlock for EthereumBlock {
     fn block_number(&self) -> u64 {
         self.number
     }
@@ -95,12 +160,12 @@ impl EvmBlock for EthereumBlock {
     }
 }
 
-/// Implement EvmBlock for ArbBlock
-pub struct ArbBlock {
+/// Implement AnyBlock for ArbBlock
+struct ArbBlock {
     pub number: u64,
 }
 
-impl EvmBlock for ArbBlock {
+impl AnyBlock for ArbBlock {
     fn block_number(&self) -> u64 {
         self.number
     }
@@ -117,12 +182,12 @@ impl EvmBlock for ArbBlock {
     }
 }
 
-/// Implement EvmBlock for OptimismBlock
-pub struct OptimismBlock {
+/// Implement AnyBlock for OptimismBlock
+struct OptimismBlock {
     pub number: u64,
 }
 
-impl EvmBlock for OptimismBlock {
+impl AnyBlock for OptimismBlock {
     fn block_number(&self) -> u64 {
         self.number
     }
@@ -139,10 +204,6 @@ impl EvmBlock for OptimismBlock {
     }
 }
 
-/// Implement SolanaBlock for SolanaBlockImpl
-pub struct SolanaBlockImpl;
-
-impl SolanaBlock for SolanaBlockImpl {}
 // TODO: implement receipt trait
 // where we can retrieve specific block data
 // for generating the proof
