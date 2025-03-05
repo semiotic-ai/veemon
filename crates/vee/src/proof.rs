@@ -232,9 +232,8 @@ mod tests {
 
     #[test]
     fn test_prove_eth_block_pre_merge() {
-        let block = Block::Evm(EthereumBlock {
-            number: MERGE_BLOCK,
-        });
+        let arb_block = mock_eth_block();
+        let block = Block::Evm(arb_block);
         block.prove_block();
     }
 
