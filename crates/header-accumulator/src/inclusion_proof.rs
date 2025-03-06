@@ -4,18 +4,12 @@
 use crate::{epoch::MAX_EPOCH_SIZE, errors::EraValidateError, Epoch};
 
 use alloy_primitives::FixedBytes;
-use ethportal_api::{
-    types::execution::{
-        accumulator::EpochAccumulator,
-        header_with_proof::{
-            BlockHeaderProof, HeaderWithProof as PortalHeaderWithProof, PreMergeAccumulatorProof,
-        },
+use ethportal_api::types::execution::{
+    accumulator::EpochAccumulator,
+    header::Header,
+    header_with_proof::{
+        BlockHeaderProof, HeaderWithProof as PortalHeaderWithProof, PreMergeAccumulatorProof,
     },
-    Header,
-};
-use trin_validation::{
-    accumulator::PreMergeAccumulator, header_validator::HeaderValidator,
-    historical_roots_acc::HistoricalRootsAccumulator,
 };
 
 const PROOF_SIZE: usize = 15;

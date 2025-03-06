@@ -1922,8 +1922,9 @@ dependencies = [
 
 [[package]]
 name = "ethportal-api"
-version = "0.4.1"
-source = "git+https://github.com/ethereum/trin.git#81045efc988d3a9499d8a1cfd972b3e65372b347"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6e4a9d7f39d21f5c7d4341fdea8c85cdc9db8eed30cc4a5dfa1a4d312432a90"
 dependencies = [
  "alloy",
  "alloy-rlp",
@@ -2422,7 +2423,6 @@ dependencies = [
  "thiserror 2.0.11",
  "tracing",
  "tree_hash",
- "trin-validation",
 ]
 
 [[package]]
@@ -4225,40 +4225,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48fd7bd8a6377e15ad9d42a8ec25371b94ddc67abe7c8b9127bec79bebaaae18"
 
 [[package]]
-name = "rust-embed"
-version = "6.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a36224c3276f8c4ebc8c20f158eca7ca4359c8db89991c4925132aaaf6702661"
-dependencies = [
- "rust-embed-impl",
- "rust-embed-utils",
- "walkdir",
-]
-
-[[package]]
-name = "rust-embed-impl"
-version = "6.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49b94b81e5b2c284684141a2fb9e2a31be90638caf040bf9afbc5a0416afe1ac"
-dependencies = [
- "proc-macro2",
- "quote",
- "rust-embed-utils",
- "syn 2.0.90",
- "walkdir",
-]
-
-[[package]]
-name = "rust-embed-utils"
-version = "7.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d38ff6bf570dc3bb7100fce9f7b60c33fa71d80e88da3f2580df4ff2bdded74"
-dependencies = [
- "sha2",
- "walkdir",
-]
-
-[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5330,28 +5296,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "trin-validation"
-version = "0.1.0"
-source = "git+https://github.com/ethereum/trin.git#81045efc988d3a9499d8a1cfd972b3e65372b347"
-dependencies = [
- "alloy",
- "anyhow",
- "enr",
- "ethereum_hashing",
- "ethereum_ssz",
- "ethereum_ssz_derive",
- "ethportal-api",
- "lazy_static",
- "rust-embed",
- "serde",
- "serde_json",
- "ssz_types",
- "tokio",
- "tree_hash",
- "tree_hash_derive",
-]
-
-[[package]]
 name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5509,6 +5453,17 @@ name = "utf8parse"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
+
+[[package]]
+name = "validation"
+version = "0.0.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-rlp",
+ "ethportal-api",
+ "ssz_types",
+ "tree_hash",
+]
 
 [[package]]
 name = "validator"

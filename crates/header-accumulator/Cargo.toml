@@ -15,7 +15,6 @@ serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 tracing.workspace = true
 tree_hash.workspace = true
-trin-validation.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
