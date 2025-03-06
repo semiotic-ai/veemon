@@ -19,4 +19,4 @@ pub use accumulator::*;
 pub use decoder::*;
 pub use protos::*;
 
-mod proof;
+pub mod proof;

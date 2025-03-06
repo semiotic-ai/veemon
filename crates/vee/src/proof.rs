@@ -4,13 +4,14 @@
 //! Generates proof for block based on its relation to the Merge and Capella upgrades
 //! in case of Ethereum BLocks. For Arbitrum, Optimism, it uses other methods to generate proofs
 
-//use crate::protos::EthBlock;
+use crate::protos::EthBlock;
 use alloy_primitives::B256;
 use ethportal_api::types::execution::header_with_proof::{
     BlockHeaderProof,
     // HistoricalRootsBlockProof, HistoricalSummariesBlockProof,
     PreMergeAccumulatorProof,
 };
+use header_accumulator::{self, generate_inclusion_proof};
 
 /// The merge block, inclusive, i.e., the block number below already counts as post-merge.
 pub const MERGE_BLOCK: u64 = 15537394;
@@ -128,13 +129,11 @@ impl<E: AnyBlock> Block<E> {
 }
 
 /// Implement AnyBlock for EthereumBlock
-struct EthereumBlock {
-    pub number: u64,
-}
+pub struct EthereumBlock(pub EthBlock);
 
 impl AnyBlock for EthereumBlock {
     fn block_number(&self) -> u64 {
-        self.number
+        self.0.number
     }
 
     fn chain_id(&self) -> EvmChain {
@@ -145,18 +144,22 @@ impl AnyBlock for EthereumBlock {
         let execution_block_number = self.block_number();
 
         if execution_block_number < MERGE_BLOCK {
-            println!("Pre-Merge Ethereum block: {:?}", execution_block_number);
             todo!()
-        } else if execution_block_number < CAPELLA_START_BLOCK {
+        //TODO: the epoch of 8192 blocks is necessary here, to generate a proof. Get it with
+        // the firehoseClilent for now. But given it is too many blocks, maybe later store ina a buffer
+        // for reuse
+        } else if execution_block_number < CAPELLA_START_BLOCK
+            && execution_block_number > MERGE_BLOCK
+        {
             println!(
                 "Post-Merge, Pre-Capella Ethereum block: {:?}",
                 execution_block_number
             );
             todo!()
-        } else {
-            println!("Post-Capella Ethereum block: {:?}", execution_block_number);
-            todo!()
         }
+
+        println!("Post-Capella Ethereum block: {:?}", execution_block_number);
+        todo!()
     }
 }
 

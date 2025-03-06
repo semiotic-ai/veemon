@@ -5553,9 +5553,11 @@ dependencies = [
  "alloy-primitives",
  "decoder",
  "ethportal-api",
+ "firehose-client",
  "firehose-protos",
  "header-accumulator",
  "reth-primitives",
+ "tokio",
  "tree_hash",
 ]
 
