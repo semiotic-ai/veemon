@@ -8,6 +8,7 @@ path = "src/lib.rs"
 name = "vee"
 
 [dependencies]
+anyhow.workspace = true
 alloy-primitives.workspace = true
 ethportal-api.workspace = true
 firehose-protos.workspace = true
