@@ -69,16 +69,22 @@ pub enum EraValidateError {
     InvalidBlockRange(u64, u64),
 
     /// Epoch is in post merge
-    #[error("Epoch is in post merge: {0}")]
+    #[error("epoch is in post merge: {0}")]
     EpochPostMerge(usize),
 
-    /// Header block number is different than expected
-    #[error("Header block number ({block_number}) is different than expected ({expected_number})")]
+    /// header block number is different than expected
+    #[error("header block number ({block_number}) is different than expected ({expected_number})")]
     HeaderMismatch {
-        /// Expected block number
+        /// expected block number
         expected_number: u64,
-        /// Actual block number
+        /// actual block number
         block_number: u64,
+    },
+    /// The proof does not match the expected era for the given header timestamp.
+    #[error("proof type does not match expected era for timestamp {timestamp}")]
+    InvalidProofEra {
+        /// The timestamp of the block header being validated.
+        timestamp: u64,
     },
 }
 

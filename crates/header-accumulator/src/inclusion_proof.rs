@@ -3,44 +3,56 @@
 
 use crate::{epoch::MAX_EPOCH_SIZE, errors::EraValidateError, Epoch};
 
-use alloy_primitives::FixedBytes;
+use ethportal_api::types::execution::header_with_proof_new::BlockHeaderProof;
 use ethportal_api::types::execution::{
-    accumulator::EpochAccumulator,
-    header::Header,
-    header_with_proof::{
-        BlockHeaderProof, HeaderWithProof as PortalHeaderWithProof, PreMergeAccumulatorProof,
-    },
+    accumulator::EpochAccumulator, header::Header, header_with_proof_new::HeaderWithProof,
 };
 
-const PROOF_SIZE: usize = 15;
+use ethportal_api::MERGE_TIMESTAMP;
+use validation::constants::{CAPELLA_BLOCK_NUMBER, MERGE_BLOCK_NUMBER};
+use validation::{
+    header_validator::HeaderValidator, historical_roots::HistoricalRootsAccumulator,
+    PreMergeAccumulator,
+};
 
-/// A proof that contains the block number
-#[derive(Clone)]
+/// A proof that contains the block number.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InclusionProof {
-    block_number: u64,
-    proof: [FixedBytes<32>; PROOF_SIZE],
+    /// given block number
+    pub block_number: u64,
+    /// A proof of the given BlockHeader
+    pub proof: BlockHeaderProof,
 }
 
 impl InclusionProof {
-    /// Takes a header and turns the proof into a provable header
+    /// creates a proof for the header, unites both proof and header into InclusionProof sturct
     pub fn with_header(self, header: Header) -> Result<HeaderWithProof, EraValidateError> {
         if self.block_number != header.number {
-            Err(EraValidateError::HeaderMismatch {
+            return Err(EraValidateError::HeaderMismatch {
                 expected_number: self.block_number,
                 block_number: header.number,
-            })
-        } else {
-            Ok(HeaderWithProof {
-                proof: self,
-                header,
-            })
+            });
         }
-    }
-}
 
-impl From<InclusionProof> for PreMergeAccumulatorProof {
-    fn from(value: InclusionProof) -> Self {
-        Self { proof: value.proof }
+        // Ensure that the proof actually corresponds to the correct historical accumulator
+        let proof_era_valid = match &self.proof {
+            BlockHeaderProof::HistoricalHashes(_) => header.number < MERGE_BLOCK_NUMBER,
+            BlockHeaderProof::HistoricalRoots(_) => {
+                (MERGE_BLOCK_NUMBER..CAPELLA_BLOCK_NUMBER).contains(&header.number)
+            }
+            BlockHeaderProof::HistoricalSummaries(_) => header.number >= CAPELLA_BLOCK_NUMBER,
+        };
+
+        if !proof_era_valid {
+            return Err(EraValidateError::InvalidProofEra {
+                timestamp: self.block_number, // add code here
+            });
+        }
+
+        Ok(HeaderWithProof {
+            proof: self.proof,
+            header,
+        })
     }
 }
 
@@ -111,12 +123,19 @@ fn do_generate_inclusion_proof(
     header: &Header,
     epoch_accumulator: &EpochAccumulator,
 ) -> Result<InclusionProof, EraValidateError> {
-    PreMergeAccumulator::construct_proof(header, epoch_accumulator)
-        .map(|proof| InclusionProof {
-            proof: proof.proof,
-            block_number: header.number,
-        })
-        .map_err(|_| EraValidateError::ProofGenerationFailure)
+    if header.timestamp > MERGE_TIMESTAMP {
+        return Err(EraValidateError::InvalidProofEra {
+            timestamp: header.timestamp,
+        });
+    }
+
+    let proof = PreMergeAccumulator::construct_proof(header, epoch_accumulator)
+        .map_err(|_| EraValidateError::ProofGenerationFailure)?; // Convert anyhow::Error to EraValidateError
+
+    Ok(InclusionProof {
+        proof: BlockHeaderProof::HistoricalHashes(proof),
+        block_number: header.number,
+    })
 }
 
 /// Verifies a list of provable headers
@@ -141,26 +160,12 @@ pub fn verify_inclusion_proofs(
 
     Ok(())
 }
-
-/// A header with an inclusion proof attached
-pub struct HeaderWithProof {
-    header: Header,
-    proof: InclusionProof,
-}
-
 /// Verifies if a proof is contained in the header validator
 pub fn verify_inclusion_proof(
     header_validator: &HeaderValidator,
     provable_header: HeaderWithProof,
 ) -> Result<(), EraValidateError> {
-    let proof = BlockHeaderProof::PreMergeAccumulatorProof(provable_header.proof.into());
-
-    let hwp = PortalHeaderWithProof {
-        header: provable_header.header,
-        proof,
-    };
-
     header_validator
-        .validate_header_with_proof(&hwp)
+        .validate_header_with_proof(&provable_header)
         .map_err(|_| EraValidateError::ProofValidationFailure)
 }
