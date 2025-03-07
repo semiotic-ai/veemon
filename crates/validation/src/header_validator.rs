@@ -1,4 +1,4 @@
-use alloy::primitives::B256;
+use alloy_primitives::B256;
 use anyhow::anyhow;
 use ethportal_api::{
     consensus::historical_summaries::HistoricalSummaries,
@@ -9,13 +9,20 @@ use ethportal_api::{
 };
 
 use crate::{
-    accumulator::PreMergeAccumulator,
     constants::{
         CAPELLA_FORK_EPOCH, EPOCH_SIZE, MERGE_BLOCK_NUMBER, SHANGHAI_BLOCK_NUMBER, SLOTS_PER_EPOCH,
     },
-    historical_roots_acc::HistoricalRootsAccumulator,
+    historical_roots::HistoricalRootsAccumulator,
     merkle::proof::verify_merkle_proof,
+    PreMergeAccumulator,
 };
+
+fn calculate_generalized_index(header: &Header) -> u64 {
+    // Calculate generalized index for header
+    // https://github.com/ethereum/consensus-specs/blob/v0.11.1/ssz/merkle-proofs.md#generalized-merkle-tree-index
+    let hr_index = header.number % EPOCH_SIZE;
+    (EPOCH_SIZE * 2 * 2) + (hr_index * 2)
+}
 
 /// HeaderValidator is responsible for validating pre-merge and post-merge headers with their
 /// respective proofs.

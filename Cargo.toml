@@ -3,6 +3,8 @@ members = ["crates/*"]
 resolver = "2"
 
 [workspace.dependencies]
+ethereum_hashing = "0.7.0"
+anyhow = "1.0.68"
 alloy-primitives = "0.8.20"
 alloy-consensus = "0.4.2"
 alloy-eip2930 = "0.1.0"
@@ -13,6 +15,7 @@ clap = { version = "4.5.23", features = ["derive"] }
 criterion = { version = "0.5.1", features = ["html_reports"] }
 ethportal-api = "0.5.1"
 ssz_types = "0.8.0"
+validation = {path = "crates/validation"}
 firehose-protos = { path = "crates/firehose-protos" }
 firehose-rs = { git = "https://github.com/semiotic-ai/firehose-rs.git", branch = "main" }
 decoder = { path = "crates/decoder" }
@@ -37,7 +40,11 @@ tonic-build = "0.12.3"
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 tree_hash = "0.8.0"
+tree_hash_derive = "0.8.0"
 zstd = "0.13.2"
+ethereum_ssz_derive = "0.7.1"
+ethereum_ssz = "0.7.1"
+
 
 [profile.dev.build-override]
 opt-level = 3
