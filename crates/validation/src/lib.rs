@@ -1,13 +1,31 @@
 // This code is adapted from  https://github.com/ethereum/trin by https://github.com/ethereum/trin/graphs/contributors/
 // License: MIT
 
+pub mod constants;
+pub mod header_validator;
+pub mod historical_roots;
+pub mod merkle;
+
 use alloy_primitives::{B256, U256};
+use anyhow::anyhow;
+use constants::{EPOCH_SIZE, MERGE_BLOCK_NUMBER};
 use ethportal_api::types::execution::{
     accumulator::EpochAccumulator, header::Header,
     header_with_proof_new::BlockProofHistoricalHashesAccumulator,
 };
-use ssz_types::{typenum, VariableList};
 
+use merkle::proof::MerkleTree;
+use rust_embed::RustEmbed;
+#[derive(RustEmbed)]
+#[folder = "src/assets/"]
+#[prefix = "validation_assets/"]
+struct ValidationAssets;
+use serde::{Deserialize, Serialize};
+use ssz::Decode;
+use ssz_derive::{Decode, Encode};
+use ssz_types::{typenum, VariableList};
+use std::path::PathBuf;
+use tree_hash_derive::TreeHash;
 /// SSZ List[Hash256, max_length = MAX_HISTORICAL_EPOCHS]
 /// List of historical epoch accumulator merkle roots preceding current epoch.
 pub type HistoricalEpochRoots = VariableList<tree_hash::Hash256, typenum::U131072>;
@@ -22,7 +40,7 @@ pub struct PreMergeAccumulator {
 
 impl Default for PreMergeAccumulator {
     fn default() -> Self {
-        let raw = TrinValidationAssets::get("validation_assets/merge_macc.bin")
+        let raw = ValidationAssets::get("validation_assets/merge_macc.bin")
             .expect("Unable to find default pre-merge accumulator");
         PreMergeAccumulator::from_ssz_bytes(raw.data.as_ref())
             .expect("Unable to decode default pre-merge accumulator")
@@ -32,7 +50,7 @@ impl Default for PreMergeAccumulator {
 impl PreMergeAccumulator {
     /// Load default trusted pre-merge acc
     pub fn try_from_file(pre_merge_acc_path: PathBuf) -> anyhow::Result<PreMergeAccumulator> {
-        let raw = TrinValidationAssets::get(&(*pre_merge_acc_path).display().to_string()[..])
+        let raw = ValidationAssets::get(&(*pre_merge_acc_path).display().to_string()[..])
             .ok_or_else(|| {
                 anyhow!("Unable to find pre-merge accumulator at path: {pre_merge_acc_path:?}")
             })?;
@@ -44,7 +62,6 @@ impl PreMergeAccumulator {
     pub fn height(&self) -> u64 {
         MERGE_BLOCK_NUMBER
     }
-
     pub(crate) fn get_epoch_index_of_header(&self, header: &Header) -> u64 {
         header.number / EPOCH_SIZE
     }
@@ -116,50 +133,4 @@ impl PreMergeAccumulator {
                 .expect("[B256; 15] should convert to FixedVector<B256, U15>"),
         )
     }
-}
-
-/// PROOFS
-
-#[derive(Debug, Clone, PartialEq, Decode, Encode, Deserialize)]
-#[ssz(enum_behaviour = "union")]
-// Ignore clippy here, since "box"-ing the accumulator proof breaks the Decode trait
-#[allow(clippy::large_enum_variant)]
-pub enum BlockHeaderProof {
-    None(SszNone),
-    PreMergeAccumulatorProof(PreMergeAccumulatorProof),
-    HistoricalRootsBlockProof(HistoricalRootsBlockProof),
-    HistoricalSummariesBlockProof(HistoricalSummariesBlockProof),
-}
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PreMergeAccumulatorProof {
-    pub proof: [B256; 15],
-}
-
-impl From<[B256; 15]> for PreMergeAccumulatorProof {
-    fn from(proof: [B256; 15]) -> Self {
-        Self { proof }
-    }
-}
-
-/// The struct holds a chain of proofs. This chain of proofs allows for verifying that an EL
-/// `BlockHeader` is part of the canonical chain. The only requirement is having access to the
-/// beacon chain `historical_roots`.
-// Total size (8 + 1 + 3 + 1 + 14) * 32 bytes + 4 bytes = 868 bytes
-#[derive(Debug, Clone, PartialEq, Encode, Decode, Serialize, Deserialize)]
-pub struct HistoricalRootsBlockProof {
-    pub beacon_block_proof: BeaconBlockProof,
-    pub beacon_block_root: B256,
-    pub historical_roots_proof: HistoricalRootsProof,
-    pub slot: u64,
-}
-
-/// The struct holds a chain of proofs. This chain of proofs allows for verifying that an EL
-/// `BlockHeader` is part of the canonical chain. The only requirement is having access to the
-/// beacon chain `historical_summaries`.
-#[derive(Debug, Clone, PartialEq, Encode, Decode, Serialize, Deserialize)]
-pub struct HistoricalSummariesBlockProof {
-    pub beacon_block_proof: BeaconBlockProof,
-    pub beacon_block_root: B256,
-    pub historical_summaries_proof: HistoricalSummariesProof,
-    pub slot: u64,
 }

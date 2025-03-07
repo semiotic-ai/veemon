@@ -2423,6 +2423,7 @@ dependencies = [
  "thiserror 2.0.11",
  "tracing",
  "tree_hash",
+ "validation",
 ]
 
 [[package]]
@@ -3832,6 +3833,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "quickcheck_macros"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b22a693222d716a9587786f37ac3f6b4faedb5b80c23914e7303ff5a1d8016e9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4223,6 +4235,40 @@ name = "ruint-macro"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48fd7bd8a6377e15ad9d42a8ec25371b94ddc67abe7c8b9127bec79bebaaae18"
+
+[[package]]
+name = "rust-embed"
+version = "8.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b3aba5104622db5c9fc61098de54708feb732e7763d7faa2fa625899f00bf6f"
+dependencies = [
+ "rust-embed-impl",
+ "rust-embed-utils",
+ "walkdir",
+]
+
+[[package]]
+name = "rust-embed-impl"
+version = "8.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f198c73be048d2c5aa8e12f7960ad08443e56fd39cc26336719fdb4ea0ebaae"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "rust-embed-utils",
+ "syn 2.0.90",
+ "walkdir",
+]
+
+[[package]]
+name = "rust-embed-utils"
+version = "8.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a2fcdc9f40c8dc2922842ca9add611ad19f332227fc651d015881ad1552bd9a"
+dependencies = [
+ "sha2",
+ "walkdir",
+]
 
 [[package]]
 name = "rustc-demangle"
@@ -5460,9 +5506,20 @@ version = "0.0.0"
 dependencies = [
  "alloy-primitives",
  "alloy-rlp",
+ "anyhow",
+ "ethereum_hashing",
+ "ethereum_ssz",
+ "ethereum_ssz_derive",
  "ethportal-api",
+ "lazy_static",
+ "quickcheck",
+ "quickcheck_macros",
+ "rust-embed",
+ "serde",
+ "serde_json",
  "ssz_types",
  "tree_hash",
+ "tree_hash_derive",
 ]
 
 [[package]]
@@ -5506,6 +5563,7 @@ name = "vee"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives",
+ "anyhow",
  "decoder",
  "ethportal-api",
  "firehose-client",
