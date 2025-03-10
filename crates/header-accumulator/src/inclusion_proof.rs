@@ -7,8 +7,6 @@ use ethportal_api::types::execution::header_with_proof_new::BlockHeaderProof;
 use ethportal_api::types::execution::{
     accumulator::EpochAccumulator, header::Header, header_with_proof_new::HeaderWithProof,
 };
-
-use ethportal_api::MERGE_TIMESTAMP;
 use validation::constants::{CAPELLA_BLOCK_NUMBER, MERGE_BLOCK_NUMBER};
 use validation::{
     header_validator::HeaderValidator, historical_roots::HistoricalRootsAccumulator,
@@ -123,7 +121,7 @@ fn do_generate_inclusion_proof(
     header: &Header,
     epoch_accumulator: &EpochAccumulator,
 ) -> Result<InclusionProof, EraValidateError> {
-    if header.timestamp > MERGE_TIMESTAMP {
+    if header.number > MERGE_BLOCK_NUMBER {
         return Err(EraValidateError::InvalidProofEra {
             timestamp: header.timestamp,
         });
