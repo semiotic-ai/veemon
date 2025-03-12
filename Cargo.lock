@@ -1923,7 +1923,7 @@ dependencies = [
 [[package]]
 name = "ethportal-api"
 version = "0.4.1"
-source = "git+https://github.com/ethereum/trin.git#81045efc988d3a9499d8a1cfd972b3e65372b347"
+source = "git+https://github.com/ethereum/trin.git?rev=81045ef#81045efc988d3a9499d8a1cfd972b3e65372b347"
 dependencies = [
  "alloy",
  "alloy-rlp",
@@ -5332,7 +5332,7 @@ dependencies = [
 [[package]]
 name = "trin-validation"
 version = "0.1.0"
-source = "git+https://github.com/ethereum/trin.git#81045efc988d3a9499d8a1cfd972b3e65372b347"
+source = "git+https://github.com/ethereum/trin.git?rev=81045ef#81045efc988d3a9499d8a1cfd972b3e65372b347"
 dependencies = [
  "alloy",
  "anyhow",
