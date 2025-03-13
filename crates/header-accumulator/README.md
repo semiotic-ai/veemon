@@ -30,13 +30,13 @@ cd crates/header-accumulator && cargo doc --open
 - **`generate_inclusion_proof`**: Generates inclusion proofs for a
   specified range of blocks, useful for verifying the presence of
   specific blocks within a dataset.
-- **`verify_inclusion_proof`**: Verifies inclusion proofs for a 
+- **`verify_inclusion_proof`**: Verifies inclusion proofs for a
   specified range of blocks. Use this to confirm the accuracy of
   inclusion proofs.
 
 ### Options
 
-- `-h, --help`: Displays a help message that includes usage 
+- `-h, --help`: Displays a help message that includes usage
   information, commands, and options.
 
 ## Goals
@@ -64,11 +64,11 @@ cargo test
 use std::{fs::File, io::BufReader};
 use flat_files_decoder::{read_blocks_from_reader, Compression};
 use header_accumulator::{
-    generate_inclusion_proofs, verify_inclusion_proofs, Epoch, EraValidateError, ExtHeaderRecord,
+    generate_inclusion_proofs, verify_inclusion_proofs, Epoch, EraValidateError, Header,
 };
 
 fn main() -> Result<(), EraValidateError> {
-   let mut headers: Vec<ExtHeaderRecord> = Vec::new();
+   let mut headers: Vec<Header> = Vec::new();
 
     for flat_file_number in (0..=8200).step_by(100) {
         let file = format!(
@@ -83,8 +83,8 @@ fn main() -> Result<(), EraValidateError> {
                 headers.extend(
                     blocks
                         .iter()
-                        .map(|block| ExtHeaderRecord::try_from(block).unwrap())
-                        .collect::<Vec<ExtHeaderRecord>>(),
+                        .map(|block| Header::try_from(block).unwrap())
+                        .collect::<Vec<Header>>(),
                 );
             }
             Err(e) => {
@@ -96,10 +96,7 @@ fn main() -> Result<(), EraValidateError> {
 
     let start_block = 301;
     let end_block = 402;
-    let headers_to_prove: Vec<_> = headers[start_block..end_block]
-        .iter()
-        .map(|ext| ext.full_header.as_ref().unwrap().clone())
-        .collect();
+    let headers_to_prove = headers[start_block..end_block].to_vec();
     let epoch: Epoch = headers.try_into().unwrap();
 
     let inclusion_proof = generate_inclusion_proofs(vec![epoch], headers_to_prove.clone())
@@ -121,7 +118,7 @@ fn main() -> Result<(), EraValidateError> {
     println!("Inclusion proof verified successfully!");
 
     Ok(())
-}    
+}
 ```
 
 ### Era validator
@@ -130,7 +127,7 @@ fn main() -> Result<(), EraValidateError> {
 use std::{fs::File, io::BufReader};
 
 use flat_files_decoder::{read_blocks_from_reader, Compression};
-use header_accumulator::{Epoch, EraValidateError, EraValidator, ExtHeaderRecord};
+use header_accumulator::{Epoch, EraValidateError, EraValidator, Header};
 use tree_hash::Hash256;
 
 fn create_test_reader(path: &str) -> BufReader<File> {
@@ -138,7 +135,7 @@ fn create_test_reader(path: &str) -> BufReader<File> {
 }
 
 fn main() -> Result<(), EraValidateError> {
-    let mut headers: Vec<ExtHeaderRecord> = Vec::new();
+    let mut headers: Vec<Header> = Vec::new();
     for number in (0..=8200).step_by(100) {
         let file_name = format!(
             "your-test-assets/ethereum_firehose_first_8200/{:010}.dbin",
@@ -149,12 +146,12 @@ fn main() -> Result<(), EraValidateError> {
         let successful_headers = blocks
             .iter()
             .cloned()
-            .map(|block| ExtHeaderRecord::try_from(&block))
+            .map(|block| Header::try_from(&block))
             .collect::<Result<Vec<_>, _>>()?;
         headers.extend(successful_headers);
     }
     assert_eq!(headers.len(), 8300);
-    assert_eq!(headers[0].block_number, 0);
+    assert_eq!(headers[0].number, 0);
     let era_verifier = EraValidator::default();
     let epoch: Epoch = headers.try_into().unwrap();
     let result = era_verifier.validate_era(&epoch)?;
