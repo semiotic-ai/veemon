@@ -38,6 +38,7 @@ tracing-subscriber = "0.3.19"
 tree_hash = "0.8.0"
 trin-validation = { git = "https://github.com/ethereum/trin.git", rev = "81045ef" }
 zstd = "0.13.2"
+arbitrum-ve = { path = "crates/arbitrum-ve" }
 
 [profile.dev.build-override]
 opt-level = 3

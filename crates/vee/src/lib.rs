@@ -18,3 +18,4 @@ pub use header_accumulator as accumulator;
 pub use accumulator::*;
 pub use decoder::*;
 pub use protos::*;
+pub use arbitrum_ve::*;
