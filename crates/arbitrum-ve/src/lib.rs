@@ -1,6 +1,5 @@
-mod inclusion_proof;
 mod errors;
+mod inclusion_proof;
 
-pub use inclusion_proof::*;
 pub use errors::*;
-
+pub use inclusion_proof::*;

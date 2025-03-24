@@ -1,4 +1,3 @@
-
 /// Arbitrum verification errors
 #[derive(thiserror::Error, Debug)]
 pub enum ArbitrumValidateError {
