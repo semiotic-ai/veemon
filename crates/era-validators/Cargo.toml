@@ -1,0 +1,8 @@
+[package]
+name = "era-validators"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+types.workspace = true
+merkle_proof.workspace = true
