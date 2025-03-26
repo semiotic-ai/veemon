@@ -22,7 +22,7 @@ impl EthereumPostMergeValidator {
     }
 }
 
-impl EraValidationContext for Vec<H256>{
+impl EraValidationContext for Vec<H256> {
     type EraInput = (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>);
     type EraOutput = Result<(), String>;
 

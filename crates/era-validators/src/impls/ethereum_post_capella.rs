@@ -1,8 +1,8 @@
 use crate::{impls::common::*, traits::EraValidationContext};
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
-use types::{historical_summary::HistoricalSummary, BeaconBlock, MainnetEthSpec};
 use trin_validation::constants::CAPELLA_FORK_EPOCH;
+use types::{historical_summary::HistoricalSummary, BeaconBlock, MainnetEthSpec};
 
 pub struct EthereumPostCapellaValidator {
     pub historical_summaries: Vec<HistoricalSummary>,
@@ -11,7 +11,9 @@ pub struct EthereumPostCapellaValidator {
 impl EthereumPostCapellaValidator {
     /// Creates a new Ethereum post-merge validator.
     pub fn new(historical_summaries: Vec<HistoricalSummary>) -> Self {
-        Self { historical_summaries }
+        Self {
+            historical_summaries,
+        }
     }
 
     /// Validates the era using the historical summary.
