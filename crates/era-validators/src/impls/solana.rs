@@ -1,7 +1,15 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
 use crate::traits::EraValidationContext;
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
 
+/// A Solana validator that validates the era using historical roots. Solana does not have a
+/// consensus source of truth for historical data. We use a Merkle tree to commit to the block
+/// hashes. Solana epochs are defined as 432,000 slots, so we use that as the epoch length, i.e.
+/// the number of values we commit to with a Merkle tree. This yields a tree depth of 19. The
+/// validator expects the era which is being verified and the corresponding block hashes. It checks
+/// the tree hash root of the block hashes against precomputed historical roots for the era.
 const SOLANA_EPOCH_LENGTH: usize = 432_000;
 const SOLANA_HISTORICAL_TREE_DEPTH: usize = 19;
 
@@ -25,6 +33,7 @@ impl SolanaValidator {
 }
 
 impl EraValidationContext for SolanaHistoricalRoots {
+    /// (era_number, block_hashes)
     type EraInput = (usize, Vec<H256>);
     type EraOutput = Result<(), String>;
 

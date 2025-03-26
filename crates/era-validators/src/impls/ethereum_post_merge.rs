@@ -1,8 +1,15 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
 use crate::{impls::common::*, traits::EraValidationContext};
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
 use types::{BeaconBlock, MainnetEthSpec};
 
+/// A validator for Ethereum post-merge, pre-Capella blocks. It uses historical roots for
+/// validation. The validator consumes an era of beacon blocks and the corresponding execution
+/// blocks. It checks that the execution block hashes match the execution payloads in the beacon
+/// blocks and that the tree hash root of the beacon blocks matches the historical root for the
+/// era.
 pub struct EthereumPostMergeValidator {
     pub historical_roots: Vec<H256>,
 }
@@ -13,7 +20,7 @@ impl EthereumPostMergeValidator {
         Self { historical_roots }
     }
 
-    /// Validates the era using the historical summary.
+    /// Validates the era using the historical roots.
     pub fn validate_era(
         &self,
         input: (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>),
@@ -23,6 +30,7 @@ impl EthereumPostMergeValidator {
 }
 
 impl EraValidationContext for Vec<H256> {
+    /// (execution_block_hashes, beacon_blocks)
     type EraInput = (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>);
     type EraOutput = Result<(), String>;
 
@@ -37,8 +45,8 @@ impl EraValidationContext for Vec<H256> {
         }
 
         for (block, expected_exec_hash) in blocks.iter().zip(exec_hashes.iter()) {
-            // Assuming each beacon block has a method like `execution_payload()`
-            // that returns an Option<&ExecutionPayload>
+            // Check that the execution block hash matches the expected hash from the beacon block
+            // execution payload, if there is one.
             match get_execution_payload_block_hash(block) {
                 Some(execution_block_hash) => {
                     // Compare the block hash from the execution payload to the provided hash.

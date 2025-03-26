@@ -1,3 +1,6 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::traits::EraValidationContext;
 
 /// A generic era validator that accepts any type implementing EraValidationContext.

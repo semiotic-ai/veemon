@@ -1,15 +1,21 @@
+// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
 use crate::{impls::common::*, traits::EraValidationContext};
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
 use trin_validation::constants::CAPELLA_FORK_EPOCH;
 use types::{historical_summary::HistoricalSummary, BeaconBlock, MainnetEthSpec};
 
+/// A validator for Ethereum post-Capella blocks. It uses historical summaries for validation. The
+/// validator consums an era of beacon blocks and the corresponding execution blocks. It checks
+/// that the execution block hashes match the execution payloads in the beacon blocks and that the
+/// that the tree hash root of the beacon blocks matches the historical summary for the era.
 pub struct EthereumPostCapellaValidator {
     pub historical_summaries: Vec<HistoricalSummary>,
 }
 
 impl EthereumPostCapellaValidator {
-    /// Creates a new Ethereum post-merge validator.
+    /// Creates a new Ethereum post-Capella validator.
     pub fn new(historical_summaries: Vec<HistoricalSummary>) -> Self {
         Self {
             historical_summaries,
@@ -26,6 +32,7 @@ impl EthereumPostCapellaValidator {
 }
 
 impl EraValidationContext for Vec<HistoricalSummary> {
+    /// (execution_block_hashes, beacon_blocks)
     type EraInput = (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>);
     type EraOutput = Result<(), String>;
 
@@ -40,8 +47,8 @@ impl EraValidationContext for Vec<HistoricalSummary> {
         }
 
         for (block, expected_exec_hash) in blocks.iter().zip(exec_hashes.iter()) {
-            // Assuming each beacon block has a method like `execution_payload()`
-            // that returns an Option<&ExecutionPayload>
+            // Check that the execution block hash matches the expected hash from the beacon block
+            // execution payload, if there is one.
             match get_execution_payload_block_hash(block) {
                 Some(execution_block_hash) => {
                     // Compare the block hash from the execution payload to the provided hash.
@@ -80,6 +87,8 @@ impl EraValidationContext for Vec<HistoricalSummary> {
         // historical_summary.block_summary_root for the era.
         let beacon_block_roots_tree_hash_root = MerkleTree::create(roots.as_slice(), 13).hash();
 
+        // We subract CAPELLA_FORK_EPOCH from the era number to get the index in the historical
+        // summaries
         let true_root = self[usize::from(era) - CAPELLA_FORK_EPOCH as usize].block_summary_root();
 
         if beacon_block_roots_tree_hash_root != true_root {
