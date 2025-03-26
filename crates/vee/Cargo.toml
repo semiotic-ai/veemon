@@ -11,6 +11,7 @@ name = "vee"
 firehose-protos.workspace = true
 decoder.workspace = true
 header-accumulator.workspace = true
+arbitrum-ve.workspace = true
 
 [dev-dependencies]
 tree_hash.workspace = true
