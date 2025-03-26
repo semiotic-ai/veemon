@@ -22,6 +22,10 @@ pub struct OffchainInclusionProof {
     pub block_header_sequence: Vec<Header>,
 }
 
+/// The off-chain inclusion proof is relatively trivial. It consists simply of the Arbitrum block
+/// header to be verified `target_header`, the start block hash `start_block_hash` indicated an RBlock, the end block hash `end_block_hash` indicated
+/// in the same RBlock, and all Arbitrum block headers between the start and and block hashes
+/// `block_header_sequence`.
 pub fn generate_offchain_inclusion_proof(
     target_header: Header,
     start_block_hash: B256,
@@ -36,6 +40,9 @@ pub fn generate_offchain_inclusion_proof(
     }
 }
 
+/// Off-chain proof verification is simple. We simply confirm that the target header is inclueded
+/// in the sequence of block headers between the start and end block hashes, then we confirm that
+/// the block header hash sequence from start to end block is correct.
 pub fn verify_offchain_inclusion_proof(
     proof: &OffchainInclusionProof,
 ) -> Result<(), ArbitrumValidateError> {
