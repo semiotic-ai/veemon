@@ -3,6 +3,7 @@
 use crate::{impls::common::*, traits::EraValidationContext};
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
+use thiserror::Error;
 use trin_validation::constants::CAPELLA_FORK_EPOCH;
 use types::{historical_summary::HistoricalSummary, BeaconBlock, MainnetEthSpec};
 
@@ -10,6 +11,26 @@ use types::{historical_summary::HistoricalSummary, BeaconBlock, MainnetEthSpec};
 /// validator consums an era of beacon blocks and the corresponding execution blocks. It checks
 /// that the execution block hashes match the execution payloads in the beacon blocks and that the
 /// that the tree hash root of the beacon blocks matches the historical summary for the era.
+
+#[derive(Error, Debug)]
+pub enum EthereumPostCapellaError {
+    #[error("Number of execution block hashes must match the number of beacon blocks")]
+    MismatchedBlockCount,
+    #[error("Execution block hash mismatch: expected {expected:?}, got {actual:?}")]
+    ExecutionBlockHashMismatch {
+        expected: Option<H256>,
+        actual: Option<H256>,
+    },
+    #[error("Invalid era start: slot {0} is not a multiple of 8192")]
+    InvalidEraStart(u64),
+    #[error("Invalid block summary root for era {era}: expected {expected}, got {actual}")]
+    InvalidBlockSummaryRoot {
+        era: usize,
+        expected: H256,
+        actual: H256,
+    },
+}
+
 pub struct EthereumPostCapellaValidator {
     pub historical_summaries: Vec<HistoricalSummary>,
 }
@@ -26,7 +47,7 @@ impl EthereumPostCapellaValidator {
     pub fn validate_era(
         &self,
         input: (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>),
-    ) -> Result<(), String> {
+    ) -> Result<(), EthereumPostCapellaError> {
         self.historical_summaries.validate_era(input)
     }
 }
@@ -34,16 +55,14 @@ impl EthereumPostCapellaValidator {
 impl EraValidationContext for Vec<HistoricalSummary> {
     /// (execution_block_hashes, beacon_blocks)
     type EraInput = (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>);
-    type EraOutput = Result<(), String>;
+    type EraOutput = Result<(), EthereumPostCapellaError>;
 
     fn validate_era(&self, input: Self::EraInput) -> Self::EraOutput {
         let exec_hashes = input.0;
         let blocks = input.1;
 
         if blocks.len() != exec_hashes.len() {
-            return Err(
-                "Number of execution block hashes must match the number of beacon blocks".into(),
-            );
+            return Err(EthereumPostCapellaError::MismatchedBlockCount);
         }
 
         for (block, expected_exec_hash) in blocks.iter().zip(exec_hashes.iter()) {
@@ -54,16 +73,19 @@ impl EraValidationContext for Vec<HistoricalSummary> {
                     // Compare the block hash from the execution payload to the provided hash.
                     let actual_hash = Some(execution_block_hash);
                     if Some(actual_hash) != Some(*expected_exec_hash) {
-                        return Err(format!(
-                            "Execution block hash mismatch: expected {:?}, got {:?}",
-                            expected_exec_hash, actual_hash
-                        ));
+                        return Err(EthereumPostCapellaError::ExecutionBlockHashMismatch {
+                            expected: *expected_exec_hash,
+                            actual: actual_hash,
+                        });
                     }
                 }
                 None => {
                     // If there's no execution payload, make sure no hash was provided.
                     if expected_exec_hash.is_some() {
-                        return Err("Unexpected execution block hash for a block without an execution payload".into());
+                        return Err(EthereumPostCapellaError::ExecutionBlockHashMismatch {
+                            expected: None,
+                            actual: *expected_exec_hash,
+                        });
                     }
                 }
             }
@@ -73,7 +95,9 @@ impl EraValidationContext for Vec<HistoricalSummary> {
         // not an even multiple of 8192.
         let era = blocks[0].slot() / 8192;
         if blocks[0].slot() % 8192 != 0 {
-            return Err(format!("Invalid era number: {}", era));
+            return Err(EthereumPostCapellaError::InvalidEraStart(
+                blocks[0].slot().into(),
+            ));
         }
 
         // Calculate the beacon block roots for each beacon block in the era.
@@ -92,10 +116,11 @@ impl EraValidationContext for Vec<HistoricalSummary> {
         let true_root = self[usize::from(era) - CAPELLA_FORK_EPOCH as usize].block_summary_root();
 
         if beacon_block_roots_tree_hash_root != true_root {
-            return Err(format!(
-                "Invalid block summary root for era {}: expected {}, got {}",
-                era, true_root, beacon_block_roots_tree_hash_root
-            ));
+            return Err(EthereumPostCapellaError::InvalidBlockSummaryRoot {
+                era: usize::from(era),
+                expected: true_root,
+                actual: beacon_block_roots_tree_hash_root,
+            });
         }
 
         Ok(())

@@ -1986,6 +1986,7 @@ version = "0.1.0"
 dependencies = [
  "merkle_proof",
  "primitive-types",
+ "thiserror 2.0.11",
  "tree_hash 0.6.0",
  "trin-validation",
  "types",
