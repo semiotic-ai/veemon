@@ -1,12 +1,12 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 use crate::{impls::common::*, traits::EraValidationContext};
+use alloy_primitives::FixedBytes;
 use merkle_proof::MerkleTree;
-use primitive_types:: H256;
+use primitive_types::H256;
 use thiserror::Error;
 use trin_validation::constants::CAPELLA_FORK_EPOCH;
 use types::{BeaconBlock, MainnetEthSpec};
-use alloy_primitives::FixedBytes;
 
 #[derive(Error, Debug)]
 pub enum EthereumPostCapellaError {
@@ -51,7 +51,7 @@ impl EthereumPostCapellaValidator {
     /// input: (execution_block_hashes, beacon_blocks). execution_block_hashes is a vector of
     /// optional execution block hashes, it is optional because not all beacon blocks have an
     /// execution payload. beacon_blocks is a vector of beacon blocks for the era. It is expected
-    /// that the execution_block_hash correspond one-to-one with the beacon_blocks. 
+    /// that the execution_block_hash correspond one-to-one with the beacon_blocks.
     pub fn validate_era(
         &self,
         input: (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>),

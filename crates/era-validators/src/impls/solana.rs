@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::traits::EraValidationContext;
+use alloy_primitives::FixedBytes;
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
 use thiserror::Error;
-use alloy_primitives::FixedBytes;
 
 const SOLANA_EPOCH_LENGTH: usize = 432_000;
 const SOLANA_HISTORICAL_TREE_DEPTH: usize = 19;
@@ -60,13 +60,17 @@ impl EraValidationContext for SolanaHistoricalRoots {
         if block_roots.len() != SOLANA_EPOCH_LENGTH {
             return Err(SolanaValidatorError::MismatchedBlockCount);
         }
-       
+
         let block_roots_fixedbytes = block_roots
             .iter()
             .map(|h| FixedBytes::<32>::from(h.0))
             .collect::<Vec<_>>();
 
-        let root = MerkleTree::create(block_roots_fixedbytes.as_slice(), SOLANA_HISTORICAL_TREE_DEPTH).hash();
+        let root = MerkleTree::create(
+            block_roots_fixedbytes.as_slice(),
+            SOLANA_HISTORICAL_TREE_DEPTH,
+        )
+        .hash();
 
         // Check that root matches the expected historical root
         if H256::from(root.0) != self.0[era_number] {

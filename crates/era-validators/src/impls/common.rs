@@ -12,21 +12,56 @@ pub fn get_execution_payload_block_hash<E: EthSpec>(block: &BeaconBlock<E>) -> O
     match block {
         BeaconBlock::Base(_inner) => None,
         BeaconBlock::Altair(_inner) => None,
-        BeaconBlock::Bellatrix(inner) => {
-            Some(inner.body.execution_payload.execution_payload.block_hash.0.0.into())
-        }
-        BeaconBlock::Capella(inner) => {
-            Some(inner.body.execution_payload.execution_payload.block_hash.0.0.into())
-        }
-        BeaconBlock::Deneb(inner) => {
-            Some(inner.body.execution_payload.execution_payload.block_hash.0.0.into())
-        }
-        BeaconBlock::Electra(inner) => {
-            Some(inner.body.execution_payload.execution_payload.block_hash.0.0.into())
-        }
-        BeaconBlock::Fulu(inner) => {
-            Some(inner.body.execution_payload.execution_payload.block_hash.0.0.into())
-        }
+        BeaconBlock::Bellatrix(inner) => Some(
+            inner
+                .body
+                .execution_payload
+                .execution_payload
+                .block_hash
+                .0
+                 .0
+                .into(),
+        ),
+        BeaconBlock::Capella(inner) => Some(
+            inner
+                .body
+                .execution_payload
+                .execution_payload
+                .block_hash
+                .0
+                 .0
+                .into(),
+        ),
+        BeaconBlock::Deneb(inner) => Some(
+            inner
+                .body
+                .execution_payload
+                .execution_payload
+                .block_hash
+                .0
+                 .0
+                .into(),
+        ),
+        BeaconBlock::Electra(inner) => Some(
+            inner
+                .body
+                .execution_payload
+                .execution_payload
+                .block_hash
+                .0
+                 .0
+                .into(),
+        ),
+        BeaconBlock::Fulu(inner) => Some(
+            inner
+                .body
+                .execution_payload
+                .execution_payload
+                .block_hash
+                .0
+                 .0
+                .into(),
+        ),
     }
 }
 

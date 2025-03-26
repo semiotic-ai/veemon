@@ -1,13 +1,12 @@
-
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::traits::EraValidationContext;
+use ethportal_api::types::execution::accumulator::EpochAccumulator;
 use primitive_types::H256;
 use thiserror::Error;
-use trin_validation::accumulator::HistoricalEpochRoots;
-use ethportal_api::types::execution::accumulator::EpochAccumulator;
 use tree_hash::TreeHash;
+use trin_validation::accumulator::HistoricalEpochRoots;
 
 #[derive(Error, Debug)]
 pub enum EthereumPreMergeValidatorError {
@@ -20,7 +19,6 @@ pub enum EthereumPreMergeValidatorError {
         actual: H256,
     },
 }
-
 
 /// A pre-merge Ethereum validator that validates the era using historical roots. Pre-merge
 /// Ethereum does not have a
@@ -44,7 +42,10 @@ impl EthereumPreMergeValidator {
     ///
     /// input: (era_number, block_hashes), where era_number is the era to validate and block_hashes
     /// is a vector of the block hashes for that era.
-    pub fn validate_era(&self, input: (usize, EpochAccumulator)) -> Result<(), EthereumPreMergeValidatorError> {
+    pub fn validate_era(
+        &self,
+        input: (usize, EpochAccumulator),
+    ) -> Result<(), EthereumPreMergeValidatorError> {
         self.historical_roots.validate_era(input)
     }
 }
