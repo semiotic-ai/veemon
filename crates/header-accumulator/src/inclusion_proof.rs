@@ -6,7 +6,7 @@ pub use ethportal_api::{types::execution::header_with_proof::PreMergeAccumulator
 
 use ethportal_api::types::execution::header_with_proof_new::BlockHeaderProof;
 use ethportal_api::types::execution::{
-    accumulator::EpochAccumulator, header::Header, header_with_proof_new::HeaderWithProof,
+    accumulator::EpochAccumulator, header_with_proof_new::HeaderWithProof,
 };
 use validation::constants::{CAPELLA_BLOCK_NUMBER, MERGE_BLOCK_NUMBER};
 use validation::{
