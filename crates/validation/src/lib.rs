@@ -8,7 +8,7 @@ pub mod merkle;
 
 use alloy_primitives::{B256, U256};
 use anyhow::anyhow;
-use constants::{EPOCH_SIZE, MERGE_BLOCK_NUMBER};
+use constants::{ACC_TREE_DEPTH, EPOCH_SIZE, MERGE_BLOCK_NUMBER};
 use ethportal_api::types::execution::{
     accumulator::EpochAccumulator, header::Header,
     header_with_proof_new::BlockProofHistoricalHashesAccumulator,
@@ -111,7 +111,7 @@ impl PreMergeAccumulator {
 
         // Generating the proof for the value at hr_index (leaf)
         let (leaf, mut proof) = merkle_tree
-            .generate_proof(hr_index, 13)
+            .generate_proof(hr_index, ACC_TREE_DEPTH)
             .map_err(|err| anyhow!("Unable to generate proof for given index: {err:?}"))?;
 
         // Validate that the value the proof is for (leaf) == hash(header, total_difficulty)

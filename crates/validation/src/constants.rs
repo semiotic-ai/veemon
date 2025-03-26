@@ -24,3 +24,8 @@ pub const EPOCH_SIZE: u64 = 8192;
 
 // EIP-155 chain ID for Ethereum mainnet
 pub const CHAIN_ID: usize = 1;
+
+// Depth of the merkle tree of the Accumulators. Depth is 13
+// because 2^13 can hold 8192 leaves, which is the amount of blocks
+// in the accumulator
+pub const ACC_TREE_DEPTH: usize = 13;
