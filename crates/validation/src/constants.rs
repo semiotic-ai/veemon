@@ -1,3 +1,6 @@
+// Copyright (c) 2021-2025 Trin Contributors
+// SPDX-License-Identifier: MIT
+
 // Execution Layer hard forks https://ethereum.org/en/history/
 pub const SHANGHAI_BLOCK_NUMBER: u64 = 17_034_870;
 pub const MERGE_BLOCK_NUMBER: u64 = 15_537_394;

@@ -1,3 +1,6 @@
+// Copyright (c) 2021-2025 Trin Contributors
+// SPDX-License-Identifier: MIT
+
 use ethportal_api::consensus::beacon_state::HistoricalRoots;
 use ssz::{Decode, Encode};
 use tree_hash::{Hash256, PackedEncoding, TreeHash, TreeHashType};

@@ -1,5 +1,5 @@
-// This code is adapted from  https://github.com/ethereum/trin by https://github.com/ethereum/trin/graphs/contributors/
-// License: MIT
+// Copyright (c) 2021-2025 Trin Contributors
+// SPDX-License-Identifier: MIT
 
 pub mod constants;
 pub mod header_validator;
