@@ -12,3 +12,4 @@ primitive-types = "0.12.2"
 thiserror.workspace = true
 header-accumulator.workspace = true
 ethportal-api.workspace = true
+alloy-primitives.workspace = true

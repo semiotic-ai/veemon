@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::{impls::common::*, traits::EraValidationContext};
 use merkle_proof::MerkleTree;
-use primitive_types::H256;
+use primitive_types:: H256;
 use thiserror::Error;
 use trin_validation::constants::CAPELLA_FORK_EPOCH;
-use types::{historical_summary::HistoricalSummary, BeaconBlock, MainnetEthSpec};
-
+use types::{BeaconBlock, MainnetEthSpec};
+use alloy_primitives::FixedBytes;
 
 #[derive(Error, Debug)]
 pub enum EthereumPostCapellaError {
@@ -27,17 +27,20 @@ pub enum EthereumPostCapellaError {
     },
 }
 
-/// A validator for Ethereum post-Capella blocks. It uses historical summaries for validation. The
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EthereumBlockSummaryRoots(pub Vec<H256>);
+
+/// A validator for Ethereum post-Capella blocks. It uses the block summary roots from historical summaries for validation. The
 /// validator consums an era of beacon blocks and the corresponding execution blocks. It checks
 /// that the execution block hashes match the execution payloads in the beacon blocks and that the
-/// that the tree hash root of the beacon blocks matches the historical summary for the era.
+/// that the tree hash root of the beacon blocks matches the historical summary block summary root for the era.
 pub struct EthereumPostCapellaValidator {
-    pub historical_summaries: Vec<HistoricalSummary>,
+    pub historical_summaries: EthereumBlockSummaryRoots,
 }
 
 impl EthereumPostCapellaValidator {
     /// Creates a new Ethereum post-Capella validator.
-    pub fn new(historical_summaries: Vec<HistoricalSummary>) -> Self {
+    pub fn new(historical_summaries: EthereumBlockSummaryRoots) -> Self {
         Self {
             historical_summaries,
         }
@@ -57,7 +60,7 @@ impl EthereumPostCapellaValidator {
     }
 }
 
-impl EraValidationContext for Vec<HistoricalSummary> {
+impl EraValidationContext for EthereumBlockSummaryRoots {
     type EraInput = (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>);
     type EraOutput = Result<(), EthereumPostCapellaError>;
 
@@ -105,10 +108,10 @@ impl EraValidationContext for Vec<HistoricalSummary> {
         }
 
         // Calculate the beacon block roots for each beacon block in the era.
-        let mut roots = Vec::new();
+        let mut roots: Vec<FixedBytes<32>> = Vec::new();
         for block in &blocks {
             let root = compute_tree_hash_root(block);
-            roots.push(root);
+            roots.push(root.0.into());
         }
 
         // Calculate the tree hash root of the beacon block roots and compare against the
@@ -117,13 +120,13 @@ impl EraValidationContext for Vec<HistoricalSummary> {
 
         // We subract CAPELLA_FORK_EPOCH from the era number to get the index in the historical
         // summaries
-        let true_root = self[usize::from(era) - CAPELLA_FORK_EPOCH as usize].block_summary_root();
+        let true_root = self.0[usize::from(era) - CAPELLA_FORK_EPOCH as usize];
 
-        if beacon_block_roots_tree_hash_root != true_root {
+        if beacon_block_roots_tree_hash_root != FixedBytes::<32>::from(true_root.0) {
             return Err(EthereumPostCapellaError::InvalidBlockSummaryRoot {
                 era: usize::from(era),
                 expected: true_root,
-                actual: beacon_block_roots_tree_hash_root,
+                actual: beacon_block_roots_tree_hash_root.0.into(),
             });
         }
 

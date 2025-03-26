@@ -13,16 +13,19 @@ pub fn get_execution_payload_block_hash<E: EthSpec>(block: &BeaconBlock<E>) -> O
         BeaconBlock::Base(_inner) => None,
         BeaconBlock::Altair(_inner) => None,
         BeaconBlock::Bellatrix(inner) => {
-            Some(inner.body.execution_payload.execution_payload.block_hash.0)
+            Some(inner.body.execution_payload.execution_payload.block_hash.0.0.into())
         }
         BeaconBlock::Capella(inner) => {
-            Some(inner.body.execution_payload.execution_payload.block_hash.0)
+            Some(inner.body.execution_payload.execution_payload.block_hash.0.0.into())
         }
         BeaconBlock::Deneb(inner) => {
-            Some(inner.body.execution_payload.execution_payload.block_hash.0)
+            Some(inner.body.execution_payload.execution_payload.block_hash.0.0.into())
         }
         BeaconBlock::Electra(inner) => {
-            Some(inner.body.execution_payload.execution_payload.block_hash.0)
+            Some(inner.body.execution_payload.execution_payload.block_hash.0.0.into())
+        }
+        BeaconBlock::Fulu(inner) => {
+            Some(inner.body.execution_payload.execution_payload.block_hash.0.0.into())
         }
     }
 }
@@ -37,11 +40,12 @@ where
     BeaconBlockElectra<E>: TreeHash,
 {
     match block {
-        BeaconBlock::Base(inner) => inner.tree_hash_root(),
-        BeaconBlock::Altair(inner) => inner.tree_hash_root(),
-        BeaconBlock::Bellatrix(inner) => inner.tree_hash_root(),
-        BeaconBlock::Capella(inner) => inner.tree_hash_root(),
-        BeaconBlock::Deneb(inner) => inner.tree_hash_root(),
-        BeaconBlock::Electra(inner) => inner.tree_hash_root(),
+        BeaconBlock::Base(inner) => inner.tree_hash_root().0.into(),
+        BeaconBlock::Altair(inner) => inner.tree_hash_root().0.into(),
+        BeaconBlock::Bellatrix(inner) => inner.tree_hash_root().0.into(),
+        BeaconBlock::Capella(inner) => inner.tree_hash_root().0.into(),
+        BeaconBlock::Deneb(inner) => inner.tree_hash_root().0.into(),
+        BeaconBlock::Electra(inner) => inner.tree_hash_root().0.into(),
+        BeaconBlock::Fulu(inner) => inner.tree_hash_root().0.into(),
     }
 }

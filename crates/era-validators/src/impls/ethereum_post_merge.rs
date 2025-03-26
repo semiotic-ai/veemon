@@ -5,7 +5,7 @@ use merkle_proof::MerkleTree;
 use primitive_types::H256;
 use thiserror::Error;
 use types::{BeaconBlock, MainnetEthSpec};
-
+use alloy_primitives::FixedBytes;
 
 #[derive(Error, Debug)]
 pub enum EthereumPostMergeError {
@@ -106,10 +106,10 @@ impl EraValidationContext for EthereumHistoricalRoots {
         }
 
         // Calculate the beacon block roots for each beacon block in the era.
-        let mut roots = Vec::new();
+        let mut roots: Vec<FixedBytes<32>> = Vec::new();
         for block in &blocks {
             let root = compute_tree_hash_root(block);
-            roots.push(root);
+            roots.push(root.0.into());
         }
 
         // Calculate the tree hash root of the beacon block roots and compare against the
@@ -118,11 +118,11 @@ impl EraValidationContext for EthereumHistoricalRoots {
 
         let true_root = self.0[usize::from(era)];
 
-        if beacon_block_roots_tree_hash_root != true_root {
+        if beacon_block_roots_tree_hash_root != FixedBytes::<32>::from(true_root.0) {
             return Err(EthereumPostMergeError::InvalidBlockSummaryRoot {
                 era: usize::from(era),
                 expected: true_root,
-                actual: beacon_block_roots_tree_hash_root,
+                actual: beacon_block_roots_tree_hash_root.0.into(),
             });
         }
 
