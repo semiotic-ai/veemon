@@ -1,17 +1,16 @@
 use crate::{impls::common::*, traits::EraValidationContext};
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
-use types::{historical_summary::HistoricalSummary, BeaconBlock, MainnetEthSpec};
-use trin_validation::constants::CAPELLA_FORK_EPOCH;
+use types::{BeaconBlock, MainnetEthSpec};
 
-pub struct EthereumPostCapellaValidator {
-    pub historical_summaries: Vec<HistoricalSummary>,
+pub struct EthereumPostMergeValidator {
+    pub historical_roots: Vec<H256>,
 }
 
-impl EthereumPostCapellaValidator {
+impl EthereumPostMergeValidator {
     /// Creates a new Ethereum post-merge validator.
-    pub fn new(historical_summaries: Vec<HistoricalSummary>) -> Self {
-        Self { historical_summaries }
+    pub fn new(historical_roots: Vec<H256>) -> Self {
+        Self { historical_roots }
     }
 
     /// Validates the era using the historical summary.
@@ -19,11 +18,11 @@ impl EthereumPostCapellaValidator {
         &self,
         input: (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>),
     ) -> Result<(), String> {
-        self.historical_summaries.validate_era(input)
+        self.historical_roots.validate_era(input)
     }
 }
 
-impl EraValidationContext for Vec<HistoricalSummary> {
+impl EraValidationContext for Vec<H256>{
     type EraInput = (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>);
     type EraOutput = Result<(), String>;
 
@@ -78,7 +77,7 @@ impl EraValidationContext for Vec<HistoricalSummary> {
         // historical_summary.block_summary_root for the era.
         let beacon_block_roots_tree_hash_root = MerkleTree::create(roots.as_slice(), 13).hash();
 
-        let true_root = self[usize::from(era) - CAPELLA_FORK_EPOCH as usize].block_summary_root();
+        let true_root = self[usize::from(era)];
 
         if beacon_block_roots_tree_hash_root != true_root {
             return Err(format!(

@@ -39,8 +39,8 @@ tree_hash = "0.8.0"
 trin-validation = { git = "https://github.com/ethereum/trin.git", rev = "81045ef" }
 zstd = "0.13.2"
 era-validators = { path = "crates/era-validators" }
-types = { git = "https://github.com/sigp/lighthouse.git", branch = "stable" }
-merkle_proof = { git = "https://github.com/sigp/lighthouse.git", branch = "stable" }
+types = { git = "https://github.com/semiotic-ai/lighthouse.git", branch = "stable" }
+merkle_proof = { git = "https://github.com/semiotic-ai/lighthouse.git", branch = "stable" }
 
 [profile.dev.build-override]
 opt-level = 3

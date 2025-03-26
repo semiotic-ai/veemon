@@ -1,5 +1,3 @@
-
-
 use crate::traits::EraValidationContext;
 
 /// A generic era validator that accepts any type implementing EraValidationContext.
