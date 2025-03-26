@@ -11,7 +11,9 @@ use ethportal_api::types::execution::header_with_proof::{
     // HistoricalRootsBlockProof, HistoricalSummariesBlockProof,
     PreMergeAccumulatorProof,
 };
-use header_accumulator::{self, generate_inclusion_proof};
+// use header_accumulator::{
+//     self, // generate_inclusion_proof
+// };
 
 /// The merge block, inclusive, i.e., the block number below already counts as post-merge.
 pub const MERGE_BLOCK: u64 = 15537394;
@@ -137,6 +139,7 @@ impl AnyBlock for EthereumBlock {
 }
 
 /// Implement AnyBlock for ArbBlock
+#[allow(dead_code)]
 struct ArbBlock {
     pub number: u64,
 }
@@ -159,6 +162,7 @@ impl AnyBlock for ArbBlock {
 }
 
 /// Implement AnyBlock for OptimismBlock
+#[allow(dead_code)]
 struct OptimismBlock {
     pub number: u64,
 }

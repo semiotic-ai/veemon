@@ -1,10 +1,9 @@
-// Copyright 2024-, Semiotic AI, Inc.
-// SPDX-License-Identifier: Apache-2.0
+// Copyright 2024-, Semiotic AI, Inc. SPDX-License-Identifier: Apache-2.0 use alloy_primitives::FixedBytes;
 
 use alloy_primitives::FixedBytes;
 use ethportal_api::types::execution::accumulator::EpochAccumulator;
 use tree_hash::TreeHash;
-use trin_validation::accumulator::{HistoricalEpochRoots, PreMergeAccumulator};
+use validation::{HistoricalEpochRoots, PreMergeAccumulator};
 
 use crate::{
     epoch::{Epoch, FINAL_EPOCH},
