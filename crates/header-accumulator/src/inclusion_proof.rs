@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{epoch::MAX_EPOCH_SIZE, errors::EraValidateError, Epoch};
+pub use ethportal_api::{types::execution::header_with_proof::PreMergeAccumulatorProof, Header};
 
 use ethportal_api::types::execution::header_with_proof_new::BlockHeaderProof;
 use ethportal_api::types::execution::{
