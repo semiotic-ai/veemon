@@ -7,10 +7,6 @@ use thiserror::Error;
 use trin_validation::constants::CAPELLA_FORK_EPOCH;
 use types::{historical_summary::HistoricalSummary, BeaconBlock, MainnetEthSpec};
 
-/// A validator for Ethereum post-Capella blocks. It uses historical summaries for validation. The
-/// validator consums an era of beacon blocks and the corresponding execution blocks. It checks
-/// that the execution block hashes match the execution payloads in the beacon blocks and that the
-/// that the tree hash root of the beacon blocks matches the historical summary for the era.
 
 #[derive(Error, Debug)]
 pub enum EthereumPostCapellaError {
@@ -31,6 +27,10 @@ pub enum EthereumPostCapellaError {
     },
 }
 
+/// A validator for Ethereum post-Capella blocks. It uses historical summaries for validation. The
+/// validator consums an era of beacon blocks and the corresponding execution blocks. It checks
+/// that the execution block hashes match the execution payloads in the beacon blocks and that the
+/// that the tree hash root of the beacon blocks matches the historical summary for the era.
 pub struct EthereumPostCapellaValidator {
     pub historical_summaries: Vec<HistoricalSummary>,
 }
@@ -43,7 +43,12 @@ impl EthereumPostCapellaValidator {
         }
     }
 
-    /// Validates the era using the historical summary.
+    /// Validates the era using the post-Capella historical summaries.
+    ///
+    /// input: (execution_block_hashes, beacon_blocks). execution_block_hashes is a vector of
+    /// optional execution block hashes, it is optional because not all beacon blocks have an
+    /// execution payload. beacon_blocks is a vector of beacon blocks for the era. It is expected
+    /// that the execution_block_hash correspond one-to-one with the beacon_blocks. 
     pub fn validate_era(
         &self,
         input: (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>),
@@ -53,7 +58,6 @@ impl EthereumPostCapellaValidator {
 }
 
 impl EraValidationContext for Vec<HistoricalSummary> {
-    /// (execution_block_hashes, beacon_blocks)
     type EraInput = (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>);
     type EraOutput = Result<(), EthereumPostCapellaError>;
 

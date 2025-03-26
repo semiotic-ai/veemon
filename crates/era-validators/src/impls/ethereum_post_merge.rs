@@ -6,11 +6,6 @@ use primitive_types::H256;
 use thiserror::Error;
 use types::{BeaconBlock, MainnetEthSpec};
 
-/// A validator for Ethereum post-merge, pre-Capella blocks. It uses historical roots for
-/// validation. The validator consumes an era of beacon blocks and the corresponding execution
-/// blocks. It checks that the execution block hashes match the execution payloads in the beacon
-/// blocks and that the tree hash root of the beacon blocks matches the historical root for the
-/// era.
 
 #[derive(Error, Debug)]
 pub enum EthereumPostMergeError {
@@ -31,6 +26,11 @@ pub enum EthereumPostMergeError {
     },
 }
 
+/// A validator for Ethereum post-merge, pre-Capella blocks. It uses historical roots for
+/// validation. The validator consumes an era of beacon blocks and the corresponding execution
+/// blocks. It checks that the execution block hashes match the execution payloads in the beacon
+/// blocks and that the tree hash root of the beacon blocks matches the historical root for the
+/// era.
 pub struct EthereumPostMergeValidator {
     pub historical_roots: Vec<H256>,
 }
@@ -41,7 +41,12 @@ impl EthereumPostMergeValidator {
         Self { historical_roots }
     }
 
-    /// Validates the era using the historical roots.
+    /// Validates the post-merge, pre-Capella era using the historical roots.
+    ///
+    /// input: (execution_block_hashes, beacon_blocks). execution_block_hashes is a vector of
+    /// optional execution block hashes, it is optional because not all beacon blocks have an
+    /// execution payload. beacon_blocks is a vector of beacon blocks for the era. It is expected
+    /// that the execution_block_hash correspond one-to-one with the beacon_blocks. 
     pub fn validate_era(
         &self,
         input: (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>),
@@ -51,7 +56,6 @@ impl EthereumPostMergeValidator {
 }
 
 impl EraValidationContext for Vec<H256> {
-    /// (execution_block_hashes, beacon_blocks)
     type EraInput = (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>);
     type EraOutput = Result<(), EthereumPostMergeError>;
 
