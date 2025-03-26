@@ -4,3 +4,4 @@ pub mod common;
 pub mod ethereum_post_capella;
 pub mod ethereum_post_merge;
 pub mod solana;
+pub mod ethereum_pre_merge;

@@ -9,3 +9,4 @@ pub use era_validator_generic::EraValidatorGeneric;
 pub use impls::ethereum_post_capella::*;
 pub use impls::ethereum_post_merge::*;
 pub use impls::solana::*;
+pub use impls::ethereum_pre_merge::*;
