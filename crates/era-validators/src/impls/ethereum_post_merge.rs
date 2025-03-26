@@ -26,18 +26,21 @@ pub enum EthereumPostMergeError {
     },
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EthereumHistoricalRoots(pub Vec<H256>);
+
 /// A validator for Ethereum post-merge, pre-Capella blocks. It uses historical roots for
 /// validation. The validator consumes an era of beacon blocks and the corresponding execution
 /// blocks. It checks that the execution block hashes match the execution payloads in the beacon
 /// blocks and that the tree hash root of the beacon blocks matches the historical root for the
 /// era.
 pub struct EthereumPostMergeValidator {
-    pub historical_roots: Vec<H256>,
+    pub historical_roots: EthereumHistoricalRoots, 
 }
 
 impl EthereumPostMergeValidator {
     /// Creates a new Ethereum post-merge validator.
-    pub fn new(historical_roots: Vec<H256>) -> Self {
+    pub fn new(historical_roots: EthereumHistoricalRoots) -> Self {
         Self { historical_roots }
     }
 
@@ -55,7 +58,7 @@ impl EthereumPostMergeValidator {
     }
 }
 
-impl EraValidationContext for Vec<H256> {
+impl EraValidationContext for EthereumHistoricalRoots {
     type EraInput = (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>);
     type EraOutput = Result<(), EthereumPostMergeError>;
 
@@ -113,7 +116,7 @@ impl EraValidationContext for Vec<H256> {
         // historical_summary.block_summary_root for the era.
         let beacon_block_roots_tree_hash_root = MerkleTree::create(roots.as_slice(), 13).hash();
 
-        let true_root = self[usize::from(era)];
+        let true_root = self.0[usize::from(era)];
 
         if beacon_block_roots_tree_hash_root != true_root {
             return Err(EthereumPostMergeError::InvalidBlockSummaryRoot {
