@@ -2,16 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{epoch::MAX_EPOCH_SIZE, errors::EraValidateError, Epoch};
+pub use ethportal_api::{types::execution::header_with_proof::PreMergeAccumulatorProof, Header};
 
 use alloy_primitives::FixedBytes;
-use ethportal_api::{
-    types::execution::{
-        accumulator::EpochAccumulator,
-        header_with_proof::{
-            BlockHeaderProof, HeaderWithProof as PortalHeaderWithProof, PreMergeAccumulatorProof,
-        },
-    },
-    Header,
+use ethportal_api::types::execution::{
+    accumulator::EpochAccumulator,
+    header_with_proof::{BlockHeaderProof, HeaderWithProof as PortalHeaderWithProof},
 };
 use trin_validation::{
     accumulator::PreMergeAccumulator, header_validator::HeaderValidator,

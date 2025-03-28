@@ -10,11 +10,11 @@ Verifiable Extraction for Blockchain.
 use std::{fs::File, io::BufReader};
 use vee::{
     generate_inclusion_proofs, read_blocks_from_reader, verify_inclusion_proofs, Compression,
-    Epoch, EraValidateError, ExtHeaderRecord,
+    Epoch, EraValidateError, Header,
 };
 
 fn main() -> Result<(), EraValidateError> {
-   let mut headers: Vec<ExtHeaderRecord> = Vec::new();
+    let mut headers: Vec<Header> = Vec::new();
 
     for flat_file_number in (0..=8200).step_by(100) {
         let file = format!(
@@ -29,8 +29,8 @@ fn main() -> Result<(), EraValidateError> {
                 headers.extend(
                     blocks
                         .iter()
-                        .map(|block| ExtHeaderRecord::try_from(block).unwrap())
-                        .collect::<Vec<ExtHeaderRecord>>(),
+                        .map(|block| Header::try_from(block).unwrap())
+                        .collect::<Vec<Header>>(),
                 );
             }
             Err(e) => {
@@ -42,10 +42,7 @@ fn main() -> Result<(), EraValidateError> {
 
     let start_block = 301;
     let end_block = 402;
-    let headers_to_prove: Vec<_> = headers[start_block..end_block]
-        .iter()
-        .map(|ext| ext.full_header.as_ref().unwrap().clone())
-        .collect();
+    let headers_to_prove = headers[start_block..end_block].to_vec();
     let epoch: Epoch = headers.try_into().unwrap();
 
     let inclusion_proof = generate_inclusion_proofs(vec![epoch], headers_to_prove.clone())
@@ -67,7 +64,7 @@ fn main() -> Result<(), EraValidateError> {
     println!("Inclusion proof verified successfully!");
 
     Ok(())
-}    
+}
 ```
 
 ### Era validator
@@ -77,7 +74,7 @@ use std::{fs::File, io::BufReader};
 use tree_hash::Hash256;
 use vee::{
     read_blocks_from_reader, Compression, Epoch, EraValidateError, EraValidator,
-    ExtHeaderRecord,
+    Header,
 };
 
 fn create_test_reader(path: &str) -> BufReader<File> {
@@ -85,7 +82,7 @@ fn create_test_reader(path: &str) -> BufReader<File> {
 }
 
 fn main() -> Result<(), EraValidateError> {
-     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
+     let mut headers: Vec<Header> = Vec::new();
 
      for number in (0..=8200).step_by(100) {
          let file_name = format!(
@@ -97,15 +94,15 @@ fn main() -> Result<(), EraValidateError> {
          let successful_headers = blocks
              .iter()
              .cloned()
-             .map(|block| ExtHeaderRecord::try_from(&block))
+             .map(|block| Header::try_from(&block))
              .collect::<Result<Vec<_>, _>>()?;
          headers.extend(successful_headers);
      }
 
      assert_eq!(headers.len(), 8300);
-     assert_eq!(headers[0].block_number, 0);
+     assert_eq!(headers[0].number, 0);
 
-     let era_verifier = EraValidator::default();     
+     let era_verifier = EraValidator::default();
      let epoch: Epoch = headers.try_into().unwrap();
      let result = era_verifier.validate_era(&epoch)?;
      let expected = Hash256::new([
