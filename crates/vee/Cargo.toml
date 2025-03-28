@@ -8,9 +8,16 @@ path = "src/lib.rs"
 name = "vee"
 
 [dependencies]
+anyhow.workspace = true
+alloy-primitives.workspace = true
+ethportal-api.workspace = true
 firehose-protos.workspace = true
+tokio.workspace = true
+firehose-client = { git = "https://github.com/semiotic-ai/firehose-client.git", branch = "main" }
 decoder.workspace = true
 header-accumulator.workspace = true
+reth-primitives.workspace = true
+
 
 [dev-dependencies]
 tree_hash.workspace = true
