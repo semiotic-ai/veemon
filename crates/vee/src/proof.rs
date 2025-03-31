@@ -115,6 +115,23 @@ impl AnyBlock for EthereumBlock {
         EvmChain::Ethereum
     }
 
+    /// Generates a Merkle proof for the current block header depending on which phase
+    /// of Ethereum's chain history the block belongs to: pre-Merge, post-Merge (pre-Capella),
+    /// or post-Capella.
+    ///
+    /// Ethereum underwent two key transitions:
+    /// - The **Merge** at block `15_537_394`, switching from PoW to PoS.
+    /// - The **Capella** fork at block `17_034_870`, enabling validator withdrawals.
+    ///
+    /// The Portal Network's **historical header accumulator** divides chain history into
+    /// fixed-size "eras" of 8192 blocks each. These eras start **at the Merge block**
+    /// (era 573) and extend through to **era 757**, which ends at block `17_052_913`.
+    ///
+    /// This means:
+    /// - **Era 573 starts at block 15_537_394** (the Merge block).
+    /// - **Era 757 ends at block 17_052_913**, which is **after Capella**.
+    /// - Therefore, the Portal pre-Capella accumulator contains **some post-Capella blocks**.
+    ///
     fn prove_block(&self) -> BlockHeaderProof {
         let execution_block_number = self.block_number();
 
