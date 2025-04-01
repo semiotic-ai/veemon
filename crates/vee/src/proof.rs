@@ -124,13 +124,16 @@ impl AnyBlock for EthereumBlock {
     /// - The **Capella** fork at block `17_034_870`, enabling validator withdrawals.
     ///
     /// The Portal Network's **historical header accumulator** divides chain history into
-    /// fixed-size "eras" of 8192 blocks each. These eras start **at the Merge block**
+    /// fixed-size "eras" of 8192 slot-groups each. These eras start **at the Merge block**
     /// (era 573) and extend through to **era 757**, which ends at block `17_052_913`.
     ///
     /// This means:
+    /// - from pre-merge, epoch 0 to epoch 1896 marks pre-merge blocks.
     /// - **Era 573 starts at block 15_537_394** (the Merge block).
-    /// - **Era 757 ends at block 17_052_913**, which is **after Capella**.
-    /// - Therefore, the Portal pre-Capella accumulator contains **some post-Capella blocks**.
+    /// - **Era 757 ends at block 17_052_913**, which is **after Capella on the execution layer by 18043 blocks**
+    ///   (for reference, the Capella block fork start is in  : 17_034_870)
+    ///
+    ///  Therefore, the Portal pre-Capella accumulator contains **some post-Capella EXECUTION blocks**.
     ///
     fn prove_block(&self) -> BlockHeaderProof {
         let execution_block_number = self.block_number();

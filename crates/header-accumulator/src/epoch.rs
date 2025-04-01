@@ -94,6 +94,64 @@ impl TryFrom<Vec<Header>> for Epoch {
     }
 }
 
+impl TryFrom<Vec<(u64, HeaderRecord)>> for Epoch {
+    type Error = EraValidateError;
+
+    fn try_from(mut records: Vec<(u64, HeaderRecord)>) -> Result<Self, Self::Error> {
+        let len = records.len();
+
+        if len != MAX_EPOCH_SIZE {
+            return Err(EraValidateError::InvalidEpochLength(len));
+        }
+
+        // Sort by block number
+        records.sort_by_key(|(block_num, _)| *block_num);
+
+        // Validate continuity
+        let missing: Vec<_> = records
+            .windows(2)
+            .filter(|w| w[1].0 != w[0].0 + 1)
+            .map(|w| w[0].0 + 1)
+            .collect();
+
+        if !missing.is_empty() {
+            let epoch_number = records[0].0 / MAX_EPOCH_SIZE as u64;
+            return Err(EraValidateError::MissingBlock {
+                blocks: missing,
+                epoch: epoch_number,
+            });
+        }
+
+        // Validate all block numbers fall in the same epoch
+        let epoch_number = records[0].0 / MAX_EPOCH_SIZE as u64;
+        let all_same_epoch = records
+            .iter()
+            .all(|(block_num, _)| *block_num / MAX_EPOCH_SIZE as u64 == epoch_number);
+
+        if !all_same_epoch {
+            let epochs_found: HashSet<u64> = records
+                .iter()
+                .map(|(block_num, _)| *block_num / MAX_EPOCH_SIZE as u64)
+                .collect();
+
+            return Err(EraValidateError::InvalidBlockInEpoch(epochs_found));
+        }
+
+        let boxed: Box<[HeaderRecord; MAX_EPOCH_SIZE]> = records
+            .into_iter()
+            .map(|(_, record)| record)
+            .collect::<Vec<_>>()
+            .into_boxed_slice()
+            .try_into()
+            .map_err(|_| EraValidateError::InvalidEpochLength(len))?;
+
+        Ok(Self {
+            number: epoch_number as usize,
+            data: boxed,
+        })
+    }
+}
+
 impl From<Epoch> for EpochAccumulator {
     fn from(value: Epoch) -> Self {
         let vec: Vec<HeaderRecord> = value.data.to_vec();
