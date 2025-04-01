@@ -36,7 +36,7 @@ pub const MERGE_BLOCK: u64 = 15537394;
 /// 0 must start from block 0 to block 8191.
 ///
 /// All blocks must be at the same epoch
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Epoch {
     number: usize,
     data: Box<[HeaderRecord; MAX_EPOCH_SIZE]>,
