@@ -8,9 +8,13 @@ path = "src/lib.rs"
 name = "vee"
 
 [dependencies]
+alloy-primitives.workspace = true
+ethportal-api.workspace = true
 firehose-protos.workspace = true
 decoder.workspace = true
 header-accumulator.workspace = true
+reth-primitives.workspace = true
+
 
 [dev-dependencies]
 tree_hash.workspace = true
