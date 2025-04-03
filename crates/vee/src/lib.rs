@@ -16,5 +16,6 @@ pub use flat_files_decoder as decoder;
 pub use header_accumulator as accumulator;
 
 pub use accumulator::*;
+pub use arbitrum_ve::*;
 pub use decoder::*;
 pub use protos::*;
