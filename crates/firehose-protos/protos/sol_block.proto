@@ -1,5 +1,6 @@
-// Copyright 2024-, Semiotic AI, Inc.
+// Copyright 2025, StreamingFast
 // SPDX-License-Identifier: Apache-2.0
+// Derived from: https://github.com/streamingfast/firehose-solana
 
 syntax = "proto3";
 
