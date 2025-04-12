@@ -14,7 +14,7 @@ mod bstream {
 }
 
 mod sol_block {
-    pub mod v1{
+    pub mod v1 {
         tonic::include_proto!("sf.solana.r#type.v1");
     }
 }
