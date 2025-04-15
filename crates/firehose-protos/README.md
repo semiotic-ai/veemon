@@ -9,6 +9,10 @@ definitions, enabling efficient encoding and decoding of data for Ethereum block
 
 Representation of the tracing of a block in the Ethereum blockchain.
 
+### [`sol_block.proto`](https://github.com/streamingfast/firehose-solana/blob/develop/proto/sf/solana/type/v1/type.proto)
+
+Representation of the tracing of a block in the Solana blockchain.
+
 ### [`bstream.proto`](https://github.com/streamingfast/bstream/blob/develop/proto/sf/bstream/v1/bstream.proto)
 
 `Block` type from the Streamingfast block streaming Handlers library. Lower level building block of dfuse.
