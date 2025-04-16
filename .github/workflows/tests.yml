@@ -34,7 +34,7 @@ jobs:
           echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@89e9040de88b577a072e3760aaf59f585da083af #v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.9
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -63,7 +63,7 @@ jobs:
           echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@89e9040de88b577a072e3760aaf59f585da083af #v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.9
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -91,7 +91,7 @@ jobs:
           echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@89e9040de88b577a072e3760aaf59f585da083af #v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.9
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -114,7 +114,7 @@ jobs:
           echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
       - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@89e9040de88b577a072e3760aaf59f585da083af #v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.9
         if: ${{ !startsWith(github.head_ref, 'renovate/') }}
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -147,4 +147,3 @@ jobs:
             --manifest-file .release-please-manifest.json \
             --target-branch=${{ github.head_ref }} \
             --dry-run
-
