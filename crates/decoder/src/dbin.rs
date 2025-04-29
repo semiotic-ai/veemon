@@ -1,6 +1,7 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use std::convert::TryFrom;
 use std::io::{self, Read};
 
 use crate::error::DecoderError;
@@ -11,6 +12,25 @@ type DbinMessages = Vec<DbinMessage>;
 /// The bytes of a dbin message
 type DbinMessage = Vec<u8>;
 
+// Supported versions
+#[derive(Debug, PartialEq)]
+#[repr(u8)]
+enum Version {
+    V0 = 0,
+    V1 = 1,
+}
+
+impl TryFrom<u8> for Version {
+    type Error = DecoderError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Version::V0),
+            1 => Ok(Version::V1),
+            _ => Err(DecoderError::VersionUnsupported),
+        }
+    }
+}
 /// Each dbin message is length-prefixed as 4 bytes big-endian uint32
 const MAGIC_BYTES: &[u8; 4] = b"dbin";
 
@@ -28,9 +48,6 @@ const HEADER_CONTENT_TYPE_SIZE: usize = 3;
 
 /// The size of the header content version in bytes
 const HEADER_CONTENT_VERSION_SIZE: usize = 2;
-
-/// The supported version of the dbin file format
-const SUPPORTED_DBIN_VERSION: u8 = 0;
 
 /// Work with a `.dbin` flat file.
 ///
@@ -51,9 +68,6 @@ impl DbinFile {
     /// Read and parse a `.dbin` file from a `Read` source.
     pub fn try_from_read<R: Read>(mut read: R) -> Result<Self, DecoderError> {
         let header = DbinHeader::try_from_read(&mut read)?;
-        if !header.is_supported_version() {
-            return Err(DecoderError::VersionUnsupported);
-        }
         let messages = Self::read_messages(&mut read)?;
         Ok(Self { header, messages })
     }
@@ -100,17 +114,12 @@ impl IntoIterator for DbinFile {
 #[derive(Debug)]
 struct DbinHeader {
     /// File format version, the next single byte after the 4 [`DbinMagicBytes`]
-    version: u8,
-    /// Content type like 'ETH', 'EOS', or something else; the next 3 bytes
+    version: Version,
+    /// Content type like 'ETH', 'type.googleapis.com/sf.ethereum.type.v2.Block'
     content_type: String,
 }
 
 impl DbinHeader {
-    /// Checks if the version is supported.
-    fn is_supported_version(&self) -> bool {
-        is_supported_version(self.version)
-    }
-
     /// Reads and validates the `.dbin` header from the given [`Read`] source.
     fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DecoderError> {
         let magic_bytes = read_magic_bytes(read)?;
@@ -134,26 +143,35 @@ impl DbinHeader {
     }
 }
 
-fn is_supported_version(version: u8) -> bool {
-    version == SUPPORTED_DBIN_VERSION
-}
-
 fn magic_bytes_valid(bytes: &MagicBytes) -> bool {
     bytes == MAGIC_BYTES
 }
 
 /// Reads and constructs a [`DbinHeader`] from the remaining fields after the magic bytes.
 fn read_header<R: Read>(read: &mut R) -> Result<DbinHeader, DecoderError> {
-    let version = match DbinHeader::read_version_field(read) {
-        Ok(version) if is_supported_version(version) => version,
-        Ok(_) => return Err(DecoderError::VersionUnsupported),
+    let read_version = DbinHeader::read_version_field(read)?;
+    let version = match Version::try_from(read_version) {
+        Ok(version) => version,
         Err(e) => return Err(e),
     };
 
-    let content_type = DbinHeader::read_string_field(read, HEADER_CONTENT_TYPE_SIZE)?;
+    let type_size = match version {
+        Version::V0 => HEADER_CONTENT_TYPE_SIZE,
+        // For v1, the next two bytes indicate the length of the content type string
+        Version::V1 => {
+            let mut field_bytes: [u8; 2] = [0; 2];
+            read.read_exact(&mut field_bytes)?;
+            u16::from_be_bytes(field_bytes) as usize
+        }
+    };
 
-    // Content version, represented as 10-based string, ranges in '00'-'99'; the next 2 bytes
-    let _content_version = DbinHeader::read_string_field(read, HEADER_CONTENT_VERSION_SIZE)?;
+    let content_type = DbinHeader::read_string_field(read, type_size)?;
+
+    let _content_version = match version {
+        // Content version, represented as 10-based string, ranges in '00'-'99'; the next 2 bytes
+        Version::V0 => DbinHeader::read_string_field(read, HEADER_CONTENT_VERSION_SIZE)?,
+        _ => String::from("None"),
+    };
 
     Ok(DbinHeader {
         version,
@@ -198,18 +216,34 @@ mod tests {
     use std::io::Cursor;
 
     #[test]
-    fn test_valid_header_parsing() {
+    fn test_valid_header_parsing_v0() {
         let data = [b'd', b'b', b'i', b'n', 0u8, b'E', b'T', b'H', b'0', b'1'];
         let mut cursor = Cursor::new(data);
 
         let header = DbinHeader::try_from_read(&mut cursor).expect("Failed to parse header");
-        assert_eq!(header.version, SUPPORTED_DBIN_VERSION);
+        assert_eq!(header.version, Version::V0);
         assert_eq!(header.content_type, "ETH");
+    }
+
+    fn test_valid_header_parsing_v1() {
+        let data = [
+            100, 98, 105, 110, 1, 0, 43, 116, 121, 112, 101, 46, 103, 111, 111, 103, 108, 101, 97,
+            112, 105, 115, 46, 99, 111, 109, 47, 115, 102, 46, 115, 111, 108, 97, 110, 97, 46, 116,
+            121, 112, 101, 46, 118, 49, 46, 66, 108, 111, 99, 107,
+        ];
+        let mut cursor = Cursor::new(data);
+
+        let header = DbinHeader::try_from_read(&mut cursor).expect("Failed to parse header");
+        assert_eq!(header.version, Version::V1);
+        assert_eq!(
+            header.content_type,
+            "type.googleapis.com/sf.solana.type.v1.Block"
+        );
     }
 
     #[test]
     fn test_unsupported_version() {
-        let data = [b'd', b'b', b'i', b'n', 1u8, b'E', b'T', b'H', b'0', b'1'];
+        let data = [b'd', b'b', b'i', b'n', 2u8, b'E', b'T', b'H', b'0', b'1'];
         let mut cursor = Cursor::new(data);
 
         let result = DbinHeader::try_from_read(&mut cursor);
@@ -226,9 +260,27 @@ mod tests {
     }
 
     #[test]
-    fn test_read_messages() {
+    fn test_read_messages_v0() {
         let mut data = vec![];
         data.extend_from_slice(&[b'd', b'b', b'i', b'n', 0u8, b'E', b'T', b'H', b'0', b'1']);
+        data.extend_from_slice(&(4u32.to_be_bytes())); // message length
+        data.extend_from_slice(b"test");
+
+        let mut cursor = Cursor::new(data);
+        let dbin_file = DbinFile::try_from_read(&mut cursor).expect("Failed to read dbin file");
+
+        assert_eq!(dbin_file.messages.len(), 1);
+        assert_eq!(dbin_file.messages[0], b"test");
+    }
+
+    #[test]
+    fn test_read_messages_v1() {
+        let mut data = vec![];
+        data.extend_from_slice(&[
+            100, 98, 105, 110, 1, 0, 43, 116, 121, 112, 101, 46, 103, 111, 111, 103, 108, 101, 97,
+            112, 105, 115, 46, 99, 111, 109, 47, 115, 102, 46, 115, 111, 108, 97, 110, 97, 46, 116,
+            121, 112, 101, 46, 118, 49, 46, 66, 108, 111, 99, 107,
+        ]);
         data.extend_from_slice(&(4u32.to_be_bytes())); // message length
         data.extend_from_slice(b"test");
 
