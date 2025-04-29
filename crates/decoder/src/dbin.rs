@@ -150,10 +150,7 @@ fn magic_bytes_valid(bytes: &MagicBytes) -> bool {
 /// Reads and constructs a [`DbinHeader`] from the remaining fields after the magic bytes.
 fn read_header<R: Read>(read: &mut R) -> Result<DbinHeader, DecoderError> {
     let read_version = DbinHeader::read_version_field(read)?;
-    let version = match Version::try_from(read_version) {
-        Ok(version) => version,
-        Err(e) => return Err(e),
-    };
+    let version = read_version.try_into()?;
 
     let type_size = match version {
         Version::V0 => HEADER_CONTENT_TYPE_SIZE,
@@ -167,11 +164,10 @@ fn read_header<R: Read>(read: &mut R) -> Result<DbinHeader, DecoderError> {
 
     let content_type = DbinHeader::read_string_field(read, type_size)?;
 
-    let _content_version = match version {
-        // Content version, represented as 10-based string, ranges in '00'-'99'; the next 2 bytes
-        Version::V0 => DbinHeader::read_string_field(read, HEADER_CONTENT_VERSION_SIZE)?,
-        _ => String::from("None"),
-    };
+    // Read content version if V0
+    if matches!(version, Version::V0) {
+        let _ = DbinHeader::read_string_field(read, HEADER_CONTENT_VERSION_SIZE)?;
+    }
 
     Ok(DbinHeader {
         version,
@@ -225,6 +221,7 @@ mod tests {
         assert_eq!(header.content_type, "ETH");
     }
 
+    #[test]
     fn test_valid_header_parsing_v1() {
         let data = [
             100, 98, 105, 110, 1, 0, 43, 116, 121, 112, 101, 46, 103, 111, 111, 103, 108, 101, 97,
