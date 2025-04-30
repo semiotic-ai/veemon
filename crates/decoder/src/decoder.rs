@@ -414,3 +414,28 @@ mod tests {
         let _ = parquet_to_headers(file);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::fs::{self, File};
+
+    use tracing_subscriber::field::debug;
+
+    use super::*;
+
+    #[test]
+    fn test_read_eth_block_from_reader() {
+        let file = File::open("tests/0000000000.dbin").unwrap();
+        let mut reader = BufReader::new(file);
+
+        let block = read_blocks_from_reader(&mut reader, false.into()).unwrap();
+    }
+
+    #[test]
+    fn test_read_sol_block_from_reader() {
+        let file = File::open("tests/0325942300.dbin.zst").unwrap();
+        let mut reader = BufReader::new(file);
+
+        let block = read_blocks_from_reader(&mut reader, true.into()).unwrap();
+    }
+}
