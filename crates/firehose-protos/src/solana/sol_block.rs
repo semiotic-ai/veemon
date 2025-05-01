@@ -2,17 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::Block;
-use alloy_primitives::{hex, Address, Bloom, FixedBytes, Uint, B256};
-use alloy_rlp::{Encodable, Header as RlpHeader};
-use ethportal_api::types::execution::header::Header;
-use firehose_rs::{FromResponse, HasNumberOrSlot, Response, SingleBlockResponse};
+use firehose_rs::{Response, SingleBlockResponse};
 use prost::Message;
 use prost_wkt_types::Any;
-use reth_primitives::{
-    proofs::calculate_transaction_root, Log, Receipt, ReceiptWithBloom, TransactionSigned,
-};
-use reth_trie_common::root::ordered_trie_root_with_encoder;
-use tracing::error;
 
 use crate::error::ProtosError;
 
