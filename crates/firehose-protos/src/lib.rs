@@ -6,6 +6,7 @@
 
 mod error;
 mod ethereum_v2;
+mod solana;
 
 mod bstream {
     pub mod v1 {
@@ -13,13 +14,7 @@ mod bstream {
     }
 }
 
-mod sol_block {
-    pub mod v1 {
-        tonic::include_proto!("sf.solana.r#type.v1");
-    }
-}
-
 pub use bstream::v1::Block as BstreamBlock;
 pub use error::ProtosError;
 pub use ethereum_v2::{eth_block::FullReceipt, Block as EthBlock, BlockHeader};
-pub use sol_block::v1::Block as SolBlock;
+pub use solana::Block as SolBlock;
