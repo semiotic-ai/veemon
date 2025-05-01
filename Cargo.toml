@@ -13,7 +13,7 @@ clap = { version = "4.5.23", features = ["derive"] }
 criterion = { version = "0.5.1", features = ["html_reports"] }
 ethportal-api = { git = "https://github.com/ethereum/trin.git", rev = "81045ef" }
 firehose-protos = { path = "crates/firehose-protos" }
-firehose-rs = { git = "https://github.com/semiotic-ai/firehose-rs.git", branch = "main" }
+firehose-rs = "0.1.0"
 decoder = { path = "crates/decoder" }
 header-accumulator = { path = "crates/header-accumulator" }
 hex = "0.4.3"

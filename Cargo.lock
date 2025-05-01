@@ -2245,7 +2245,7 @@ checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 [[package]]
 name = "firehose-client"
 version = "0.1.1"
-source = "git+https://github.com/semiotic-ai/firehose-client.git?branch=main#70b26dc4a9db6a2789c1f7816e06e98f953cdac5"
+source = "git+https://github.com/semiotic-ai/firehose-client.git?branch=main#a805a51faeaaa252f9540fce56cf350f4ad1662a"
 dependencies = [
  "dotenvy",
  "firehose-rs",
@@ -2300,7 +2300,8 @@ dependencies = [
 [[package]]
 name = "firehose-rs"
 version = "0.1.0"
-source = "git+https://github.com/semiotic-ai/firehose-rs.git?branch=main#44992d9acb35e7d5be1c96c94d71a32a127152fb"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "51c26c3c02472bcb02b84c687ac04e550e7ff689c6d15a01d2a0329b4aba153c"
 dependencies = [
  "prost",
  "prost-build",
