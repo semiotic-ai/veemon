@@ -2245,7 +2245,7 @@ checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 [[package]]
 name = "firehose-client"
 version = "0.1.1"
-source = "git+https://github.com/semiotic-ai/firehose-client.git?branch=main#a805a51faeaaa252f9540fce56cf350f4ad1662a"
+source = "git+https://github.com/semiotic-ai/firehose-client.git?branch=main#7b6967b41b1949f2b109c3523438785611764354"
 dependencies = [
  "dotenvy",
  "firehose-rs",
