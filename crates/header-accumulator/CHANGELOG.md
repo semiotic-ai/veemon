@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.1](https://github.com/semiotic-ai/veemon/compare/header-accumulator-v0.2.0...header-accumulator-v0.2.1) (2025-04-01)
+
+
+### Bug Fixes
+
+* export PreMergeAccumulatorProof ([05a5a38](https://github.com/semiotic-ai/veemon/commit/05a5a38ee179f1b740b199e34ef8113a2acd1c11))
+
+
+### Reverts
+
+* reverts version bumps ([ac25245](https://github.com/semiotic-ai/veemon/commit/ac25245c576a3f014056c947374b8d5af1886943))
+
 ## [0.2.0](https://github.com/semiotic-ai/veemon/compare/header-accumulator-v0.1.0...header-accumulator-v0.2.0) (2025-03-20)
 
 

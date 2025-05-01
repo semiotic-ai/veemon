@@ -6,6 +6,7 @@
 
 mod error;
 mod ethereum_v2;
+mod solana;
 
 mod bstream {
     pub mod v1 {
@@ -16,3 +17,4 @@ mod bstream {
 pub use bstream::v1::Block as BstreamBlock;
 pub use error::ProtosError;
 pub use ethereum_v2::{eth_block::FullReceipt, Block as EthBlock, BlockHeader};
+pub use solana::Block as SolBlock;
