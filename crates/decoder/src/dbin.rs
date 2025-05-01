@@ -12,11 +12,13 @@ type DbinMessages = Vec<DbinMessage>;
 /// The bytes of a dbin message
 type DbinMessage = Vec<u8>;
 
-// Supported versions
-#[derive(Debug, PartialEq)]
+/// Supported versions
+#[derive(Debug, PartialEq, Clone, Copy)]
 #[repr(u8)]
-enum Version {
+pub enum Version {
+    /// Version 0
     V0 = 0,
+    /// Version 1
     V1 = 1,
 }
 
@@ -98,6 +100,11 @@ impl DbinFile {
 
         Ok(messages)
     }
+
+    /// Get the version of the `.dbin` file.
+    pub fn version(&self) -> Version {
+        self.header.version()
+    }
 }
 
 /// implement iterator for DbinFile so that we can iterate over the messages
@@ -112,7 +119,7 @@ impl IntoIterator for DbinFile {
 
 /// Header of a `.dbin` file, containing metadata such as version, content type, and content version.
 #[derive(Debug)]
-struct DbinHeader {
+pub struct DbinHeader {
     /// File format version, the next single byte after the 4 [`DbinMagicBytes`]
     version: Version,
     /// Content type like 'ETH', 'type.googleapis.com/sf.ethereum.type.v2.Block'
@@ -140,6 +147,10 @@ impl DbinHeader {
         let mut buf = [0; HEADER_VERSION_SIZE];
         read.read_exact(&mut buf)?;
         Ok(buf[0])
+    }
+
+    fn version(&self) -> Version {
+        self.version
     }
 }
 
@@ -217,7 +228,7 @@ mod tests {
         let mut cursor = Cursor::new(data);
 
         let header = DbinHeader::try_from_read(&mut cursor).expect("Failed to parse header");
-        assert_eq!(header.version, Version::V0);
+        assert_eq!(header.version(), Version::V0);
         assert_eq!(header.content_type, "ETH");
     }
 
