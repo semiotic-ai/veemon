@@ -3,7 +3,7 @@
 
 use std::io::{BufReader, Cursor, Read};
 
-use firehose_protos::{BstreamBlock, EthBlock as Block};
+use firehose_protos::{BstreamBlock, EthBlock as Block, SolBlock};
 use prost::Message;
 use tracing::{error, info};
 
@@ -36,6 +36,33 @@ impl From<bool> for Compression {
         }
     }
 }
+
+enum AnyBlock {
+    Eth(Block),
+    Sol(SolBlock),
+}
+
+impl AnyBlock {
+    fn verify() {
+        
+    }
+
+
+}
+
+fn handle_block(block: AnyBlock) {
+    match block {
+        AnyBlock::Eth(eth_block) => {
+        }
+
+        AnyBlock::Sol(sol_block) =>{
+
+
+        }
+    }
+}
+
+
 
 /// Read blocks from a flat file reader.
 ///
@@ -82,6 +109,40 @@ pub fn read_blocks_from_reader<R: Read>(
         .collect()
 }
 
+/// read solana blocks 
+pub fn read_sol_blocks_from_reader<R: Read>(
+    reader: R,
+    compression: Compression,
+) -> Result<Vec<SolBlock>, DecoderError> {
+    const CONTENT_TYPE: &str = "type.googleapis.com/sf.solana.type.v1.Block";
+
+    let mut file_contents: Box<dyn Read> = match compression {
+        Compression::Zstd => Box::new(Cursor::new(zstd::decode_all(reader)?)),
+        Compression::None => Box::new(reader),
+    };
+
+    let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
+    if dbin_file.content_type() != CONTENT_TYPE {
+        return Err(DecoderError::ContentTypeInvalid(
+            dbin_file.content_type().to_string(),
+        ));
+    }
+
+    dbin_file
+        .into_iter()
+        .map(|message| {
+            let block = decode_sol_block_from_bytes(&message)?;
+            if !sol_block_is_verified(&block) {
+                Err(DecoderError::VerificationFailed {
+                    block_number: block.slot,
+                })
+            } else {
+                Ok(block)
+            }
+        })
+        .collect()
+}
+
 fn block_is_verified(block: &Block) -> bool {
     if block.number != 0 {
         if !block.receipt_root_is_verified() {
@@ -100,6 +161,11 @@ fn block_is_verified(block: &Block) -> bool {
             return false;
         }
     }
+    true
+}
+
+// Logic not yet implemented for verifying Solana Blocks
+fn sol_block_is_verified(block: &SolBlock) -> bool {
     true
 }
 
@@ -177,6 +243,7 @@ impl From<Option<u64>> for EndBlock {
 ///   [`BufReader`] or a `StdIn` reader with or without compression.
 /// * `end_block`: Specifies the block number at which to stop streaming. By default, this is set to
 ///   block 15537393, the last block before the Ethereum merge.
+
 pub fn stream_blocks(
     reader: Reader,
     end_block: EndBlock,
@@ -218,11 +285,26 @@ pub fn stream_blocks(
     Ok(blocks.into_iter())
 }
 
-/// Decodes a block from a byte slice.
 fn decode_block_from_bytes(bytes: &[u8]) -> Result<Block, DecoderError> {
     let block_stream = BstreamBlock::decode(bytes)?;
-    let block = Block::decode(block_stream.payload_buffer.as_slice())?;
-    Ok(block)
+    if let Some(payload) = block_stream.payload {
+        let block = Block::decode(payload.value.as_slice())?;
+        Ok(block)
+    } else {
+        let block = Block::decode(block_stream.payload_buffer.as_slice())?;
+        Ok(block)
+    }
+}
+
+fn decode_sol_block_from_bytes(bytes: &[u8]) -> Result<SolBlock, DecoderError> {
+    let block_stream = BstreamBlock::decode(bytes)?;
+    if let Some(payload) = block_stream.payload {
+        let block = SolBlock::decode(payload.value.as_slice())?;
+        Ok(block)
+    } else {
+        let block = SolBlock::decode(block_stream.payload_buffer.as_slice())?;
+        Ok(block)
+    }
 }
 
 #[cfg(test)]
@@ -234,7 +316,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_read_eth_block_from_reader() {
+    fn test_read_eth_blocks_from_reader() {
         let file = File::open("tests/0000000000.dbin").unwrap();
         let mut reader = BufReader::new(file);
 
@@ -242,10 +324,10 @@ mod tests {
     }
 
     #[test]
-    fn test_read_sol_block_from_reader() {
+    fn test_read_sol_blocks_from_reader() {
         let file = File::open("tests/0325942300.dbin.zst").unwrap();
         let mut reader = BufReader::new(file);
 
-        let block = read_blocks_from_reader(&mut reader, true.into()).unwrap();
+        let block = read_sol_blocks_from_reader(&mut reader, true.into()).unwrap();
     }
 }
