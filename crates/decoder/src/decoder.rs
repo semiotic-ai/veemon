@@ -37,32 +37,35 @@ impl From<bool> for Compression {
     }
 }
 
+#[derive(Clone)]
 enum AnyBlock {
     Eth(Block),
     Sol(SolBlock),
 }
 
-impl AnyBlock {
-    fn verify() {
-        
-    }
-
-
+// So far we have parsed .dbin files containing Blocks
+// from these chains, but others may be added in the
+// future. The content type in the dbin header may also
+// vary depending on the version of the file.
+#[derive(Clone)]
+enum ContentType {
+    Eth,
+    Sol,
 }
 
-fn handle_block(block: AnyBlock) {
-    match block {
-        AnyBlock::Eth(eth_block) => {
-        }
+impl TryFrom<&str> for ContentType {
+    type Error = DecoderError;
 
-        AnyBlock::Sol(sol_block) =>{
-
-
+    // These are the content types we have so far encountered, but there
+    // are others which may be added in the future.
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "ETH" => Ok(ContentType::Eth),
+            "type.googleapis.com/sf.solana.type.v1.Block" => Ok(ContentType::Sol),
+            _ => Err(DecoderError::ContentTypeInvalid(value.to_string())),
         }
     }
 }
-
-
 
 /// Read blocks from a flat file reader.
 ///
@@ -79,28 +82,23 @@ fn handle_block(block: AnyBlock) {
 pub fn read_blocks_from_reader<R: Read>(
     reader: R,
     compression: Compression,
-) -> Result<Vec<Block>, DecoderError> {
-    const CONTENT_TYPE: &str = "ETH";
-
+) -> Result<Vec<AnyBlock>, DecoderError> {
     let mut file_contents: Box<dyn Read> = match compression {
         Compression::Zstd => Box::new(Cursor::new(zstd::decode_all(reader)?)),
         Compression::None => Box::new(reader),
     };
 
     let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
-    if dbin_file.content_type() != CONTENT_TYPE {
-        return Err(DecoderError::ContentTypeInvalid(
-            dbin_file.content_type().to_string(),
-        ));
-    }
+    let content_type: ContentType = dbin_file.content_type().try_into()?;
 
     dbin_file
         .into_iter()
         .map(|message| {
-            let block = decode_block_from_bytes(&message)?;
-            if !block_is_verified(&block) {
+            let block = decode_block_from_bytes(&message, content_type.clone())?;
+            let (verified, number) = block_is_verified(&block);
+            if !verified {
                 Err(DecoderError::VerificationFailed {
-                    block_number: block.number,
+                    block_number: number,
                 })
             } else {
                 Ok(block)
@@ -109,64 +107,35 @@ pub fn read_blocks_from_reader<R: Read>(
         .collect()
 }
 
-/// read solana blocks 
-pub fn read_sol_blocks_from_reader<R: Read>(
-    reader: R,
-    compression: Compression,
-) -> Result<Vec<SolBlock>, DecoderError> {
-    const CONTENT_TYPE: &str = "type.googleapis.com/sf.solana.type.v1.Block";
+fn block_is_verified(block: &AnyBlock) -> (bool, u64) {
+    match block {
+        AnyBlock::Eth(eth_block) => {
+            let block_number = eth_block.number;
+            if block_number != 0 {
+                if !eth_block.receipt_root_is_verified() {
+                    error!(
+                        "Receipt root verification failed for block {}",
+                        block_number
+                    );
+                    return (false, block_number);
+                }
 
-    let mut file_contents: Box<dyn Read> = match compression {
-        Compression::Zstd => Box::new(Cursor::new(zstd::decode_all(reader)?)),
-        Compression::None => Box::new(reader),
-    };
-
-    let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
-    if dbin_file.content_type() != CONTENT_TYPE {
-        return Err(DecoderError::ContentTypeInvalid(
-            dbin_file.content_type().to_string(),
-        ));
-    }
-
-    dbin_file
-        .into_iter()
-        .map(|message| {
-            let block = decode_sol_block_from_bytes(&message)?;
-            if !sol_block_is_verified(&block) {
-                Err(DecoderError::VerificationFailed {
-                    block_number: block.slot,
-                })
-            } else {
-                Ok(block)
+                if !eth_block.transaction_root_is_verified() {
+                    error!(
+                        "Transaction root verification failed for block {}",
+                        block_number
+                    );
+                    return (false, block_number);
+                }
             }
-        })
-        .collect()
-}
-
-fn block_is_verified(block: &Block) -> bool {
-    if block.number != 0 {
-        if !block.receipt_root_is_verified() {
-            error!(
-                "Receipt root verification failed for block {}",
-                block.number
-            );
-            return false;
+            (true, block_number)
         }
-
-        if !block.transaction_root_is_verified() {
-            error!(
-                "Transaction root verification failed for block {}",
-                block.number
-            );
-            return false;
+        // Logic is not yet implemented for verifying Solana Blocks
+        AnyBlock::Sol(sol_block) => {
+            let block_number = sol_block.slot;
+            (true, block_number)
         }
     }
-    true
-}
-
-// Logic not yet implemented for verifying Solana Blocks
-fn sol_block_is_verified(block: &SolBlock) -> bool {
-    true
 }
 
 /// Reader enum to handle different types of readers
@@ -285,25 +254,25 @@ pub fn stream_blocks(
     Ok(blocks.into_iter())
 }
 
-fn decode_block_from_bytes(bytes: &[u8]) -> Result<Block, DecoderError> {
+fn decode_block_from_bytes(
+    bytes: &[u8],
+    content_type: ContentType,
+) -> Result<AnyBlock, DecoderError> {
     let block_stream = BstreamBlock::decode(bytes)?;
-    if let Some(payload) = block_stream.payload {
-        let block = Block::decode(payload.value.as_slice())?;
-        Ok(block)
-    } else {
-        let block = Block::decode(block_stream.payload_buffer.as_slice())?;
-        Ok(block)
-    }
-}
+    let block_stream_payload = block_stream
+        .payload
+        .map(|p| p.value)
+        .unwrap_or(block_stream.payload_buffer);
 
-fn decode_sol_block_from_bytes(bytes: &[u8]) -> Result<SolBlock, DecoderError> {
-    let block_stream = BstreamBlock::decode(bytes)?;
-    if let Some(payload) = block_stream.payload {
-        let block = SolBlock::decode(payload.value.as_slice())?;
-        Ok(block)
-    } else {
-        let block = SolBlock::decode(block_stream.payload_buffer.as_slice())?;
-        Ok(block)
+    match content_type {
+        ContentType::Eth => {
+            let block = Block::decode(block_stream_payload.as_slice())?;
+            Ok(AnyBlock::Eth(block))
+        }
+        ContentType::Sol => {
+            let block = SolBlock::decode(block_stream_payload.as_slice())?;
+            Ok(AnyBlock::Sol(block))
+        }
     }
 }
 
@@ -328,6 +297,6 @@ mod tests {
         let file = File::open("tests/0325942300.dbin.zst").unwrap();
         let mut reader = BufReader::new(file);
 
-        let block = read_sol_blocks_from_reader(&mut reader, true.into()).unwrap();
+        let block = read_blocks_from_reader(&mut reader, true.into()).unwrap();
     }
 }
