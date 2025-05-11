@@ -4,6 +4,7 @@
 use std::convert::TryFrom;
 use std::io::{self, Read};
 
+use crate::decoder::ContentType;
 use crate::error::DecoderError;
 
 /// The bytes of a dbin file minus the header
@@ -202,19 +203,19 @@ fn read_message<R: Read>(read: &mut R, length: usize) -> Result<DbinMessage, Dec
 }
 
 /// Read the next block from a flat file reader.
-pub fn read_block_from_reader<R: Read>(read: &mut R) -> Result<DbinMessage, DecoderError> {
-    let mut magic_bytes = read_magic_bytes(read)?;
+pub fn read_block_from_reader<R: Read>(
+    read: &mut R,
+) -> Result<(DbinMessage, ContentType), DecoderError> {
+    let header = DbinHeader::try_from_read(read)?;
+    let content_type = header.content_type.as_str().try_into()?;
 
-    if magic_bytes_valid(&magic_bytes) {
-        // Block messages are separated by "dbin" (the magical 4 bytes), so each
-        // new occurrence marks the start of a new .dbin file
-        _ = read_header(read)?;
-        magic_bytes = read_magic_bytes(read)?;
-    }
-
+    // The next four bytes are the length prefix for tne message.
+    let magic_bytes = read_magic_bytes(read)?;
     let message_size = u32::from_be_bytes(magic_bytes) as usize;
 
-    read_message(read, message_size)
+    let message = read_message(read, message_size)?;
+
+    Ok((message, content_type))
 }
 
 #[cfg(test)]

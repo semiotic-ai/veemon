@@ -7,11 +7,12 @@ use std::{
 };
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use flat_files_decoder::read_block_from_reader;
+use flat_files_decoder::{read_block_from_reader, ContentType};
 use prost::Message;
 
 const ITERS_PER_FILE: usize = 10;
 
+#[allow(deprecated)]
 fn read_decode_check_bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("read-decode-check");
     group.sample_size(ITERS_PER_FILE);
@@ -32,13 +33,15 @@ fn read_decode_check_bench(c: &mut Criterion) {
             let mut reader = BufReader::new(file);
 
             loop {
-                let mut message: Result<Vec<u8>, _> = Ok(Vec::new());
+                let message: Vec<u8> = Vec::new();
+                let content_type: ContentType = String::from("").as_str().try_into().unwrap();
+                let mut result: Result<(Vec<u8>, ContentType), _> = Ok((message, content_type));
 
                 b.iter(|| {
-                    message = black_box(read_block_from_reader(&mut reader));
+                    result = black_box(read_block_from_reader(&mut reader));
                 });
 
-                if message.is_err() {
+                if result.is_err() {
                     break;
                 }
             }
@@ -60,8 +63,8 @@ fn read_decode_check_bench(c: &mut Criterion) {
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
             loop {
-                let message = match read_block_from_reader(&mut reader) {
-                    Ok(message) => message,
+                let (message, _content_type) = match read_block_from_reader(&mut reader) {
+                    Ok((message, content_type)) => (message, content_type),
                     Err(_) => {
                         break;
                     }
@@ -88,8 +91,8 @@ fn read_decode_check_bench(c: &mut Criterion) {
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
             loop {
-                let message = match read_block_from_reader(&mut reader) {
-                    Ok(message) => message,
+                let (message, _content_type) = match read_block_from_reader(&mut reader) {
+                    Ok((message, content_type)) => (message, content_type),
                     Err(_) => {
                         break;
                     }
@@ -121,8 +124,8 @@ fn read_decode_check_bench(c: &mut Criterion) {
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
             loop {
-                let message = match read_block_from_reader(&mut reader) {
-                    Ok(message) => message,
+                let (message, _content_type) = match read_block_from_reader(&mut reader) {
+                    Ok((message, content_type)) => (message, content_type),
                     Err(_) => {
                         break;
                     }
@@ -154,8 +157,8 @@ fn read_decode_check_bench(c: &mut Criterion) {
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
             loop {
-                let message = match read_block_from_reader(&mut reader) {
-                    Ok(message) => message,
+                let (message, _content_type) = match read_block_from_reader(&mut reader) {
+                    Ok((message, content_type)) => (message, content_type),
                     Err(_) => {
                         break;
                     }

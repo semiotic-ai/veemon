@@ -37,19 +37,44 @@ impl From<bool> for Compression {
     }
 }
 
-#[derive(Clone)]
-enum AnyBlock {
+/// An enumeration of supported chains and associated Block structs
+#[derive(Clone, Debug, serde::Serialize)]
+pub enum AnyBlock {
+    /// EVM Block
     Eth(Block),
+    /// Solana Block
     Sol(SolBlock),
 }
 
-// So far we have parsed .dbin files containing Blocks
-// from these chains, but others may be added in the
-// future. The content type in the dbin header may also
-// vary depending on the version of the file.
+impl AnyBlock {
+    /// Convert the data associated with an AnyBlock instance into
+    /// a firehose_protos::EthBlock
+    pub fn try_into_eth_block(self) -> Result<Block, DecoderError> {
+        match self {
+            AnyBlock::Eth(block) => Ok(block),
+            _ => Err(DecoderError::ConversionError),
+        }
+    }
+
+    /// Convert the data associated with an AnyBlock instance into
+    /// a firehose_protos::SolBlock
+    pub fn try_into_sol_block(self) -> Result<SolBlock, DecoderError> {
+        match self {
+            AnyBlock::Sol(block) => Ok(block),
+            _ => Err(DecoderError::ConversionError),
+        }
+    }
+}
+
+/// So far we have parsed .dbin files containing Blocks
+/// from these enumerated chains, but others may be added in the
+/// future. The content type in the dbin header may also
+/// vary depending on the version of the file.
 #[derive(Clone)]
-enum ContentType {
+pub enum ContentType {
+    /// Indicates EVM Block content.
     Eth,
+    /// Indicates Solana Block content.
     Sol,
 }
 
@@ -132,7 +157,7 @@ fn block_is_verified(block: &AnyBlock) -> (bool, u64) {
         }
         // Logic is not yet implemented for verifying Solana Blocks
         AnyBlock::Sol(sol_block) => {
-            let block_number = sol_block.slot;
+            let block_number = sol_block.block_height.unwrap().block_height;
             (true, block_number)
         }
     }
@@ -216,7 +241,7 @@ impl From<Option<u64>> for EndBlock {
 pub fn stream_blocks(
     reader: Reader,
     end_block: EndBlock,
-) -> Result<impl Iterator<Item = Block>, DecoderError> {
+) -> Result<impl Iterator<Item = AnyBlock>, DecoderError> {
     let mut current_block_number = 0;
 
     let mut reader = reader.into_reader()?;
@@ -226,15 +251,15 @@ pub fn stream_blocks(
 
     loop {
         match read_block_from_reader(&mut reader) {
-            Ok(message) => {
-                match decode_block_from_bytes(&message) {
+            Ok((message, content_type)) => {
+                match decode_block_from_bytes(&message, content_type) {
                     Ok(block) => {
-                        current_block_number = block.number;
-
-                        if block_is_verified(&block) {
+                        let (verified, number) = block_is_verified(&block);
+                        current_block_number = number;
+                        if verified {
                             blocks.push(block);
                         } else {
-                            info!("Block verification failed, skipping block {}", block.number);
+                            info!("Block verification failed, skipping block {}", number);
                         }
                     }
                     Err(e) => return Err(e),
@@ -254,6 +279,7 @@ pub fn stream_blocks(
     Ok(blocks.into_iter())
 }
 
+#[allow(deprecated)]
 fn decode_block_from_bytes(
     bytes: &[u8],
     content_type: ContentType,
@@ -278,18 +304,15 @@ fn decode_block_from_bytes(
 
 #[cfg(test)]
 mod tests {
-    use std::fs::{self, File};
-
-    use tracing_subscriber::field::debug;
-
     use super::*;
+    use std::fs::File;
 
     #[test]
     fn test_read_eth_blocks_from_reader() {
         let file = File::open("tests/0000000000.dbin").unwrap();
         let mut reader = BufReader::new(file);
 
-        let block = read_blocks_from_reader(&mut reader, false.into()).unwrap();
+        let _block = read_blocks_from_reader(&mut reader, false.into()).unwrap();
     }
 
     #[test]
@@ -297,6 +320,34 @@ mod tests {
         let file = File::open("tests/0325942300.dbin.zst").unwrap();
         let mut reader = BufReader::new(file);
 
-        let block = read_blocks_from_reader(&mut reader, true.into()).unwrap();
+        let _block = read_blocks_from_reader(&mut reader, true.into()).unwrap();
+    }
+
+    #[test]
+    fn test_unwrap_eth_block() {
+        let file = File::open("tests/0000000000.dbin").unwrap();
+        let mut reader = BufReader::new(file);
+        let any_blocks = read_blocks_from_reader(&mut reader, false.into()).unwrap();
+        let any_block = any_blocks.get(0).unwrap();
+        let block = any_block.clone().try_into_eth_block().unwrap();
+
+        let hash = [
+            212, 229, 103, 64, 248, 118, 174, 248, 192, 16, 184, 106, 64, 213, 245, 103, 69, 161,
+            24, 208, 144, 106, 52, 230, 154, 236, 140, 13, 177, 203, 143, 163,
+        ];
+
+        assert_eq!(block.hash, hash);
+    }
+
+    #[test]
+    fn test_unwrap_sol_block() {
+        let file = File::open("tests/0325942300.dbin.zst").unwrap();
+        let mut reader = BufReader::new(file);
+        let any_blocks = read_blocks_from_reader(&mut reader, true.into()).unwrap();
+        let any_block = any_blocks.get(0).unwrap();
+        let block = any_block.clone().try_into_sol_block().unwrap();
+        
+        let hash: String = "8NQ2DstBY2HukX2JQPL7ejdRN1FVxdLG6mnH9Sv25thC".into();
+        assert_eq!(block.blockhash, hash);
     }
 }
