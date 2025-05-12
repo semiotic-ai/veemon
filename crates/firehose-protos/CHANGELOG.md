@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/semiotic-ai/veemon/compare/firehose-protos-v0.3.0...firehose-protos-v0.4.0) (2025-05-12)
+
+
+### Features
+
+* decode parquet block rows into sf BlockHeader ([63ade21](https://github.com/semiotic-ai/veemon/commit/63ade215ef5ed55e672fbcd6cf638f6804bdc5b8))
+* decode parquet block rows into sf BlockHeader ([f0b9576](https://github.com/semiotic-ai/veemon/commit/f0b95763062a0230905e34774a0a930614eada11))
+
 ## [0.3.0](https://github.com/semiotic-ai/veemon/compare/firehose-protos-v0.2.1...firehose-protos-v0.3.0) (2025-05-01)
 
 
