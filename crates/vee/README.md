@@ -2,9 +2,27 @@
 
 Verifiable Extraction for Blockchain.
 
+This crate exposes the interfaces from other crates in ve.
+
+### Verifiabilty for Ethereum
+![Full path of proofs diagram](./assets/diagram.svg)
+
+
+In order for verifiable extraction to work, it depends partially on [portal network accumualtors](https://github.com/ethereum/portal-accumulators)
+which consists of the header accumulators for pre-merge, post-merge & pre-capella.
+
+For post-capella, it relies on the 
+`HistoricalSummary` which is extracted from the `HeadState` of the beacon chain, and the associated beacon blocks as well. 
+
+As seen on the diagram above, VE also has implementations for the constructing parts of blocks. Since most of the interesting data is on events, it is possible to generate proofs for receipts against the `receipts_root`, then proofs that the `receipts_root` is valid givne the block, and then the proofs that the blocks are valid within the canonicalness of the chain.
+
+
 ## Examples
 
 ### Inclusion proof
+
+inclusion proofs are for verifying specific blocks to be 
+
 
 ```rust,no_run
 use std::{fs::File, io::BufReader};
@@ -116,3 +134,9 @@ fn main() -> Result<(), EraValidateError> {
      Ok(())
 }
 ```
+
+## Testing
+
+Some assets were stored in [ve-assets](https://github.com/semiotic-ai/ve-assets)
+. These include parquet file block headers and .dbin files extracted from Firehose.
+
