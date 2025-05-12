@@ -3,6 +3,7 @@ members = ["crates/*"]
 resolver = "2"
 
 [workspace.dependencies]
+alloy-rlp = "0.3.11"
 alloy-consensus = "0.4.2"
 alloy-eip2930 = "0.1.0"
 alloy-primitives = "0.8.20"
