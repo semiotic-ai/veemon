@@ -41,7 +41,8 @@ impl From<bool> for Compression {
 #[derive(Clone, Debug, serde::Serialize)]
 pub enum AnyBlock {
     /// EVM Block
-    Eth(Block),
+    // `Box` to address a large size difference between variants
+    Eth(Box<Block>),
     /// Solana Block
     Sol(SolBlock),
 }
@@ -51,7 +52,7 @@ impl AnyBlock {
     /// a firehose_protos::EthBlock
     pub fn try_into_eth_block(self) -> Result<Block, DecoderError> {
         match self {
-            AnyBlock::Eth(block) => Ok(block),
+            AnyBlock::Eth(block) => Ok(*block),
             _ => Err(DecoderError::ConversionError),
         }
     }
@@ -62,6 +63,22 @@ impl AnyBlock {
         match self {
             AnyBlock::Sol(block) => Ok(block),
             _ => Err(DecoderError::ConversionError),
+        }
+    }
+
+    /// Borrow-based conversion to extract reference to an EthBlock
+    pub fn as_eth_block(&self) -> Option<&Block> {
+        match self {
+            AnyBlock::Eth(b) => Some(b),
+            _ => None,
+        }
+    }
+
+    /// Borrow-based conversion to extract reference to a SolBlock
+    pub fn as_sol_block(&self) -> Option<&SolBlock> {
+        match self {
+            AnyBlock::Sol(b) => Some(b),
+            _ => None,
         }
     }
 }
@@ -293,7 +310,7 @@ fn decode_block_from_bytes(
     match content_type {
         ContentType::Eth => {
             let block = Block::decode(block_stream_payload.as_slice())?;
-            Ok(AnyBlock::Eth(block))
+            Ok(AnyBlock::Eth(Box::new(block)))
         }
         ContentType::Sol => {
             let block = SolBlock::decode(block_stream_payload.as_slice())?;
@@ -328,7 +345,7 @@ mod tests {
         let file = File::open("tests/0000000000.dbin").unwrap();
         let mut reader = BufReader::new(file);
         let any_blocks = read_blocks_from_reader(&mut reader, false.into()).unwrap();
-        let any_block = any_blocks.get(0).unwrap();
+        let any_block = any_blocks.first().unwrap();
         let block = any_block.clone().try_into_eth_block().unwrap();
 
         let hash = [
@@ -344,9 +361,9 @@ mod tests {
         let file = File::open("tests/0325942300.dbin.zst").unwrap();
         let mut reader = BufReader::new(file);
         let any_blocks = read_blocks_from_reader(&mut reader, true.into()).unwrap();
-        let any_block = any_blocks.get(0).unwrap();
+        let any_block = any_blocks.first().unwrap();
         let block = any_block.clone().try_into_sol_block().unwrap();
-        
+
         let hash: String = "8NQ2DstBY2HukX2JQPL7ejdRN1FVxdLG6mnH9Sv25thC".into();
         assert_eq!(block.blockhash, hash);
     }

@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
-    fs::{self, DirEntry, File}, io::{self, BufReader, BufWriter, Write}, process::ExitCode
+    fs::{self, DirEntry, File},
+    io::{self, BufReader, BufWriter, Write},
+    process::ExitCode,
 };
 
 use alloy_primitives::B256;
@@ -168,7 +170,6 @@ fn decode_flat_files(
                     break;
                 }
             }
-            
         }
     }
 
@@ -202,12 +203,8 @@ fn check_block_against_json(block: &Block, headers_dir: &str) -> Result<(), Deco
 
 fn write_block_to_json(block: &AnyBlock, output: &str) -> Result<(), DecoderError> {
     let block_number = match block {
-        AnyBlock::Eth(eth_block) => {
-            eth_block.number
-        }
-        AnyBlock::Sol(sol_block) => {
-            sol_block.block_height.unwrap().block_height
-        }
+        AnyBlock::Eth(eth_block) => eth_block.number,
+        AnyBlock::Sol(sol_block) => sol_block.block_height.unwrap().block_height,
     };
 
     let file_name = format!("{}/block-{}.json", output, block_number);
@@ -304,7 +301,7 @@ impl TryFrom<&SolBlock> for HeaderRecordWithNumber {
     fn try_from(block: &SolBlock) -> Result<Self, Self::Error> {
         Ok(HeaderRecordWithNumber {
             block_hash: block.blockhash.clone().into(),
-            block_number: block.block_height.unwrap().block_height, 
+            block_number: block.block_height.unwrap().block_height,
             // There is no field analogous to `total_difficulty` in Solana Blocks
             total_difficulty: Vec::new(),
         })
@@ -317,12 +314,11 @@ impl TryFrom<&AnyBlock> for HeaderRecordWithNumber {
 
     fn try_from(block: &AnyBlock) -> Result<Self, Self::Error> {
         match block {
-            AnyBlock::Eth(eth_block) => {
+            AnyBlock::Eth(_) => {
+                let eth_block = block.as_eth_block().ok_or(DecoderError::ConversionError)?;
                 HeaderRecordWithNumber::try_from(eth_block)
             }
-            AnyBlock::Sol(sol_block) => {
-                HeaderRecordWithNumber::try_from(sol_block)
-            }
+            AnyBlock::Sol(sol_block) => HeaderRecordWithNumber::try_from(sol_block),
         }
     }
 }
