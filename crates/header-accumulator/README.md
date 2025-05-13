@@ -62,7 +62,7 @@ cargo test
 
 ```rust,no_run
 use std::{fs::File, io::BufReader};
-use flat_files_decoder::{read_blocks_from_reader, Compression};
+use flat_files_decoder::{read_blocks_from_reader, AnyBlock, Compression};
 use header_accumulator::{
     generate_inclusion_proofs, verify_inclusion_proofs, Epoch, EraValidateError, Header,
 };
@@ -80,12 +80,27 @@ fn main() -> Result<(), EraValidateError> {
             Compression::None,
         ) {
             Ok(blocks) => {
-                headers.extend(
-                    blocks
-                        .iter()
-                        .map(|block| Header::try_from(block).unwrap())
-                        .collect::<Vec<Header>>(),
-                );
+                // Check if the Blocks contained in the .dbin files are Ethereum type.
+                // Header Accumulators are currently only supported for Ethereum type
+                // blocks.
+                match blocks.first().unwrap(){
+                    AnyBlock::Eth(_) =>
+                    {
+                        headers.extend(
+                            blocks
+                            .iter()
+                            .filter_map(|block| {
+                                if let AnyBlock::Eth(eth_block) = block {
+                                    Header::try_from(eth_block.as_ref()).ok()
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect::<Vec<Header>>(),
+                        );
+                    }
+                    _ => println!("File does not contain Ethereum Blocks: {}", file)
+                } 
             }
             Err(e) => {
                 eprintln!("error: {:?}", e);
@@ -126,7 +141,7 @@ fn main() -> Result<(), EraValidateError> {
 ```rust,no_run
 use std::{fs::File, io::BufReader};
 
-use flat_files_decoder::{read_blocks_from_reader, Compression};
+use flat_files_decoder::{read_blocks_from_reader, AnyBlock, Compression};
 use header_accumulator::{Epoch, EraValidateError, EraValidator, Header};
 use tree_hash::Hash256;
 
@@ -143,13 +158,30 @@ fn main() -> Result<(), EraValidateError> {
         );
         let reader = create_test_reader(&file_name);
         let blocks = read_blocks_from_reader(reader, Compression::None).unwrap();
-        let successful_headers = blocks
-            .iter()
-            .cloned()
-            .map(|block| Header::try_from(&block))
-            .collect::<Result<Vec<_>, _>>()?;
-        headers.extend(successful_headers);
+
+        // Check if the Blocks contained in the .dbin files are Ethereum type.
+        // Header Accumulators are currently only supported for Ethereum type
+        // blocks.
+        match blocks.first().unwrap(){
+            AnyBlock::Eth(_) =>
+            {
+                let successful_headers = blocks
+                    .iter()
+                    .cloned()
+                    .filter_map(|block| {
+                        if let AnyBlock::Eth(eth_block) = block {
+                            Header::try_from(eth_block.as_ref()).ok()
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<Header>>();
+                headers.extend(successful_headers);
+            }
+            _ => println!("File does not contain Ethereum Blocks: {}", file_name)
+        }
     }
+
     assert_eq!(headers.len(), 8300);
     assert_eq!(headers[0].number, 0);
     let era_verifier = EraValidator::default();

@@ -26,12 +26,12 @@ inclusion proofs are for verifying specific blocks to be part of canonical epoch
 ```rust,no_run
 use std::{fs::File, io::BufReader};
 use vee::{
-    generate_inclusion_proofs, read_blocks_from_reader, verify_inclusion_proofs, Compression,
-    Epoch, EraValidateError, Header,
+    generate_inclusion_proofs, read_blocks_from_reader, verify_inclusion_proofs, 
+    AnyBlock, Compression, Epoch, EraValidateError, Header,
 };
 
 fn main() -> Result<(), EraValidateError> {
-    let mut headers: Vec<Header> = Vec::new();
+   let mut headers: Vec<Header> = Vec::new();
 
     for flat_file_number in (0..=8200).step_by(100) {
         let file = format!(
@@ -43,12 +43,27 @@ fn main() -> Result<(), EraValidateError> {
             Compression::None,
         ) {
             Ok(blocks) => {
-                headers.extend(
-                    blocks
-                        .iter()
-                        .map(|block| Header::try_from(block).unwrap())
-                        .collect::<Vec<Header>>(),
-                );
+                // Check if the Blocks contained in the .dbin files are Ethereum type.
+                // Header Accumulators are currently only supported for Ethereum type
+                // blocks.
+                match blocks.first().unwrap(){
+                    AnyBlock::Eth(_) =>
+                    {
+                        headers.extend(
+                            blocks
+                            .iter()
+                            .filter_map(|block| {
+                                if let AnyBlock::Eth(eth_block) = block {
+                                    Header::try_from(eth_block.as_ref()).ok()
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect::<Vec<Header>>(),
+                        );
+                    }
+                    _ => println!("File does not contain Ethereum Blocks: {}", file)
+                } 
             }
             Err(e) => {
                 eprintln!("error: {:?}", e);
@@ -87,53 +102,67 @@ fn main() -> Result<(), EraValidateError> {
 ### Era validator
 
 Epochs by themselves can be validated to be canonical]
-wit the example below.
+with the example below.
 
 ```rust,no_run
 use std::{fs::File, io::BufReader};
 use tree_hash::Hash256;
 use vee::{
-    read_blocks_from_reader, Compression, Epoch, EraValidateError, EraValidator,
-    Header,
+    read_blocks_from_reader, AnyBlock, Compression, Epoch, EraValidateError, 
+    EraValidator, Header,
 };
 
 fn create_test_reader(path: &str) -> BufReader<File> {
-     BufReader::new(File::open(path).unwrap())
+    BufReader::new(File::open(path).unwrap())
 }
 
 fn main() -> Result<(), EraValidateError> {
-     let mut headers: Vec<Header> = Vec::new();
+    let mut headers: Vec<Header> = Vec::new();
+    for number in (0..=8200).step_by(100) {
+        let file_name = format!(
+            "your-test-assets/ethereum_firehose_first_8200/{:010}.dbin",
+            number
+        );
+        let reader = create_test_reader(&file_name);
+        let blocks = read_blocks_from_reader(reader, Compression::None).unwrap();
 
-     for number in (0..=8200).step_by(100) {
-         let file_name = format!(
-             "your-test-assets/ethereum_firehose_first_8200/{:010}.dbin",
-             number
-         );
-         let reader = create_test_reader(&file_name);
-         let blocks = read_blocks_from_reader(reader, Compression::None).unwrap();
-         let successful_headers = blocks
-             .iter()
-             .cloned()
-             .map(|block| Header::try_from(&block))
-             .collect::<Result<Vec<_>, _>>()?;
-         headers.extend(successful_headers);
-     }
+        // Check if the Blocks contained in the .dbin files are Ethereum type.
+        // Header Accumulators are currently only supported for Ethereum type
+        // blocks.
+        match blocks.first().unwrap(){
+            AnyBlock::Eth(_) =>
+            {
+                let successful_headers = blocks
+                    .iter()
+                    .cloned()
+                    .filter_map(|block| {
+                        if let AnyBlock::Eth(eth_block) = block {
+                            Header::try_from(eth_block.as_ref()).ok()
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<Header>>();
+                headers.extend(successful_headers);
+            }
+            _ => println!("File does not contain Ethereum Blocks: {}", file_name)
+        }
+    }
 
-     assert_eq!(headers.len(), 8300);
-     assert_eq!(headers[0].number, 0);
+    assert_eq!(headers.len(), 8300);
+    assert_eq!(headers[0].number, 0);
+    let era_verifier = EraValidator::default();
+    let epoch: Epoch = headers.try_into().unwrap();
+    let result = era_verifier.validate_era(&epoch)?;
+    let expected = Hash256::new([
+        94, 193, 255, 184, 195, 177, 70, 244, 38, 6, 199, 76, 237, 151, 61, 193, 110, 197, 161, 7,
+        192, 52, 88, 88, 195, 67, 252, 148, 120, 11, 66, 24,
+    ]);
+    assert_eq!(result, expected);
 
-     let era_verifier = EraValidator::default();
-     let epoch: Epoch = headers.try_into().unwrap();
-     let result = era_verifier.validate_era(&epoch)?;
-     let expected = Hash256::new([
-         94, 193, 255, 184, 195, 177, 70, 244, 38, 6, 199, 76, 237, 151, 61, 193, 110, 197, 161, 7,
-         192, 52, 88, 88, 195, 67, 252, 148, 120, 11, 66, 24,
-     ]);
-     assert_eq!(result, expected);
+    println!("Era validated successfully!");
 
-     println!("Era validated successfully!");
-
-     Ok(())
+    Ok(())
 }
 ```
 
