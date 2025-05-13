@@ -1,20 +1,19 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{
-    fs::File,
-    io::{BufReader, Cursor, Read},
-};
-
 use crate::{dbin::read_block_from_reader, error::DecoderError, DbinFile};
 use firehose_protos::{
-    BigInt, BlockHeader, BstreamBlock, EthBlock as Block, Timestamp, Uint64NestedArray,
+    BigInt, BlockHeader, BstreamBlock, EthBlock as Block, SolBlock, Timestamp, Uint64NestedArray,
 };
 use parquet::{
     file::reader::{FileReader, SerializedFileReader},
     record::RowAccessor,
 };
 use prost::Message;
+use std::{
+    fs::File,
+    io::{BufReader, Cursor, Read},
+};
 use tracing::{error, info};
 
 /// Work with data compression, including zstd.
@@ -45,6 +44,78 @@ impl From<bool> for Compression {
     }
 }
 
+/// An enumeration of supported chains and associated Block structs
+#[derive(Clone, Debug, serde::Serialize)]
+pub enum AnyBlock {
+    /// EVM Block
+    // `Box` to address a large size difference between variants
+    Eth(Box<Block>),
+    /// Solana Block
+    Sol(SolBlock),
+}
+
+impl AnyBlock {
+    /// Convert the data associated with an AnyBlock instance into
+    /// a firehose_protos::EthBlock
+    pub fn try_into_eth_block(self) -> Result<Block, DecoderError> {
+        match self {
+            AnyBlock::Eth(block) => Ok(*block),
+            _ => Err(DecoderError::ConversionError),
+        }
+    }
+
+    /// Convert the data associated with an AnyBlock instance into
+    /// a firehose_protos::SolBlock
+    pub fn try_into_sol_block(self) -> Result<SolBlock, DecoderError> {
+        match self {
+            AnyBlock::Sol(block) => Ok(block),
+            _ => Err(DecoderError::ConversionError),
+        }
+    }
+
+    /// Borrow-based conversion to extract reference to an EthBlock
+    pub fn as_eth_block(&self) -> Option<&Block> {
+        match self {
+            AnyBlock::Eth(b) => Some(b),
+            _ => None,
+        }
+    }
+
+    /// Borrow-based conversion to extract reference to a SolBlock
+    pub fn as_sol_block(&self) -> Option<&SolBlock> {
+        match self {
+            AnyBlock::Sol(b) => Some(b),
+            _ => None,
+        }
+    }
+}
+
+/// So far we have parsed .dbin files containing Blocks
+/// from these enumerated chains, but others may be added in the
+/// future. The content type in the dbin header may also
+/// vary depending on the version of the file.
+#[derive(Clone)]
+pub enum ContentType {
+    /// Indicates EVM Block content.
+    Eth,
+    /// Indicates Solana Block content.
+    Sol,
+}
+
+impl TryFrom<&str> for ContentType {
+    type Error = DecoderError;
+
+    // These are the content types we have so far encountered, but there
+    // are others which may be added in the future.
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "ETH" => Ok(ContentType::Eth),
+            "type.googleapis.com/sf.solana.type.v1.Block" => Ok(ContentType::Sol),
+            _ => Err(DecoderError::ContentTypeInvalid(value.to_string())),
+        }
+    }
+}
+
 /// Read blocks from a flat file reader.
 ///
 /// This function processes flat files that are already loaded into memory, supporting both
@@ -60,28 +131,23 @@ impl From<bool> for Compression {
 pub fn read_blocks_from_reader<R: Read>(
     reader: R,
     compression: Compression,
-) -> Result<Vec<Block>, DecoderError> {
-    const CONTENT_TYPE: &str = "ETH";
-
+) -> Result<Vec<AnyBlock>, DecoderError> {
     let mut file_contents: Box<dyn Read> = match compression {
         Compression::Zstd => Box::new(Cursor::new(zstd::decode_all(reader)?)),
         Compression::None => Box::new(reader),
     };
 
     let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
-    if dbin_file.content_type() != CONTENT_TYPE {
-        return Err(DecoderError::ContentTypeInvalid(
-            dbin_file.content_type().to_string(),
-        ));
-    }
+    let content_type: ContentType = dbin_file.content_type().try_into()?;
 
     dbin_file
         .into_iter()
         .map(|message| {
-            let block = decode_block_from_bytes(&message)?;
-            if !block_is_verified(&block) {
+            let block = decode_block_from_bytes(&message, content_type.clone())?;
+            let (verified, number) = block_is_verified(&block);
+            if !verified {
                 Err(DecoderError::VerificationFailed {
-                    block_number: block.number,
+                    block_number: number,
                 })
             } else {
                 Ok(block)
@@ -90,25 +156,35 @@ pub fn read_blocks_from_reader<R: Read>(
         .collect()
 }
 
-fn block_is_verified(block: &Block) -> bool {
-    if block.number != 0 {
-        if !block.receipt_root_is_verified() {
-            error!(
-                "Receipt root verification failed for block {}",
-                block.number
-            );
-            return false;
-        }
+fn block_is_verified(block: &AnyBlock) -> (bool, u64) {
+    match block {
+        AnyBlock::Eth(eth_block) => {
+            let block_number = eth_block.number;
+            if block_number != 0 {
+                if !eth_block.receipt_root_is_verified() {
+                    error!(
+                        "Receipt root verification failed for block {}",
+                        block_number
+                    );
+                    return (false, block_number);
+                }
 
-        if !block.transaction_root_is_verified() {
-            error!(
-                "Transaction root verification failed for block {}",
-                block.number
-            );
-            return false;
+                if !eth_block.transaction_root_is_verified() {
+                    error!(
+                        "Transaction root verification failed for block {}",
+                        block_number
+                    );
+                    return (false, block_number);
+                }
+            }
+            (true, block_number)
+        }
+        // Logic is not yet implemented for verifying Solana Blocks
+        AnyBlock::Sol(sol_block) => {
+            let block_number = sol_block.block_height.unwrap().block_height;
+            (true, block_number)
         }
     }
-    true
 }
 
 /// Reader enum to handle different types of readers
@@ -185,10 +261,11 @@ impl From<Option<u64>> for EndBlock {
 ///   [`BufReader`] or a `StdIn` reader with or without compression.
 /// * `end_block`: Specifies the block number at which to stop streaming. By default, this is set to
 ///   block 15537393, the last block before the Ethereum merge.
+
 pub fn stream_blocks(
     reader: Reader,
     end_block: EndBlock,
-) -> Result<impl Iterator<Item = Block>, DecoderError> {
+) -> Result<impl Iterator<Item = AnyBlock>, DecoderError> {
     let mut current_block_number = 0;
 
     let mut reader = reader.into_reader()?;
@@ -198,15 +275,15 @@ pub fn stream_blocks(
 
     loop {
         match read_block_from_reader(&mut reader) {
-            Ok(message) => {
-                match decode_block_from_bytes(&message) {
+            Ok((message, content_type)) => {
+                match decode_block_from_bytes(&message, content_type) {
                     Ok(block) => {
-                        current_block_number = block.number;
-
-                        if block_is_verified(&block) {
+                        let (verified, number) = block_is_verified(&block);
+                        current_block_number = number;
+                        if verified {
                             blocks.push(block);
                         } else {
-                            info!("Block verification failed, skipping block {}", block.number);
+                            info!("Block verification failed, skipping block {}", number);
                         }
                     }
                     Err(e) => return Err(e),
@@ -226,11 +303,27 @@ pub fn stream_blocks(
     Ok(blocks.into_iter())
 }
 
-/// Decodes a block from a byte slice.
-fn decode_block_from_bytes(bytes: &[u8]) -> Result<Block, DecoderError> {
+#[allow(deprecated)]
+fn decode_block_from_bytes(
+    bytes: &[u8],
+    content_type: ContentType,
+) -> Result<AnyBlock, DecoderError> {
     let block_stream = BstreamBlock::decode(bytes)?;
-    let block = Block::decode(block_stream.payload_buffer.as_slice())?;
-    Ok(block)
+    let block_stream_payload = block_stream
+        .payload
+        .map(|p| p.value)
+        .unwrap_or(block_stream.payload_buffer);
+
+    match content_type {
+        ContentType::Eth => {
+            let block = Block::decode(block_stream_payload.as_slice())?;
+            Ok(AnyBlock::Eth(Box::new(block)))
+        }
+        ContentType::Sol => {
+            let block = SolBlock::decode(block_stream_payload.as_slice())?;
+            Ok(AnyBlock::Sol(block))
+        }
+    }
 }
 
 /// Converts a Parquet file containing block header data (from nozzle) into [`Vec<BlockHeader>`]
@@ -296,9 +389,52 @@ pub fn parquet_to_headers(file: File) -> Result<Vec<BlockHeader>, parquet::error
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use std::fs::File;
 
-    use super::*;
+    #[test]
+    fn test_read_eth_blocks_from_reader() {
+        let file = File::open("tests/0000000000.dbin").unwrap();
+        let mut reader = BufReader::new(file);
+
+        let _block = read_blocks_from_reader(&mut reader, false.into()).unwrap();
+    }
+
+    #[test]
+    fn test_read_sol_blocks_from_reader() {
+        let file = File::open("tests/0325942300.dbin.zst").unwrap();
+        let mut reader = BufReader::new(file);
+
+        let _block = read_blocks_from_reader(&mut reader, true.into()).unwrap();
+    }
+
+    #[test]
+    fn test_unwrap_eth_block() {
+        let file = File::open("tests/0000000000.dbin").unwrap();
+        let mut reader = BufReader::new(file);
+        let any_blocks = read_blocks_from_reader(&mut reader, false.into()).unwrap();
+        let any_block = any_blocks.first().unwrap();
+        let block = any_block.clone().try_into_eth_block().unwrap();
+
+        let hash = [
+            212, 229, 103, 64, 248, 118, 174, 248, 192, 16, 184, 106, 64, 213, 245, 103, 69, 161,
+            24, 208, 144, 106, 52, 230, 154, 236, 140, 13, 177, 203, 143, 163,
+        ];
+
+        assert_eq!(block.hash, hash);
+    }
+
+    #[test]
+    fn test_unwrap_sol_block() {
+        let file = File::open("tests/0325942300.dbin.zst").unwrap();
+        let mut reader = BufReader::new(file);
+        let any_blocks = read_blocks_from_reader(&mut reader, true.into()).unwrap();
+        let any_block = any_blocks.first().unwrap();
+        let block = any_block.clone().try_into_sol_block().unwrap();
+
+        let hash: String = "8NQ2DstBY2HukX2JQPL7ejdRN1FVxdLG6mnH9Sv25thC".into();
+        assert_eq!(block.blockhash, hash);
+    }
 
     #[test]
     fn test_read_parquet() {
