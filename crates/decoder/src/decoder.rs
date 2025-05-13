@@ -1,13 +1,20 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use std::io::{BufReader, Cursor, Read};
-
-use firehose_protos::{BstreamBlock, EthBlock as Block, SolBlock};
-use prost::Message;
-use tracing::{error, info};
-
 use crate::{dbin::read_block_from_reader, error::DecoderError, DbinFile};
+use firehose_protos::{
+    BigInt, BlockHeader, BstreamBlock, EthBlock as Block, SolBlock, Timestamp, Uint64NestedArray,
+};
+use parquet::{
+    file::reader::{FileReader, SerializedFileReader},
+    record::RowAccessor,
+};
+use prost::Message;
+use std::{
+    fs::File,
+    io::{BufReader, Cursor, Read},
+};
+use tracing::{error, info};
 
 /// Work with data compression, including zstd.
 #[derive(Clone, Copy, Debug, Default)]
@@ -319,6 +326,67 @@ fn decode_block_from_bytes(
     }
 }
 
+/// Converts a Parquet file containing block header data (from nozzle) into [`Vec<BlockHeader>`]
+/// structs.
+///
+/// This function reads the given Parquet file, extracts the necessary fields from each row, and
+/// constructs a [`BlockHeader`] for each block found in the file. The resulting [`BlockHeader`] structs
+/// are returned as a `Vec<BlockHeader>`. This is useful for transforming raw block data from Parquet
+/// format into the format expected by the FirehoseProtos system.
+pub fn parquet_to_headers(file: File) -> Result<Vec<BlockHeader>, parquet::errors::ParquetError> {
+    let reader = SerializedFileReader::new(file)?;
+
+    let iter = reader.get_row_iter(None)?;
+
+    let mut bheaders: Vec<BlockHeader> = Vec::new();
+    for row_result in iter {
+        let row = row_result.unwrap();
+
+        let bheader = BlockHeader {
+            number: row.get_ulong(0).unwrap(),
+            parent_hash: row.get_bytes(3)?.data().to_vec(),
+            uncle_hash: row.get_bytes(4)?.data().to_vec(),
+            coinbase: row.get_bytes(5)?.data().to_vec(),
+            state_root: row.get_bytes(6)?.data().to_vec(),
+            transactions_root: row.get_bytes(7)?.data().to_vec(),
+            receipt_root: row.get_bytes(8)?.data().to_vec(),
+            logs_bloom: row.get_bytes(9)?.data().to_vec(),
+            difficulty: Some(BigInt {
+                bytes: row.get_bytes(10)?.data().to_vec(),
+            }),
+            // total_difficulty is not present in parquet headers
+            total_difficulty: Some(BigInt { bytes: vec![] }),
+            gas_limit: row.get_ulong(11).unwrap(),
+            gas_used: row.get_ulong(12).unwrap(),
+            timestamp: row
+                .get_timestamp_micros(1)
+                .map(|timestamp_micros| Timestamp {
+                    seconds: timestamp_micros / 1_000_000,
+                    nanos: (timestamp_micros % 1_000_000) as i32 * 1000, // Convert microseconds to nanoseconds
+                })
+                .ok(),
+            extra_data: row.get_bytes(13)?.data().to_vec(),
+            mix_hash: row.get_bytes(15)?.data().to_vec(),
+            nonce: row.get_ulong(16).unwrap(),
+            hash: row.get_bytes(2)?.data().to_vec(),
+            base_fee_per_gas: Some(BigInt {
+                bytes: row.get_bytes(16)?.data().to_vec(),
+            }),
+            // withdrawals_root not present in parquet headers
+            withdrawals_root: vec![],
+            // tx_dependency is not present in parquet files
+            tx_dependency: Some(Uint64NestedArray { val: Vec::new() }),
+            blob_gas_used: None,
+            excess_blob_gas: None,
+            // TODO: does the RPC endpoints provide this data?
+            parent_beacon_root: vec![],
+        };
+
+        bheaders.push(bheader);
+    }
+    Ok(bheaders)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -366,5 +434,11 @@ mod tests {
 
         let hash: String = "8NQ2DstBY2HukX2JQPL7ejdRN1FVxdLG6mnH9Sv25thC".into();
         assert_eq!(block.blockhash, hash);
+    }
+
+    #[test]
+    fn test_read_parquet() {
+        let file = File::open("tests/000000000.parquet").unwrap();
+        let _ = parquet_to_headers(file);
     }
 }

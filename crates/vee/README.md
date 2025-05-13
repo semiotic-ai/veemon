@@ -2,9 +2,26 @@
 
 Verifiable Extraction for Blockchain.
 
+This crate exposes the interfaces from other crates in ve.
+
+### Verifiabilty for Ethereum
+![Full path of proofs diagram](./assets/diagram.svg)
+
+
+In order for verifiable extraction to work, it depends partially on [portal network accumualtors](https://github.com/ethereum/portal-accumulators)
+which consists of the header accumulators for pre-merge, post-merge & pre-capella.
+
+For post-capella, it relies on the 
+`HistoricalSummary` which is extracted from the `HeadState` of the beacon chain, and the associated beacon blocks as well. 
+
+As seen on the diagram above, VE also has implementations for the constructing parts of blocks. Since most of the interesting data is on events, it is possible to generate proofs for receipts against the `receipts_root`, then proofs that the `receipts_root` is valid givne the block, and then the proofs that the blocks are valid within the canonicalness of the chain.
+
+
 ## Examples
 
 ### Inclusion proof
+
+inclusion proofs are for verifying specific blocks to be part of canonical epochs. 
 
 ```rust,no_run
 use std::{fs::File, io::BufReader};
@@ -69,6 +86,9 @@ fn main() -> Result<(), EraValidateError> {
 
 ### Era validator
 
+Epochs by themselves can be validated to be canonical]
+wit the example below.
+
 ```rust,no_run
 use std::{fs::File, io::BufReader};
 use tree_hash::Hash256;
@@ -116,3 +136,19 @@ fn main() -> Result<(), EraValidateError> {
      Ok(())
 }
 ```
+
+### Other available examples
+
+Other usage examples are available in the examples folder. These depend on  [ve-assets](https://github.com/semiotic-ai/ve-assets) to run. Choose each example carefully given the .dbin or .parquet file, because the blocks have to be within the specific block number range for it to work. These usage examples are:
+
+1. Convert parquet data structure into the same `BlockHeader` 
+2. Build receipt proofa gainst receipts
+3. Build proof that `receipt_root` is correct against `receipt`.
+4. Build proof of pre-merge and pre-capella block against header accumulaors.
+5. Build proof of psot-capella blocks given beacon blocks and Ethereum head state
+
+## Testing
+
+Some testing assets were stored in [ve-assets](https://github.com/semiotic-ai/ve-assets)
+. These include parquet file block headers and .dbin files extracted from Firehose. Part of these are necessary for some tests, but they are heavy so most of them are stored in another repo.
+

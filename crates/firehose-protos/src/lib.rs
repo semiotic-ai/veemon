@@ -16,5 +16,8 @@ mod bstream {
 
 pub use bstream::v1::Block as BstreamBlock;
 pub use error::ProtosError;
-pub use ethereum_v2::{eth_block::FullReceipt, Block as EthBlock, BlockHeader};
+pub use ethereum_v2::{
+    eth_block::FullReceipt, BigInt, Block as EthBlock, BlockHeader, Uint64NestedArray,
+};
+pub use prost_wkt_types::Timestamp;
 pub use solana::Block as SolBlock;
