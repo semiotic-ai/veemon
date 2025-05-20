@@ -232,12 +232,13 @@ fn read_flat_file(path: &str, compression: Compression) -> Result<Vec<AnyBlock>,
 /// Dbin file type extension
 const EXTENSION: &str = "dbin";
 
-/// Checks if the file extension is `.dbin`.
+/// Checks if the file extension is `.dbin`, ignoring a .zst extension.
 fn dir_entry_extension_is_dbin(entry: &DirEntry) -> bool {
-    entry
-        .path()
-        .extension()
-        .map_or(false, |ext| ext == EXTENSION)
+    let mut path = entry.path();
+    if path.extension().and_then(|e| e.to_str()) == Some("zst") {
+        path = path.with_extension("");
+    }
+    path.extension().map_or(false, |ext| ext == EXTENSION)
 }
 
 fn read_flat_files(path: &str, compression: Compression) -> Result<Vec<AnyBlock>, DecoderError> {
