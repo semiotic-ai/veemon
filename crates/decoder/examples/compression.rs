@@ -17,14 +17,14 @@ fn main() {
     let blocks_compressed =
         read_blocks_from_reader(create_reader(path), Compression::Zstd).unwrap();
     let mut block = blocks_compressed.first().unwrap();
-    assert!(matches!(block, AnyBlock::Eth(_)));
+    assert!(matches!(block, AnyBlock::Evm(_)));
     assert_eq!(blocks_compressed.len(), 100);
 
     let path = "example.dbin";
     let blocks_decompressed =
         read_blocks_from_reader(create_reader(path), Compression::None).unwrap();
     block = blocks_decompressed.first().unwrap();
-    assert!(matches!(block, AnyBlock::Eth(_)));
+    assert!(matches!(block, AnyBlock::Evm(_)));
     assert_eq!(blocks_compressed.len(), blocks_decompressed.len());
 
     for (b1, b2) in blocks_compressed.into_iter().zip(blocks_decompressed) {

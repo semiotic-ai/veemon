@@ -84,14 +84,14 @@ fn main() -> Result<(), EraValidateError> {
                 // Header Accumulators are currently only supported for Ethereum type
                 // blocks.
                 match blocks.first().unwrap(){
-                    AnyBlock::Eth(_) =>
+                    AnyBlock::Evm(_) =>
                     {
                         headers.extend(
                             blocks
                             .iter()
                             .filter_map(|block| {
-                                if let AnyBlock::Eth(eth_block) = block {
-                                    Header::try_from(eth_block.as_ref()).ok()
+                                if let AnyBlock::Evm(ref eth_block) = *block {
+                                    Header::try_from(eth_block).ok()
                                 } else {
                                     None
                                 }
@@ -163,14 +163,14 @@ fn main() -> Result<(), EraValidateError> {
         // Header Accumulators are currently only supported for Ethereum type
         // blocks.
         match blocks.first().unwrap(){
-            AnyBlock::Eth(_) =>
+            AnyBlock::Evm(_) =>
             {
                 let successful_headers = blocks
                     .iter()
                     .cloned()
                     .filter_map(|block| {
-                        if let AnyBlock::Eth(eth_block) = block {
-                            Header::try_from(eth_block.as_ref()).ok()
+                        if let AnyBlock::Evm(eth_block) = block {
+                            Header::try_from(&eth_block).ok()
                         } else {
                             None
                         }

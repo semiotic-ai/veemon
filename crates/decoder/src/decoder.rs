@@ -45,11 +45,11 @@ impl From<bool> for Compression {
 }
 
 /// An enumeration of supported chains and associated Block structs
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, serde::Serialize)]
 pub enum AnyBlock {
     /// EVM Block
-    // `Box` to address a large size difference between variants
-    Eth(Box<Block>),
+    Evm(Block),
     /// Solana Block
     Sol(SolBlock),
 }
@@ -59,7 +59,7 @@ impl AnyBlock {
     /// a firehose_protos::EthBlock
     pub fn try_into_eth_block(self) -> Result<Block, DecoderError> {
         match self {
-            AnyBlock::Eth(block) => Ok(*block),
+            AnyBlock::Evm(block) => Ok(block),
             _ => Err(DecoderError::ConversionError),
         }
     }
@@ -76,7 +76,7 @@ impl AnyBlock {
     /// Borrow-based conversion to extract reference to an EthBlock
     pub fn as_eth_block(&self) -> Option<&Block> {
         match self {
-            AnyBlock::Eth(b) => Some(b),
+            AnyBlock::Evm(b) => Some(b),
             _ => None,
         }
     }
@@ -97,7 +97,7 @@ impl AnyBlock {
 #[derive(Clone)]
 pub enum ContentType {
     /// Indicates EVM Block content.
-    Eth,
+    Evm,
     /// Indicates Solana Block content.
     Sol,
 }
@@ -109,7 +109,7 @@ impl TryFrom<&str> for ContentType {
     // are others which may be added in the future.
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "ETH" => Ok(ContentType::Eth),
+            "ETH" => Ok(ContentType::Evm),
             "type.googleapis.com/sf.solana.type.v1.Block" => Ok(ContentType::Sol),
             _ => Err(DecoderError::ContentTypeInvalid(value.to_string())),
         }
@@ -158,7 +158,7 @@ pub fn read_blocks_from_reader<R: Read>(
 
 fn block_is_verified(block: &AnyBlock) -> (bool, u64) {
     match block {
-        AnyBlock::Eth(eth_block) => {
+        AnyBlock::Evm(eth_block) => {
             let block_number = eth_block.number;
             if block_number != 0 {
                 if !eth_block.receipt_root_is_verified() {
@@ -261,7 +261,6 @@ impl From<Option<u64>> for EndBlock {
 ///   [`BufReader`] or a `StdIn` reader with or without compression.
 /// * `end_block`: Specifies the block number at which to stop streaming. By default, this is set to
 ///   block 15537393, the last block before the Ethereum merge.
-
 pub fn stream_blocks(
     reader: Reader,
     end_block: EndBlock,
@@ -318,9 +317,9 @@ fn decode_block_from_bytes(
         .unwrap_or(block_stream.payload_buffer);
 
     match content_type {
-        ContentType::Eth => {
+        ContentType::Evm => {
             let block = Block::decode(block_stream_payload.as_slice())?;
-            Ok(AnyBlock::Eth(Box::new(block)))
+            Ok(AnyBlock::Evm(block))
         }
         ContentType::Sol => {
             let block = SolBlock::decode(block_stream_payload.as_slice())?;

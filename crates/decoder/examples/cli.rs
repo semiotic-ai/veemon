@@ -162,7 +162,7 @@ fn decode_flat_files(
     if let Some(json_headers_dir) = json_headers_dir {
         for block in blocks.iter() {
             match block {
-                AnyBlock::Eth(eth_block) => {
+                AnyBlock::Evm(eth_block) => {
                     check_block_against_json(eth_block, json_headers_dir)?;
                 }
                 _ => {
@@ -203,7 +203,7 @@ fn check_block_against_json(block: &Block, headers_dir: &str) -> Result<(), Deco
 
 fn write_block_to_json(block: &AnyBlock, output: &str) -> Result<(), DecoderError> {
     let block_number = match block {
-        AnyBlock::Eth(eth_block) => eth_block.number,
+        AnyBlock::Evm(eth_block) => eth_block.number,
         AnyBlock::Sol(sol_block) => sol_block.block_height.unwrap().block_height,
     };
 
@@ -315,7 +315,7 @@ impl TryFrom<&AnyBlock> for HeaderRecordWithNumber {
 
     fn try_from(block: &AnyBlock) -> Result<Self, Self::Error> {
         match block {
-            AnyBlock::Eth(_) => {
+            AnyBlock::Evm(_) => {
                 let eth_block = block.as_eth_block().ok_or(DecoderError::ConversionError)?;
                 HeaderRecordWithNumber::try_from(eth_block)
             }
