@@ -1,7 +1,7 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{dbin::read_block_from_reader, error::DecoderError, DbinFile};
+use crate::{dbin::read_block_from_reader, error::DecoderError, DbinFile, DbinHeader};
 use firehose_protos::{
     BigInt, BlockHeader, BstreamBlock, EthBlock as Block, SolBlock, Timestamp, Uint64NestedArray,
 };
@@ -273,10 +273,13 @@ pub fn stream_blocks(
 
     let mut blocks = Vec::new();
 
+    let header = DbinHeader::try_from_read(&mut reader)?;
+    let content_type: ContentType = header.content_type.as_str().try_into()?;
+
     loop {
         match read_block_from_reader(&mut reader) {
-            Ok((message, content_type)) => {
-                match decode_block_from_bytes(&message, content_type) {
+            Ok(message) => {
+                match decode_block_from_bytes(&message, content_type.clone()) {
                     Ok(block) => {
                         let (verified, number) = block_is_verified(&block);
                         current_block_number = number;

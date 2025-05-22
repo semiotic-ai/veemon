@@ -4,7 +4,6 @@
 use std::convert::TryFrom;
 use std::io::{self, Read};
 
-use crate::decoder::ContentType;
 use crate::error::DecoderError;
 
 /// The bytes of a dbin file minus the header
@@ -124,12 +123,12 @@ pub struct DbinHeader {
     /// File format version, the next single byte after the 4 [`DbinMagicBytes`]
     version: Version,
     /// Content type like 'ETH', 'type.googleapis.com/sf.ethereum.type.v2.Block'
-    content_type: String,
+    pub content_type: String,
 }
 
 impl DbinHeader {
     /// Reads and validates the `.dbin` header from the given [`Read`] source.
-    fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DecoderError> {
+    pub fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DecoderError> {
         let magic_bytes = read_magic_bytes(read)?;
         if !magic_bytes_valid(&magic_bytes) {
             return Err(DecoderError::MagicBytesInvalid);
@@ -203,19 +202,14 @@ fn read_message<R: Read>(read: &mut R, length: usize) -> Result<DbinMessage, Dec
 }
 
 /// Read the next block from a flat file reader.
-pub fn read_block_from_reader<R: Read>(
-    read: &mut R,
-) -> Result<(DbinMessage, ContentType), DecoderError> {
-    let header = DbinHeader::try_from_read(read)?;
-    let content_type = header.content_type.as_str().try_into()?;
-
+pub fn read_block_from_reader<R: Read>(read: &mut R) -> Result<DbinMessage, DecoderError> {
     // The next four bytes are the length prefix for tne message.
     let magic_bytes = read_magic_bytes(read)?;
     let message_size = u32::from_be_bytes(magic_bytes) as usize;
 
     let message = read_message(read, message_size)?;
 
-    Ok((message, content_type))
+    Ok(message)
 }
 
 #[cfg(test)]
