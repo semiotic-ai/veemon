@@ -413,22 +413,13 @@ mod tests {
         let file = File::open("tests/000000000.parquet").unwrap();
         let _ = parquet_to_headers(file);
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::fs::{self, File};
-
-    use tracing_subscriber::field::debug;
-
-    use super::*;
 
     #[test]
     fn test_read_eth_block_from_reader() {
         let file = File::open("tests/0000000000.dbin").unwrap();
         let mut reader = BufReader::new(file);
 
-        let block = read_blocks_from_reader(&mut reader, false.into()).unwrap();
+        let _block = read_blocks_from_reader(&mut reader, false.into()).unwrap();
     }
 
     #[test]
@@ -436,6 +427,34 @@ mod tests {
         let file = File::open("tests/0325942300.dbin.zst").unwrap();
         let mut reader = BufReader::new(file);
 
-        let block = read_blocks_from_reader(&mut reader, true.into()).unwrap();
+        let _block = read_blocks_from_reader(&mut reader, true.into()).unwrap();
+    }
+
+    #[test]
+    fn test_unwrap_eth_block() {
+        let file = File::open("tests/0000000000.dbin").unwrap();
+        let mut reader = BufReader::new(file);
+        let any_blocks = read_blocks_from_reader(&mut reader, false.into()).unwrap();
+        let any_block = any_blocks.first().unwrap();
+        let block = any_block.clone().try_into_eth_block().unwrap();
+
+        let hash = [
+            212, 229, 103, 64, 248, 118, 174, 248, 192, 16, 184, 106, 64, 213, 245, 103, 69, 161,
+            24, 208, 144, 106, 52, 230, 154, 236, 140, 13, 177, 203, 143, 163,
+        ];
+
+        assert_eq!(block.hash, hash);
+    }
+
+    #[test]
+    fn test_unwrap_sol_block() {
+        let file = File::open("tests/0325942300.dbin.zst").unwrap();
+        let mut reader = BufReader::new(file);
+        let any_blocks = read_blocks_from_reader(&mut reader, true.into()).unwrap();
+        let any_block = any_blocks.first().unwrap();
+        let block = any_block.clone().try_into_sol_block().unwrap();
+
+        let hash: String = "8NQ2DstBY2HukX2JQPL7ejdRN1FVxdLG6mnH9Sv25thC".into();
+        assert_eq!(block.blockhash, hash);
     }
 }
