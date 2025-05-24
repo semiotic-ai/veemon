@@ -5,9 +5,7 @@ use std::{
     fs::File,
     io::{BufReader, BufWriter, Cursor, Write},
 };
-
-use firehose_protos::EthBlock as Block;
-use flat_files_decoder::{stream_blocks, EndBlock, Reader};
+use flat_files_decoder::{stream_blocks, AnyBlock, EndBlock, Reader};
 
 fn main() {
     let mut buffer = Vec::new();
@@ -27,7 +25,7 @@ fn main() {
 
     let reader = BufReader::new(cursor);
 
-    let blocks: Vec<Block> = stream_blocks(Reader::Buf(reader), EndBlock::MergeBlock)
+    let blocks: Vec<AnyBlock> = stream_blocks(Reader::Buf(reader), EndBlock::MergeBlock)
         .unwrap()
         .collect();
 
@@ -36,6 +34,9 @@ fn main() {
 
     println!("Read blocks:");
     for block in blocks {
-        println!("{:?}", block.number);
+        // `block` is an `AnyBlock`; convert into an `EthBlock`.
+        // If test file does not contain `EthBlock`s, this will produce a ConversionError.
+        let eth_block = block.try_into_eth_block().unwrap();
+        println!("{:?}", eth_block.number);
     }
 }
