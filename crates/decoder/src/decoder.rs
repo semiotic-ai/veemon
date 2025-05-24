@@ -144,7 +144,6 @@ pub fn read_blocks_from_reader<R: Read>(
     reader: R,
     compression: Compression,
 ) -> Result<Vec<AnyBlock>, DecoderError> {
-
     let mut file_contents: Box<dyn Read> = match compression {
         Compression::Zstd => Box::new(Cursor::new(zstd::decode_all(reader)?)),
         Compression::None => Box::new(reader),
@@ -324,7 +323,7 @@ fn decode_block_from_bytes(
     content_type: ContentType,
 ) -> Result<AnyBlock, DecoderError> {
     let block_stream = BstreamBlock::decode(bytes)?;
-        let block_stream_payload = block_stream
+    let block_stream_payload = block_stream
         .payload
         .map(|p| p.value)
         .unwrap_or(block_stream.payload_buffer);

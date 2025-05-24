@@ -240,7 +240,9 @@ fn dir_entry_extension_is_dbin(entry: &DirEntry) -> bool {
     } else {
         path
     };
-    effective_path.extension().map_or(false, |ext| ext == EXTENSION)
+    effective_path
+        .extension()
+        .map_or(false, |ext| ext == EXTENSION)
 }
 
 fn read_flat_files(path: &str, compression: Compression) -> Result<Vec<AnyBlock>, DecoderError> {

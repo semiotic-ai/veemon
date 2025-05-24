@@ -1,11 +1,11 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use flat_files_decoder::{stream_blocks, AnyBlock, EndBlock, Reader};
 use std::{
     fs::File,
     io::{BufReader, BufWriter, Cursor, Write},
 };
-use flat_files_decoder::{stream_blocks, AnyBlock, EndBlock, Reader};
 
 fn main() {
     let mut buffer = Vec::new();
