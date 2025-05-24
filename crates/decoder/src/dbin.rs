@@ -123,7 +123,7 @@ pub struct DbinHeader {
     /// File format version, the next single byte after the 4 [`DbinMagicBytes`]
     version: Version,
     /// Content type like 'ETH', 'type.googleapis.com/sf.ethereum.type.v2.Block'
-    pub content_type: String,
+    content_type: String,
 }
 
 impl DbinHeader {
@@ -151,6 +151,11 @@ impl DbinHeader {
 
     fn version(&self) -> Version {
         self.version
+    }
+
+    /// Access content_type field
+    pub fn content_type(&self) -> String {
+        self.content_type.clone()
     }
 }
 

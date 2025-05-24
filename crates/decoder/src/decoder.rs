@@ -284,7 +284,7 @@ pub fn stream_blocks(
     let mut blocks = Vec::new();
 
     let header = DbinHeader::try_from_read(&mut reader)?;
-    let content_type: ContentType = header.content_type.as_str().try_into()?;
+    let content_type: ContentType = header.content_type().as_str().try_into()?;
 
     loop {
         match read_block_from_reader(&mut reader) {
