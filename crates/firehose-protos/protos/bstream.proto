@@ -1,10 +1,15 @@
+// Copyright 2025, StreamingFast
+// SPDX-License-Identifier: Apache-2.0
+// Derived from: https://github.com/streamingfast/bstream
+
 syntax = "proto3";
 
 package sf.bstream.v1;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
 
-option go_package = "github.com/streamingfast/pbgo/sf/bstream/v1;pbbstream";
+option go_package = "github.com/streamingfast/bstream/pb/sf/bstream/v1;pbbstream";
 
 service BlockStream {
   rpc Blocks(BlockRequest) returns (stream Block);
@@ -57,20 +62,46 @@ enum ForkStep {
   reserved 5 ;
 }
 
-// Work with generic blocks messages using streaming APIs.
-//
+
 // General response and structs
+
+// Block is the chain agnostic representation of a block. It contains the block
+// metadata like num, hash, parent num, etc as well as containing the payload.
+//
+// **Required** Any changes to non-payload field on this object must be
+// reflected in `BlockMeta` as well!
 message Block {
   uint64 number = 1;
   string id = 2;
-  string previous_id = 3;
+  string parent_id = 3;
   google.protobuf.Timestamp timestamp = 4;
   uint64 lib_num = 5;
 
-  Protocol payload_kind = 6;
-  int32 payload_version = 7;
-  bytes payload_buffer = 8;
-  uint64 head_num = 9; // when set, indicates the current server head block
+  Protocol payload_kind = 6 [deprecated=true];
+  int32 payload_version = 7 [deprecated=true];
+  bytes payload_buffer = 8 [deprecated=true];
+  uint64 head_num = 9 [deprecated=true];
+
+  uint64 parent_num = 10;
+  google.protobuf.Any payload = 11;
+}
+
+// BlockMeta is strictly equivalent to Block, except that it doesn't contain the payload
+// nor any field related to payload.
+//
+// First, it's used to store block meta information on disk or on a KV store. Second,
+// it serves the purpose of being a lighter version of Block, that can to `proto.Unmarshal`
+// a real `Block` while ignoring the payload.
+//
+// **Required** Alignment of the fields in this struct is **required** to be the same as
+// `Block` to allow for `proto.Unmarshal` to work.
+message BlockMeta {
+  uint64 number = 1;
+  string id = 2;
+  string parent_id = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  uint64 lib_num = 5;
+  uint64 parent_num = 10;
 }
 
 message BlockRef {
