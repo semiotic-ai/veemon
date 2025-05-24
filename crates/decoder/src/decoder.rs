@@ -89,6 +89,16 @@ impl AnyBlock {
             _ => None,
         }
     }
+
+    /// Determine if an AnyBlock instance is an Evm variant
+    pub fn is_eth_block(&self) -> bool {
+        matches!(self, AnyBlock::Evm(_))
+    }
+
+    /// Determine if an AnyBlock instance is a Sol variant
+    pub fn is_sol_block(&self) -> bool {
+        matches!(self, AnyBlock::Sol(_))
+    }
 }
 
 /// The content type (or proto definition type) is a field in the dbin file structure
