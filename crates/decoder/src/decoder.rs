@@ -227,6 +227,7 @@ pub fn stream_blocks(
 }
 
 /// Decodes a block from a byte slice.
+#[allow(deprecated)]
 fn decode_block_from_bytes(bytes: &[u8]) -> Result<Block, DecoderError> {
     let block_stream = BstreamBlock::decode(bytes)?;
     let block = Block::decode(block_stream.payload_buffer.as_slice())?;

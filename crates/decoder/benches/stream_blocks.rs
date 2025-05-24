@@ -12,6 +12,7 @@ use prost::Message;
 
 const ITERS_PER_FILE: usize = 10;
 
+#[allow(deprecated)]
 fn read_decode_check_bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("read-decode-check");
     group.sample_size(ITERS_PER_FILE);
