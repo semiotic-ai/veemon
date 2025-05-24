@@ -123,12 +123,12 @@ pub struct DbinHeader {
     /// File format version, the next single byte after the 4 [`DbinMagicBytes`]
     version: Version,
     /// Content type like 'ETH', 'type.googleapis.com/sf.ethereum.type.v2.Block'
-    content_type: String,
+    pub content_type: String,
 }
 
 impl DbinHeader {
     /// Reads and validates the `.dbin` header from the given [`Read`] source.
-    fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DecoderError> {
+    pub fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DecoderError> {
         let magic_bytes = read_magic_bytes(read)?;
         if !magic_bytes_valid(&magic_bytes) {
             return Err(DecoderError::MagicBytesInvalid);

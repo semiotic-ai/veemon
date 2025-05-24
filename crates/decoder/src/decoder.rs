@@ -6,7 +6,7 @@ use std::{
     io::{BufReader, Cursor, Read},
 };
 
-use crate::{dbin::read_block_from_reader, error::DecoderError, DbinFile};
+use crate::{dbin::read_block_from_reader, error::DecoderError, DbinFile, DbinHeader};
 use firehose_protos::{
     BigInt, BlockHeader, BstreamBlock, EthBlock as Block, SolBlock, Timestamp, Uint64NestedArray,
 };
@@ -143,8 +143,7 @@ impl TryFrom<&str> for ContentType {
 pub fn read_blocks_from_reader<R: Read>(
     reader: R,
     compression: Compression,
-) -> Result<Vec<Block>, DecoderError> {
-    const CONTENT_TYPE: &str = "ETH";
+) -> Result<Vec<AnyBlock>, DecoderError> {
 
     let mut file_contents: Box<dyn Read> = match compression {
         Compression::Zstd => Box::new(Cursor::new(zstd::decode_all(reader)?)),
@@ -152,19 +151,16 @@ pub fn read_blocks_from_reader<R: Read>(
     };
 
     let dbin_file = DbinFile::try_from_read(&mut file_contents)?;
-    if dbin_file.content_type() != CONTENT_TYPE {
-        return Err(DecoderError::ContentTypeInvalid(
-            dbin_file.content_type().to_string(),
-        ));
-    }
+    let content_type: ContentType = dbin_file.content_type().try_into()?;
 
     dbin_file
         .into_iter()
         .map(|message| {
-            let block = decode_block_from_bytes(&message)?;
-            if !block_is_verified(&block) {
+            let block = decode_block_from_bytes(&message, content_type.clone())?;
+            let (verified, number) = block_is_verified(&block);
+            if !verified {
                 Err(DecoderError::VerificationFailed {
-                    block_number: block.number,
+                    block_number: number,
                 })
             } else {
                 Ok(block)
@@ -173,25 +169,34 @@ pub fn read_blocks_from_reader<R: Read>(
         .collect()
 }
 
-fn block_is_verified(block: &Block) -> bool {
-    if block.number != 0 {
-        if !block.receipt_root_is_verified() {
-            error!(
-                "Receipt root verification failed for block {}",
-                block.number
-            );
-            return false;
+fn block_is_verified(block: &AnyBlock) -> (bool, u64) {
+    match block {
+        AnyBlock::Evm(eth_block) => {
+            let block_number = eth_block.number;
+            if block_number != 0 {
+                if !eth_block.receipt_root_is_verified() {
+                    error!(
+                        "Receipt root verification failed for block {}",
+                        block_number
+                    );
+                    return (false, block_number);
+                }
+                if !eth_block.transaction_root_is_verified() {
+                    error!(
+                        "Transaction root verification failed for block {}",
+                        block_number
+                    );
+                    return (false, block_number);
+                }
+            }
+            (true, block_number)
         }
-
-        if !block.transaction_root_is_verified() {
-            error!(
-                "Transaction root verification failed for block {}",
-                block.number
-            );
-            return false;
+        // Logic is not yet implemented for verifying Solana Blocks
+        AnyBlock::Sol(sol_block) => {
+            let block_number = sol_block.block_height.unwrap().block_height;
+            (true, block_number)
         }
     }
-    true
 }
 
 /// Reader enum to handle different types of readers
@@ -271,7 +276,7 @@ impl From<Option<u64>> for EndBlock {
 pub fn stream_blocks(
     reader: Reader,
     end_block: EndBlock,
-) -> Result<impl Iterator<Item = Block>, DecoderError> {
+) -> Result<impl Iterator<Item = AnyBlock>, DecoderError> {
     let mut current_block_number = 0;
 
     let mut reader = reader.into_reader()?;
@@ -279,17 +284,20 @@ pub fn stream_blocks(
 
     let mut blocks = Vec::new();
 
+    let header = DbinHeader::try_from_read(&mut reader)?;
+    let content_type: ContentType = header.content_type.as_str().try_into()?;
+
     loop {
         match read_block_from_reader(&mut reader) {
             Ok(message) => {
-                match decode_block_from_bytes(&message) {
+                match decode_block_from_bytes(&message, content_type.clone()) {
                     Ok(block) => {
-                        current_block_number = block.number;
-
-                        if block_is_verified(&block) {
+                        let (verified, number) = block_is_verified(&block);
+                        current_block_number = number;
+                        if verified {
                             blocks.push(block);
                         } else {
-                            info!("Block verification failed, skipping block {}", block.number);
+                            info!("Block verification failed, skipping block {}", number);
                         }
                     }
                     Err(e) => return Err(e),
@@ -311,10 +319,26 @@ pub fn stream_blocks(
 
 /// Decodes a block from a byte slice.
 #[allow(deprecated)]
-fn decode_block_from_bytes(bytes: &[u8]) -> Result<Block, DecoderError> {
+fn decode_block_from_bytes(
+    bytes: &[u8],
+    content_type: ContentType,
+) -> Result<AnyBlock, DecoderError> {
     let block_stream = BstreamBlock::decode(bytes)?;
-    let block = Block::decode(block_stream.payload_buffer.as_slice())?;
-    Ok(block)
+        let block_stream_payload = block_stream
+        .payload
+        .map(|p| p.value)
+        .unwrap_or(block_stream.payload_buffer);
+
+    match content_type {
+        ContentType::Evm => {
+            let block = Block::decode(block_stream_payload.as_slice())?;
+            Ok(AnyBlock::Evm(block))
+        }
+        ContentType::Sol => {
+            let block = SolBlock::decode(block_stream_payload.as_slice())?;
+            Ok(AnyBlock::Sol(block))
+        }
+    }
 }
 
 /// Converts a Parquet file containing block header data (from nozzle) into [`Vec<BlockHeader>`]
