@@ -9,9 +9,9 @@ use std::{
 
 use alloy_primitives::B256;
 use clap::{Parser, Subcommand};
-use firehose_protos::{BlockHeader, EthBlock as Block};
+use firehose_protos::{BlockHeader, EthBlock as Block, SolBlock};
 use flat_files_decoder::{
-    read_blocks_from_reader, stream_blocks, Compression, DecoderError, Reader,
+    read_blocks_from_reader, stream_blocks, AnyBlock, Compression, DecoderError, Reader,
 };
 use serde::{Deserialize, Serialize};
 use tracing::{error, info, level_filters::LevelFilter, subscriber::set_global_default, trace};
@@ -138,7 +138,7 @@ fn run() -> Result<(), DecoderError> {
 /// * `input_path`: A [`String`] specifying the path to the input directory or file.
 /// * `output_path`: An [`Option<&str>`] specifying the directory where decoded blocks should be written.
 ///             If `None`, decoded blocks are not written to disk.
-/// * `json_headers_dir`: An [`Option<&str>`] specifying the directory containing header files for verification.
+/// * `json_headers_dir`: An [`Option<&str>`] specifying the directory containing EVM Block Header files for verification.
 ///                  Must be a directory if provided.
 /// * `compression`: A [`Compression`] enum specifying if it is necessary to decompress from zstd.
 fn decode_flat_files(
@@ -146,7 +146,7 @@ fn decode_flat_files(
     output_path: Option<&str>,
     json_headers_dir: Option<&str>,
     compression: Compression,
-) -> Result<Vec<Block>, DecoderError> {
+) -> Result<Vec<AnyBlock>, DecoderError> {
     let metadata = fs::metadata(input_path)?;
 
     // Get blocks depending on file or folder
@@ -158,9 +158,18 @@ fn decode_flat_files(
         read_flat_file(input_path, compression)
     }?;
 
+    // These JSON file formats are applicable to EVM Block Headers.
     if let Some(json_headers_dir) = json_headers_dir {
         for block in blocks.iter() {
-            check_block_against_json(block, json_headers_dir)?;
+            match block {
+                AnyBlock::Evm(eth_block) => {
+                    check_block_against_json(eth_block, json_headers_dir)?;
+                }
+                _ => {
+                    info!("JSON Headers Directory provided, but no EVM block found.");
+                    break;
+                }
+            }
         }
     }
 
@@ -192,8 +201,13 @@ fn check_block_against_json(block: &Block, headers_dir: &str) -> Result<(), Deco
     Ok(())
 }
 
-fn write_block_to_json(block: &Block, output: &str) -> Result<(), DecoderError> {
-    let file_name = format!("{}/block-{}.json", output, block.number);
+fn write_block_to_json(block: &AnyBlock, output: &str) -> Result<(), DecoderError> {
+    let block_number = match block {
+        AnyBlock::Evm(eth_block) => eth_block.number,
+        AnyBlock::Sol(sol_block) => sol_block.block_height.unwrap().block_height,
+    };
+
+    let file_name = format!("{}/block-{}.json", output, block_number);
     let mut out_file = File::create(file_name)?;
 
     let block_json = serde_json::to_string(&block)?;
@@ -207,7 +221,7 @@ fn write_block_to_json(block: &Block, output: &str) -> Result<(), DecoderError> 
 ///
 /// This function decodes and verifies blocks contained within flat files.
 /// Additionally, the function supports handling `zstd` compressed flat files if decompression is required.
-fn read_flat_file(path: &str, compression: Compression) -> Result<Vec<Block>, DecoderError> {
+fn read_flat_file(path: &str, compression: Compression) -> Result<Vec<AnyBlock>, DecoderError> {
     let reader = BufReader::new(File::open(path)?);
 
     let blocks = read_blocks_from_reader(reader, compression)?;
@@ -218,18 +232,21 @@ fn read_flat_file(path: &str, compression: Compression) -> Result<Vec<Block>, De
 /// Dbin file type extension
 const EXTENSION: &str = "dbin";
 
-/// Checks if the file extension is `.dbin`.
+/// Checks if the file extension is `.dbin`, ignoring a .zst extension.
 fn dir_entry_extension_is_dbin(entry: &DirEntry) -> bool {
-    entry
-        .path()
-        .extension()
-        .map_or(false, |ext| ext == EXTENSION)
+    let path = entry.path();
+    let effective_path = if path.extension().and_then(|e| e.to_str()) == Some("zst") {
+        path.with_extension("")
+    } else {
+        path
+    };
+    effective_path.extension().map_or(false, |ext| ext == EXTENSION)
 }
 
-fn read_flat_files(path: &str, compression: Compression) -> Result<Vec<Block>, DecoderError> {
+fn read_flat_files(path: &str, compression: Compression) -> Result<Vec<AnyBlock>, DecoderError> {
     let read_dir = create_read_dir(path)?;
 
-    let mut blocks: Vec<Block> = vec![];
+    let mut blocks: Vec<AnyBlock> = vec![];
 
     for path in read_dir {
         let path = path?;
@@ -261,6 +278,7 @@ struct HeaderRecordWithNumber {
     total_difficulty: Vec<u8>,
 }
 
+/// Try from an Ethereum Block
 impl TryFrom<&Block> for HeaderRecordWithNumber {
     type Error = DecoderError;
 
@@ -276,6 +294,35 @@ impl TryFrom<&Block> for HeaderRecordWithNumber {
                 .bytes
                 .clone(),
         })
+    }
+}
+
+/// Try from a Solana Block
+impl TryFrom<&SolBlock> for HeaderRecordWithNumber {
+    type Error = DecoderError;
+
+    fn try_from(block: &SolBlock) -> Result<Self, Self::Error> {
+        Ok(HeaderRecordWithNumber {
+            block_hash: block.blockhash.clone().into(),
+            block_number: block.block_height.unwrap().block_height,
+            // There is no field analogous to `total_difficulty` in Solana Blocks
+            total_difficulty: Vec::new(),
+        })
+    }
+}
+
+/// Try from a Generalized AnyBlock enum
+impl TryFrom<&AnyBlock> for HeaderRecordWithNumber {
+    type Error = DecoderError;
+
+    fn try_from(block: &AnyBlock) -> Result<Self, Self::Error> {
+        match block {
+            AnyBlock::Evm(_) => {
+                let eth_block = block.as_eth_block().ok_or(DecoderError::ConversionError)?;
+                HeaderRecordWithNumber::try_from(eth_block)
+            }
+            AnyBlock::Sol(sol_block) => HeaderRecordWithNumber::try_from(sol_block),
+        }
     }
 }
 
