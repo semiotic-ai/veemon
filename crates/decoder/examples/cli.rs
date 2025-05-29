@@ -308,7 +308,7 @@ impl TryFrom<&SolBlock> for HeaderRecordWithNumber {
             block_hash: block.blockhash.clone().into(),
             block_number: block.block_height.unwrap().block_height,
             // There is no field analogous to `total_difficulty` in Solana Blocks
-            total_difficulty: Vec::new(),
+            total_difficulty: vec![],
         })
     }
 }

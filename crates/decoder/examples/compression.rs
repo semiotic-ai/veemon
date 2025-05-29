@@ -11,7 +11,7 @@
 
 use std::{fs::File, io::BufReader};
 
-use flat_files_decoder::{read_blocks_from_reader, AnyBlock, Compression};
+use flat_files_decoder::{read_blocks_from_reader, Compression};
 
 fn main() {
     let path = "example.dbin.zst";
