@@ -168,8 +168,16 @@ pub fn read_blocks_from_reader<R: Read>(
         .collect()
 }
 
+/// Validate the contents of the Block (e.g., transactions, receipts)
+/// against the self-contained information in the block (such as Merkle
+/// tree roots). This is a check that the contents of the block are correct,
+/// but does not validate the inclusion of the Block in the chain's
+/// history (as in crates/header-accumulator).
 fn block_is_verified(block: &AnyBlock) -> (bool, u64) {
     match block {
+        // Validate the transactions and receipts in the Block by
+        // reconstructing the transactions and receipts trees and
+        // comparing the roots to those recorded in the Block Header.
         AnyBlock::Evm(eth_block) => {
             let block_number = eth_block.number;
             if block_number != 0 {
@@ -190,7 +198,11 @@ fn block_is_verified(block: &AnyBlock) -> (bool, u64) {
             }
             (true, block_number)
         }
-        // Logic is not yet implemented for verifying Solana Blocks
+        // Logic is not yet implemented for verifying Solana Blocks.
+        // The blockhash can be used to verify transactions, but
+        // the information needed to reconstruct the blockhash is not
+        // self-contained in the Block. Additional framework is needed
+        // to implement this function for Solana.
         AnyBlock::Sol(sol_block) => {
             let block_number = sol_block.block_height.unwrap().block_height;
             (true, block_number)
