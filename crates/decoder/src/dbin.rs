@@ -154,8 +154,8 @@ impl DbinHeader {
     }
 
     /// Access content_type field
-    pub fn content_type(&self) -> String {
-        self.content_type.clone()
+    pub fn content_type(&self) -> &str {
+        &self.content_type
     }
 }
 
