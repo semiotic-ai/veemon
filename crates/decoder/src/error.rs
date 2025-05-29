@@ -19,7 +19,7 @@ pub enum DecoderError {
     ContentTypeInvalid(String),
 
     /// Error converting from AnyBlock into chain-specific Block.
-    #[error("Error converting into chain block")]
+    #[error("The block contents of this file are not supported")]
     ConversionError,
 
     /// [firehose_protos] library error.
