@@ -18,6 +18,10 @@ pub enum DecoderError {
     #[error("Invalid flat file content type: {0}")]
     ContentTypeInvalid(String),
 
+    /// Error converting from AnyBlock into chain-specific Block.
+    #[error("The block contents of this file are not supported")]
+    ConversionError,
+
     /// [firehose_protos] library error.
     #[error("Protos error: {0}")]
     FirehoseProtosError(#[from] firehose_protos::ProtosError),

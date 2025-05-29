@@ -8,7 +8,7 @@ use std::{
 
 use crate::{dbin::read_block_from_reader, error::DecoderError, DbinFile};
 use firehose_protos::{
-    BigInt, BlockHeader, BstreamBlock, EthBlock as Block, Timestamp, Uint64NestedArray,
+    BigInt, BlockHeader, BstreamBlock, EthBlock as Block, SolBlock, Timestamp, Uint64NestedArray,
 };
 use parquet::{
     file::reader::{FileReader, SerializedFileReader},
@@ -45,6 +45,89 @@ impl From<bool> for Compression {
     }
 }
 
+/// An enumeration of supported chains and associated Block structs
+#[allow(clippy::large_enum_variant)]
+#[derive(Clone, Debug, serde::Serialize)]
+pub enum AnyBlock {
+    /// EVM Block
+    Evm(Block),
+    /// Solana Block
+    Sol(SolBlock),
+}
+
+impl AnyBlock {
+    /// Convert the data associated with an AnyBlock instance into
+    /// a firehose_protos::EthBlock
+    pub fn try_into_eth_block(self) -> Result<Block, DecoderError> {
+        match self {
+            AnyBlock::Evm(block) => Ok(block),
+            _ => Err(DecoderError::ConversionError),
+        }
+    }
+
+    /// Convert the data associated with an AnyBlock instance into
+    /// a firehose_protos::SolBlock
+    pub fn try_into_sol_block(self) -> Result<SolBlock, DecoderError> {
+        match self {
+            AnyBlock::Sol(block) => Ok(block),
+            _ => Err(DecoderError::ConversionError),
+        }
+    }
+
+    /// Borrow-based conversion to extract reference to an EthBlock
+    pub fn as_eth_block(&self) -> Option<&Block> {
+        match self {
+            AnyBlock::Evm(b) => Some(b),
+            _ => None,
+        }
+    }
+
+    /// Borrow-based conversion to extract reference to a SolBlock
+    pub fn as_sol_block(&self) -> Option<&SolBlock> {
+        match self {
+            AnyBlock::Sol(b) => Some(b),
+            _ => None,
+        }
+    }
+
+    /// Determine if an AnyBlock instance is an Evm variant
+    pub fn is_eth_block(&self) -> bool {
+        matches!(self, AnyBlock::Evm(_))
+    }
+
+    /// Determine if an AnyBlock instance is a Sol variant
+    pub fn is_sol_block(&self) -> bool {
+        matches!(self, AnyBlock::Sol(_))
+    }
+}
+
+/// The content type (or proto definition type) is a field in the dbin file structure
+/// which indicates which chain the Blocks represented by the file are from.
+/// So far we have parsed .dbin files containing Blocks
+/// from these enumerated chains, but others may be added in the
+/// future. The content type in the dbin header may also
+/// vary depending on the version of the file.
+#[derive(Clone)]
+pub enum ContentType {
+    /// Indicates EVM Block content.
+    Evm,
+    /// Indicates Solana Block content.
+    Sol,
+}
+
+impl TryFrom<&str> for ContentType {
+    type Error = DecoderError;
+
+    // These are the content types we have so far encountered, but there
+    // are others which may be added in the future.
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "ETH" => Ok(ContentType::Evm),
+            "type.googleapis.com/sf.solana.type.v1.Block" => Ok(ContentType::Sol),
+            _ => Err(DecoderError::ContentTypeInvalid(value.to_string())),
+        }
+    }
+}
 /// Read blocks from a flat file reader.
 ///
 /// This function processes flat files that are already loaded into memory, supporting both
