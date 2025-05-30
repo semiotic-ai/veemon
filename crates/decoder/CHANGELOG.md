@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/semiotic-ai/veemon/compare/decoder-v0.2.0...decoder-v0.3.0) (2025-05-30)
+
+
+### Features
+
+* **decoder:** support for non-EVM blocks ([eb65032](https://github.com/semiotic-ai/veemon/commit/eb65032357154acc4eb8d1f0b609f300b83c99c5))
+
 ## [0.2.0](https://github.com/semiotic-ai/veemon/compare/decoder-v0.1.3...decoder-v0.2.0) (2025-05-12)
 
 
