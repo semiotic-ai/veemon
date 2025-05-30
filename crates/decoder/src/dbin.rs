@@ -128,7 +128,7 @@ pub struct DbinHeader {
 
 impl DbinHeader {
     /// Reads and validates the `.dbin` header from the given [`Read`] source.
-    fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DecoderError> {
+    pub fn try_from_read<R: Read>(read: &mut R) -> Result<Self, DecoderError> {
         let magic_bytes = read_magic_bytes(read)?;
         if !magic_bytes_valid(&magic_bytes) {
             return Err(DecoderError::MagicBytesInvalid);
@@ -151,6 +151,11 @@ impl DbinHeader {
 
     fn version(&self) -> Version {
         self.version
+    }
+
+    /// Access content_type field
+    pub fn content_type(&self) -> &str {
+        &self.content_type
     }
 }
 
