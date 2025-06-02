@@ -168,7 +168,7 @@ pub fn read_blocks_from_reader<R: Read>(
         .collect()
 }
 
-/// Validate the contents of the Block (e.g., transactions, receipts)
+/// Validate the contents of the Block (e.g., transactions, receipts, block hash)
 /// against the self-contained information in the block (such as Merkle
 /// tree roots). This is a check that the contents of the block are correct,
 /// but does not validate the inclusion of the Block in the chain's
@@ -193,6 +193,10 @@ fn block_is_verified(block: &AnyBlock) -> (bool, u64) {
                         "Transaction root verification failed for block {}",
                         block_number
                     );
+                    return (false, block_number);
+                }
+                if !eth_block.block_hash_is_verified() {
+                    error!("Block hash verification failed for block {}", block_number);
                     return (false, block_number);
                 }
             }

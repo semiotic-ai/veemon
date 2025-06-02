@@ -261,12 +261,35 @@ impl Block {
         }
     }
 
+    /// Checks if the hash of selected block header contents is equal to the hash
+    /// recorded in the block header. Returns `true` if they match, `false`
+    /// otherwise. The block hash is calculated using the ethportal-api Header method.
+    pub fn block_hash_is_verified(&self) -> bool {
+        let header = Header::try_from(self).unwrap();
+        let block_hash = header.hash();
+
+        match self.verify_block_hash(block_hash.as_slice()) {
+            Ok(result) => result,
+            Err(e) => {
+                error!("Failed to verify block hash: {e}");
+                false
+            }
+        }
+    }
+
+    /// Check if a value matches the receipt root hash recorded in the block header.
     fn verify_receipt_root(&self, other_receipt_root: &[u8]) -> Result<bool, ProtosError> {
         Ok(other_receipt_root == self.header()?.receipt_root.as_slice())
     }
 
+    /// Check if a value matches the transaction root hash recorded in the block header.
     fn verify_transaction_root(&self, other_transaction_root: &[u8]) -> Result<bool, ProtosError> {
         Ok(other_transaction_root == self.header()?.transactions_root.as_slice())
+    }
+
+    /// Check if a value matches the block hash recorded in the block header.
+    fn verify_block_hash(&self, other_block_hash: &[u8]) -> Result<bool, ProtosError> {
+        Ok(other_block_hash == self.header()?.hash.as_slice())
     }
 }
 
@@ -408,6 +431,18 @@ mod tests {
             block_hash.to_string().as_str(),
             "0xf218f8b4f7879b1c4a44b658a32d4a338db85c85c2916229d8b1c7728b448382"
         );
+    }
+
+    #[test]
+    fn test_block_hash_verification() {
+        let block_header: BlockHeader = serde_json::from_str(BLOCK).unwrap();
+
+        let block = Block {
+            header: Some(block_header),
+            ..Default::default()
+        };
+
+        assert!(block.block_hash_is_verified())
     }
 
     static BLOCK: &str = r###"
