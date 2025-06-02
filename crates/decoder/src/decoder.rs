@@ -196,10 +196,7 @@ fn block_is_verified(block: &AnyBlock) -> (bool, u64) {
                     return (false, block_number);
                 }
                 if !eth_block.block_hash_is_verified() {
-                    error!(
-                        "Block hash verification failed for block {}",
-                        block_number
-                    );
+                    error!("Block hash verification failed for block {}", block_number);
                     return (false, block_number);
                 }
             }
