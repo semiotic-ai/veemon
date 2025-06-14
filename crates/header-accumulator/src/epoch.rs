@@ -4,12 +4,9 @@
 use std::array::IntoIter;
 
 use alloy_primitives::map::HashSet;
-use ethportal_api::{
-    types::execution::accumulator::{EpochAccumulator, HeaderRecord},
-    Header,
-};
+use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
 
-use crate::errors::EraValidateError;
+use crate::{errors::EraValidateError, types::ExtHeaderRecord};
 
 /// The maximum number of slots per epoch in Ethereum.
 ///
@@ -42,25 +39,25 @@ pub struct Epoch {
     data: Box<[HeaderRecord; MAX_EPOCH_SIZE]>,
 }
 
-impl TryFrom<Vec<Header>> for Epoch {
+impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
     type Error = EraValidateError;
 
-    fn try_from(mut data: Vec<Header>) -> Result<Self, Self::Error> {
+    fn try_from(mut data: Vec<ExtHeaderRecord>) -> Result<Self, Self::Error> {
         // all data must be sorted
-        data.sort_by(|b1, b2| b1.number.cmp(&b2.number));
+        data.sort_by(|b1, b2| b1.block_number.cmp(&b2.block_number));
         // max MAX_EPOCH_SIZE in the array
         data.truncate(MAX_EPOCH_SIZE);
         let len = data.len();
         // get the first block to get the block number
         let epoch_number = data
             .first()
-            .map(|block| block.number / MAX_EPOCH_SIZE as u64)
+            .map(|block| block.block_number / MAX_EPOCH_SIZE as u64)
             .ok_or(EraValidateError::InvalidEpochLength(0))?;
         // cannot have any missing blocks
         let blocks_missing: Vec<_> = data
             .windows(2)
-            .filter(|w| w[1].number - w[0].number != 1)
-            .map(|w| w[0].number + 1)
+            .filter(|w| w[1].block_number - w[0].block_number != 1)
+            .map(|w| w[0].block_number + 1)
             .collect();
         if !blocks_missing.is_empty() {
             return Err(EraValidateError::MissingBlock {
@@ -72,18 +69,12 @@ impl TryFrom<Vec<Header>> for Epoch {
         // check if all blocks are in the same era
         let epochs_found: HashSet<u64> = data
             .iter()
-            .map(|block| block.number / MAX_EPOCH_SIZE as u64)
+            .map(|block| block.block_number / MAX_EPOCH_SIZE as u64)
             .collect();
         if epochs_found.len() > 1 {
             return Err(EraValidateError::InvalidBlockInEpoch(epochs_found));
         }
-        let data: Box<[HeaderRecord]> = data
-            .into_iter()
-            .map(|header| HeaderRecord {
-                block_hash: header.hash(),
-                total_difficulty: header.difficulty,
-            })
-            .collect();
+        let data: Box<[HeaderRecord]> = data.into_iter().map(Into::into).collect();
         let data: Box<[HeaderRecord; MAX_EPOCH_SIZE]> = data
             .try_into()
             .map_err(|_| EraValidateError::InvalidEpochLength(len))?;

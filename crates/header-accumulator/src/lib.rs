@@ -8,8 +8,10 @@ mod epoch;
 mod era_validator;
 mod errors;
 mod inclusion_proof;
+mod types;
 
 pub use epoch::*;
 pub use era_validator::*;
 pub use errors::*;
 pub use inclusion_proof::*;
+pub use types::*;
