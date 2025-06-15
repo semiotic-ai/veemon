@@ -1,20 +1,17 @@
 # Vee
 
-Verifiable Extraction for Blockchain.
+Verifiable Extraction for Blockchain data.
 
-This crate exposes the interfaces from other crates in ve.
+This crate exposes the interfaces from other crates in veemon.
 
 ### Verifiabilty for Ethereum
 ![Full path of proofs diagram](./assets/diagram.svg)
 
+Events recorded in transaction receipt logs are useful for analysis of blockchain data. Ensuring that the receipts recorded in extracted blocks accurately reflect the chain's history is critical for developers. veemon provides the capability to generate inclusion proofs for receipts against the `receipts_root` in the block header as well as to reconstruct the `receipts_root` for validation.
 
-In order for verifiable extraction to work, it depends partially on [portal network accumualtors](https://github.com/ethereum/portal-accumulators)
-which consists of the header accumulators for pre-merge, post-merge & pre-capella.
-
-For post-capella, it relies on the 
+veemon also provides implementations for verification of the block itself against the history of the blockchain. Verifying inclusion of a block in the Ethereum history relies on [Ethereum Portal Network Accumulators](https://github.com/ethereum/portal-accumulators)
+which use Header Accumulators built on historical block hash information for pre-Merge, post-Merge & pre-Capella Ethereum blocks. Post-Capella Accumulators rely on the 
 `HistoricalSummary` which is extracted from the `HeadState` of the beacon chain, and the associated beacon blocks as well. 
-
-As seen on the diagram above, VE also has implementations for the constructing parts of blocks. Since most of the interesting data is on events, it is possible to generate proofs for receipts against the `receipts_root`, then proofs that the `receipts_root` is valid givne the block, and then the proofs that the blocks are valid within the canonicalness of the chain.
 
 
 ## Examples
@@ -144,16 +141,15 @@ fn main() -> Result<(), EraValidateError> {
 
 ### Other available examples
 
-Other usage examples are available in the examples folder. These depend on  [ve-assets](https://github.com/semiotic-ai/ve-assets) to run. Choose each example carefully given the .dbin or .parquet file, because the blocks have to be within the specific block number range for it to work. These usage examples are:
+Other examples and tests in veemon depend on  [ve-assets](https://github.com/semiotic-ai/ve-assets) to run. Choose each example carefully given the .dbin or .parquet file, because the blocks have to be within the specific block number range for it to work. These usage examples are:
 
 1. Convert parquet data structure into the same `BlockHeader` 
-2. Build receipt proofa gainst receipts
+2. Build receipt proof against receipts
 3. Build proof that `receipt_root` is correct against `receipt`.
-4. Build proof of pre-merge and pre-capella block against header accumulaors.
-5. Build proof of psot-capella blocks given beacon blocks and Ethereum head state
+4. Build proof of pre-Merge and pre-Capella block against Header Accumulaors.
+5. Build proof of post-Capella blocks given beacon blocks and Ethereum head state
 
 ## Testing
 
-Some testing assets were stored in [ve-assets](https://github.com/semiotic-ai/ve-assets)
-. These include parquet file block headers and .dbin files extracted from Firehose. Part of these are necessary for some tests, but they are heavy so most of them are stored in another repo.
+Some testing assets were stored in [ve-assets](https://github.com/semiotic-ai/ve-assets). These include parquet file block headers and .dbin files extracted from Firehose. Part of these are necessary for some tests, but they are heavy so most of them are stored in another repo.
 
