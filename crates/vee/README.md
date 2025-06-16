@@ -26,8 +26,8 @@ inclusion proofs are for verifying specific blocks to be part of canonical epoch
 ```rust,no_run
 use std::{fs::File, io::BufReader};
 use vee::{
-    generate_inclusion_proofs, read_blocks_from_reader, verify_inclusion_proofs, Compression,
-    Epoch, EraValidateError, ExtHeaderRecord,
+    generate_inclusion_proofs, read_blocks_from_reader, verify_inclusion_proofs, 
+    AnyBlock, Compression, Epoch, EraValidateError, ExtHeaderRecord,
 };
 
 fn main() -> Result<(), EraValidateError> {
@@ -38,23 +38,22 @@ fn main() -> Result<(), EraValidateError> {
             "your_files/ethereum_firehose_first_8200/{:010}.dbin",
             flat_file_number
         );
-        match read_blocks_from_reader(
+        let blocks =  read_blocks_from_reader(
             BufReader::new(File::open(&file).unwrap()),
             Compression::None,
-        ) {
-            Ok(blocks) => {
-                headers.extend(
-                    blocks
-                        .iter()
-                        .map(|block| ExtHeaderRecord::try_from(block).unwrap())
-                        .collect::<Vec<ExtHeaderRecord>>(),
-                );
-            }
-            Err(e) => {
-                eprintln!("error: {:?}", e);
-                break;
-            }
-        }
+        ).unwrap();
+        headers.extend(
+            blocks
+            .iter()
+            .filter_map(|block| {
+                if let AnyBlock::Evm(eth_block) = block {
+                    ExtHeaderRecord::try_from(eth_block).ok()
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<ExtHeaderRecord>>(),
+        );
     }
 
     let start_block = 301;
@@ -96,8 +95,8 @@ with the example below.
 use std::{fs::File, io::BufReader};
 use tree_hash::Hash256;
 use vee::{
-    read_blocks_from_reader, Compression, Epoch, EraValidateError, EraValidator,
-    ExtHeaderRecord,
+    read_blocks_from_reader, AnyBlock, Compression, Epoch, EraValidateError, 
+    EraValidator, ExtHeaderRecord,
 };
 
 fn create_test_reader(path: &str) -> BufReader<File> {
@@ -105,38 +104,41 @@ fn create_test_reader(path: &str) -> BufReader<File> {
 }
 
 fn main() -> Result<(), EraValidateError> {
-     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
+    let mut headers: Vec<ExtHeaderRecord> = Vec::new();
+    for number in (0..=8200).step_by(100) {
+        let file_name = format!(
+            "your-test-assets/ethereum_firehose_first_8200/{:010}.dbin",
+            number
+        );
+        let reader = create_test_reader(&file_name);
+        let blocks = read_blocks_from_reader(reader, Compression::None).unwrap();
+        let successful_headers = blocks
+            .iter()
+            .filter_map(|block| {
+                if let AnyBlock::Evm(eth_block) = block {
+                    ExtHeaderRecord::try_from(eth_block).ok()
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        headers.extend(successful_headers);
+    }
+    
+    assert_eq!(headers.len(), 8300);
+    assert_eq!(headers[0].block_number, 0);
+    let era_verifier = EraValidator::default();
+    let epoch: Epoch = headers.try_into().unwrap();
+    let result = era_verifier.validate_era(&epoch)?;
+    let expected = Hash256::new([
+        94, 193, 255, 184, 195, 177, 70, 244, 38, 6, 199, 76, 237, 151, 61, 193, 110, 197, 161, 7,
+        192, 52, 88, 88, 195, 67, 252, 148, 120, 11, 66, 24,
+    ]);
+    assert_eq!(result, expected);
 
-     for number in (0..=8200).step_by(100) {
-         let file_name = format!(
-             "your-test-assets/ethereum_firehose_first_8200/{:010}.dbin",
-             number
-         );
-         let reader = create_test_reader(&file_name);
-         let blocks = read_blocks_from_reader(reader, Compression::None).unwrap();
-         let successful_headers = blocks
-             .iter()
-             .cloned()
-             .map(|block| ExtHeaderRecord::try_from(&block))
-             .collect::<Result<Vec<_>, _>>()?;
-         headers.extend(successful_headers);
-     }
+    println!("Era validated successfully!");
 
-     assert_eq!(headers.len(), 8300);
-     assert_eq!(headers[0].block_number, 0);
-
-     let era_verifier = EraValidator::default();     
-     let epoch: Epoch = headers.try_into().unwrap();
-     let result = era_verifier.validate_era(&epoch)?;
-     let expected = Hash256::new([
-         94, 193, 255, 184, 195, 177, 70, 244, 38, 6, 199, 76, 237, 151, 61, 193, 110, 197, 161, 7,
-         192, 52, 88, 88, 195, 67, 252, 148, 120, 11, 66, 24,
-     ]);
-     assert_eq!(result, expected);
-
-     println!("Era validated successfully!");
-
-     Ok(())
+    Ok(())
 }
 ```
 

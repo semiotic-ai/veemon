@@ -75,23 +75,22 @@ fn main() -> Result<(), EraValidateError> {
             "your_files/ethereum_firehose_first_8200/{:010}.dbin",
             flat_file_number
         );
-        match read_blocks_from_reader(
+        let blocks =  read_blocks_from_reader(
             BufReader::new(File::open(&file).unwrap()),
             Compression::None,
-        ) {
-            Ok(blocks) => {
-                headers.extend(
-                    blocks
-                        .iter()
-                        .map(|block| ExtHeaderRecord::try_from(block).unwrap())
-                        .collect::<Vec<ExtHeaderRecord>>(),
-                );
-            }
-            Err(e) => {
-                eprintln!("error: {:?}", e);
-                break;
-            }
-        }
+        ).unwrap();
+        headers.extend(
+            blocks
+            .iter()
+            .filter_map(|block| {
+                if let AnyBlock::Evm(eth_block) = block {
+                    ExtHeaderRecord::try_from(eth_block).ok()
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<ExtHeaderRecord>>(),
+        );
     }
 
     let start_block = 301;
@@ -129,7 +128,7 @@ fn main() -> Result<(), EraValidateError> {
 ```rust,no_run
 use std::{fs::File, io::BufReader};
 
-use flat_files_decoder::{read_blocks_from_reader, Compression};
+use flat_files_decoder::{read_blocks_from_reader, AnyBlock, Compression};
 use header_accumulator::{Epoch, EraValidateError, EraValidator, ExtHeaderRecord};
 use tree_hash::Hash256;
 
@@ -148,9 +147,14 @@ fn main() -> Result<(), EraValidateError> {
         let blocks = read_blocks_from_reader(reader, Compression::None).unwrap();
         let successful_headers = blocks
             .iter()
-            .cloned()
-            .map(|block| ExtHeaderRecord::try_from(&block))
-            .collect::<Result<Vec<_>, _>>()?;
+            .filter_map(|block| {
+                if let AnyBlock::Evm(eth_block) = block {
+                    ExtHeaderRecord::try_from(eth_block).ok()
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
         headers.extend(successful_headers);
     }
     
