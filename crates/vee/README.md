@@ -26,12 +26,12 @@ inclusion proofs are for verifying specific blocks to be part of canonical epoch
 ```rust,no_run
 use std::{fs::File, io::BufReader};
 use vee::{
-    generate_inclusion_proofs, read_blocks_from_reader, verify_inclusion_proofs, 
-    AnyBlock, Compression, Epoch, EraValidateError, Header,
+    generate_inclusion_proofs, read_blocks_from_reader, verify_inclusion_proofs, Compression,
+    Epoch, EraValidateError, ExtHeaderRecord,
 };
 
 fn main() -> Result<(), EraValidateError> {
-   let mut headers: Vec<Header> = Vec::new();
+   let mut headers: Vec<ExtHeaderRecord> = Vec::new();
 
     for flat_file_number in (0..=8200).step_by(100) {
         let file = format!(
@@ -43,27 +43,12 @@ fn main() -> Result<(), EraValidateError> {
             Compression::None,
         ) {
             Ok(blocks) => {
-                // Check if the Blocks contained in the .dbin files are Ethereum type.
-                // Header Accumulators are currently only supported for Ethereum type
-                // blocks.
-                match blocks.first().unwrap(){
-                    AnyBlock::Evm(_) =>
-                    {
-                        headers.extend(
-                            blocks
-                            .iter()
-                            .filter_map(|block| {
-                                if let AnyBlock::Evm(ref eth_block) = *block {
-                                    Header::try_from(eth_block).ok()
-                                } else {
-                                    None
-                                }
-                            })
-                            .collect::<Vec<Header>>(),
-                        );
-                    }
-                    _ => println!("File does not contain Ethereum Blocks: {}", file)
-                } 
+                headers.extend(
+                    blocks
+                        .iter()
+                        .map(|block| ExtHeaderRecord::try_from(block).unwrap())
+                        .collect::<Vec<ExtHeaderRecord>>(),
+                );
             }
             Err(e) => {
                 eprintln!("error: {:?}", e);
@@ -74,7 +59,10 @@ fn main() -> Result<(), EraValidateError> {
 
     let start_block = 301;
     let end_block = 402;
-    let headers_to_prove = headers[start_block..end_block].to_vec();
+    let headers_to_prove: Vec<_> = headers[start_block..end_block]
+        .iter()
+        .map(|ext| ext.full_header.as_ref().unwrap().clone())
+        .collect();
     let epoch: Epoch = headers.try_into().unwrap();
 
     let inclusion_proof = generate_inclusion_proofs(vec![epoch], headers_to_prove.clone())
@@ -96,7 +84,7 @@ fn main() -> Result<(), EraValidateError> {
     println!("Inclusion proof verified successfully!");
 
     Ok(())
-}
+}    
 ```
 
 ### Era validator
@@ -108,8 +96,8 @@ with the example below.
 use std::{fs::File, io::BufReader};
 use tree_hash::Hash256;
 use vee::{
-    read_blocks_from_reader, AnyBlock, Compression, Epoch, EraValidateError, 
-    EraValidator, Header,
+    read_blocks_from_reader, Compression, Epoch, EraValidateError, EraValidator,
+    ExtHeaderRecord,
 };
 
 fn create_test_reader(path: &str) -> BufReader<File> {
@@ -117,51 +105,38 @@ fn create_test_reader(path: &str) -> BufReader<File> {
 }
 
 fn main() -> Result<(), EraValidateError> {
-    let mut headers: Vec<Header> = Vec::new();
-    for number in (0..=8200).step_by(100) {
-        let file_name = format!(
-            "your-test-assets/ethereum_firehose_first_8200/{:010}.dbin",
-            number
-        );
-        let reader = create_test_reader(&file_name);
-        let blocks = read_blocks_from_reader(reader, Compression::None).unwrap();
-        // Check if the Blocks contained in the .dbin files are Ethereum type.
-        // Header Accumulators are currently only supported for Ethereum type
-        // blocks.
-        match blocks.first().unwrap(){
-            AnyBlock::Evm(_) =>
-            {
-                let successful_headers = blocks
-                    .iter()
-                    .cloned()
-                    .filter_map(|block| {
-                        if let AnyBlock::Evm(eth_block) = block {
-                            Header::try_from(&eth_block).ok()
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<Header>>();
-                headers.extend(successful_headers);
-            }
-            _ => println!("File does not contain Ethereum Blocks: {}", file_name)
-        }
-    }
-    
-    assert_eq!(headers.len(), 8300);
-    assert_eq!(headers[0].number, 0);
-    let era_verifier = EraValidator::default();
-    let epoch: Epoch = headers.try_into().unwrap();
-    let result = era_verifier.validate_era(&epoch)?;
-    let expected = Hash256::new([
-        94, 193, 255, 184, 195, 177, 70, 244, 38, 6, 199, 76, 237, 151, 61, 193, 110, 197, 161, 7,
-        192, 52, 88, 88, 195, 67, 252, 148, 120, 11, 66, 24,
-    ]);
-    assert_eq!(result, expected);
+     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
 
-    println!("Era validated successfully!");
+     for number in (0..=8200).step_by(100) {
+         let file_name = format!(
+             "your-test-assets/ethereum_firehose_first_8200/{:010}.dbin",
+             number
+         );
+         let reader = create_test_reader(&file_name);
+         let blocks = read_blocks_from_reader(reader, Compression::None).unwrap();
+         let successful_headers = blocks
+             .iter()
+             .cloned()
+             .map(|block| ExtHeaderRecord::try_from(&block))
+             .collect::<Result<Vec<_>, _>>()?;
+         headers.extend(successful_headers);
+     }
 
-    Ok(())
+     assert_eq!(headers.len(), 8300);
+     assert_eq!(headers[0].block_number, 0);
+
+     let era_verifier = EraValidator::default();     
+     let epoch: Epoch = headers.try_into().unwrap();
+     let result = era_verifier.validate_era(&epoch)?;
+     let expected = Hash256::new([
+         94, 193, 255, 184, 195, 177, 70, 244, 38, 6, 199, 76, 237, 151, 61, 193, 110, 197, 161, 7,
+         192, 52, 88, 88, 195, 67, 252, 148, 120, 11, 66, 24,
+     ]);
+     assert_eq!(result, expected);
+
+     println!("Era validated successfully!");
+
+     Ok(())
 }
 ```
 
