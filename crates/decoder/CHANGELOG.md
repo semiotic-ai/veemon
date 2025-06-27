@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/semiotic-ai/veemon/compare/decoder-v0.3.0...decoder-v0.4.0) (2025-06-27)
+
+
+### Features
+
+* **firehose-protos:** method to verify block hash ([87b791f](https://github.com/semiotic-ai/veemon/commit/87b791fdaa0291f8013bd1b6e7596a7931f839f6))
+
 ## [0.3.0](https://github.com/semiotic-ai/veemon/compare/decoder-v0.2.0...decoder-v0.3.0) (2025-05-30)
 
 
