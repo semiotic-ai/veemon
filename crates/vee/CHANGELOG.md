@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/semiotic-ai/veemon/compare/vee-v0.1.5...vee-v0.1.6) (2025-07-16)
+
+
+### Bug Fixes
+
+* Resolve conflicts from ExtHeaderRecord reversion ([d28df7a](https://github.com/semiotic-ai/veemon/commit/d28df7a7897aaba71dccf8a73ff75b3a1c0559d8))
+
 ## [0.1.5](https://github.com/semiotic-ai/veemon/compare/vee-v0.1.4...vee-v0.1.5) (2025-05-30)
 
 ## [0.1.4](https://github.com/semiotic-ai/veemon/compare/vee-v0.1.3...vee-v0.1.4) (2025-05-12)

@@ -1870,7 +1870,7 @@ dependencies = [
 
 [[package]]
 name = "decoder"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "alloy-consensus 0.4.2",
  "alloy-eip2930",
@@ -2179,7 +2179,7 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "era-validators"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "alloy-primitives",
  "ethportal-api",
@@ -2417,7 +2417,7 @@ dependencies = [
 
 [[package]]
 name = "firehose-protos"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "alloy-consensus 0.4.2",
  "alloy-eip2930",
@@ -2444,7 +2444,7 @@ dependencies = [
 
 [[package]]
 name = "firehose-protos-examples"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "alloy-primitives",
  "firehose-client",
@@ -2833,7 +2833,7 @@ dependencies = [
 
 [[package]]
 name = "header-accumulator"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "alloy-primitives",
  "base64 0.22.1",
@@ -6582,7 +6582,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 
 [[package]]
 name = "vee"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "arbitrum-ve",
  "decoder",
