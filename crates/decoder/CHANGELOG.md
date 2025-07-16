@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/semiotic-ai/veemon/compare/decoder-v0.3.0...decoder-v0.4.0) (2025-07-16)
+
+
+### Features
+
+* **firehose-protos:** method to verify block hash ([87b791f](https://github.com/semiotic-ai/veemon/commit/87b791fdaa0291f8013bd1b6e7596a7931f839f6))
+
+
+### Bug Fixes
+
+* add support to sf.ethereum.type.v2.Block to decoder ([00900e5](https://github.com/semiotic-ai/veemon/commit/00900e53185fe269dc63574eb06c51294cc18fc4))
+* add support to sf.ethereum.type.v2.Block to decoder ([53a7041](https://github.com/semiotic-ai/veemon/commit/53a704148d2e86b959e31e81f565e20513ffed62))
+
 ## [0.3.0](https://github.com/semiotic-ai/veemon/compare/decoder-v0.2.0...decoder-v0.3.0) (2025-05-30)
 
 
