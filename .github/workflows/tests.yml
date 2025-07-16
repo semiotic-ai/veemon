@@ -145,5 +145,5 @@ jobs:
             --repo-url=semiotic-ai/veemon \
             --token=${{ secrets.GITHUB_TOKEN }} \
             --manifest-file .release-please-manifest.json \
-            --target-branch=${{ github.head_ref }} \
+            --target-branch=${{ github.base_ref }} \
             --dry-run
