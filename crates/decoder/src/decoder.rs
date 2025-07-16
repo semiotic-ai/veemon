@@ -123,6 +123,7 @@ impl TryFrom<&str> for ContentType {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             "ETH" => Ok(ContentType::Evm),
+            "type.googleapis.com/sf.ethereum.type.v2.Block" => Ok(ContentType::Evm),
             "type.googleapis.com/sf.solana.type.v1.Block" => Ok(ContentType::Sol),
             _ => Err(DecoderError::ContentTypeInvalid(value.to_string())),
         }
