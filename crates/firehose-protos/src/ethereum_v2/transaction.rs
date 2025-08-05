@@ -246,6 +246,9 @@ impl TryFrom<&TransactionTrace> for Transaction {
                 max_fee_per_blob_gas: get_u128_or_default(&trace.blob_gas_fee_cap)?,
                 input,
             }),
+            // The StreamingFast Ethereum Firehose block protobuf definition does not include
+            // the `access_list` entry for this type, which distinguishes it from the
+            // `Eip1559` type.
             TxType::Eip7702 => unimplemented!(),
         };
 
