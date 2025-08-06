@@ -66,6 +66,10 @@ pub enum ProtosError {
     #[error("KzgCommitmentInvalid")]
     KzgCommitmentInvalid,
 
+    /// KZG versioned hash is not in a valid format.
+    #[error("KzgVersionedHashInvalid")]
+    KzgVersionedHashInvalid,
+
     /// Invalid log address.
     #[error("Invalid log address: {0}")]
     LogAddressInvalid(String),

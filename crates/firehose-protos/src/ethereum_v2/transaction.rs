@@ -4,10 +4,10 @@
 
 use std::fmt::Display;
 
-use alloy_consensus::{TxEip1559, TxEip2930, TxLegacy};
+use alloy_consensus::{TxEip1559, TxEip2930, TxEip4844, TxLegacy};
 use alloy_eip2930::{AccessList, AccessListItem};
 use alloy_primitives::{
-    hex, Address, Bytes, ChainId, FixedBytes, Parity, TxKind, Uint, U128, U256,
+    hex, Address, Bytes, ChainId, FixedBytes, Parity, TxKind, Uint, B256, U128, U256,
 };
 use reth_primitives::{Signature, Transaction, TransactionSigned, TxType};
 use tracing::debug;
@@ -145,6 +145,15 @@ impl TryFrom<&TransactionTrace> for TxKind {
     }
 }
 
+impl TryFrom<&TransactionTrace> for Address {
+    type Error = ProtosError;
+
+    fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
+        let address = Address::from_slice(trace.to.as_slice());
+        Ok(address)
+    }
+}
+
 impl TryFrom<&TransactionTrace> for Signature {
     type Error = ProtosError;
 
@@ -224,7 +233,22 @@ impl TryFrom<&TransactionTrace> for Transaction {
                 access_list: AccessList::try_from(trace)?,
                 input,
             }),
-            TxType::Eip4844 => unimplemented!(),
+            TxType::Eip4844 => Transaction::Eip4844(TxEip4844 {
+                chain_id: CHAIN_ID,
+                nonce,
+                gas_limit,
+                max_fee_per_gas: get_u128_or_default(&trace.max_fee_per_gas)?,
+                max_priority_fee_per_gas: get_u128_or_default(&trace.max_priority_fee_per_gas)?,
+                to: Address::try_from(trace)?,
+                value,
+                access_list: AccessList::try_from(trace)?,
+                blob_versioned_hashes: repeated_bytes_to_b256(&trace.blob_hashes)?,
+                max_fee_per_blob_gas: get_u128_or_default(&trace.blob_gas_fee_cap)?,
+                input,
+            }),
+            // The StreamingFast Ethereum Firehose block protobuf definition does not include
+            // the `access_list` entry for this type, which distinguishes it from the
+            // `Eip1559` type.
             TxType::Eip7702 => unimplemented!(),
         };
 
@@ -238,6 +262,19 @@ fn get_u128_or_default(opt_big_int: &Option<BigInt>) -> Result<u128, ProtosError
         None => &BigInt { bytes: vec![0] },
     };
     u128::try_from(big_int)
+}
+
+fn repeated_bytes_to_b256(repeated_bytes: &[Vec<u8>]) -> Result<Vec<B256>, ProtosError> {
+    repeated_bytes
+        .iter()
+        .map(|bytes| {
+            let bytes_array: [u8; 32] = bytes
+                .as_slice()
+                .try_into()
+                .map_err(|_| ProtosError::KzgVersionedHashInvalid)?;
+            Ok(B256::from(bytes_array))
+        })
+        .collect()
 }
 
 impl TryFrom<&TransactionTrace> for TransactionSigned {
@@ -301,6 +338,46 @@ mod tests {
     }
 
     #[test]
+    fn test_repeated_bytes_to_b256() {
+        let fixed_bytes: Vec<B256> = vec![
+            B256::new([
+                1, 240, 29, 33, 169, 15, 200, 181, 150, 148, 142, 29, 46, 20, 144, 215, 102, 238,
+                246, 129, 199, 221, 212, 170, 90, 3, 150, 231, 80, 204, 79, 133,
+            ]),
+            B256::new([
+                1, 89, 24, 242, 52, 32, 222, 110, 23, 123, 102, 85, 121, 62, 97, 139, 2, 40, 33,
+                209, 143, 114, 48, 122, 174, 19, 160, 94, 50, 132, 48, 50,
+            ]),
+        ];
+
+        let repeated_bytes: Vec<Vec<u8>> = vec![
+            [
+                1, 240, 29, 33, 169, 15, 200, 181, 150, 148, 142, 29, 46, 20, 144, 215, 102, 238,
+                246, 129, 199, 221, 212, 170, 90, 3, 150, 231, 80, 204, 79, 133,
+            ]
+            .to_vec(),
+            [
+                1, 89, 24, 242, 52, 32, 222, 110, 23, 123, 102, 85, 121, 62, 97, 139, 2, 40, 33,
+                209, 143, 114, 48, 122, 174, 19, 160, 94, 50, 132, 48, 50,
+            ]
+            .to_vec(),
+        ];
+        let result = repeated_bytes_to_b256(&repeated_bytes).unwrap();
+        assert_eq!(result, fixed_bytes);
+
+        let repeated_bytes_too_short: Vec<Vec<u8>> = vec![
+            [
+                1, 240, 29, 33, 169, 15, 200, 181, 150, 148, 142, 29, 46, 20, 144, 215, 102, 238,
+                246, 129, 199, 221, 212, 170, 90, 3, 150, 231, 80, 204, 79, 133,
+            ]
+            .to_vec(),
+            [1, 89, 24, 242, 52, 32, 222, 110, 23].to_vec(),
+        ];
+        let result = repeated_bytes_to_b256(&repeated_bytes_too_short);
+        assert!(matches!(result, Err(ProtosError::KzgVersionedHashInvalid)));
+    }
+
+    #[test]
     fn test_get_legacy_chain_id() {
         let mut trace = TransactionTrace {
             v: vec![27],
@@ -323,6 +400,16 @@ mod tests {
         };
         let tx_kind = TxKind::try_from(&trace).unwrap();
         assert_eq!(tx_kind, TxKind::Call(Address::from_slice(&[0x00; 20])));
+    }
+
+    #[test]
+    fn test_transaction_trace_to_address() {
+        let trace = TransactionTrace {
+            to: Address::from_slice(&[0x00; 20]).to_vec(),
+            ..Default::default()
+        };
+        let tx_address = Address::try_from(&trace).unwrap();
+        assert_eq!(tx_address, Address::from_slice(&[0x00; 20]));
     }
 
     #[test]
@@ -392,6 +479,11 @@ mod tests {
         trace.r#type = Type::TrxTypeDynamicFee as i32;
         let tx = Transaction::try_from(&trace).unwrap();
         assert!(matches!(tx, Transaction::Eip1559(_)));
+
+        // EIP-4844 transaction
+        trace.r#type = Type::TrxTypeBlob as i32;
+        let tx = Transaction::try_from(&trace).unwrap();
+        assert!(matches!(tx, Transaction::Eip4844(_)));
     }
 
     #[test]
