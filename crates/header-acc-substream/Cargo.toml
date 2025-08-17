@@ -1,0 +1,47 @@
+[package]
+name = "header_accumulator"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+name = "substreams"
+crate-type = ["cdylib"]
+
+[dependencies]
+ethabi = "17"
+hex-literal = "0.3.4"
+num-bigint = "0.4"
+num-traits = "0.2.15"
+prost = "0.13.3"
+prost-types = "0.13.3"
+substreams = "0.6.0"
+substreams-ethereum = "0.10.0"
+substreams-database-change = "1"
+substreams-entity-change = "1"
+# header_accumulator = { git = "ssh://git@github.com/semiotic-ai/veemon.git", branch = "main" }
+# ethportal-api = { git = "https://github.com/ethereum/trin.git", version = "0.2.2", tag = "v0.1.0-alpha.51" }
+tree_hash = "0.8.0"
+tree_hash_derive = "0.8.0"
+# ssz = "0.2.0"
+ssz_types = "0.8.0"
+alloy = "0.5.3"
+serde = "1"
+serde_json = "1"
+ethereum_ssz = "0.7.1"
+ethereum_ssz_derive = "0.7.1"
+
+# ring = { version = "0.17.8", features = ["wasm32_unknown_unknown_js"] }
+
+# Required so that ethabi > ethereum-types build correctly under wasm32-unknown-unknown
+[target.wasm32-unknown-unknown.dependencies]
+getrandom = { version = "0.2", features = ["custom"] }
+
+[build-dependencies]
+anyhow = "1"
+substreams-ethereum = "0.10.0"
+regex = "1.8"
+
+[profile.release]
+lto = true
+opt-level = 's'
+strip = "debuginfo"
