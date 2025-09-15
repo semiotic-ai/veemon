@@ -5,12 +5,20 @@ use flat_files_decoder::{stream_blocks, AnyBlock, EndBlock, Reader};
 use std::{
     fs::File,
     io::{BufReader, BufWriter, Cursor, Write},
+    path::PathBuf,
 };
 
 fn main() {
     let mut buffer = Vec::new();
     let cursor: Cursor<&mut Vec<u8>> = Cursor::new(&mut buffer);
-    let inputs = vec![format!("example-1.dbin"), format!("example-2.dbin")];
+
+    let crate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
+    // build absolute paths to your test files, relative to the crate root
+    let inputs: Vec<PathBuf> = ["0000000000.dbin"]
+        .into_iter()
+        .map(|f| crate_dir.join("tests").join(f))
+        .collect();
     {
         let mut writer = BufWriter::new(cursor);
         for i in inputs {
@@ -25,11 +33,11 @@ fn main() {
 
     let reader = BufReader::new(cursor);
 
-    let blocks: Vec<AnyBlock> = stream_blocks(Reader::Buf(reader), EndBlock::MergeBlock)
+    let blocks: Vec<AnyBlock> = stream_blocks(Reader::Buf(reader), EndBlock::Block(99))
         .unwrap()
         .collect();
 
-    assert_eq!(blocks.len(), 2);
+    assert_eq!(blocks.len(), 100);
     println!("read_blocks.rs done");
 
     println!("Read blocks:");
