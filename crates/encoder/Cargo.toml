@@ -23,8 +23,7 @@ tracing.workspace = true
 zstd.workspace = true
 
 [dev-dependencies]
-clap.workspace = true
-criterion.workspace = true
-rand.workspace = true
-tracing-subscriber = { workspace = true, features = ["json", "env-filter"] }
-
+tokio = "1.39.2"
+beacon-protos = { git = "https://github.com/semiotic-ai/beacon-protos.git", branch = "main" }
+firehose-client = { git = "https://github.com/semiotic-ai/firehose-client.git", branch = "main" }
+tree_hash.workspace = true

@@ -101,3 +101,7 @@ impl Encoder {
 pub fn encode(input: &[u8]) -> Vec<u8> {
     input.to_vec()
 }
+
+// NEW: expose a generic encoding helper for DBIN from blocks (ETH blocks by default)
+pub mod encode_utils;
+
