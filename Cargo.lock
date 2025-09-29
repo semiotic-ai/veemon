@@ -2643,7 +2643,7 @@ checksum = "1ced73b1dacfc750a6db6c0a0c3a3853c8b41997e2e2c563dc90804ae6867959"
 [[package]]
 name = "firehose-client"
 version = "0.2.0"
-source = "git+https://github.com/semiotic-ai/firehose-client.git?branch=main#959aed28a43c0341d6c72b41814316a3137e33a1"
+source = "git+https://github.com/semiotic-ai/firehose-client.git?branch=main#60c84907fe7f2f605a8ee43d3789ce26a331e7b4"
 dependencies = [
  "dotenvy",
  "firehose-rs",
@@ -5126,7 +5126,7 @@ checksum = "caf4aa5b0f434c91fe5c7f1ecb6a5ece2130b02ad2a590589dda5146df959001"
 [[package]]
 name = "reth-codecs"
 version = "1.8.1"
-source = "git+https://github.com/paradigmxyz/reth?tag=v1.8.1#e6608be51ea34424b8e3693cf1f946a3eb224736"
+source = "git+https://github.com/paradigmxyz/reth?branch=main#564e3a67fcaddad2f413cc41a132bb6eba7f64f7"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -5144,7 +5144,7 @@ dependencies = [
 [[package]]
 name = "reth-codecs-derive"
 version = "1.8.1"
-source = "git+https://github.com/paradigmxyz/reth?tag=v1.8.1#e6608be51ea34424b8e3693cf1f946a3eb224736"
+source = "git+https://github.com/paradigmxyz/reth?branch=main#564e3a67fcaddad2f413cc41a132bb6eba7f64f7"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -5155,7 +5155,7 @@ dependencies = [
 [[package]]
 name = "reth-ethereum-forks"
 version = "1.8.1"
-source = "git+https://github.com/paradigmxyz/reth?tag=v1.8.1#e6608be51ea34424b8e3693cf1f946a3eb224736"
+source = "git+https://github.com/paradigmxyz/reth?branch=main#564e3a67fcaddad2f413cc41a132bb6eba7f64f7"
 dependencies = [
  "alloy-eip2124",
  "alloy-hardforks 0.3.5",
@@ -5168,7 +5168,7 @@ dependencies = [
 [[package]]
 name = "reth-ethereum-primitives"
 version = "1.8.1"
-source = "git+https://github.com/paradigmxyz/reth?tag=v1.8.1#e6608be51ea34424b8e3693cf1f946a3eb224736"
+source = "git+https://github.com/paradigmxyz/reth?branch=main#564e3a67fcaddad2f413cc41a132bb6eba7f64f7"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -5187,7 +5187,7 @@ dependencies = [
 [[package]]
 name = "reth-primitives"
 version = "1.8.1"
-source = "git+https://github.com/paradigmxyz/reth?tag=v1.8.1#e6608be51ea34424b8e3693cf1f946a3eb224736"
+source = "git+https://github.com/paradigmxyz/reth?branch=main#564e3a67fcaddad2f413cc41a132bb6eba7f64f7"
 dependencies = [
  "alloy-consensus",
  "c-kzg",
@@ -5201,7 +5201,7 @@ dependencies = [
 [[package]]
 name = "reth-primitives-traits"
 version = "1.8.1"
-source = "git+https://github.com/paradigmxyz/reth?tag=v1.8.1#e6608be51ea34424b8e3693cf1f946a3eb224736"
+source = "git+https://github.com/paradigmxyz/reth?branch=main#564e3a67fcaddad2f413cc41a132bb6eba7f64f7"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -5230,7 +5230,7 @@ dependencies = [
 [[package]]
 name = "reth-static-file-types"
 version = "1.8.1"
-source = "git+https://github.com/paradigmxyz/reth?tag=v1.8.1#e6608be51ea34424b8e3693cf1f946a3eb224736"
+source = "git+https://github.com/paradigmxyz/reth?branch=main#564e3a67fcaddad2f413cc41a132bb6eba7f64f7"
 dependencies = [
  "alloy-primitives",
  "derive_more",
@@ -5241,7 +5241,7 @@ dependencies = [
 [[package]]
 name = "reth-zstd-compressors"
 version = "1.8.1"
-source = "git+https://github.com/paradigmxyz/reth?tag=v1.8.1#e6608be51ea34424b8e3693cf1f946a3eb224736"
+source = "git+https://github.com/paradigmxyz/reth?branch=main#564e3a67fcaddad2f413cc41a132bb6eba7f64f7"
 dependencies = [
  "zstd",
 ]
