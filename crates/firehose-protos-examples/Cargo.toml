@@ -5,6 +5,10 @@ edition = "2021"
 
 [dev-dependencies]
 alloy-primitives.workspace = true
+beacon-protos.workspace = true
 firehose-client = { git = "https://github.com/semiotic-ai/firehose-client.git", branch = "main" }
 firehose-protos.workspace = true
+futures.workspace = true
+hex.workspace = true
 tokio.workspace = true
+vee.workspace = true
