@@ -96,7 +96,17 @@ fn run() -> Result<(), DecoderError> {
 
             for block in blocks {
                 let header_record_with_number = HeaderRecordWithNumber::try_from(&block)?;
-                let header_record_bin = bincode::serialize(&header_record_with_number)?;
+                let header_record_bin = bincode::serde::encode_to_vec::<
+                    _,
+                    bincode::config::Configuration<
+                        bincode::config::LittleEndian,
+                        bincode::config::Varint,
+                        bincode::config::NoLimit,
+                    >,
+                >(
+                    &header_record_with_number,
+                    bincode::config::Configuration::default(),
+                )?;
 
                 let size = header_record_bin.len() as u32;
                 writer.write_all(&size.to_be_bytes())?;
@@ -137,9 +147,9 @@ fn run() -> Result<(), DecoderError> {
 ///
 /// * `input_path`: A [`String`] specifying the path to the input directory or file.
 /// * `output_path`: An [`Option<&str>`] specifying the directory where decoded blocks should be written.
-///             If `None`, decoded blocks are not written to disk.
+///   If `None`, decoded blocks are not written to disk.
 /// * `json_headers_dir`: An [`Option<&str>`] specifying the directory containing EVM Block Header files for verification.
-///                  Must be a directory if provided.
+///   Must be a directory if provided.
 /// * `compression`: A [`Compression`] enum specifying if it is necessary to decompress from zstd.
 fn decode_flat_files(
     input_path: &str,
@@ -242,7 +252,7 @@ fn dir_entry_extension_is_dbin(entry: &DirEntry) -> bool {
     };
     effective_path
         .extension()
-        .map_or(false, |ext| ext == EXTENSION)
+        .is_some_and(|ext| ext == EXTENSION)
 }
 
 fn read_flat_files(path: &str, compression: Compression) -> Result<Vec<AnyBlock>, DecoderError> {

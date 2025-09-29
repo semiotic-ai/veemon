@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::{Block, BlockHeader, TransactionReceipt, TransactionTrace};
-use alloy_primitives::{hex, Address, Bloom, FixedBytes, Uint, B256};
+use alloy_consensus::{
+    proofs::{calculate_transaction_root, ordered_trie_root_with_encoder},
+    EthereumTxEnvelope, Header, TxEip4844,
+};
+use alloy_primitives::{Address, Bloom, FixedBytes, Uint, U256, B256};
 use alloy_rlp::{Encodable, Header as RlpHeader};
-use ethportal_api::types::execution::header::Header;
 use firehose_rs::{FromResponse, HasNumberOrSlot, Response, SingleBlockResponse};
 use prost::Message;
 use prost_wkt_types::Any;
-use reth_primitives::{
-    proofs::calculate_transaction_root, Log, Receipt, ReceiptWithBloom, TransactionSigned,
-};
-use reth_trie_common::root::ordered_trie_root_with_encoder;
+use reth_primitives::{Log, Receipt, ReceiptWithBloom};
 use tracing::error;
 
 use crate::error::ProtosError;
@@ -26,8 +26,8 @@ impl TryFrom<&Block> for Header {
             .ok_or(ProtosError::BlockConversionError)?;
 
         let parent_hash = FixedBytes::from_slice(block_header.parent_hash.as_slice());
-        let uncles_hash = FixedBytes::from_slice(block_header.uncle_hash.as_slice());
-        let author = Address::from_slice(block_header.coinbase.as_slice());
+        let ommers_hash = FixedBytes::from_slice(block_header.uncle_hash.as_slice());
+        let beneficiary = Address::from_slice(block_header.coinbase.as_slice());
         let state_root = FixedBytes::from_slice(block_header.state_root.as_slice());
         let transactions_root = FixedBytes::from_slice(block_header.transactions_root.as_slice());
         let receipts_root = FixedBytes::from_slice(block_header.receipt_root.as_slice());
@@ -41,28 +41,30 @@ impl TryFrom<&Block> for Header {
                 .as_slice(),
         );
         let number = block_header.number;
-        let gas_limit = Uint::from(block_header.gas_limit);
-        let gas_used = Uint::from(block_header.gas_used);
+        let gas_limit = block_header.gas_limit;
+        let gas_used = block_header.gas_used;
         let timestamp = block_header
             .timestamp
             .as_ref()
             .ok_or(ProtosError::BlockConversionError)?
             .seconds as u64;
         let extra_data = block_header.extra_data.clone();
-        let mix_hash = Some(FixedBytes::from_slice(block_header.mix_hash.as_slice()));
-        let nonce = Some(FixedBytes::from_slice(&block_header.nonce.to_be_bytes()));
+        let mix_hash = FixedBytes::from_slice(block_header.mix_hash.as_slice());
+        let nonce = FixedBytes::from_slice(&block_header.nonce.to_be_bytes());
         let base_fee_per_gas = block_header
             .base_fee_per_gas
             .as_ref()
-            .map(|base_fee_per_gas| Uint::from_be_slice(base_fee_per_gas.bytes.as_slice()));
+            .map(|base_fee_per_gas| {
+                U256::from_be_slice(&base_fee_per_gas.bytes).to::<u64>()
+            });
         let withdrawals_root = match block_header.withdrawals_root.is_empty() {
             true => None,
             false => Some(FixedBytes::from_slice(
                 block_header.withdrawals_root.as_slice(),
             )),
         };
-        let blob_gas_used = block_header.blob_gas_used.map(Uint::from);
-        let excess_blob_gas = block_header.excess_blob_gas.map(Uint::from);
+        let blob_gas_used = block_header.blob_gas_used;
+        let excess_blob_gas = block_header.excess_blob_gas;
         let parent_beacon_block_root = match block_header.parent_beacon_root.is_empty() {
             true => None,
             false => Some(FixedBytes::from_slice(
@@ -72,8 +74,8 @@ impl TryFrom<&Block> for Header {
 
         Ok(Header {
             parent_hash,
-            uncles_hash,
-            author,
+            ommers_hash,
+            beneficiary,
             state_root,
             transactions_root,
             receipts_root,
@@ -83,7 +85,7 @@ impl TryFrom<&Block> for Header {
             gas_limit,
             gas_used,
             timestamp,
-            extra_data,
+            extra_data: extra_data.into(),
             mix_hash,
             nonce,
             base_fee_per_gas,
@@ -91,6 +93,7 @@ impl TryFrom<&Block> for Header {
             blob_gas_used,
             excess_blob_gas,
             parent_beacon_block_root,
+            requests_hash: None,
         })
     }
 }
@@ -234,10 +237,10 @@ impl Block {
 
     fn transaction_traces_to_signed_transactions(
         &self,
-    ) -> Result<Vec<TransactionSigned>, ProtosError> {
+    ) -> Result<Vec<EthereumTxEnvelope<TxEip4844>>, ProtosError> {
         self.transaction_traces
             .iter()
-            .map(|trace| trace.try_into())
+            .map(EthereumTxEnvelope::try_from)
             .collect()
     }
 
@@ -266,7 +269,7 @@ impl Block {
     /// otherwise. The block hash is calculated using the ethportal-api Header method.
     pub fn block_hash_is_verified(&self) -> bool {
         let header = Header::try_from(self).unwrap();
-        let block_hash = header.hash();
+        let block_hash = header.hash_slow();
 
         match self.verify_block_hash(block_hash.as_slice()) {
             Ok(result) => result,
@@ -303,7 +306,7 @@ impl TryFrom<&TransactionTrace> for FullReceipt {
     type Error = ProtosError;
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
-        let tx_type = trace.try_into()?;
+        let tx_type = trace.r#type;
 
         let trace_receipt = trace.receipt()?;
 
@@ -314,12 +317,16 @@ impl TryFrom<&TransactionTrace> for FullReceipt {
             tx_type,
             logs,
             cumulative_gas_used: trace_receipt.cumulative_gas_used,
-        };
+        }
+        .into();
 
-        let bloom = Bloom::try_from(trace_receipt)?;
+        let logs_bloom = Bloom::try_from(trace_receipt)?;
 
         Ok(Self {
-            receipt: ReceiptWithBloom { receipt, bloom },
+            receipt: ReceiptWithBloom {
+                receipt,
+                logs_bloom,
+            },
             state_root: trace_receipt.state_root.to_vec(),
         })
     }
@@ -355,14 +362,14 @@ impl FullReceipt {
         self.rlp_header().encode(encoded);
         self.state_root.as_slice().encode(encoded);
         Encodable::encode(&self.receipt.receipt.cumulative_gas_used, encoded);
-        self.receipt.bloom.encode(encoded);
+        self.receipt.logs_bloom.encode(encoded);
         self.receipt.receipt.logs.encode(encoded);
     }
 
     /// For Byzantium and later: only encode the inner receipt contents using the `reth_primitives`
     /// [`ReceiptWithBloom`] `encode_inner` method.
     fn encode_byzantium_and_later_receipt(&self, encoded: &mut Vec<u8>) {
-        self.receipt.encode_inner(encoded, false);
+        self.receipt.encode(encoded);
     }
 
     /// Returns a reference to the [`ReceiptWithBloom`] for this [`FullReceipt`]
@@ -374,7 +381,7 @@ impl FullReceipt {
     fn rlp_header(&self) -> RlpHeader {
         let payload_length = self.state_root.as_slice().length()
             + self.receipt.receipt.cumulative_gas_used.length()
-            + self.receipt.bloom.length()
+            + self.receipt.logs_bloom.length()
             + self.receipt.receipt.logs.length();
 
         RlpHeader {
@@ -400,7 +407,7 @@ impl HasNumberOrSlot for Block {
 
 #[cfg(test)]
 mod tests {
-    use ethportal_api::Header;
+    use alloy_consensus::Header;
 
     use crate::ethereum_v2::BlockHeader;
 
@@ -425,7 +432,7 @@ mod tests {
 
         // Calculate the block hash from the header.
         // `hash()` calls `keccak256(alloy_rlp::encode(self))`.
-        let block_hash = header.hash();
+        let block_hash = header.hash_slow();
 
         assert_eq!(
             block_hash.to_string().as_str(),

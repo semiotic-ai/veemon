@@ -6,12 +6,12 @@ pub mod header_validator;
 pub mod historical_roots;
 pub mod merkle;
 
+use alloy_consensus::Header;
 use alloy_primitives::{B256, U256};
 use anyhow::anyhow;
 use constants::{ACC_TREE_DEPTH, EPOCH_SIZE, MERGE_BLOCK_NUMBER};
 use ethportal_api::types::execution::{
-    accumulator::EpochAccumulator, header::Header,
-    header_with_proof_new::BlockProofHistoricalHashesAccumulator,
+    accumulator::EpochAccumulator, header_with_proof::BlockProofHistoricalHashesAccumulator,
 };
 
 use merkle::proof::MerkleTree;
@@ -21,7 +21,7 @@ use rust_embed::RustEmbed;
 #[prefix = "validation_assets/"]
 struct ValidationAssets;
 use serde::{Deserialize, Serialize};
-use ssz::Decode;
+use ssz::Decode as SszDecode;
 use ssz_derive::{Decode, Encode};
 use ssz_types::{typenum, VariableList};
 use std::path::PathBuf;
@@ -73,7 +73,7 @@ impl PreMergeAccumulator {
         // Validate header hash matches historical hash from epoch accumulator
         let hr_index = (header.number % EPOCH_SIZE) as usize;
         let header_record = epoch_acc[hr_index];
-        if header_record.block_hash != header.hash() {
+        if header_record.block_hash != header.hash_slow() {
             return Err(anyhow!(
                 "Block hash doesn't match historical header hash found in epoch acc."
             ));

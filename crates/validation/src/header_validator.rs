@@ -1,14 +1,15 @@
 // Copyright (c) 2021-2025 Trin Contributors
 // SPDX-License-Identifier: MIT
 
+use alloy_consensus::Header;
 use alloy_primitives::B256;
 use anyhow::anyhow;
 use ethportal_api::{
     consensus::historical_summaries::HistoricalSummaries,
-    types::execution::header_with_proof_new::{
-        BlockHeaderProof, BlockProofHistoricalRoots, BlockProofHistoricalSummaries, HeaderWithProof,
+    types::execution::header_with_proof::{
+        BlockHeaderProof, BlockProofHistoricalRoots, BlockProofHistoricalSummariesDeneb,
+        HeaderWithProof,
     },
-    Header,
 };
 
 use crate::{
@@ -61,7 +62,7 @@ impl HeaderValidator {
                 let epoch_hash = self.pre_merge_acc.historical_epochs[epoch_index];
 
                 match verify_merkle_proof(
-                    hwp.header.hash(),
+                    hwp.header.hash_slow(),
                     proof,
                     15,
                     gen_index as usize,
@@ -75,10 +76,10 @@ impl HeaderValidator {
             }
             BlockHeaderProof::HistoricalRoots(proof) => self.verify_post_merge_pre_capella_header(
                 hwp.header.number,
-                hwp.header.hash(),
+                hwp.header.hash_slow(),
                 proof,
             ),
-            BlockHeaderProof::HistoricalSummaries(_) => {
+            BlockHeaderProof::HistoricalSummariesDeneb(_) => {
                 if hwp.header.number < SHANGHAI_BLOCK_NUMBER {
                     return Err(anyhow!(
                         "Invalid BlockProofHistoricalSummaries found for pre-Shanghai header."
@@ -86,6 +87,9 @@ impl HeaderValidator {
                 }
                 // TODO: Validation for post-Capella headers is not implemented
                 Ok(())
+            }
+            BlockHeaderProof::HistoricalSummariesCapella(_) => {
+                unimplemented!("Validation for post-Deneb headers is not implemented");
             }
         }
     }
@@ -142,7 +146,7 @@ impl HeaderValidator {
         &self,
         block_number: u64,
         header_hash: B256,
-        proof: &BlockProofHistoricalSummaries,
+        proof: &BlockProofHistoricalSummariesDeneb,
         historical_summaries: HistoricalSummaries,
     ) -> anyhow::Result<()> {
         if block_number < SHANGHAI_BLOCK_NUMBER {

@@ -8,7 +8,7 @@ use thiserror::Error;
 pub enum DecoderError {
     /// [bincode] library error.
     #[error("Bin code error: {0}")]
-    Bincode(#[from] bincode::Error),
+    Bincode(#[from] bincode::error::EncodeError),
 
     /// Flat file bytes invalid.
     #[error("Invalid flat file bytes")]

@@ -4,12 +4,12 @@
 
 use std::fmt::Display;
 
-use alloy_consensus::{TxEip1559, TxEip2930, TxEip4844, TxLegacy};
+use alloy_consensus::{EthereumTxEnvelope, Signed, TxEip1559, TxEip2930, TxEip4844, TxLegacy};
 use alloy_eip2930::{AccessList, AccessListItem};
 use alloy_primitives::{
-    hex, Address, Bytes, ChainId, FixedBytes, Parity, TxKind, Uint, B256, U128, U256,
+    hex, Address, Bytes, ChainId, FixedBytes, Signature, TxKind, Uint, B256, U128, U256,
 };
-use reth_primitives::{Signature, Transaction, TransactionSigned, TxType};
+use reth_primitives::{Transaction, TxType};
 use tracing::debug;
 
 use crate::error::ProtosError;
@@ -63,7 +63,7 @@ impl TransactionTrace {
         self.status == 1
     }
 
-    fn parity(&self) -> Result<Parity, ProtosError> {
+    fn parity(&self) -> Result<bool, ProtosError> {
         // Extract the first byte of the V value (Ethereum's V value).
         let v = self.v();
 
@@ -86,7 +86,7 @@ impl TransactionTrace {
             }
         };
 
-        Ok(parity.into())
+        Ok(parity)
     }
 
     pub(crate) fn receipt(&self) -> Result<&TransactionReceipt, ProtosError> {
@@ -277,19 +277,20 @@ fn repeated_bytes_to_b256(repeated_bytes: &[Vec<u8>]) -> Result<Vec<B256>, Proto
         .collect()
 }
 
-impl TryFrom<&TransactionTrace> for TransactionSigned {
+impl TryFrom<&TransactionTrace> for EthereumTxEnvelope<TxEip4844> {
     type Error = ProtosError;
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
-        let transaction = Transaction::try_from(trace)?;
+        let tx = Transaction::try_from(trace)?;
         let signature = Signature::try_from(trace)?;
-        let hash = FixedBytes::from_slice(trace.hash.as_slice());
+        let hash = FixedBytes::<32>::from_slice(trace.hash.as_slice());
 
-        Ok(TransactionSigned {
-            transaction,
+        Ok(EthereumTxEnvelope::Eip4844(Signed::new_unchecked(
+            tx.try_into_eip4844()
+                .map_err(|_| ProtosError::TxTypeConversion("Eip4844".to_string()))?,
             signature,
             hash,
-        })
+        )))
     }
 }
 
@@ -432,10 +433,10 @@ mod tests {
         let signature = Signature::try_from(&trace).unwrap();
         assert_eq!(signature.r(), U256::from(1));
         assert_eq!(signature.s(), U256::from(1));
-        assert!(!trace.parity().unwrap().y_parity());
+        assert!(!trace.parity().unwrap());
 
         trace.v = vec![28];
-        assert!(trace.parity().unwrap().y_parity());
+        assert!(trace.parity().unwrap());
     }
 
     #[test]

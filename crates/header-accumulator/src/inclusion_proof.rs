@@ -3,19 +3,18 @@
 
 use crate::{epoch::MAX_EPOCH_SIZE, errors::EraValidateError, Epoch};
 
+use alloy_consensus::Header;
 use alloy_primitives::FixedBytes;
-use ethportal_api::{
-    types::execution::{
-        accumulator::EpochAccumulator,
-        header_with_proof::{
-            BlockHeaderProof, HeaderWithProof as PortalHeaderWithProof, PreMergeAccumulatorProof,
-        },
+use ethportal_api::types::execution::{
+    accumulator::EpochAccumulator,
+    header_with_proof::{
+        BlockHeaderProof, BlockProofHistoricalHashesAccumulator,
+        HeaderWithProof as PortalHeaderWithProof,
     },
-    Header,
 };
-use trin_validation::{
-    accumulator::PreMergeAccumulator, header_validator::HeaderValidator,
-    historical_roots_acc::HistoricalRootsAccumulator,
+use validation::{
+    header_validator::HeaderValidator, historical_roots::HistoricalRootsAccumulator,
+    PreMergeAccumulator,
 };
 
 const PROOF_SIZE: usize = 15;
@@ -41,12 +40,6 @@ impl InclusionProof {
                 header,
             })
         }
-    }
-}
-
-impl From<InclusionProof> for PreMergeAccumulatorProof {
-    fn from(value: InclusionProof) -> Self {
-        Self { proof: value.proof }
     }
 }
 
@@ -118,18 +111,29 @@ fn do_generate_inclusion_proof(
     epoch_accumulator: &EpochAccumulator,
 ) -> Result<InclusionProof, EraValidateError> {
     PreMergeAccumulator::construct_proof(header, epoch_accumulator)
-        .map(|proof| InclusionProof {
-            proof: proof.proof,
-            block_number: header.number,
+        .map(|proof| {
+            // Convert BlockProofHistoricalHashesAccumulator to [FixedBytes<32>; 15]
+            // The proof is a FixedVector<B256, U15>, so we can iterate over it
+            let proof_array: [FixedBytes<32>; PROOF_SIZE] = proof
+                .iter()
+                .map(|b| FixedBytes::from_slice(b.as_slice()))
+                .collect::<Vec<_>>()
+                .try_into()
+                .map_err(|_| EraValidateError::ProofGenerationFailure)?;
+
+            Ok(InclusionProof {
+                block_number: header.number,
+                proof: proof_array,
+            })
         })
-        .map_err(|_| EraValidateError::ProofGenerationFailure)
+        .map_err(|_| EraValidateError::ProofGenerationFailure)?
 }
 
 /// Verifies a list of provable headers
 ///
 /// * `pre_merge_accumulator_file`- An optional instance of [`PreMergeAccumulator`]
-///     which is a file that maintains a record of historical epoch it is used to
-///     verify canonical-ness of headers accumulated from the `blocks`
+///   which is a file that maintains a record of historical epoch it is used to
+///   verify canonical-ness of headers accumulated from the `blocks`
 /// * `header_proofs`-  A [`Vec<HeaderWithProof>`].
 pub fn verify_inclusion_proofs(
     pre_merge_accumulator_file: Option<PreMergeAccumulator>,
@@ -159,7 +163,18 @@ pub fn verify_inclusion_proof(
     header_validator: &HeaderValidator,
     provable_header: HeaderWithProof,
 ) -> Result<(), EraValidateError> {
-    let proof = BlockHeaderProof::PreMergeAccumulatorProof(provable_header.proof.into());
+    // Convert [FixedBytes<32>; 15] to Vec<B256> for BlockProofHistoricalHashesAccumulator
+    let proof_vec: Vec<alloy_primitives::B256> = provable_header
+        .proof
+        .proof
+        .iter()
+        .map(|fixed_bytes| alloy_primitives::B256::from_slice(fixed_bytes.as_slice()))
+        .collect();
+
+    let block_proof = BlockProofHistoricalHashesAccumulator::new(proof_vec)
+        .map_err(|_| EraValidateError::ProofValidationFailure)?;
+
+    let proof = BlockHeaderProof::HistoricalHashes(block_proof);
 
     let hwp = PortalHeaderWithProof {
         header: provable_header.header,
