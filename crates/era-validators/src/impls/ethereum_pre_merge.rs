@@ -6,7 +6,7 @@ use ethportal_api::types::execution::accumulator::EpochAccumulator;
 use primitive_types::H256;
 use thiserror::Error;
 use tree_hash::TreeHash;
-use trin_validation::accumulator::HistoricalEpochRoots;
+use validation::HistoricalEpochRoots;
 
 #[derive(Error, Debug)]
 pub enum EthereumPreMergeValidatorError {

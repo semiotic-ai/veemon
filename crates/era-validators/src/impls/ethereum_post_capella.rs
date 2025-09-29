@@ -5,8 +5,8 @@ use alloy_primitives::FixedBytes;
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
 use thiserror::Error;
-use trin_validation::constants::CAPELLA_FORK_EPOCH;
 use types::{BeaconBlock, MainnetEthSpec};
+use validation::constants::CAPELLA_FORK_EPOCH;
 
 #[derive(Error, Debug)]
 pub enum EthereumPostCapellaError {

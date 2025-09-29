@@ -4,12 +4,14 @@
 #![deny(missing_docs)]
 #![doc = include_str!("../README.md")]
 
+mod accumulator;
 mod epoch;
 mod era_validator;
 mod errors;
 mod inclusion_proof;
 mod types;
 
+pub use accumulator::*;
 pub use epoch::*;
 pub use era_validator::*;
 pub use errors::*;

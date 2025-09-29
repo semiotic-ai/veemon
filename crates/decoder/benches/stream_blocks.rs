@@ -6,9 +6,10 @@ use std::{
     io::BufReader,
 };
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use flat_files_decoder::read_block_from_reader;
 use prost::Message;
+use std::hint::black_box;
 
 const ITERS_PER_FILE: usize = 10;
 
@@ -60,13 +61,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
             }
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
-            loop {
-                let message = match read_block_from_reader(&mut reader) {
-                    Ok(message) => message,
-                    Err(_) => {
-                        break;
-                    }
-                };
+            while let Ok(message) = read_block_from_reader(&mut reader) {
                 b.iter(|| {
                     black_box(firehose_protos::BstreamBlock::decode(message.as_slice())).unwrap();
                 });
@@ -88,13 +83,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
             }
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
-            loop {
-                let message = match read_block_from_reader(&mut reader) {
-                    Ok(message) => message,
-                    Err(_) => {
-                        break;
-                    }
-                };
+            while let Ok(message) = read_block_from_reader(&mut reader) {
                 let block_stream =
                     firehose_protos::BstreamBlock::decode(message.as_slice()).unwrap();
                 b.iter(|| {
@@ -121,13 +110,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
             }
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
-            loop {
-                let message = match read_block_from_reader(&mut reader) {
-                    Ok(message) => message,
-                    Err(_) => {
-                        break;
-                    }
-                };
+            while let Ok(message) = read_block_from_reader(&mut reader) {
                 let block_stream =
                     firehose_protos::BstreamBlock::decode(message.as_slice()).unwrap();
                 let block =
@@ -154,13 +137,7 @@ fn read_decode_check_bench(c: &mut Criterion) {
             }
             let file = File::open(&path).expect("Failed to open file");
             let mut reader = BufReader::new(file);
-            loop {
-                let message = match read_block_from_reader(&mut reader) {
-                    Ok(message) => message,
-                    Err(_) => {
-                        break;
-                    }
-                };
+            while let Ok(message) = read_block_from_reader(&mut reader) {
                 let block_stream =
                     firehose_protos::BstreamBlock::decode(message.as_slice()).unwrap();
                 let block =

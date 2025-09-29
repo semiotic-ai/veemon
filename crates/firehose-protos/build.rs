@@ -12,15 +12,16 @@ fn main() {
     config.type_attribute(".", "#[derive(serde::Serialize, serde::Deserialize)]");
     config.type_attribute(".", "#[allow(clippy::enum_variant_names)]");
     config.type_attribute(".", "#[allow(missing_docs)]");
+    config.type_attribute(".", "#[allow(dead_code)]");
 
     // Map Google protobuf types to prost_wkt_types
     config.extern_path(".google.protobuf.Any", "::prost_wkt_types::Any");
     config.extern_path(".google.protobuf.Timestamp", "::prost_wkt_types::Timestamp");
 
-    tonic_build::configure()
+    tonic_prost_build::configure()
         .build_client(true)
         .file_descriptor_set_path(out_dir.join("descriptors.bin"))
-        .compile_protos_with_config(
+        .compile_with_config(
             config,
             &[
                 "protos/block.proto",

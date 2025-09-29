@@ -62,6 +62,16 @@ pub fn get_execution_payload_block_hash<E: EthSpec>(block: &BeaconBlock<E>) -> O
                  .0
                 .into(),
         ),
+        BeaconBlock::Gloas(inner) => Some(
+            inner
+                .body
+                .execution_payload
+                .execution_payload
+                .block_hash
+                .0
+                 .0
+                .into(),
+        ),
     }
 }
 
@@ -82,5 +92,6 @@ where
         BeaconBlock::Deneb(inner) => inner.tree_hash_root().0.into(),
         BeaconBlock::Electra(inner) => inner.tree_hash_root().0.into(),
         BeaconBlock::Fulu(inner) => inner.tree_hash_root().0.into(),
+        BeaconBlock::Gloas(inner) => inner.tree_hash_root().0.into(),
     }
 }

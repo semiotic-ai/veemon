@@ -3,8 +3,8 @@
 
 use crate::errors::ArbitrumValidateError;
 
+use alloy_consensus::Header;
 use alloy_primitives::B256;
-use ethportal_api::Header;
 
 /// Off-chain inclusion proof
 #[derive(Debug, Clone)]
@@ -69,7 +69,7 @@ pub fn verify_offchain_inclusion_proof(
     if proof
         .block_header_sequence
         .last()
-        .map(|header| header.hash())
+        .map(|header| header.hash_slow())
         != Some(proof.end_block_hash)
     {
         return Err(ArbitrumValidateError::OffchainInclusionProofVerificationFailure);
@@ -78,7 +78,9 @@ pub fn verify_offchain_inclusion_proof(
     // Confirm that the block_header_sequence is correct by confirming that the parent hash for the
     // current header is the hash of the previous header
     for i in 1..proof.block_header_sequence.len() {
-        if proof.block_header_sequence[i].parent_hash != proof.block_header_sequence[i - 1].hash() {
+        if proof.block_header_sequence[i].parent_hash
+            != proof.block_header_sequence[i - 1].hash_slow()
+        {
             return Err(ArbitrumValidateError::OffchainInclusionProofVerificationFailure);
         }
     }

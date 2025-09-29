@@ -6,10 +6,9 @@ edition = "2021"
 [dependencies]
 types.workspace = true
 merkle_proof.workspace = true
-trin-validation.workspace = true
+validation.workspace = true
 tree_hash.workspace = true
-primitive-types.workspace = true
 thiserror.workspace = true
-header-accumulator.workspace = true
 ethportal-api.workspace = true
 alloy-primitives.workspace = true
+primitive-types.workspace = true

@@ -1,8 +1,9 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+use alloy_consensus::Header;
 use alloy_primitives::{Uint, B256};
-use ethportal_api::{types::execution::accumulator::HeaderRecord, Header};
+use ethportal_api::types::execution::accumulator::HeaderRecord;
 use firehose_protos::{BlockHeader, EthBlock as Block};
 
 use crate::errors::EraValidateError;
