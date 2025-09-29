@@ -1,8 +1,8 @@
 {
-  "crates/vee": "0.1.6",
-  "crates/decoder": "0.4.0",
-  "crates/header-accumulator": "0.2.5",
-  "crates/firehose-protos": "0.5.0",
-  "crates/firehose-protos-examples": "0.2.2",
+  "crates/vee": "0.1.7",
+  "crates/decoder": "0.4.1",
+  "crates/header-accumulator": "0.2.6",
+  "crates/firehose-protos": "0.6.0",
+  "crates/firehose-protos-examples": "0.2.3",
   "crates/era-validators": "0.1.5"
 }
