@@ -6,7 +6,7 @@ use alloy_consensus::{
     proofs::{calculate_transaction_root, ordered_trie_root_with_encoder},
     EthereumTxEnvelope, Header, TxEip4844,
 };
-use alloy_primitives::{Address, Bloom, FixedBytes, Uint, U256, B256};
+use alloy_primitives::{Address, Bloom, FixedBytes, Uint, B256, U256};
 use alloy_rlp::{Encodable, Header as RlpHeader};
 use firehose_rs::{FromResponse, HasNumberOrSlot, Response, SingleBlockResponse};
 use prost::Message;
@@ -54,9 +54,7 @@ impl TryFrom<&Block> for Header {
         let base_fee_per_gas = block_header
             .base_fee_per_gas
             .as_ref()
-            .map(|base_fee_per_gas| {
-                U256::from_be_slice(&base_fee_per_gas.bytes).to::<u64>()
-            });
+            .map(|base_fee_per_gas| U256::from_be_slice(&base_fee_per_gas.bytes).to::<u64>());
         let withdrawals_root = match block_header.withdrawals_root.is_empty() {
             true => None,
             false => Some(FixedBytes::from_slice(
