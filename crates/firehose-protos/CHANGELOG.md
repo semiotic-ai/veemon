@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/semiotic-ai/veemon/compare/firehose-protos-v0.5.0...firehose-protos-v0.6.0) (2025-09-29)
+
+
+### Features
+
+* **firehose-protos:** add support for EIP-4844 transactions ([a7f7be5](https://github.com/semiotic-ai/veemon/commit/a7f7be531a7fb44b868e9df21a3fc89f5a79ff12))
+
 ## [0.5.0](https://github.com/semiotic-ai/veemon/compare/firehose-protos-v0.4.0...firehose-protos-v0.5.0) (2025-07-16)
 
 
