@@ -12,11 +12,9 @@ use flat_files_encoder::encode_utils::encode_blocks_to_dbin;
 async fn main() {
     let mut eth_client = FirehoseClient::new(Chain::Ethereum);
 
-    // Range to fetch for the first step
     let start_block: u64 = 12965000;
     let count: usize = 5;
 
-    // Collect blocks
     let mut blocks: Vec<EthBlock> = Vec::with_capacity(count);
     for i in 0..count {
         let n = start_block + i as u64;
@@ -25,7 +23,6 @@ async fn main() {
         blocks.push(block);
     }
 
-    // Encode to DBIN (ETH) using the new helper
     let dbin = encode_blocks_to_dbin(blocks);
 
     // Write to /tmp

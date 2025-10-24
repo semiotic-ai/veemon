@@ -104,4 +104,5 @@ pub fn encode(input: &[u8]) -> Vec<u8> {
 
 // NEW: expose a generic encoding helper for DBIN from blocks (ETH blocks by default)
 pub mod encode_utils;
-
+pub mod encode_ext;
+pub use crate::encode_ext::DbinEncodeExt;
