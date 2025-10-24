@@ -5,6 +5,10 @@ pub mod constants;
 pub mod header_validator;
 pub mod historical_roots;
 pub mod merkle;
+pub mod post_capella_types;
+
+// Re-export commonly used types
+pub use header_validator::{HeaderValidator, PostCapellaProof};
 
 use alloy_consensus::Header;
 use alloy_primitives::{B256, U256};

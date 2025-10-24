@@ -5,6 +5,7 @@ use crate::{epoch::MAX_EPOCH_SIZE, errors::EraValidateError, Epoch};
 
 use alloy_consensus::Header;
 use alloy_primitives::FixedBytes;
+use ethportal_api::consensus::historical_summaries::HistoricalSummaries;
 use ethportal_api::types::execution::{
     accumulator::EpochAccumulator,
     header_with_proof::{
@@ -135,14 +136,18 @@ fn do_generate_inclusion_proof(
 ///   which is a file that maintains a record of historical epoch it is used to
 ///   verify canonical-ness of headers accumulated from the `blocks`
 /// * `header_proofs`-  A [`Vec<HeaderWithProof>`].
+/// * `historical_summaries`- An optional instance of [`HistoricalSummaries`]
+///   required for validating post-Capella (post-Shanghai fork) headers.
 pub fn verify_inclusion_proofs(
     pre_merge_accumulator_file: Option<PreMergeAccumulator>,
     header_proofs: Vec<HeaderWithProof>,
+    historical_summaries: Option<HistoricalSummaries>,
 ) -> Result<(), EraValidateError> {
     let pre_merge_acc = pre_merge_accumulator_file.unwrap_or_default();
     let header_validator = HeaderValidator {
         pre_merge_acc,
         historical_roots_acc: HistoricalRootsAccumulator::default(),
+        historical_summaries,
     };
 
     for provable_header in header_proofs {
