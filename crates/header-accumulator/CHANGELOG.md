@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/semiotic-ai/veemon/compare/header-accumulator-v0.2.6...header-accumulator-v0.3.0) (2025-10-27)
+
+
+### Features
+
+* implement post-capella header validation ([b2569e6](https://github.com/semiotic-ai/veemon/commit/b2569e6e124eccda2b5396c1c54e5aad4cd2fdbd))
+* implement post-capella header validation ([db713c2](https://github.com/semiotic-ai/veemon/commit/db713c219317d43ee62b0cab94b7a630256f2044))
+
 ## [0.2.6](https://github.com/semiotic-ai/veemon/compare/header-accumulator-v0.2.5...header-accumulator-v0.2.6) (2025-09-29)
 
 ## [0.2.5](https://github.com/semiotic-ai/veemon/compare/header-accumulator-v0.2.4...header-accumulator-v0.2.5) (2025-07-16)
