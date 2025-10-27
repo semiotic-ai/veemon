@@ -115,7 +115,8 @@ fn main() -> Result<(), EraValidateError> {
         .collect::<Result<Vec<_>, _>>()?;
 
     // Verify inclusion proof
-    assert!(verify_inclusion_proofs(None, proof_headers).is_ok());
+    // Note: For post-Capella blocks, pass Some(historical_summaries) as the third argument
+    assert!(verify_inclusion_proofs(None, proof_headers, None).is_ok());
 
     println!("Inclusion proof verified successfully!");
 
