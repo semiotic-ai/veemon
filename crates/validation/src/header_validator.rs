@@ -441,6 +441,121 @@ impl HeaderValidator {
     ///
     /// * `Ok(())` if all verification steps pass
     /// * `Err` if any step fails (era validation, pre-conditions, bounds check, or Merkle proof)
+    ///
+    /// # Examples
+    ///
+    /// ## Example 1: Capella Era Validation
+    ///
+    /// Validates a block from the Capella era (blocks 17,034,870 to 19,426,586).
+    /// Capella-era proofs use 11-element execution block proofs.
+    ///
+    /// ```no_run
+    /// use alloy_consensus::Header;
+    /// use alloy_primitives::B256;
+    /// use ethportal_api::{
+    ///     consensus::historical_summaries::HistoricalSummaries,
+    ///     types::execution::header_with_proof::BlockProofHistoricalSummariesCapella,
+    /// };
+    /// use validation::{HeaderValidator, header_validator::PostCapellaProof};
+    ///
+    /// # fn main() -> anyhow::Result<()> {
+    /// // create validator with historical summaries from beacon node
+    /// let historical_summaries: HistoricalSummaries = load_historical_summaries()?;
+    /// let validator = HeaderValidator::new_with_historical_summaries(historical_summaries.clone());
+    ///
+    /// // example capella-era block (block 17,100,000)
+    /// let block_number = 17_100_000;
+    /// let header = Header {
+    ///     number: block_number,
+    ///     // populate with actual header data
+    ///     ..Default::default()
+    /// };
+    /// let header_hash = header.hash_slow();
+    ///
+    /// // capella proof structure with 11-element execution block proof
+    /// // these proofs are obtained from beacon chain data
+    /// let capella_proof = BlockProofHistoricalSummariesCapella {
+    ///     beacon_block_root: B256::ZERO,  // root of beacon block containing this execution block
+    ///     execution_block_proof: vec![B256::ZERO; 11].into(),  // 11 merkle siblings
+    ///     beacon_block_proof: vec![B256::ZERO; 13].into(),     // 13 merkle siblings
+    ///     slot: 6209536,  // beacon chain slot number
+    /// };
+    ///
+    /// // verify the header using capella-era proof
+    /// validator.verify_post_capella_header(
+    ///     block_number,
+    ///     header_hash,
+    ///     PostCapellaProof::Capella(&capella_proof),
+    ///     &historical_summaries,
+    /// )?;
+    ///
+    /// println!("capella-era block verified successfully");
+    /// # Ok(())
+    /// # }
+    /// #
+    /// # fn load_historical_summaries() -> anyhow::Result<HistoricalSummaries> {
+    /// #     Ok(vec![].into())
+    /// # }
+    /// ```
+    ///
+    /// ## Example 2: Deneb Era Validation
+    ///
+    /// Validates a block from the Deneb era (blocks ≥19,426,587).
+    /// Deneb-era proofs use 12-element execution block proofs due to changes
+    /// in the beacon block structure.
+    ///
+    /// ```no_run
+    /// use alloy_consensus::Header;
+    /// use alloy_primitives::B256;
+    /// use ethportal_api::{
+    ///     consensus::historical_summaries::HistoricalSummaries,
+    ///     types::execution::header_with_proof::BlockProofHistoricalSummariesDeneb,
+    /// };
+    /// use validation::{HeaderValidator, header_validator::PostCapellaProof};
+    ///
+    /// # fn main() -> anyhow::Result<()> {
+    /// // create validator with historical summaries
+    /// let historical_summaries: HistoricalSummaries = load_historical_summaries()?;
+    /// let validator = HeaderValidator::new_with_historical_summaries(historical_summaries.clone());
+    ///
+    /// // example deneb-era block (block 19,500,000)
+    /// let block_number = 19_500_000;
+    /// let header = Header {
+    ///     number: block_number,
+    ///     ..Default::default()
+    /// };
+    /// let header_hash = header.hash_slow();
+    ///
+    /// // deneb proof structure with 12-element execution block proof
+    /// // note the extra element compared to capella
+    /// let deneb_proof = BlockProofHistoricalSummariesDeneb {
+    ///     beacon_block_root: B256::ZERO,
+    ///     execution_block_proof: vec![B256::ZERO; 12].into(),  // 12 merkle siblings
+    ///     beacon_block_proof: vec![B256::ZERO; 13].into(),     // 13 merkle siblings
+    ///     slot: 7123456,
+    /// };
+    ///
+    /// // verify using deneb-era proof
+    /// validator.verify_post_capella_header(
+    ///     block_number,
+    ///     header_hash,
+    ///     PostCapellaProof::Deneb(&deneb_proof),
+    ///     &historical_summaries,
+    /// )?;
+    ///
+    /// println!("deneb-era block verified successfully");
+    /// # Ok(())
+    /// # }
+    /// #
+    /// # fn load_historical_summaries() -> anyhow::Result<HistoricalSummaries> {
+    /// #     Ok(vec![].into())
+    /// # }
+    /// ```
+    ///
+    /// # See Also
+    ///
+    /// - [`PostCapellaProof`] for the unified proof interface and era validation
+    /// - [`validate_header_with_proof`](Self::validate_header_with_proof) for validating pre-merge and post-merge headers
     pub fn verify_post_capella_header(
         &self,
         block_number: u64,

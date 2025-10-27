@@ -47,10 +47,109 @@ impl InclusionProof {
 /// Generates inclusion proofs for headers, given a list epochs that contains
 /// the headers to be proven
 ///
+/// This function creates Merkle inclusion proofs for specified headers by looking them up
+/// within the provided epochs. Each proof demonstrates that a header's block hash is correctly
+/// included in its epoch's accumulator, which can then be verified against the historical
+/// PreMergeAccumulator.
+///
 /// # Arguments
 ///
-/// * `epochs`-  A list of epochs [`Vec<Epoch>`].
-/// * `headers_to_prove` - A list of headers [`Vec<Header>`]
+/// * `epochs` - A list of epochs [`Vec<Epoch>`] containing the block headers. Each epoch
+///   represents 8192 blocks (ERA size).
+/// * `headers_to_prove` - A list of headers [`Vec<Header>`] for which to generate inclusion proofs.
+///   These headers must exist within the provided epochs.
+///
+/// # Returns
+///
+/// * `Ok(Vec<InclusionProof>)` - A vector of inclusion proofs, one for each header
+/// * `Err(EraValidateError)` - If a header's epoch is not found in the provided list, or if
+///   proof generation fails
+///
+/// # Example
+///
+/// This example demonstrates generating inclusion proofs for multiple blocks across different
+/// epochs, which is useful when you need to verify specific blocks from a larger dataset.
+///
+/// ```no_run
+/// use std::{fs::File, io::BufReader};
+/// use flat_files_decoder::{read_blocks_from_reader, AnyBlock, Compression};
+/// use header_accumulator::{Epoch, ExtHeaderRecord, generate_inclusion_proofs};
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // read headers from multiple eras (epochs 0 and 1)
+/// let mut all_headers: Vec<ExtHeaderRecord> = Vec::new();
+///
+/// // load epoch 0 (blocks 0-8191)
+/// for block_num in (0..=8100).step_by(100) {
+///     let path = format!("path/to/dbin/epoch0/{:010}.dbin", block_num);
+///     let reader = BufReader::new(File::open(path)?);
+///     let blocks = read_blocks_from_reader(reader, Compression::None)?;
+///     all_headers.extend(
+///         blocks.iter().filter_map(|b| {
+///             if let AnyBlock::Evm(eth) = b {
+///                 ExtHeaderRecord::try_from(eth).ok()
+///             } else {
+///                 None
+///             }
+///         })
+///     );
+/// }
+///
+/// // load epoch 1 (blocks 8192-16383)
+/// for block_num in (8192..=16300).step_by(100) {
+///     let path = format!("path/to/dbin/epoch1/{:010}.dbin", block_num);
+///     let reader = BufReader::new(File::open(path)?);
+///     let blocks = read_blocks_from_reader(reader, Compression::None)?;
+///     all_headers.extend(
+///         blocks.iter().filter_map(|b| {
+///             if let AnyBlock::Evm(eth) = b {
+///                 ExtHeaderRecord::try_from(eth).ok()
+///             } else {
+///                 None
+///             }
+///         })
+///     );
+/// }
+///
+/// // extract full headers before creating epochs
+/// let headers_to_prove: Vec<_> = all_headers
+///     .iter()
+///     .filter(|h| [100, 1000, 8242].contains(&h.block_number))
+///     .filter_map(|ext| ext.full_header.as_ref().cloned())
+///     .collect();
+///
+/// // separate headers by epoch
+/// let (epoch0_headers, epoch1_headers): (Vec<_>, Vec<_>) = all_headers
+///     .into_iter()
+///     .partition(|h| h.block_number < 8192);
+///
+/// // create epochs
+/// let epoch0: Epoch = epoch0_headers.try_into()?;
+/// let epoch1: Epoch = epoch1_headers.try_into()?;
+/// let epochs = vec![epoch0, epoch1];
+///
+/// // generate proofs for all selected headers
+/// let proofs = generate_inclusion_proofs(epochs, headers_to_prove.clone())?;
+///
+/// // verify we got one proof per header
+/// assert_eq!(proofs.len(), headers_to_prove.len());
+///
+/// // combine proofs with headers for verification
+/// let provable_headers: Vec<_> = headers_to_prove
+///     .into_iter()
+///     .zip(proofs)
+///     .map(|(header, proof)| proof.with_header(header))
+///     .collect::<Result<Vec<_>, _>>()?;
+///
+/// println!("generated {} inclusion proofs", provable_headers.len());
+/// # Ok(())
+/// # }
+/// ```
+///
+/// # See Also
+///
+/// - [`generate_inclusion_proof`] for generating a proof for a single header
+/// - [`verify_inclusion_proofs`] for verifying the generated proofs
 pub fn generate_inclusion_proofs(
     epochs: Vec<Epoch>,
     headers_to_prove: Vec<Header>,
@@ -132,12 +231,98 @@ fn do_generate_inclusion_proof(
 
 /// Verifies a list of provable headers
 ///
-/// * `pre_merge_accumulator_file`- An optional instance of [`PreMergeAccumulator`]
-///   which is a file that maintains a record of historical epoch it is used to
-///   verify canonical-ness of headers accumulated from the `blocks`
-/// * `header_proofs`-  A [`Vec<HeaderWithProof>`].
-/// * `historical_summaries`- An optional instance of [`HistoricalSummaries`]
-///   required for validating post-Capella (post-Shanghai fork) headers.
+/// This function validates that execution layer block headers are part of the canonical
+/// Ethereum chain by verifying inclusion proofs. Currently, this function generates proofs
+/// compatible with pre-merge block validation using `BlockHeaderProof::HistoricalHashes`.
+///
+/// **Note**: For post-Capella validation (blocks ≥17,034,870), use [`HeaderValidator`](validation::header_validator::HeaderValidator)
+/// directly with `BlockProofHistoricalSummariesCapella` or `BlockProofHistoricalSummariesDeneb` proofs.
+///
+/// # Arguments
+///
+/// * `pre_merge_accumulator_file` - An optional [`PreMergeAccumulator`] containing
+///   historical epoch accumulator roots. Pass `None` to use the default embedded accumulator.
+/// * `header_proofs` - A [`Vec<HeaderWithProof>`] containing headers and their inclusion proofs
+/// * `historical_summaries` - Reserved for future post-Capella support
+///
+/// # Returns
+///
+/// * `Ok(())` if all header proofs verify successfully
+/// * `Err(EraValidateError)` if any proof fails validation
+///
+/// # Example: Pre-Merge Era Validation
+///
+/// This example shows the complete workflow for verifying pre-merge blocks (blocks 0-15,537,394):
+/// reading blocks from .dbin files, generating inclusion proofs, and verifying them.
+///
+/// **Note**: Test .dbin files can be obtained from:
+/// - [ve-assets repository](https://github.com/semiotic-ai/ve-assets) for sample pre-merge blocks
+/// - StreamingFast Firehose extraction using a provider like Pinax
+///
+/// ```no_run
+/// use std::{fs::File, io::BufReader};
+/// use flat_files_decoder::{read_blocks_from_reader, AnyBlock, Compression};
+/// use header_accumulator::{
+///     Epoch, ExtHeaderRecord, generate_inclusion_proofs, verify_inclusion_proofs,
+/// };
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// // step 1: read blocks from .dbin files (pre-merge era blocks 0-8199)
+/// let mut headers: Vec<ExtHeaderRecord> = Vec::new();
+/// for block_num in (0..=8200).step_by(100) {
+///     let path = format!("path/to/dbin/{:010}.dbin", block_num);
+///     let reader = BufReader::new(File::open(path)?);
+///     let blocks = read_blocks_from_reader(reader, Compression::None)?;
+///
+///     headers.extend(
+///         blocks.iter().filter_map(|block| {
+///             if let AnyBlock::Evm(eth_block) = block {
+///                 ExtHeaderRecord::try_from(eth_block).ok()
+///             } else {
+///                 None
+///             }
+///         })
+///     );
+/// }
+///
+/// // step 2: select specific blocks to prove (e.g., blocks 100-200)
+/// let headers_to_prove: Vec<_> = headers[100..200]
+///     .iter()
+///     .map(|ext| ext.full_header.as_ref().unwrap().clone())
+///     .collect();
+///
+/// // step 3: create epoch from all headers in the era (8192 blocks)
+/// let epoch: Epoch = headers.try_into()?;
+///
+/// // step 4: generate inclusion proofs for the selected headers
+/// let inclusion_proofs = generate_inclusion_proofs(
+///     vec![epoch],
+///     headers_to_prove.clone()
+/// )?;
+///
+/// // step 5: combine headers with their proofs
+/// let provable_headers = headers_to_prove
+///     .into_iter()
+///     .zip(inclusion_proofs)
+///     .map(|(header, proof)| proof.with_header(header))
+///     .collect::<Result<Vec<_>, _>>()?;
+///
+/// // step 6: verify inclusion proofs using PreMergeAccumulator
+/// // the default accumulator contains historical epoch roots from ethereum portal network
+/// verify_inclusion_proofs(None, provable_headers, None)?;
+///
+/// println!("pre-merge blocks verified successfully");
+/// # Ok(())
+/// # }
+/// ```
+///
+/// # See Also
+///
+/// For post-Capella validation examples, see:
+/// - [`HeaderValidator::verify_post_capella_header`](validation::header_validator::HeaderValidator::verify_post_capella_header)
+///   for Capella and Deneb era validation
+/// - [`PostCapellaProof`](validation::header_validator::PostCapellaProof) for era-specific proof structures
+/// - [`generate_inclusion_proofs`] for creating proofs from epochs
 pub fn verify_inclusion_proofs(
     pre_merge_accumulator_file: Option<PreMergeAccumulator>,
     header_proofs: Vec<HeaderWithProof>,
