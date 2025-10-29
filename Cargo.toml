@@ -2,6 +2,7 @@
 members = [
     "crates/arbitrum-ve",
     "crates/decoder",
+    "crates/encoder",
     "crates/era-validators",
     "crates/firehose-protos",
     "crates/firehose-protos-examples",
