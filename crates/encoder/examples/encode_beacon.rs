@@ -3,60 +3,31 @@
 
 //! # Fetch Beacon Block
 //!
-//! Demonstrates how to fetch a single block from Beacon Firehose ,and how to encode it.
+//! Demonstrates how to fetch a single block from Beacon Firehose, and how to
+//! encode it to a DBIN stream and store it to the filesystem (like the ETH example).
 
-use alloy_primitives::hex;
-use beacon_protos::{Block as BeaconBlock, Body};
+use beacon_protos::Block as BeaconBlock;
 use firehose_client::{Chain, FirehoseClient};
-use firehose_protos::EthBlock;
+use flat_files_encoder::Encoder;
+use prost::Message;
 
 #[tokio::main]
 async fn main() {
-    // Show matching data from execution layer and beacon chain
-    let mut execution_layer_client = FirehoseClient::new(Chain::Ethereum);
-
-    let response = execution_layer_client
-        .fetch_block(20672593)
-        .await
-        .unwrap()
-        .unwrap();
-
-    let block = EthBlock::try_from(response.into_inner()).unwrap();
-
-    assert_eq!(block.number, 20672593);
-    assert_eq!(
-        format!("0x{}", hex::encode(block.hash)),
-        "0xea48ba1c8e38ea586239e9c5ec62949ddd79404c6006c099bb02a8b22ddd18e4"
-    );
-
+    // Fetch a single beacon block
     let mut beacon_client = FirehoseClient::new(Chain::Beacon);
-    // This is the slot number for the Beacon block we want to fetch, but right now
-    // we don't have a way to map the block number of the execution block to the slot number
-    // of the Beacon block.
-    let response = beacon_client.fetch_block(9881091).await.unwrap().unwrap();
-    let block = BeaconBlock::try_from(response.into_inner()).unwrap();
+    // This is the slot number for the Beacon slot for the example
+    const SLOT_NUM: u64 = 9881091;
 
-    assert_eq!(block.slot, 9881091);
+    let response = beacon_client.fetch_block(SLOT_NUM).await.unwrap().unwrap();
+    let inner = response.into_inner();
+    let block = BeaconBlock::try_from(inner).unwrap();
 
-    let body = block.body.as_ref().unwrap();
+    // Encode the beacon block as a DBIN stream and write to /tmp
+    let payload = block.encode_to_vec();
+    let encoder = Encoder::new_v1("BEA");
+    let dbin = encoder.wrap_stream(std::iter::once(payload));
+    let path = format!("/tmp/mainnet_beacon_block_{}.dbin", SLOT_NUM);
+    std::fs::write(&path, dbin).expect("Failed to write DBIN to /tmp");
 
-    match body {
-        Body::Deneb(body) => {
-            let execution_payload = body.execution_payload.as_ref().unwrap();
-
-            let block_hash = &execution_payload.block_hash;
-
-            assert_eq!(
-                format!("0x{}", hex::encode(block_hash)).as_str(),
-                "0xea48ba1c8e38ea586239e9c5ec62949ddd79404c6006c099bb02a8b22ddd18e4"
-            );
-
-            let block_number = execution_payload.block_number;
-
-            assert_eq!(block_number, 20672593);
-        }
-        _ => unimplemented!(),
-    };
-
-    println!("fetch_beacon ran to completion!");
+    println!("Wrote {}", path);
 }
