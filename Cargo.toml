@@ -15,22 +15,22 @@ resolver = "2"
 alloy-core = "1.4.1"
 alloy-dyn-abi = "1.4.1"
 alloy-rlp = "0.3.12"
-alloy-consensus = "1.0.36"
+alloy-consensus = "1.0.42"
 alloy-eip2930 = "0.2.1"
-alloy-primitives = "1.4.0"
+alloy-primitives = "1.4.1"
 anyhow = "1.0.100"
 arbitrum-ve = { path = "crates/arbitrum-ve" }
 base64 = "0.22.1"
 beacon-protos = { git = "https://github.com/semiotic-ai/beacon-protos.git", branch = "main" }
 bincode = { version = "2.0.1", features = ["serde"] }
-clap = { version = "4.5.23", features = ["derive"] }
+clap = { version = "4.5.51", features = ["derive"] }
 criterion = { version = "0.7.0", features = ["html_reports"] }
 decoder = { path = "crates/decoder" }
 era-validators = { path = "crates/era-validators" }
 ethportal-api = "0.12.0"
 ethereum_hashing = "0.8.0"
-ethereum_ssz = "0.9.0"
-ethereum_ssz_derive = "0.9.0"
+ethereum_ssz = "0.9.1"
+ethereum_ssz_derive = "0.9.1"
 firehose-protos = { path = "crates/firehose-protos" }
 firehose-rs = "0.3.0"
 futures = "0.3.31"
@@ -49,17 +49,17 @@ rand = "0.9.2"
 reth-primitives = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 reth-trie-common = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
 rlp = "0.6.1"
-serde = "1.0.216"
-serde_json = "1.0.133"
-ssz_types = "0.12.1"
-tempfile = "3.14.0"
-thiserror = "2.0.8"
-tokio = "1.42.0"
+serde = "1.0.228"
+serde_json = "1.0.145"
+ssz_types = "0.12.2"
+tempfile = "3.23.0"
+thiserror = "2.0.17"
+tokio = "1.48.0"
 tonic = "0.14.2"
 tonic-prost = "0.14.2"
 tonic-prost-build = "0.14.2"
 tracing = "0.1.41"
-tracing-subscriber = "0.3.19"
+tracing-subscriber = "0.3.20"
 tree_hash = "0.10.0"
 tree_hash_derive = "0.10.0"
 validation = { path = "crates/validation" }

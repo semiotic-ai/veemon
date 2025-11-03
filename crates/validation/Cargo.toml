@@ -16,16 +16,16 @@ ssz_types.workspace = true
 ethereum_ssz.workspace = true
 ethereum_ssz_derive.workspace = true
 ethereum_hashing.workspace = true
-lazy_static = "1.4.0"
+lazy_static = "1.5.0"
 serde.workspace = true
 serde_json.workspace = true
-rust-embed = "8.5.0"
+rust-embed = "8.9.0"
 tree_hash_derive.workspace = true
 static_assertions = "1.1"
 
 [dev-dependencies]
 quickcheck = "1.0.3"
-quickcheck_macros = "1.0.0"
+quickcheck_macros = "1.1.0"
 
 [lib]
 name = "validation"
