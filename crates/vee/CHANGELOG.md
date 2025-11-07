@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/semiotic-ai/veemon/compare/vee-v0.1.7...vee-v0.2.0) (2025-10-27)
+
+
+### Features
+
+* implement post-capella header validation ([b2569e6](https://github.com/semiotic-ai/veemon/commit/b2569e6e124eccda2b5396c1c54e5aad4cd2fdbd))
+* implement post-capella header validation ([db713c2](https://github.com/semiotic-ai/veemon/commit/db713c219317d43ee62b0cab94b7a630256f2044))
+
 ## [0.1.7](https://github.com/semiotic-ai/veemon/compare/vee-v0.1.6...vee-v0.1.7) (2025-09-29)
 
 ## [0.1.6](https://github.com/semiotic-ai/veemon/compare/vee-v0.1.5...vee-v0.1.6) (2025-07-16)

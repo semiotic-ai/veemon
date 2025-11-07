@@ -2679,7 +2679,7 @@ dependencies = [
 
 [[package]]
 name = "firehose-protos-examples"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "alloy-primitives",
  "beacon-protos",
@@ -3109,7 +3109,7 @@ dependencies = [
 
 [[package]]
 name = "header-accumulator"
-version = "0.2.6"
+version = "0.3.0"
 dependencies = [
  "alloy-consensus",
  "alloy-primitives",
@@ -6927,7 +6927,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 
 [[package]]
 name = "vee"
-version = "0.1.7"
+version = "0.2.0"
 dependencies = [
  "arbitrum-ve",
  "decoder",
