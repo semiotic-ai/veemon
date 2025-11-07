@@ -1,0 +1,270 @@
+syntax = "proto3";
+
+option go_package = "github.com/pinax-network/firehose-beacon/pb/sf/beacon/type/v1;pbbeacon";
+
+package sf.beacon.type.v1;
+
+import "google/protobuf/timestamp.proto";
+
+enum Spec {
+  UNSPECIFIED = 0;
+  PHASE0 = 1;
+  ALTAIR = 2;
+  BELLATRIX = 3;
+  CAPELLA = 4;
+  DENEB = 5;
+}
+
+message Block {
+
+  uint32 version = 1;
+
+  Spec spec = 2;
+  uint64 slot = 3;
+  uint64 parent_slot = 4;
+  bytes root = 5;
+  bytes parent_root = 6;
+  bytes state_root = 7;
+  uint64 proposer_index = 8;
+  bytes body_root = 9;
+
+  oneof Body {
+    Phase0Body phase0 = 20;
+    AltairBody altair = 21;
+    BellatrixBody bellatrix = 22;
+    CapellaBody capella = 23;
+    DenebBody deneb = 24;
+  }
+
+  bytes signature = 30;
+  google.protobuf.Timestamp timestamp = 31;
+}
+
+message Phase0Body {
+  bytes rando_reveal = 1;
+  Eth1Data eth1_data = 2;
+  bytes graffiti = 3;
+  repeated ProposerSlashing proposer_slashings = 4;
+  repeated AttesterSlashing attester_slashings = 5;
+  repeated Attestation attestations = 6;
+  repeated Deposit deposits = 7;
+  repeated SignedVoluntaryExit voluntary_exits = 8;
+}
+
+message AltairBody {
+  bytes rando_reveal = 1;
+  Eth1Data eth1_data = 2;
+  bytes graffiti = 3;
+  repeated ProposerSlashing proposer_slashings = 4;
+  repeated AttesterSlashing attester_slashings = 5;
+  repeated Attestation attestations = 6;
+  repeated Deposit deposits = 7;
+  repeated SignedVoluntaryExit voluntary_exits = 8;
+  SyncAggregate sync_aggregate = 9;
+}
+
+message BellatrixBody {
+  bytes rando_reveal = 1;
+  Eth1Data eth1_data = 2;
+  bytes graffiti = 3;
+  repeated ProposerSlashing proposer_slashings = 4;
+  repeated AttesterSlashing attester_slashings = 5;
+  repeated Attestation attestations = 6;
+  repeated Deposit deposits = 7;
+  repeated SignedVoluntaryExit voluntary_exits = 8;
+  SyncAggregate sync_aggregate = 9;
+  BellatrixExecutionPayload execution_payload = 10;
+}
+
+message CapellaBody {
+  bytes rando_reveal = 1;
+  Eth1Data eth1_data = 2;
+  bytes graffiti = 3;
+  repeated ProposerSlashing proposer_slashings = 4;
+  repeated AttesterSlashing attester_slashings = 5;
+  repeated Attestation attestations = 6;
+  repeated Deposit deposits = 7;
+  repeated SignedVoluntaryExit voluntary_exits = 8;
+  SyncAggregate sync_aggregate = 9;
+  CapellaExecutionPayload execution_payload = 10;
+}
+
+message DenebBody {
+  bytes rando_reveal = 1;
+  Eth1Data eth1_data = 2;
+  bytes graffiti = 3;
+  repeated ProposerSlashing proposer_slashings = 4;
+  repeated AttesterSlashing attester_slashings = 5;
+  repeated Attestation attestations = 6;
+  repeated Deposit deposits = 7;
+  repeated SignedVoluntaryExit voluntary_exits = 8;
+  SyncAggregate sync_aggregate = 9;
+  DenebExecutionPayload execution_payload = 10;
+  repeated SignedBLSToExecutionChange bls_to_execution_changes = 11;
+  repeated bytes blob_kzg_commitments = 12;
+
+  repeated Blob embedded_blobs = 20;
+}
+
+message Eth1Data {
+  bytes deposit_root = 1;
+  uint64 deposit_count = 2;
+  bytes block_hash = 3;
+}
+
+message ProposerSlashing {
+  SignedBeaconBlockHeader signed_header_1 = 1;
+  SignedBeaconBlockHeader signed_header_2 = 2;
+}
+
+message AttesterSlashing {
+  IndexedAttestation attestation_1 = 1;
+  IndexedAttestation attestation_2 = 2;
+}
+
+message Attestation {
+  bytes aggregation_bits = 1;
+  AttestationData data = 2;
+  bytes signature = 3;
+}
+
+message Deposit {
+  repeated bytes proof = 1;
+  DepositData data = 2;
+}
+
+message SignedVoluntaryExit {
+  VoluntaryExit message = 1;
+  bytes signature = 2;
+}
+
+message SyncAggregate {
+  bytes sync_commitee_bits = 1;
+  bytes sync_comittee_signature = 2;
+}
+
+message BellatrixExecutionPayload {
+  bytes parent_hash = 1;
+  bytes fee_recipient = 2;
+  bytes state_root = 3;
+  bytes receipts_root = 4;
+  bytes logs_bloom = 5;
+  bytes prev_randao = 6;
+  uint64 block_number = 7;
+  uint64 gas_limit = 8;
+  uint64 gas_used = 9;
+  google.protobuf.Timestamp timestamp = 10;
+  bytes extra_data = 11;
+  bytes base_fee_per_gas = 12;
+  bytes block_hash = 13;
+  repeated bytes transactions = 14;
+}
+
+
+message CapellaExecutionPayload {
+  bytes parent_hash = 1;
+  bytes fee_recipient = 2;
+  bytes state_root = 3;
+  bytes receipts_root = 4;
+  bytes logs_bloom = 5;
+  bytes prev_randao = 6;
+  uint64 block_number = 7;
+  uint64 gas_limit = 8;
+  uint64 gas_used = 9;
+  google.protobuf.Timestamp timestamp = 10;
+  bytes extra_data = 11;
+  bytes base_fee_per_gas = 12;
+  bytes block_hash = 13;
+  repeated bytes transactions = 14;
+  repeated Withdrawal withdrawals = 15;
+}
+
+message DenebExecutionPayload {
+  bytes parent_hash = 1;
+  bytes fee_recipient = 2;
+  bytes state_root = 3;
+  bytes receipts_root = 4;
+  bytes logs_bloom = 5;
+  bytes prev_randao = 6;
+  uint64 block_number = 7;
+  uint64 gas_limit = 8;
+  uint64 gas_used = 9;
+  google.protobuf.Timestamp timestamp = 10;
+  bytes extra_data = 11;
+  bytes base_fee_per_gas = 12;
+  bytes block_hash = 13;
+  repeated bytes transactions = 14;
+  repeated Withdrawal withdrawals = 15;
+  uint64 blob_gas_used = 16;
+  uint64 excess_blob_gas = 17;
+}
+
+message SignedBLSToExecutionChange {
+  BLSToExecutionChange message = 1;
+  bytes signature = 2;
+}
+
+message BLSToExecutionChange {
+  uint64 validator_index = 1;
+  bytes from_bls_pub_key = 2;
+  bytes to_execution_address = 3;
+}
+
+message Withdrawal {
+  uint64 withdrawal_index = 1;
+  uint64 validator_index = 2;
+  bytes address = 3;
+  uint64 gwei = 4;
+}
+
+message VoluntaryExit {
+  uint64 epoch = 1;
+  uint64 validator_index = 2;
+}
+
+message DepositData {
+  bytes public_key = 1;
+  bytes withdrawal_credentials = 2;
+  uint64 gwei = 3;
+  bytes signature = 4;
+}
+
+message IndexedAttestation {
+  repeated uint64 attesting_indices = 1;
+  AttestationData data = 2;
+  bytes signature = 3;
+}
+
+message AttestationData {
+  uint64 slot = 1;
+  uint64 committee_index = 2;
+  bytes beacon_block_root = 3;
+  Checkpoint source = 4;
+  Checkpoint target = 5;
+}
+
+message Checkpoint {
+  uint64 epoch = 1;
+  bytes root = 2;
+}
+
+message SignedBeaconBlockHeader {
+  BeaconBlockHeader message = 1;
+  bytes Signature = 2;
+}
+
+message BeaconBlockHeader {
+  uint64 slot = 1;
+  uint64 proposer_index = 2;
+  bytes parent_root = 3;
+  bytes state_root = 4;
+  bytes body_root = 5;
+}
+
+message Blob {
+  uint64 index = 1;
+  bytes blob = 2;
+  bytes kzg_commitment = 3;
+  bytes kzg_proof = 4;
+  repeated bytes kzg_commitment_inclusion_proof = 5;
+}
