@@ -1,6 +1,6 @@
-//! Encoder crate — DBIN-aligned encoder.
-//!
-//! This crate encodes raw block data into a DBIN-like binary stream that can be consumed by the decoder in `crates/decoder`.
+// Encoder crate — DBIN-aligned encoder.
+//
+// This crate encodes raw block data into a DBIN-like binary stream that can be consumed by the decoder in `crates/decoder`.
 
 /// Encoder version selector for the DBIN header.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,7 +21,7 @@ pub struct Encoder {
 impl Encoder {
     /// Create a V0 encoder. Content type must be exactly 3 ASCII bytes (e.g., "ETH").
     pub fn new_v0(content_type: &str, content_version: [u8; 2]) -> Self {
-        assert_eq!(content_type.as_bytes().len(), 3, "content_type must be 3 bytes for V0");
+        assert_eq!(content_type.len(), 3, "content_type must be 3 bytes for V0");
         Self {
             version: Version::V0,
             content_type: content_type.to_string(),
@@ -39,35 +39,38 @@ impl Encoder {
     }
 
     /// Encode a single block into a DBIN-style stream: header followed by a single framed block.
-    pub fn encode_block(&self, block: &[u8]) -> Vec<u8> {
+    pub fn encode_block<M: prost::Message>(&self, block: M) -> Vec<u8> {
         let mut out = Vec::new();
         self.write_header(&mut out);
-        self.write_frame(&mut out, block);
+        let bytes = block.encode_to_vec();
+        self.write_frame(&mut out, &bytes);
         out
     }
 
-    /// Encode a sequence of blocks into a single stream (header + frames).
-    pub fn encode_blocks<I>(&self, blocks: I) -> Vec<u8>
+    /// Encodes a list of blocks into a .dbin file
+    pub fn encode_blocks<I, M>(&self, blocks: I) -> Vec<u8>
     where
-        I: IntoIterator<Item = Vec<u8>>,
+        I: IntoIterator<Item = M>,
+        M: prost::Message,
     {
         let mut out = Vec::new();
         self.write_header(&mut out);
         for b in blocks {
-            self.write_frame(&mut out, &b);
+            let bytes = b.encode_to_vec();
+            self.write_frame(&mut out, &bytes);
         }
         out
     }
 
-    /// Convenience wrapper to encode a stream of blocks with header.
-    pub fn wrap_stream<I>(&self, blocks: I) -> Vec<u8>
-    where
-        I: IntoIterator<Item = Vec<u8>>,
-    {
-        self.encode_blocks(blocks)
+    pub fn encode_value<T: ssz::Encode>(&self, value: &T) -> Vec<u8> {
+        let mut out = Vec::new();
+        self.write_header(&mut out);
+        let mut frame = Vec::with_capacity(value.ssz_bytes_len());
+        value.ssz_append(&mut frame);
+        self.write_frame(&mut out, &frame);
+        out
     }
 
-    // internal helpers
     fn write_header(&self, out: &mut Vec<u8>) {
         // magic
         out.extend_from_slice(b"dbin");
@@ -101,8 +104,3 @@ impl Encoder {
 pub fn encode(input: &[u8]) -> Vec<u8> {
     input.to_vec()
 }
-
-// NEW: expose a generic encoding helper for DBIN from blocks (ETH blocks by default)
-pub mod encode_utils;
-pub mod encode_ext;
-pub use crate::encode_ext::DbinEncodeExt;
