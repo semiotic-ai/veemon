@@ -19,13 +19,12 @@ async fn main() {
     const SLOT_NUM: u64 = 9881091;
 
     let response = beacon_client.fetch_block(SLOT_NUM).await.unwrap().unwrap();
-    let inner = response.into_inner();
-    let block = BeaconBlock::try_from(inner).unwrap();
+    let block = BeaconBlock::try_from(response.into_inner()).unwrap();
 
     // Encode the beacon block as a DBIN stream and write to /tmp
     let payload = block.encode_to_vec();
     let encoder = Encoder::new_v1("BEA");
-    let dbin = encoder.wrap_stream(std::iter::once(payload));
+    let dbin = encoder.encode_blocks(std::iter::once(payload));
     let path = format!("/tmp/mainnet_beacon_block_{}.dbin", SLOT_NUM);
     std::fs::write(&path, dbin).expect("Failed to write DBIN to /tmp");
 
