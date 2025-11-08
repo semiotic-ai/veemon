@@ -23,6 +23,7 @@ zstd.workspace = true
 types.workspace = true
 ssz_types.workspace = true
 ethereum_ssz.workspace = true
+firehose-protos.workspace = true;
 ethereum_ssz_derive.workspace = true
 
 [dev-dependencies]
