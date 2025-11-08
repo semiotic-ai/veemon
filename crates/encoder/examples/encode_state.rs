@@ -26,12 +26,11 @@ async fn main() {
 
     let resp = reqwest::get(LIGHT_CLIENT_DATA_URL).await.unwrap();
     let DebugStateResponse { data: state } = resp.json::<DebugStateResponse>().await.unwrap();
-    // Serialize as JSON bytes
+    // Serialize as SSZ bytes
     let payload = state.as_ssz_bytes();
 
     // Encode and write to /tmp
     let encoder = Encoder::new_v1("STA");
-    let dbin = encoder.encode_value(&payload);
 
     let ts = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -39,6 +38,9 @@ async fn main() {
         .as_secs();
 
     let path = format!("/tmp/mainnet_beacon_state_head_{}.dbin", ts);
-    std::fs::write(&path, dbin).expect("Failed to write DBIN to /tmp");
+    encoder
+        .encode_bytes_to_path(&path, std::iter::once(payload.as_slice()))
+        .expect("DBIN encoding failed");
+
     println!("Wrote {}", path);
 }

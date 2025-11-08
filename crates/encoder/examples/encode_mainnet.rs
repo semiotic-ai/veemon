@@ -1,6 +1,6 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
-//! # Fetch Entire Era of Execution Layer Blocks
+//! # Fetch and encode Entire Era of Execution Layer Blocks
 //!
 //! This example demonstrates how to fetch an entire era of execution layer blocks
 //! using the FirehoseClient.
@@ -26,11 +26,11 @@ async fn main() {
 
     // Encode all fetched blocks as a single DBIN stream (one frame per block)
     let encoder = Encoder::new_v1("ETH");
-    let dbin = encoder.encode_blocks(blocks);
+
+    let path = format!("/tmp/mainnet_eth_blocks_{}_{}.dbin", start_block, count);
+    encoder.encode_blocks_to_path(&path, blocks).unwrap();
 
     // Write to /tmp
-    let path = format!("/tmp/mainnet_eth_blocks_{}_{}.dbin", start_block, count);
-    std::fs::write(&path, dbin).expect("Failed to write DBIN to /tmp");
 
     println!("Wrote {}", path);
 }

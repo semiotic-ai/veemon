@@ -1,7 +1,7 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-//! # Fetch Beacon Block
+//! # Fetch and encode Beacon Blocks
 //!
 //! Demonstrates how to fetch a single block from Beacon Firehose, and how to
 //! encode it to a DBIN stream and store it to the filesystem (like the ETH example).
@@ -17,16 +17,22 @@ async fn main() {
     let mut beacon_client = FirehoseClient::new(Chain::Beacon);
     // This is the slot number for the Beacon slot for the example
     const SLOT_NUM: u64 = 9881091;
+    let start_block: u64 = SLOT_NUM;
+    let count: usize = 5;
 
-    let response = beacon_client.fetch_block(SLOT_NUM).await.unwrap().unwrap();
-    let block = BeaconBlock::try_from(response.into_inner()).unwrap();
+    let mut blocks: Vec<BeaconBlock> = Vec::with_capacity(count);
+    for i in 0..count {
+        let n = start_block + i as u64;
+        let resp = beacon_client.fetch_block(n).await.unwrap().unwrap();
+        let block = BeaconBlock::try_from(resp.into_inner()).unwrap();
+        blocks.push(block);
+    }
 
-    // Encode the beacon block as a DBIN stream and write to /tmp
-    let payload = block.encode_to_vec();
+    // Encode all fetched blocks as a single DBIN stream (one frame per block)
     let encoder = Encoder::new_v1("BEA");
-    let dbin = encoder.encode_blocks(std::iter::once(payload));
-    let path = format!("/tmp/mainnet_beacon_block_{}.dbin", SLOT_NUM);
-    std::fs::write(&path, dbin).expect("Failed to write DBIN to /tmp");
+
+    let path = format!("/tmp/mainnet_eth_blocks_{}_{}.dbin", start_block, count);
+    encoder.encode_blocks_to_path(&path, blocks).unwrap();
 
     println!("Wrote {}", path);
 }
