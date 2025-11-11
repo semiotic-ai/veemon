@@ -28,9 +28,7 @@ async fn main() {
     let encoder = Encoder::new_v1("ETH");
 
     let path = format!("/tmp/mainnet_eth_blocks_{}_{}.dbin", start_block, count);
-    encoder.encode_blocks_to_path(&path, blocks).unwrap();
-
-    // Write to /tmp
+    encoder.encode_prost_blocks_to_path(&path, blocks).unwrap();
 
     println!("Wrote {}", path);
 }
