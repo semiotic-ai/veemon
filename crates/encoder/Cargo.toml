@@ -23,8 +23,8 @@ zstd.workspace = true
 types.workspace = true
 ssz_types.workspace = true
 ethereum_ssz.workspace = true
-firehose-protos.workspace = true;
 ethereum_ssz_derive.workspace = true
+prost-wkt-types.workspace = true
 
 [dev-dependencies]
 tokio = "1.39.2"

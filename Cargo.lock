@@ -2372,6 +2372,7 @@ dependencies = [
  "firehose-client",
  "firehose-protos",
  "prost",
+ "prost-wkt-types",
  "reqwest",
  "reth-primitives",
  "serde",
