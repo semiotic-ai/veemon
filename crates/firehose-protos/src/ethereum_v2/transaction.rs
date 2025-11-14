@@ -285,12 +285,27 @@ impl TryFrom<&TransactionTrace> for EthereumTxEnvelope<TxEip4844> {
         let signature = Signature::try_from(trace)?;
         let hash = FixedBytes::<32>::from_slice(trace.hash.as_slice());
 
-        Ok(EthereumTxEnvelope::Eip4844(Signed::new_unchecked(
-            tx.try_into_eip4844()
-                .map_err(|_| ProtosError::TxTypeConversion("Eip4844".to_string()))?,
-            signature,
-            hash,
-        )))
+        let envelope = match tx {
+            Transaction::Legacy(tx) => {
+                EthereumTxEnvelope::Legacy(Signed::new_unchecked(tx, signature, hash))
+            }
+            Transaction::Eip2930(tx) => {
+                EthereumTxEnvelope::Eip2930(Signed::new_unchecked(tx, signature, hash))
+            }
+            Transaction::Eip1559(tx) => {
+                EthereumTxEnvelope::Eip1559(Signed::new_unchecked(tx, signature, hash))
+            }
+            Transaction::Eip4844(tx) => {
+                EthereumTxEnvelope::Eip4844(Signed::new_unchecked(tx, signature, hash))
+            }
+            Transaction::Eip7702(_) => {
+                return Err(ProtosError::TxTypeConversion(
+                    "Eip7702 not supported".to_string(),
+                ));
+            }
+        };
+
+        Ok(envelope)
     }
 }
 
@@ -501,5 +516,194 @@ mod tests {
         }; // More than 16 bytes, should fail
         let result: Result<u128, ProtosError> = u128::try_from(&invalid_bigint);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn legacy_envelope_conversion() {
+        let trace = TransactionTrace {
+            r#type: Type::TrxTypeLegacy as i32,
+            nonce: 1,
+            gas_price: Some(BigInt {
+                bytes: vec![0, 0, 1],
+            }),
+            gas_limit: 21000,
+            to: Address::from_slice(&[0x02; 20]).to_vec(),
+            value: Some(BigInt {
+                bytes: vec![0, 0, 5],
+            }),
+            input: vec![0x01, 0x02, 0x03],
+            calls: vec![Call::default()],
+            r: vec![0; 32],
+            s: vec![0; 32],
+            v: vec![27],
+            hash: vec![0; 32],
+            ..Default::default()
+        };
+
+        let envelope = EthereumTxEnvelope::try_from(&trace).unwrap();
+        assert!(matches!(envelope, EthereumTxEnvelope::Legacy(_)));
+    }
+
+    #[test]
+    fn eip2930_envelope_conversion() {
+        let trace = TransactionTrace {
+            r#type: Type::TrxTypeAccessList as i32,
+            nonce: 1,
+            gas_price: Some(BigInt {
+                bytes: vec![0, 0, 1],
+            }),
+            gas_limit: 21000,
+            to: Address::from_slice(&[0x02; 20]).to_vec(),
+            value: Some(BigInt {
+                bytes: vec![0, 0, 5],
+            }),
+            input: vec![0x01, 0x02, 0x03],
+            calls: vec![Call::default()],
+            r: vec![0; 32],
+            s: vec![0; 32],
+            v: vec![27],
+            hash: vec![0; 32],
+            ..Default::default()
+        };
+
+        let envelope = EthereumTxEnvelope::try_from(&trace).unwrap();
+        assert!(matches!(envelope, EthereumTxEnvelope::Eip2930(_)));
+    }
+
+    #[test]
+    fn eip1559_envelope_conversion() {
+        let trace = TransactionTrace {
+            r#type: Type::TrxTypeDynamicFee as i32,
+            nonce: 1,
+            max_fee_per_gas: Some(BigInt {
+                bytes: vec![0, 0, 1],
+            }),
+            max_priority_fee_per_gas: Some(BigInt { bytes: vec![0, 1] }),
+            gas_limit: 21000,
+            to: Address::from_slice(&[0x02; 20]).to_vec(),
+            value: Some(BigInt {
+                bytes: vec![0, 0, 5],
+            }),
+            input: vec![0x01, 0x02, 0x03],
+            calls: vec![Call::default()],
+            r: vec![0; 32],
+            s: vec![0; 32],
+            v: vec![27],
+            hash: vec![0; 32],
+            ..Default::default()
+        };
+
+        let envelope = EthereumTxEnvelope::try_from(&trace).unwrap();
+        assert!(matches!(envelope, EthereumTxEnvelope::Eip1559(_)));
+    }
+
+    #[test]
+    fn eip4844_envelope_conversion() {
+        let trace = TransactionTrace {
+            r#type: Type::TrxTypeBlob as i32,
+            nonce: 1,
+            max_fee_per_gas: Some(BigInt {
+                bytes: vec![0, 0, 1],
+            }),
+            max_priority_fee_per_gas: Some(BigInt { bytes: vec![0, 1] }),
+            blob_gas_fee_cap: Some(BigInt { bytes: vec![0, 1] }),
+            gas_limit: 21000,
+            to: Address::from_slice(&[0x02; 20]).to_vec(),
+            value: Some(BigInt {
+                bytes: vec![0, 0, 5],
+            }),
+            input: vec![0x01, 0x02, 0x03],
+            calls: vec![Call::default()],
+            r: vec![0; 32],
+            s: vec![0; 32],
+            v: vec![27],
+            hash: vec![0; 32],
+            ..Default::default()
+        };
+
+        let envelope = EthereumTxEnvelope::try_from(&trace).unwrap();
+        assert!(matches!(envelope, EthereumTxEnvelope::Eip4844(_)));
+    }
+
+    #[test]
+    fn envelope_conversion_preserves_tx_type() {
+        let test_cases = vec![
+            (Type::TrxTypeLegacy as i32, "Legacy"),
+            (Type::TrxTypeAccessList as i32, "Eip2930"),
+            (Type::TrxTypeDynamicFee as i32, "Eip1559"),
+            (Type::TrxTypeBlob as i32, "Eip4844"),
+        ];
+
+        for (tx_type, expected_name) in test_cases {
+            let trace = TransactionTrace {
+                r#type: tx_type,
+                nonce: 1,
+                gas_price: Some(BigInt {
+                    bytes: vec![0, 0, 1],
+                }),
+                max_fee_per_gas: Some(BigInt {
+                    bytes: vec![0, 0, 1],
+                }),
+                max_priority_fee_per_gas: Some(BigInt { bytes: vec![0, 1] }),
+                blob_gas_fee_cap: Some(BigInt { bytes: vec![0, 1] }),
+                gas_limit: 21000,
+                to: Address::from_slice(&[0x02; 20]).to_vec(),
+                value: Some(BigInt {
+                    bytes: vec![0, 0, 5],
+                }),
+                input: vec![0x01, 0x02, 0x03],
+                calls: vec![Call::default()],
+                r: vec![0; 32],
+                s: vec![0; 32],
+                v: vec![27],
+                hash: vec![0; 32],
+                ..Default::default()
+            };
+
+            let envelope = EthereumTxEnvelope::try_from(&trace);
+            assert!(
+                envelope.is_ok(),
+                "expected successful conversion for {expected_name}"
+            );
+        }
+    }
+
+    #[test]
+    fn transaction_to_reth_tx_type() {
+        let legacy_trace = TransactionTrace {
+            r#type: Type::TrxTypeLegacy as i32,
+            ..Default::default()
+        };
+        assert_eq!(
+            reth_primitives::TxType::try_from(&legacy_trace).unwrap(),
+            reth_primitives::TxType::Legacy
+        );
+
+        let eip2930_trace = TransactionTrace {
+            r#type: Type::TrxTypeAccessList as i32,
+            ..Default::default()
+        };
+        assert_eq!(
+            reth_primitives::TxType::try_from(&eip2930_trace).unwrap(),
+            reth_primitives::TxType::Eip2930
+        );
+
+        let eip1559_trace = TransactionTrace {
+            r#type: Type::TrxTypeDynamicFee as i32,
+            ..Default::default()
+        };
+        assert_eq!(
+            reth_primitives::TxType::try_from(&eip1559_trace).unwrap(),
+            reth_primitives::TxType::Eip1559
+        );
+
+        let eip4844_trace = TransactionTrace {
+            r#type: Type::TrxTypeBlob as i32,
+            ..Default::default()
+        };
+        assert_eq!(
+            reth_primitives::TxType::try_from(&eip4844_trace).unwrap(),
+            reth_primitives::TxType::Eip4844
+        );
     }
 }

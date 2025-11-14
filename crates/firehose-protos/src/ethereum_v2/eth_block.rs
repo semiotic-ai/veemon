@@ -11,7 +11,7 @@ use alloy_rlp::{Encodable, Header as RlpHeader};
 use firehose_rs::{FromResponse, HasNumberOrSlot, Response, SingleBlockResponse};
 use prost::Message;
 use prost_wkt_types::Any;
-use reth_primitives::{Log, Receipt, ReceiptWithBloom};
+use reth_primitives::{Log, Receipt, ReceiptWithBloom, TxType};
 use tracing::error;
 
 use crate::error::ProtosError;
@@ -298,21 +298,20 @@ impl Block {
 pub struct FullReceipt {
     receipt: ReceiptWithBloom,
     state_root: Vec<u8>,
+    tx_type: TxType,
 }
 
 impl TryFrom<&TransactionTrace> for FullReceipt {
     type Error = ProtosError;
 
     fn try_from(trace: &TransactionTrace) -> Result<Self, Self::Error> {
-        let tx_type = trace.r#type;
-
+        let tx_type = TxType::try_from(trace)?;
         let trace_receipt = trace.receipt()?;
-
         let logs = trace_receipt.logs()?;
 
         let receipt = Receipt {
             success: trace.is_success(),
-            tx_type,
+            tx_type: trace.r#type,
             logs,
             cumulative_gas_used: trace_receipt.cumulative_gas_used,
         }
@@ -326,6 +325,7 @@ impl TryFrom<&TransactionTrace> for FullReceipt {
                 logs_bloom,
             },
             state_root: trace_receipt.state_root.to_vec(),
+            tx_type,
         })
     }
 }
@@ -364,10 +364,21 @@ impl FullReceipt {
         self.receipt.receipt.logs.encode(encoded);
     }
 
-    /// For Byzantium and later: only encode the inner receipt contents using the `reth_primitives`
-    /// [`ReceiptWithBloom`] `encode_inner` method.
+    /// For Byzantium and later: encode the receipt according to EIP-2718.
+    /// - Legacy transactions (type 0): RLP encode the receipt
+    /// - Typed transactions (types 1, 2, 3): TransactionType || RLP(receipt)
     fn encode_byzantium_and_later_receipt(&self, encoded: &mut Vec<u8>) {
-        self.receipt.encode(encoded);
+        match self.tx_type {
+            // Legacy transaction: encode receipt directly without type prefix
+            TxType::Legacy => {
+                self.receipt.encode(encoded);
+            }
+            // Typed transactions: add type byte prefix then RLP encode
+            TxType::Eip2930 | TxType::Eip1559 | TxType::Eip4844 | TxType::Eip7702 => {
+                encoded.push(self.tx_type as u8);
+                self.receipt.encode(encoded);
+            }
+        }
     }
 
     /// Returns a reference to the [`ReceiptWithBloom`] for this [`FullReceipt`]
@@ -477,4 +488,124 @@ mod tests {
             "parent_beacon_root":[200,178,112,247,15,219,223,40,221,158,56,205,13,155,9,68,32,137,201,81,195,111,239,86,19,255,147,198,140,203,232,34]
         }
     "###;
+
+    fn create_test_trace(tx_type: i32) -> TransactionTrace {
+        use crate::ethereum_v2::TransactionReceipt;
+
+        TransactionTrace {
+            r#type: tx_type,
+            status: 1,
+            receipt: Some(TransactionReceipt {
+                state_root: vec![1; 32],
+                cumulative_gas_used: 21000,
+                logs_bloom: vec![0; 256],
+                logs: vec![],
+                blob_gas_used: None,
+                blob_gas_price: None,
+            }),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn legacy_receipt_encoding_without_type_prefix() {
+        use crate::ethereum_v2::transaction_trace::Type;
+
+        let trace = create_test_trace(Type::TrxTypeLegacy as i32);
+        let full_receipt = FullReceipt::try_from(&trace).unwrap();
+
+        let mut encoded = Vec::new();
+        full_receipt.encode_byzantium_and_later_receipt(&mut encoded);
+
+        assert!(!encoded.is_empty());
+        assert_ne!(encoded[0], TxType::Legacy as u8);
+    }
+
+    #[test]
+    fn eip2930_receipt_encoding_with_type_prefix() {
+        use crate::ethereum_v2::transaction_trace::Type;
+
+        let trace = create_test_trace(Type::TrxTypeAccessList as i32);
+        let full_receipt = FullReceipt::try_from(&trace).unwrap();
+
+        let mut encoded = Vec::new();
+        full_receipt.encode_byzantium_and_later_receipt(&mut encoded);
+
+        assert!(!encoded.is_empty());
+        assert_eq!(encoded[0], TxType::Eip2930 as u8);
+    }
+
+    #[test]
+    fn eip1559_receipt_encoding_with_type_prefix() {
+        use crate::ethereum_v2::transaction_trace::Type;
+
+        let trace = create_test_trace(Type::TrxTypeDynamicFee as i32);
+        let full_receipt = FullReceipt::try_from(&trace).unwrap();
+
+        let mut encoded = Vec::new();
+        full_receipt.encode_byzantium_and_later_receipt(&mut encoded);
+
+        assert!(!encoded.is_empty());
+        assert_eq!(encoded[0], TxType::Eip1559 as u8);
+    }
+
+    #[test]
+    fn eip4844_receipt_encoding_with_type_prefix() {
+        use crate::ethereum_v2::transaction_trace::Type;
+
+        let trace = create_test_trace(Type::TrxTypeBlob as i32);
+        let full_receipt = FullReceipt::try_from(&trace).unwrap();
+
+        let mut encoded = Vec::new();
+        full_receipt.encode_byzantium_and_later_receipt(&mut encoded);
+
+        assert!(!encoded.is_empty());
+        assert_eq!(encoded[0], TxType::Eip4844 as u8);
+    }
+
+    #[test]
+    fn full_receipt_stores_correct_tx_type() {
+        use crate::ethereum_v2::transaction_trace::Type;
+
+        let legacy_trace = create_test_trace(Type::TrxTypeLegacy as i32);
+        let legacy_receipt = FullReceipt::try_from(&legacy_trace).unwrap();
+        assert_eq!(legacy_receipt.tx_type, TxType::Legacy);
+
+        let eip2930_trace = create_test_trace(Type::TrxTypeAccessList as i32);
+        let eip2930_receipt = FullReceipt::try_from(&eip2930_trace).unwrap();
+        assert_eq!(eip2930_receipt.tx_type, TxType::Eip2930);
+
+        let eip1559_trace = create_test_trace(Type::TrxTypeDynamicFee as i32);
+        let eip1559_receipt = FullReceipt::try_from(&eip1559_trace).unwrap();
+        assert_eq!(eip1559_receipt.tx_type, TxType::Eip1559);
+
+        let eip4844_trace = create_test_trace(Type::TrxTypeBlob as i32);
+        let eip4844_receipt = FullReceipt::try_from(&eip4844_trace).unwrap();
+        assert_eq!(eip4844_receipt.tx_type, TxType::Eip4844);
+    }
+
+    #[test]
+    fn receipt_encoding_differs_by_transaction_type() {
+        use crate::ethereum_v2::transaction_trace::Type;
+
+        let legacy_trace = create_test_trace(Type::TrxTypeLegacy as i32);
+        let legacy_receipt = FullReceipt::try_from(&legacy_trace).unwrap();
+        let mut legacy_encoded = Vec::new();
+        legacy_receipt.encode_byzantium_and_later_receipt(&mut legacy_encoded);
+
+        let eip1559_trace = create_test_trace(Type::TrxTypeDynamicFee as i32);
+        let eip1559_receipt = FullReceipt::try_from(&eip1559_trace).unwrap();
+        let mut eip1559_encoded = Vec::new();
+        eip1559_receipt.encode_byzantium_and_later_receipt(&mut eip1559_encoded);
+
+        assert_ne!(
+            legacy_encoded, eip1559_encoded,
+            "legacy and eip1559 receipt encodings should differ"
+        );
+
+        assert_ne!(
+            legacy_encoded[0], eip1559_encoded[0],
+            "first byte should differ between legacy and typed transactions"
+        );
+    }
 }
