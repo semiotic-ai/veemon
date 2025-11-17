@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.1](https://github.com/semiotic-ai/veemon/compare/firehose-protos-v0.6.0...firehose-protos-v0.6.1) (2025-11-17)
+
+
+### Bug Fixes
+
+* add EIP-2718 type prefix for typed transactions and receipts ([748c8b3](https://github.com/semiotic-ai/veemon/commit/748c8b3936342234667cd5f455b72c6a83206397))
+* add EIP-2718 type prefix for typed transactions and receipts ([5f1c006](https://github.com/semiotic-ai/veemon/commit/5f1c0065f87a350b0e8bf0a51f7da5153bec7d8b))
+
 ## [0.6.0](https://github.com/semiotic-ai/veemon/compare/firehose-protos-v0.5.0...firehose-protos-v0.6.0) (2025-09-29)
 
 

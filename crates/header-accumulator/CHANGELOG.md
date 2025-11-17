@@ -1,5 +1,7 @@
 # Changelog
 
+## [0.3.1](https://github.com/semiotic-ai/veemon/compare/header-accumulator-v0.3.0...header-accumulator-v0.3.1) (2025-11-17)
+
 ## [0.3.0](https://github.com/semiotic-ai/veemon/compare/header-accumulator-v0.2.6...header-accumulator-v0.3.0) (2025-10-27)
 
 
