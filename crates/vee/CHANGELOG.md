@@ -1,5 +1,7 @@
 # Changelog
 
+## [0.2.1](https://github.com/semiotic-ai/veemon/compare/vee-v0.2.0...vee-v0.2.1) (2025-11-17)
+
 ## [0.2.0](https://github.com/semiotic-ai/veemon/compare/vee-v0.1.7...vee-v0.2.0) (2025-10-27)
 
 

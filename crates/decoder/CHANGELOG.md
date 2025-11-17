@@ -1,5 +1,7 @@
 # Changelog
 
+## [0.4.2](https://github.com/semiotic-ai/veemon/compare/decoder-v0.4.1...decoder-v0.4.2) (2025-11-17)
+
 ## [0.4.1](https://github.com/semiotic-ai/veemon/compare/decoder-v0.4.0...decoder-v0.4.1) (2025-09-29)
 
 ## [0.4.0](https://github.com/semiotic-ai/veemon/compare/decoder-v0.3.0...decoder-v0.4.0) (2025-07-16)
