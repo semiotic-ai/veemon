@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/semiotic-ai/veemon/compare/decoder-v0.4.2...decoder-v0.5.0) (2025-11-20)
+
+
+### Features
+
+* add exmaples of usage of encoder ([d1ed9d4](https://github.com/semiotic-ai/veemon/commit/d1ed9d48078c62c273b5b0fb2c396420db44b120))
+
 ## [0.4.2](https://github.com/semiotic-ai/veemon/compare/decoder-v0.4.1...decoder-v0.4.2) (2025-11-17)
 
 ## [0.4.1](https://github.com/semiotic-ai/veemon/compare/decoder-v0.4.0...decoder-v0.4.1) (2025-09-29)
