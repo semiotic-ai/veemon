@@ -1,0 +1,34 @@
+[package]
+name = "encoder"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "flat_files_encoder"
+path = "src/lib.rs"
+
+[dependencies]
+alloy-primitives.workspace = true
+alloy-consensus.workspace = true
+alloy-eip2930.workspace = true
+bincode.workspace = true
+firehose-protos.workspace = true
+prost.workspace = true
+reth-primitives.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+zstd.workspace = true
+types.workspace = true
+ssz_types.workspace = true
+ethereum_ssz.workspace = true
+ethereum_ssz_derive.workspace = true
+prost-wkt-types.workspace = true
+
+[dev-dependencies]
+tokio = "1.39.2"
+beacon-protos = { git = "https://github.com/semiotic-ai/beacon-protos.git", commit = "fba3539"}
+firehose-client = { git = "https://github.com/semiotic-ai/firehose-client.git", commit = "c511e4c"}
+tree_hash.workspace = true
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
