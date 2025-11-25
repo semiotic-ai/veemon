@@ -1,5 +1,7 @@
 # Changelog
 
+## [0.2.6](https://github.com/semiotic-ai/veemon/compare/firehose-protos-examples-v0.2.5...firehose-protos-examples-v0.2.6) (2025-11-20)
+
 ## [0.2.5](https://github.com/semiotic-ai/veemon/compare/firehose-protos-examples-v0.2.4...firehose-protos-examples-v0.2.5) (2025-11-17)
 
 ## [0.2.4](https://github.com/semiotic-ai/veemon/compare/firehose-protos-examples-v0.2.3...firehose-protos-examples-v0.2.4) (2025-10-27)
