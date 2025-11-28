@@ -2531,15 +2531,7 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 name = "era-validators"
 version = "0.2.0"
 dependencies = [
- "alloy-primitives",
  "authentication",
- "ethportal-api",
- "merkle_proof",
- "primitive-types 0.14.0",
- "thiserror 2.0.17",
- "tree_hash",
- "types",
- "validation",
 ]
 
 [[package]]
@@ -3294,24 +3286,9 @@ dependencies = [
 name = "header-accumulator"
 version = "0.4.0"
 dependencies = [
- "alloy-consensus",
- "alloy-primitives",
  "authentication",
- "base64 0.22.1",
  "decoder",
- "ethereum_ssz",
- "ethereum_ssz_derive",
- "ethportal-api",
- "firehose-protos",
- "serde",
- "serde_json",
- "ssz_types 0.12.2",
  "tempfile",
- "thiserror 2.0.17",
- "tracing",
- "tree_hash",
- "tree_hash_derive",
- "validation",
 ]
 
 [[package]]
@@ -7403,6 +7380,7 @@ dependencies = [
  "authentication",
  "decoder",
  "firehose-protos",
+ "header-accumulator",
  "tree_hash",
 ]
 

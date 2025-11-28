@@ -10,6 +10,7 @@ name = "vee"
 [dependencies]
 firehose-protos.workspace = true
 decoder.workspace = true
+authentication.workspace = true
 header-accumulator.workspace = true
 arbitrum-ve.workspace = true
 

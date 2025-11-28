@@ -1,5 +1,25 @@
 # Header Accumulator
 
+> **⚠️ DEPRECATED**: This crate has been superseded by the `authentication` crate.
+> All functionality has moved to `authentication::ethereum`.
+> Please migrate to avoid future breakage.
+>
+> See [authentication crate](../authentication/README.md) for migration guide.
+
+## Migration Guide
+
+| Old (header-accumulator) | New (authentication) |
+|--------------------------|---------------------|
+| `use header_accumulator::*;` | `use authentication::ethereum::*;` |
+| `EraValidator` | `EthereumPreMergeValidator` |
+| `EraValidateError` | `AuthenticationError` |
+| `generate_inclusion_proofs` | `authentication::ethereum::generate_inclusion_proofs` |
+| `verify_inclusion_proofs` | `authentication::ethereum::verify_inclusion_proofs` |
+| `Epoch` | `authentication::ethereum::Epoch` |
+| `ExtHeaderRecord` | `authentication::ethereum::ExtHeaderRecord` |
+
+---
+
 `header_accumulator` is a Rust library used to accumulate and verify
 block headers by comparing them against header accumulators, helping
 to ensure the authenticity of blockchain data. This crate is designed
