@@ -1,7 +1,7 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{epoch::MAX_EPOCH_SIZE, errors::EraValidateError, Epoch};
+use crate::{error::AuthenticationError, ethereum::types::MAX_EPOCH_SIZE, Epoch};
 
 use alloy_consensus::Header;
 use alloy_primitives::FixedBytes;
@@ -20,7 +20,7 @@ use validation::{
 
 const PROOF_SIZE: usize = 15;
 
-/// A proof that contains the block number
+/// a proof that contains the block number
 #[derive(Clone)]
 pub struct InclusionProof {
     block_number: u64,
@@ -28,10 +28,10 @@ pub struct InclusionProof {
 }
 
 impl InclusionProof {
-    /// Takes a header and turns the proof into a provable header
-    pub fn with_header(self, header: Header) -> Result<HeaderWithProof, EraValidateError> {
+    /// takes a header and turns the proof into a provable header
+    pub fn with_header(self, header: Header) -> Result<HeaderWithProof, AuthenticationError> {
         if self.block_number != header.number {
-            Err(EraValidateError::HeaderMismatch {
+            Err(AuthenticationError::HeaderMismatch {
                 expected_number: self.block_number,
                 block_number: header.number,
             })
@@ -44,36 +44,36 @@ impl InclusionProof {
     }
 }
 
-/// Generates inclusion proofs for headers, given a list epochs that contains
+/// generates inclusion proofs for headers, given a list epochs that contains
 /// the headers to be proven
 ///
-/// This function creates Merkle inclusion proofs for specified headers by looking them up
-/// within the provided epochs. Each proof demonstrates that a header's block hash is correctly
+/// this function creates merkle inclusion proofs for specified headers by looking them up
+/// within the provided epochs. each proof demonstrates that a header's block hash is correctly
 /// included in its epoch's accumulator, which can then be verified against the historical
 /// PreMergeAccumulator.
 ///
 /// # Arguments
 ///
-/// * `epochs` - A list of epochs [`Vec<Epoch>`] containing the block headers. Each epoch
+/// * `epochs` - a list of epochs [`Vec<Epoch>`] containing the block headers. each epoch
 ///   represents 8192 blocks (ERA size).
-/// * `headers_to_prove` - A list of headers [`Vec<Header>`] for which to generate inclusion proofs.
-///   These headers must exist within the provided epochs.
+/// * `headers_to_prove` - a list of headers [`Vec<Header>`] for which to generate inclusion proofs.
+///   these headers must exist within the provided epochs.
 ///
 /// # Returns
 ///
-/// * `Ok(Vec<InclusionProof>)` - A vector of inclusion proofs, one for each header
-/// * `Err(EraValidateError)` - If a header's epoch is not found in the provided list, or if
+/// * `Ok(Vec<InclusionProof>)` - a vector of inclusion proofs, one for each header
+/// * `Err(AuthenticationError)` - if a header's epoch is not found in the provided list, or if
 ///   proof generation fails
 ///
 /// # Example
 ///
-/// This example demonstrates generating inclusion proofs for multiple blocks across different
+/// this example demonstrates generating inclusion proofs for multiple blocks across different
 /// epochs, which is useful when you need to verify specific blocks from a larger dataset.
 ///
-/// ```no_run
+/// ```ignore
 /// use std::{fs::File, io::BufReader};
-/// use flat_files_decoder::{read_blocks_from_reader, AnyBlock, Compression};
-/// use header_accumulator::{Epoch, ExtHeaderRecord, generate_inclusion_proofs};
+/// use decoder::{read_blocks_from_reader, AnyBlock, Compression};
+/// use authentication::{Epoch, ExtHeaderRecord, ethereum::generate_inclusion_proofs};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// // read headers from multiple eras (epochs 0 and 1)
@@ -153,7 +153,7 @@ impl InclusionProof {
 pub fn generate_inclusion_proofs(
     epochs: Vec<Epoch>,
     headers_to_prove: Vec<Header>,
-) -> Result<Vec<InclusionProof>, EraValidateError> {
+) -> Result<Vec<InclusionProof>, AuthenticationError> {
     let mut inclusion_proof_vec: Vec<InclusionProof> = Vec::with_capacity(headers_to_prove.len());
     let epoch_list: Vec<_> = epochs.iter().map(|epoch| epoch.number()).collect();
     let accumulators: Vec<_> = epochs
@@ -168,7 +168,7 @@ pub fn generate_inclusion_proofs(
             .iter()
             .find(|epoch| epoch.0 == block_epoch)
             .map(|epoch| &epoch.1)
-            .ok_or(EraValidateError::EpochNotFoundInProvidedList {
+            .ok_or(AuthenticationError::EpochNotFoundInProvidedList {
                 block_epoch,
                 epoch_list: epoch_list.clone(),
             })?;
@@ -179,23 +179,23 @@ pub fn generate_inclusion_proofs(
     Ok(inclusion_proof_vec)
 }
 
-/// Generates an inclusion proof for the header, given the epoch that contains
+/// generates an inclusion proof for the header, given the epoch that contains
 /// the header to be proven
 ///
-/// Returns an error if the header is not inside the epoch.
+/// returns an error if the header is not inside the epoch.
 ///
 /// # Arguments
 ///
-/// * `header`- Header to be proven
-/// * `epoch` - Epoch in which the header is located
+/// * `header`- header to be proven
+/// * `epoch` - epoch in which the header is located
 pub fn generate_inclusion_proof(
     header: Header,
     epoch: Epoch,
-) -> Result<InclusionProof, EraValidateError> {
+) -> Result<InclusionProof, AuthenticationError> {
     let block_number = header.number;
     let block_epoch = (block_number / MAX_EPOCH_SIZE as u64) as usize;
     if block_epoch != epoch.number() {
-        return Err(EraValidateError::EpochNotMatchForHeader {
+        return Err(AuthenticationError::EpochNotMatchForHeader {
             epoch_number: epoch.number(),
             block_number,
             block_epoch,
@@ -209,61 +209,61 @@ pub fn generate_inclusion_proof(
 fn do_generate_inclusion_proof(
     header: &Header,
     epoch_accumulator: &EpochAccumulator,
-) -> Result<InclusionProof, EraValidateError> {
+) -> Result<InclusionProof, AuthenticationError> {
     PreMergeAccumulator::construct_proof(header, epoch_accumulator)
         .map(|proof| {
-            // Convert BlockProofHistoricalHashesAccumulator to [FixedBytes<32>; 15]
-            // The proof is a FixedVector<B256, U15>, so we can iterate over it
+            // convert BlockProofHistoricalHashesAccumulator to [FixedBytes<32>; 15]
+            // the proof is a FixedVector<B256, U15>, so we can iterate over it
             let proof_array: [FixedBytes<32>; PROOF_SIZE] = proof
                 .iter()
                 .map(|b| FixedBytes::from_slice(b.as_slice()))
                 .collect::<Vec<_>>()
                 .try_into()
-                .map_err(|_| EraValidateError::ProofGenerationFailure)?;
+                .map_err(|_| AuthenticationError::ProofGenerationFailure)?;
 
             Ok(InclusionProof {
                 block_number: header.number,
                 proof: proof_array,
             })
         })
-        .map_err(|_| EraValidateError::ProofGenerationFailure)?
+        .map_err(|_| AuthenticationError::ProofGenerationFailure)?
 }
 
-/// Verifies a list of provable headers
+/// verifies a list of provable headers
 ///
-/// This function validates that execution layer block headers are part of the canonical
-/// Ethereum chain by verifying inclusion proofs. Currently, this function generates proofs
+/// this function validates that execution layer block headers are part of the canonical
+/// ethereum chain by verifying inclusion proofs. currently, this function generates proofs
 /// compatible with pre-merge block validation using `BlockHeaderProof::HistoricalHashes`.
 ///
-/// **Note**: For post-Capella validation (blocks ≥17,034,870), use [`HeaderValidator`](validation::header_validator::HeaderValidator)
+/// **note**: for post-capella validation (blocks ≥17,034,870), use [`HeaderValidator`](validation::header_validator::HeaderValidator)
 /// directly with `BlockProofHistoricalSummariesCapella` or `BlockProofHistoricalSummariesDeneb` proofs.
 ///
 /// # Arguments
 ///
-/// * `pre_merge_accumulator_file` - An optional [`PreMergeAccumulator`] containing
-///   historical epoch accumulator roots. Pass `None` to use the default embedded accumulator.
-/// * `header_proofs` - A [`Vec<HeaderWithProof>`] containing headers and their inclusion proofs
-/// * `historical_summaries` - Reserved for future post-Capella support
+/// * `pre_merge_accumulator_file` - an optional [`PreMergeAccumulator`] containing
+///   historical epoch accumulator roots. pass `None` to use the default embedded accumulator.
+/// * `header_proofs` - a [`Vec<HeaderWithProof>`] containing headers and their inclusion proofs
+/// * `historical_summaries` - reserved for future post-capella support
 ///
 /// # Returns
 ///
 /// * `Ok(())` if all header proofs verify successfully
-/// * `Err(EraValidateError)` if any proof fails validation
+/// * `Err(AuthenticationError)` - if any proof fails validation
 ///
 /// # Example: Pre-Merge Era Validation
 ///
-/// This example shows the complete workflow for verifying pre-merge blocks (blocks 0-15,537,394):
+/// this example shows the complete workflow for verifying pre-merge blocks (blocks 0-15,537,394):
 /// reading blocks from .dbin files, generating inclusion proofs, and verifying them.
 ///
-/// **Note**: Test .dbin files can be obtained from:
+/// **note**: test .dbin files can be obtained from:
 /// - [ve-assets repository](https://github.com/semiotic-ai/ve-assets) for sample pre-merge blocks
-/// - StreamingFast Firehose extraction using a provider like Pinax
+/// - streamingfast firehose extraction using a provider like pinax
 ///
-/// ```no_run
+/// ```ignore
 /// use std::{fs::File, io::BufReader};
-/// use flat_files_decoder::{read_blocks_from_reader, AnyBlock, Compression};
-/// use header_accumulator::{
-///     Epoch, ExtHeaderRecord, generate_inclusion_proofs, verify_inclusion_proofs,
+/// use decoder::{read_blocks_from_reader, AnyBlock, Compression};
+/// use authentication::{
+///     Epoch, ExtHeaderRecord, ethereum::{generate_inclusion_proofs, verify_inclusion_proofs},
 /// };
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -318,16 +318,16 @@ fn do_generate_inclusion_proof(
 ///
 /// # See Also
 ///
-/// For post-Capella validation examples, see:
+/// for post-capella validation examples, see:
 /// - [`HeaderValidator::verify_post_capella_header`](validation::header_validator::HeaderValidator::verify_post_capella_header)
-///   for Capella and Deneb era validation
+///   for capella and deneb era validation
 /// - [`PostCapellaProof`](validation::header_validator::PostCapellaProof) for era-specific proof structures
 /// - [`generate_inclusion_proofs`] for creating proofs from epochs
 pub fn verify_inclusion_proofs(
     pre_merge_accumulator_file: Option<PreMergeAccumulator>,
     header_proofs: Vec<HeaderWithProof>,
     historical_summaries: Option<HistoricalSummaries>,
-) -> Result<(), EraValidateError> {
+) -> Result<(), AuthenticationError> {
     let pre_merge_acc = pre_merge_accumulator_file.unwrap_or_default();
     let header_validator = HeaderValidator {
         pre_merge_acc,
@@ -342,18 +342,18 @@ pub fn verify_inclusion_proofs(
     Ok(())
 }
 
-/// A header with an inclusion proof attached
+/// a header with an inclusion proof attached
 pub struct HeaderWithProof {
     header: Header,
     proof: InclusionProof,
 }
 
-/// Verifies if a proof is contained in the header validator
+/// verifies if a proof is contained in the header validator
 pub fn verify_inclusion_proof(
     header_validator: &HeaderValidator,
     provable_header: HeaderWithProof,
-) -> Result<(), EraValidateError> {
-    // Convert [FixedBytes<32>; 15] to Vec<B256> for BlockProofHistoricalHashesAccumulator
+) -> Result<(), AuthenticationError> {
+    // convert [FixedBytes<32>; 15] to Vec<B256> for BlockProofHistoricalHashesAccumulator
     let proof_vec: Vec<alloy_primitives::B256> = provable_header
         .proof
         .proof
@@ -362,7 +362,7 @@ pub fn verify_inclusion_proof(
         .collect();
 
     let block_proof = BlockProofHistoricalHashesAccumulator::new(proof_vec)
-        .map_err(|_| EraValidateError::ProofValidationFailure)?;
+        .map_err(|_| AuthenticationError::ProofValidationFailure)?;
 
     let proof = BlockHeaderProof::HistoricalHashes(block_proof);
 
@@ -373,5 +373,5 @@ pub fn verify_inclusion_proof(
 
     header_validator
         .validate_header_with_proof(&hwp)
-        .map_err(|_| EraValidateError::ProofValidationFailure)
+        .map_err(|_| AuthenticationError::ProofValidationFailure)
 }

@@ -7,7 +7,8 @@
 
 use std::{fs::File, io::BufReader};
 use tree_hash::Hash256;
-use vee::{read_blocks_from_reader, AnyBlock, Compression, Epoch, EraValidator, ExtHeaderRecord};
+use vee::authentication::ethereum::EthereumPreMergeValidator;
+use vee::{read_blocks_from_reader, AnyBlock, Compression, Epoch, ExtHeaderRecord};
 
 fn main() {
     // Path to .dbin file containing block to verify. This is our "extracted"
@@ -82,13 +83,13 @@ fn main() {
     }
     // Arrange block headers in order and determine the era number in which they belong.
     let era: Epoch = headers.try_into().unwrap();
-    // `EraValidator` struct containing a historical record of Merkle tree roots
+    // `EthereumPreMergeValidator` struct containing a historical record of Merkle tree roots
     // from the trusted `PreMergeAccumulator`.
-    let era_verifier = EraValidator::default();
-    // `validate_era` calculates the root of the Merkle tree with this era's
+    let era_verifier = EthereumPreMergeValidator::default();
+    // `validate_single_epoch` calculates the root of the Merkle tree with this era's
     // block hashes at the leaves. The method includes a check that the calculated
-    // value matches that in the `EraValidator` for this era.
-    let result = era_verifier.validate_era(&era).unwrap();
+    // value matches that in the `EthereumPreMergeValidator` for this era.
+    let result = era_verifier.validate_single_epoch(&era).unwrap();
     // Here, we compare the historical record with the calculated value separately
     // to show what is happening.
     let expected = Hash256::new([

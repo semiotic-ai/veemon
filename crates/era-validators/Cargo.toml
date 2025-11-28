@@ -1,14 +1,7 @@
 [package]
 name = "era-validators"
-version = "0.1.5"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-types.workspace = true
-merkle_proof.workspace = true
-validation.workspace = true
-tree_hash.workspace = true
-thiserror.workspace = true
-ethportal-api.workspace = true
-alloy-primitives.workspace = true
-primitive-types.workspace = true
+authentication = { version = "0.1.0", path = "../authentication" }
