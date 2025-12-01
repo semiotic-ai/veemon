@@ -32,4 +32,5 @@ jobs:
             -ignore 'crates/firehose-protos/protos/bstream.proto' \
             -ignore 'crates/firehose-protos/protos/block.proto' \
             -ignore 'crates/firehose-protos/protos/firehose.proto' \
+            -ignore 'crates/firehose-protos/protos/beacon.proto' \
             .
