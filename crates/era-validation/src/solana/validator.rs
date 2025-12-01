@@ -12,23 +12,23 @@ const SOLANA_HISTORICAL_TREE_DEPTH: usize = 19;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SolanaHistoricalRoots(pub Vec<H256>);
 
-/// a solana validator that validates the era using historical roots. solana does not have a
-/// consensus source of truth for historical data. we use a merkle tree to commit to the block
-/// hashes. solana epochs are defined as 432,000 slots, so we use that as the epoch length, i.e.
-/// the number of values we commit to with a merkle tree. this yields a tree depth of 19. the
-/// validator expects the era which is being verified and the corresponding block hashes. it checks
+/// A Solana validator that validates the era using historical roots. Solana does not have a
+/// consensus source of truth for historical data. We use a Merkle tree to commit to the block
+/// hashes. Solana epochs are defined as 432,000 slots, so we use that as the epoch length, i.e.
+/// the number of values we commit to with a Merkle tree. This yields a tree depth of 19. The
+/// validator expects the era which is being verified and the corresponding block hashes. It checks
 /// the tree hash root of the block hashes against precomputed historical roots for the era.
 pub struct SolanaValidator {
     pub historical_roots: SolanaHistoricalRoots,
 }
 
 impl SolanaValidator {
-    /// creates a new solana validator.
+    /// Creates a new Solana validator.
     pub fn new(historical_roots: SolanaHistoricalRoots) -> Self {
         Self { historical_roots }
     }
 
-    /// validates the era using the historical roots.
+    /// Validates the era using the historical roots.
     ///
     /// input: (era_number, block_hashes), where era_number is the era to validate and block_hashes
     /// is a vector of the block hashes for that era.
@@ -59,7 +59,7 @@ impl EraValidationContext for SolanaHistoricalRoots {
         )
         .hash();
 
-        // check that root matches the expected historical root
+        // Check that root matches the expected historical root
         if H256::from(root.0) != self.0[era_number] {
             return Err(SolanaValidatorError::InvalidHistoricalRoot {
                 era: era_number,
