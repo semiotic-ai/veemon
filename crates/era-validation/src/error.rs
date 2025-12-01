@@ -5,7 +5,7 @@ use alloy_primitives::map::HashSet;
 use firehose_protos::ProtosError;
 use primitive_types::H256;
 
-/// Unified authentication error type for all blockchain eras and chains
+/// Unified era validation error type for all blockchain eras and chains
 #[derive(thiserror::Error, Debug)]
 pub enum AuthenticationError {
     // Ethereum Pre-Merge errors

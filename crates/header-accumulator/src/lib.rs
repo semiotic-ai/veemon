@@ -2,116 +2,116 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #![deny(missing_docs)]
-#![doc = "**DEPRECATED**: This crate has been superseded by the `authentication` crate.\n\n\
-All functionality has been moved to `authentication::ethereum`. Please migrate to the new crate.\n\n\
-See the [authentication crate documentation](https://docs.rs/authentication) for migration guide."]
+#![doc = "**DEPRECATED**: This crate has been superseded by the `era-validation` crate.\n\n\
+All functionality has been moved to `era-validation::ethereum`. Please migrate to the new crate.\n\n\
+See the [era-validation crate documentation](https://docs.rs/era-validation) for migration guide."]
 
 // ============================================================================
 // DEPRECATED: All types and functions below are deprecated in favor of the
-// unified `authentication` crate. This crate now re-exports from
-// `authentication` for backward compatibility.
+// unified `era-validation` crate. This crate now re-exports from
+// `era-validation` for backward compatibility.
 // ============================================================================
 
-// Deprecated re-exports from authentication crate
+// Deprecated re-exports from era-validation crate
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::Epoch` instead"
+    note = "use `era-validation::ethereum::Epoch` instead"
 )]
-pub use authentication::ethereum::Epoch;
+pub use era_validation::ethereum::Epoch;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::ExtHeaderRecord` instead"
+    note = "use `era-validation::ethereum::ExtHeaderRecord` instead"
 )]
-pub use authentication::ethereum::ExtHeaderRecord;
+pub use era_validation::ethereum::ExtHeaderRecord;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::MAX_EPOCH_SIZE` instead"
+    note = "use `era-validation::ethereum::MAX_EPOCH_SIZE` instead"
 )]
-pub use authentication::ethereum::MAX_EPOCH_SIZE;
+pub use era_validation::ethereum::MAX_EPOCH_SIZE;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::FINAL_EPOCH` instead"
+    note = "use `era-validation::ethereum::FINAL_EPOCH` instead"
 )]
-pub use authentication::ethereum::FINAL_EPOCH;
+pub use era_validation::ethereum::FINAL_EPOCH;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::MERGE_BLOCK` instead"
+    note = "use `era-validation::ethereum::MERGE_BLOCK` instead"
 )]
-pub use authentication::ethereum::MERGE_BLOCK;
+pub use era_validation::ethereum::MERGE_BLOCK;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::generate_inclusion_proof` instead"
+    note = "use `era-validation::ethereum::generate_inclusion_proof` instead"
 )]
-pub use authentication::ethereum::generate_inclusion_proof;
+pub use era_validation::ethereum::generate_inclusion_proof;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::generate_inclusion_proofs` instead"
+    note = "use `era-validation::ethereum::generate_inclusion_proofs` instead"
 )]
-pub use authentication::ethereum::generate_inclusion_proofs;
+pub use era_validation::ethereum::generate_inclusion_proofs;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::verify_inclusion_proof` instead"
+    note = "use `era-validation::ethereum::verify_inclusion_proof` instead"
 )]
-pub use authentication::ethereum::verify_inclusion_proof;
+pub use era_validation::ethereum::verify_inclusion_proof;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::verify_inclusion_proofs` instead"
+    note = "use `era-validation::ethereum::verify_inclusion_proofs` instead"
 )]
-pub use authentication::ethereum::verify_inclusion_proofs;
+pub use era_validation::ethereum::verify_inclusion_proofs;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::HeaderWithProof` instead"
+    note = "use `era-validation::ethereum::HeaderWithProof` instead"
 )]
-pub use authentication::ethereum::HeaderWithProof;
+pub use era_validation::ethereum::HeaderWithProof;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::InclusionProof` instead"
+    note = "use `era-validation::ethereum::InclusionProof` instead"
 )]
-pub use authentication::ethereum::InclusionProof;
+pub use era_validation::ethereum::InclusionProof;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::AuthenticationError` instead"
+    note = "use `era-validation::AuthenticationError` instead"
 )]
-pub use authentication::error::AuthenticationError as EraValidateError;
+pub use era_validation::error::AuthenticationError as EraValidateError;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::error::EthereumPreMergeError` instead"
+    note = "use `era-validation::error::EthereumPreMergeError` instead"
 )]
-pub use authentication::error::EthereumPreMergeError;
+pub use era_validation::error::EthereumPreMergeError;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::EthereumPreMergeValidator` instead"
+    note = "use `era-validation::ethereum::EthereumPreMergeValidator` instead"
 )]
-pub use authentication::ethereum::EthereumPreMergeValidator as EraValidator;
+pub use era_validation::ethereum::EthereumPreMergeValidator as EraValidator;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::EpochAccumulator` instead"
+    note = "use `era-validation::ethereum::EpochAccumulator` instead"
 )]
-pub use authentication::ethereum::EpochAccumulator;
+pub use era_validation::ethereum::EpochAccumulator;
 
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::ethereum::HistoricalEpochRoots` instead"
+    note = "use `era-validation::ethereum::HistoricalEpochRoots` instead"
 )]
-pub use authentication::ethereum::HistoricalEpochRoots;
+pub use era_validation::ethereum::HistoricalEpochRoots;
 
-// Re-export PreMergeAccumulator from authentication crate for convenience
+// Re-export PreMergeAccumulator from era-validation crate for convenience
 #[deprecated(
     since = "0.4.0",
-    note = "use `authentication::PreMergeAccumulator` directly instead"
+    note = "use `era-validation::PreMergeAccumulator` directly instead"
 )]
-pub use authentication::PreMergeAccumulator;
+pub use era_validation::PreMergeAccumulator;

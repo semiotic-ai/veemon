@@ -1,22 +1,22 @@
 # Header Accumulator
 
-> **⚠️ DEPRECATED**: This crate has been superseded by the `authentication` crate.
-> All functionality has moved to `authentication::ethereum`.
+> **⚠️ DEPRECATED**: This crate has been superseded by the `era-validation` crate.
+> All functionality has moved to `era-validation::ethereum`.
 > Please migrate to avoid future breakage.
 >
-> See [authentication crate](../authentication/README.md) for migration guide.
+> See [era-validation crate](../era-validation/README.md) for migration guide.
 
 ## Migration Guide
 
-| Old (header-accumulator) | New (authentication) |
+| Old (header-accumulator) | New (era-validation) |
 |--------------------------|---------------------|
-| `use header_accumulator::*;` | `use authentication::ethereum::*;` |
+| `use header_accumulator::*;` | `use era_validation::ethereum::*;` |
 | `EraValidator` | `EthereumPreMergeValidator` |
 | `EraValidateError` | `AuthenticationError` |
-| `generate_inclusion_proofs` | `authentication::ethereum::generate_inclusion_proofs` |
-| `verify_inclusion_proofs` | `authentication::ethereum::verify_inclusion_proofs` |
-| `Epoch` | `authentication::ethereum::Epoch` |
-| `ExtHeaderRecord` | `authentication::ethereum::ExtHeaderRecord` |
+| `generate_inclusion_proofs` | `era_validation::ethereum::generate_inclusion_proofs` |
+| `verify_inclusion_proofs` | `era_validation::ethereum::verify_inclusion_proofs` |
+| `Epoch` | `era_validation::ethereum::Epoch` |
+| `ExtHeaderRecord` | `era_validation::ethereum::ExtHeaderRecord` |
 
 ---
 

@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-authentication = { version = "0.1.0", path = "../authentication" }
+era-validation = { version = "0.1.0", path = "../era-validation" }
 
 [dev-dependencies]
 decoder.workspace = true

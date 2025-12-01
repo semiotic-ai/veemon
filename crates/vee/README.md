@@ -26,7 +26,7 @@ use vee::{
     generate_inclusion_proofs, read_blocks_from_reader, verify_inclusion_proofs,
     AnyBlock, Compression, Epoch, ExtHeaderRecord,
 };
-use vee::authentication::AuthenticationError;
+use vee::era_validation::AuthenticationError;
 
 fn main() -> Result<(), AuthenticationError> {
    let mut headers: Vec<ExtHeaderRecord> = Vec::new();
@@ -96,8 +96,8 @@ use tree_hash::Hash256;
 use vee::{
     read_blocks_from_reader, AnyBlock, Compression, Epoch, ExtHeaderRecord,
 };
-use vee::authentication::ethereum::EthereumPreMergeValidator;
-use vee::authentication::AuthenticationError;
+use vee::era_validation::ethereum::EthereumPreMergeValidator;
+use vee::era_validation::AuthenticationError;
 
 fn create_test_reader(path: &str) -> BufReader<File> {
     BufReader::new(File::open(path).unwrap())

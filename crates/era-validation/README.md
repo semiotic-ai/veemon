@@ -1,6 +1,6 @@
-# authentication
+# era-validation
 
-unified blockchain authentication and validation library for ethereum and solana.
+unified blockchain era validation library for ethereum and solana.
 
 
 ## per era validation
@@ -9,7 +9,7 @@ unified blockchain authentication and validation library for ethereum and solana
 ### ethereum pre-merge validation
 
 ```rust
-use authentication::ethereum::{Epoch, EthereumPreMergeValidator};
+use era_validation::ethereum::{Epoch, EthereumPreMergeValidator};
 use validation::PreMergeAccumulator;
 
 let validator = EthereumPreMergeValidator::new(accumulator);
@@ -19,7 +19,7 @@ let result = validator.validate_single_epoch(epoch)?;
 ### ethereum post-merge validation
 
 ```rust
-use authentication::ethereum::EthereumPostMergeValidator;
+use era_validation::ethereum::EthereumPostMergeValidator;
 
 let validator = EthereumPostMergeValidator;
 let result = validator.validate_era((historical_roots, beacon_blocks))?;
@@ -28,7 +28,7 @@ let result = validator.validate_era((historical_roots, beacon_blocks))?;
 ### ethereum post-capella validation
 
 ```rust
-use authentication::ethereum::EthereumPostCapellaValidator;
+use era_validation::ethereum::EthereumPostCapellaValidator;
 
 let validator = EthereumPostCapellaValidator;
 let result = validator.validate_era((historical_summaries, beacon_blocks))?;
@@ -37,7 +37,7 @@ let result = validator.validate_era((historical_summaries, beacon_blocks))?;
 ### solana validation
 
 ```rust
-use authentication::solana::SolanaValidator;
+use era_validation::solana::SolanaValidator;
 
 let validator = SolanaValidator::new(tree_depth);
 let result = validator.validate_era((roots, blocks))?;
@@ -46,7 +46,7 @@ let result = validator.validate_era((roots, blocks))?;
 ### inclusion proofs
 
 ```rust
-use authentication::ethereum::{generate_inclusion_proofs, verify_inclusion_proofs};
+use era_validation::ethereum::{generate_inclusion_proofs, verify_inclusion_proofs};
 
 // generate proofs for headers
 let proofs = generate_inclusion_proofs(epochs, headers)?;

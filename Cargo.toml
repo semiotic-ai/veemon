@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "crates/arbitrum-ve",
-    "crates/authentication",
+    "crates/era-validation",
     "crates/decoder",
     "crates/encoder",
     "crates/era-validators",
@@ -22,7 +22,7 @@ alloy-eip2930 = "0.2.1"
 alloy-primitives = "1.4.1"
 anyhow = "1.0.100"
 arbitrum-ve = { path = "crates/arbitrum-ve" }
-authentication = { path = "crates/authentication" }
+era-validation = { path = "crates/era-validation" }
 base64 = "0.22.1"
 beacon-protos = { git = "https://github.com/semiotic-ai/beacon-protos.git", branch = "main" }
 bincode = { version = "2.0.1", features = ["serde"] }

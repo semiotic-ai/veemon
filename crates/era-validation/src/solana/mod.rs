@@ -1,7 +1,7 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-//! solana block authentication
+//! solana block era validation
 
 pub mod validator;
 

@@ -4,4 +4,4 @@ version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-authentication = { version = "0.1.0", path = "../authentication" }
+era-validation = { version = "0.1.0", path = "../era-validation" }

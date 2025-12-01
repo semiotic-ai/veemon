@@ -7,7 +7,7 @@
 
 use std::{fs::File, io::BufReader};
 use tree_hash::Hash256;
-use vee::authentication::ethereum::EthereumPreMergeValidator;
+use vee::era_validation::ethereum::EthereumPreMergeValidator;
 use vee::{read_blocks_from_reader, AnyBlock, Compression, Epoch, ExtHeaderRecord};
 
 fn main() {

@@ -1,7 +1,7 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-//! ethereum block authentication across all eras
+//! ethereum block era validation across all eras
 
 mod common;
 pub mod post_capella;

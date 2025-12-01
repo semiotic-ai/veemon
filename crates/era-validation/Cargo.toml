@@ -1,9 +1,9 @@
 [package]
-name = "authentication"
+name = "era-validation"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-description = "multi-chain block authentication for ethereum and solana"
+description = "multi-chain block era validation for ethereum and solana"
 authors = ["Semiotic AI <info@semiotic.ai>"]
 
 [dependencies]

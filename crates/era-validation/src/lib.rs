@@ -1,23 +1,23 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-//! # Authentication
+//! # Era Validation
 //!
-//! multi-chain block and header authentication library.
+//! multi-chain block and header era validation library.
 //!
-//! ## ethereum authentication
+//! ## ethereum era validation
 //!
-//! ethereum has three distinct authentication eras:
+//! ethereum has three distinct validation eras:
 //!
-//! - **pre-merge (pow)**: blocks 0-15,537,393 - authenticated against HistoricalEpochRoots
-//! - **post-merge (pos)**: blocks 15,537,394-17,034,869 - authenticated against HistoricalRoots
-//! - **post-capella (pos)**: blocks 17,034,870+ - authenticated against HistoricalSummaries
+//! - **pre-merge (pow)**: blocks 0-15,537,393 - validated against HistoricalEpochRoots
+//! - **post-merge (pos)**: blocks 15,537,394-17,034,869 - validated against HistoricalRoots
+//! - **post-capella (pos)**: blocks 17,034,870+ - validated against HistoricalSummaries
 //!
 //! ### quick start
 //!
 //! ```rust,ignore
-//! use authentication::ethereum::{EthereumPreMergeValidator, Epoch};
-//! use authentication::traits::EraValidationContext;
+//! use era_validation::ethereum::{EthereumPreMergeValidator, Epoch};
+//! use era_validation::traits::EraValidationContext;
 //!
 //! // create validator with default historical roots
 //! let validator = EthereumPreMergeValidator::default();
@@ -27,7 +27,7 @@
 //! let result = validator.validate_era((epoch.number(), epoch.into()))?;
 //! ```
 //!
-//! ## solana authentication
+//! ## solana era validation
 //!
 //! solana eras are defined as 432,000 slot epochs.
 //!

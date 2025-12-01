@@ -73,7 +73,7 @@ impl InclusionProof {
 /// ```ignore
 /// use std::{fs::File, io::BufReader};
 /// use decoder::{read_blocks_from_reader, AnyBlock, Compression};
-/// use authentication::{Epoch, ExtHeaderRecord, ethereum::generate_inclusion_proofs};
+/// use era_validation::{Epoch, ExtHeaderRecord, ethereum::generate_inclusion_proofs};
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// // read headers from multiple eras (epochs 0 and 1)
@@ -262,7 +262,7 @@ fn do_generate_inclusion_proof(
 /// ```ignore
 /// use std::{fs::File, io::BufReader};
 /// use decoder::{read_blocks_from_reader, AnyBlock, Compression};
-/// use authentication::{
+/// use era_validation::{
 ///     Epoch, ExtHeaderRecord, ethereum::{generate_inclusion_proofs, verify_inclusion_proofs},
 /// };
 ///

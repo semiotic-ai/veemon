@@ -20,7 +20,7 @@ use crate::traits::EraValidationContext;
 /// # Examples
 ///
 /// ```rust,ignore
-/// use authentication::{EraValidatorGeneric, ethereum::EthereumPreMergeValidator};
+/// use era_validation::{EraValidatorGeneric, ethereum::EthereumPreMergeValidator};
 /// use validation::HistoricalEpochRoots;
 ///
 /// let historical_roots = HistoricalEpochRoots::default();
