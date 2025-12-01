@@ -2502,17 +2502,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
-name = "era-validators"
-version = "0.1.5"
+name = "era-validation"
+version = "0.1.0"
 dependencies = [
+ "alloy-consensus",
  "alloy-primitives",
+ "base64 0.22.1",
+ "decoder",
+ "ethereum_ssz",
+ "ethereum_ssz_derive",
  "ethportal-api",
+ "firehose-protos",
  "merkle_proof",
  "primitive-types 0.14.0",
+ "serde",
+ "serde_json",
+ "ssz_types 0.12.2",
+ "tempfile",
  "thiserror 2.0.17",
+ "tracing",
  "tree_hash",
+ "tree_hash_derive",
  "types",
  "validation",
+]
+
+[[package]]
+name = "era-validators"
+version = "0.2.0"
+dependencies = [
+ "era-validation",
 ]
 
 [[package]]
@@ -3265,25 +3284,11 @@ dependencies = [
 
 [[package]]
 name = "header-accumulator"
-version = "0.3.2"
+version = "0.4.0"
 dependencies = [
- "alloy-consensus",
- "alloy-primitives",
- "base64 0.22.1",
  "decoder",
- "ethereum_ssz",
- "ethereum_ssz_derive",
- "ethportal-api",
- "firehose-protos",
- "serde",
- "serde_json",
- "ssz_types 0.12.2",
+ "era-validation",
  "tempfile",
- "thiserror 2.0.17",
- "tracing",
- "tree_hash",
- "tree_hash_derive",
- "validation",
 ]
 
 [[package]]
@@ -7373,6 +7378,7 @@ version = "0.2.2"
 dependencies = [
  "arbitrum-ve",
  "decoder",
+ "era-validation",
  "firehose-protos",
  "header-accumulator",
  "tree_hash",

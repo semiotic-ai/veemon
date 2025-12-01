@@ -1,37 +1,18 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
-use crate::{impls::common::*, traits::EraValidationContext};
+
+use crate::{error::EthereumPostCapellaError, ethereum::common::*, traits::EraValidationContext};
 use alloy_primitives::FixedBytes;
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
-use thiserror::Error;
 use types::{BeaconBlock, MainnetEthSpec};
 use validation::constants::CAPELLA_FORK_EPOCH;
-
-#[derive(Error, Debug)]
-pub enum EthereumPostCapellaError {
-    #[error("Number of execution block hashes must match the number of beacon blocks")]
-    MismatchedBlockCount,
-    #[error("Execution block hash mismatch: expected {expected:?}, got {actual:?}")]
-    ExecutionBlockHashMismatch {
-        expected: Option<H256>,
-        actual: Option<H256>,
-    },
-    #[error("Invalid era start: slot {0} is not a multiple of 8192")]
-    InvalidEraStart(u64),
-    #[error("Invalid block summary root for era {era}: expected {expected}, got {actual}")]
-    InvalidBlockSummaryRoot {
-        era: usize,
-        expected: H256,
-        actual: H256,
-    },
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EthereumBlockSummaryRoots(pub Vec<H256>);
 
-/// A validator for Ethereum post-Capella blocks. It uses the block summary roots from historical summaries for validation. The
-/// validator consums an era of beacon blocks and the corresponding execution blocks. It checks
+/// a validator for ethereum post-capella blocks. it uses the block summary roots from historical summaries for validation. the
+/// validator consumes an era of beacon blocks and the corresponding execution blocks. it checks
 /// that the execution block hashes match the execution payloads in the beacon blocks and that the
 /// that the tree hash root of the beacon blocks matches the historical summary block summary root for the era.
 pub struct EthereumPostCapellaValidator {
@@ -39,18 +20,18 @@ pub struct EthereumPostCapellaValidator {
 }
 
 impl EthereumPostCapellaValidator {
-    /// Creates a new Ethereum post-Capella validator.
+    /// creates a new ethereum post-capella validator.
     pub fn new(historical_summaries: EthereumBlockSummaryRoots) -> Self {
         Self {
             historical_summaries,
         }
     }
 
-    /// Validates the era using the post-Capella historical summaries.
+    /// validates the era using the post-capella historical summaries.
     ///
     /// input: (execution_block_hashes, beacon_blocks). execution_block_hashes is a vector of
     /// optional execution block hashes, it is optional because not all beacon blocks have an
-    /// execution payload. beacon_blocks is a vector of beacon blocks for the era. It is expected
+    /// execution payload. beacon_blocks is a vector of beacon blocks for the era. it is expected
     /// that the execution_block_hash correspond one-to-one with the beacon_blocks.
     pub fn validate_era(
         &self,

@@ -1,30 +1,11 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
-use crate::{impls::common::*, traits::EraValidationContext};
+
+use crate::{error::EthereumPostMergeError, ethereum::common::*, traits::EraValidationContext};
 use alloy_primitives::FixedBytes;
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
-use thiserror::Error;
 use types::{BeaconBlock, MainnetEthSpec};
-
-#[derive(Error, Debug)]
-pub enum EthereumPostMergeError {
-    #[error("Number of execution block hashes must match the number of beacon blocks")]
-    MismatchedBlockCount,
-    #[error("Execution block hash mismatch: expected {expected:?}, got {actual:?}")]
-    ExecutionBlockHashMismatch {
-        expected: Option<H256>,
-        actual: Option<H256>,
-    },
-    #[error("Invalid era start: slot {0} is not a multiple of 8192")]
-    InvalidEraStart(u64),
-    #[error("Invalid block summary root for era {era}: expected {expected}, got {actual}")]
-    InvalidBlockSummaryRoot {
-        era: usize,
-        expected: H256,
-        actual: H256,
-    },
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EthereumHistoricalRoots(pub Vec<H256>);

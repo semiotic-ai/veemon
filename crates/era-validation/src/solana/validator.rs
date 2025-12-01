@@ -1,26 +1,13 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::traits::EraValidationContext;
+use crate::{error::SolanaValidatorError, traits::EraValidationContext};
 use alloy_primitives::FixedBytes;
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
-use thiserror::Error;
 
 const SOLANA_EPOCH_LENGTH: usize = 432_000;
 const SOLANA_HISTORICAL_TREE_DEPTH: usize = 19;
-
-#[derive(Error, Debug)]
-pub enum SolanaValidatorError {
-    #[error("Number of execution block hashes must match the epoch length")]
-    MismatchedBlockCount,
-    #[error("Invalid historical root for era {era}: expected {expected}, got {actual}")]
-    InvalidHistoricalRoot {
-        era: usize,
-        expected: H256,
-        actual: H256,
-    },
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SolanaHistoricalRoots(pub Vec<H256>);
