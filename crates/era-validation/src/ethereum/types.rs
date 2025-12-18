@@ -4,7 +4,7 @@
 use std::array::IntoIter;
 
 use alloy_consensus::Header;
-use alloy_primitives::{map::HashSet, Uint, B256};
+use alloy_primitives::{Uint, B256};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
 use firehose_protos::{BlockHeader, EthBlock as Block};
 
@@ -69,10 +69,12 @@ impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
         }
 
         // check if all blocks are in the same era
-        let epochs_found: HashSet<u64> = data
+        let mut epochs_found: Vec<u64> = data
             .iter()
             .map(|block| block.block_number / MAX_EPOCH_SIZE as u64)
             .collect();
+        epochs_found.sort_unstable();
+        epochs_found.dedup();
         if epochs_found.len() > 1 {
             return Err(AuthenticationError::InvalidBlockInEpoch(epochs_found));
         }

@@ -1,7 +1,6 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use alloy_primitives::map::HashSet;
 use firehose_protos::ProtosError;
 use primitive_types::H256;
 
@@ -40,7 +39,7 @@ pub enum AuthenticationError {
     },
 
     #[error("not all blocks are in the same epoch. epochs found: {0:?}")]
-    InvalidBlockInEpoch(HashSet<u64>),
+    InvalidBlockInEpoch(Vec<u64>),
 
     #[error("block epoch {block_epoch} (block number {block_number}) could not be proven with provided epoch {epoch_number}.")]
     EpochNotMatchForHeader {
