@@ -7,7 +7,7 @@ use tree_hash::TreeHash;
 use validation::{HistoricalEpochRoots, PreMergeAccumulator};
 
 use crate::{
-    error::{AuthenticationError, EthereumPreMergeError},
+    error::{EraValidationError, EthereumPreMergeError},
     ethereum::types::{Epoch, FINAL_EPOCH},
     traits::EraValidationContext,
 };
@@ -50,7 +50,7 @@ impl EthereumPreMergeValidator {
     pub fn validate_eras(
         &self,
         epochs: &[&Epoch],
-    ) -> Result<Vec<FixedBytes<32>>, AuthenticationError> {
+    ) -> Result<Vec<FixedBytes<32>>, EraValidationError> {
         let mut validated_epochs = Vec::new();
         for epoch in epochs {
             let root = self.validate_single_epoch(epoch)?;
@@ -71,9 +71,9 @@ impl EthereumPreMergeValidator {
     pub fn validate_single_epoch(
         &self,
         epoch: &Epoch,
-    ) -> Result<FixedBytes<32>, AuthenticationError> {
+    ) -> Result<FixedBytes<32>, EraValidationError> {
         if epoch.number() > FINAL_EPOCH {
-            return Err(AuthenticationError::EpochPostMerge(epoch.number() as u64));
+            return Err(EraValidationError::EpochPostMerge(epoch.number() as u64));
         }
 
         let header_records: Vec<_> = epoch.iter().cloned().collect();
@@ -90,7 +90,7 @@ impl EthereumPreMergeValidator {
                 valid_root,
                 root
             );
-            Err(AuthenticationError::EraAccumulatorMismatch)
+            Err(EraValidationError::EraAccumulatorMismatch)
         }
     }
 }

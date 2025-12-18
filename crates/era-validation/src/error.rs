@@ -6,7 +6,7 @@ use primitive_types::H256;
 
 /// Unified era validation error type for all blockchain eras and chains
 #[derive(thiserror::Error, Debug)]
-pub enum AuthenticationError {
+pub enum EraValidationError {
     // Ethereum Pre-Merge errors
     #[error("ethereum pre-merge validation failed: {0}")]
     EthereumPreMerge(#[from] EthereumPreMergeError),
@@ -67,8 +67,8 @@ pub enum AuthenticationError {
     ProofValidationFailure,
 
     // Header/Block errors
-    #[error("error decoding header from flat files")]
-    HeaderDecodeError,
+    #[error("error decoding header from flat files: {0}")]
+    HeaderDecode(#[source] ProtosError),
 
     #[error("error converting ExtHeaderRecord to header block number {0}")]
     ExtHeaderRecordError(u64),
@@ -154,11 +154,8 @@ pub enum SolanaValidatorError {
     },
 }
 
-impl From<ProtosError> for AuthenticationError {
+impl From<ProtosError> for EraValidationError {
     fn from(error: ProtosError) -> Self {
-        match error {
-            ProtosError::BlockConversionError => Self::HeaderDecodeError,
-            _ => Self::HeaderDecodeError,
-        }
+        EraValidationError::HeaderDecode(error)
     }
 }

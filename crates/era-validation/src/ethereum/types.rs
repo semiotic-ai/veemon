@@ -6,9 +6,9 @@ use std::array::IntoIter;
 use alloy_consensus::Header;
 use alloy_primitives::{Uint, B256};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
-use firehose_protos::{BlockHeader, EthBlock as Block};
+use firehose_protos::{BlockHeader, EthBlock as Block, ProtosError};
 
-use crate::error::AuthenticationError;
+use crate::error::EraValidationError;
 
 /// the maximum number of slots per epoch in ethereum.
 ///
@@ -42,7 +42,7 @@ pub struct Epoch {
 }
 
 impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
-    type Error = AuthenticationError;
+    type Error = EraValidationError;
 
     fn try_from(mut data: Vec<ExtHeaderRecord>) -> Result<Self, Self::Error> {
         // all data must be sorted
@@ -54,7 +54,7 @@ impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
         let epoch_number = data
             .first()
             .map(|block| block.block_number / MAX_EPOCH_SIZE as u64)
-            .ok_or(AuthenticationError::InvalidEpochLength(0))?;
+            .ok_or(EraValidationError::InvalidEpochLength(0))?;
         // cannot have any missing blocks
         let blocks_missing: Vec<_> = data
             .windows(2)
@@ -62,7 +62,7 @@ impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
             .map(|w| w[0].block_number + 1)
             .collect();
         if !blocks_missing.is_empty() {
-            return Err(AuthenticationError::MissingBlock {
+            return Err(EraValidationError::MissingBlock {
                 blocks: blocks_missing,
                 epoch: epoch_number,
             });
@@ -76,12 +76,12 @@ impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
         epochs_found.sort_unstable();
         epochs_found.dedup();
         if epochs_found.len() > 1 {
-            return Err(AuthenticationError::InvalidBlockInEpoch(epochs_found));
+            return Err(EraValidationError::InvalidBlockInEpoch(epochs_found));
         }
         let data: Box<[HeaderRecord]> = data.into_iter().map(Into::into).collect();
         let data: Box<[HeaderRecord; MAX_EPOCH_SIZE]> = data
             .try_into()
-            .map_err(|_| AuthenticationError::InvalidEpochLength(len as u64))?;
+            .map_err(|_| EraValidationError::InvalidEpochLength(len as u64))?;
         Ok(Self {
             number: epoch_number as usize,
             data,
@@ -150,11 +150,11 @@ impl From<ExtHeaderRecord> for HeaderRecord {
 }
 
 impl TryFrom<ExtHeaderRecord> for Header {
-    type Error = AuthenticationError;
+    type Error = EraValidationError;
 
     fn try_from(ext: ExtHeaderRecord) -> Result<Self, Self::Error> {
         ext.full_header
-            .ok_or(AuthenticationError::ExtHeaderRecordError(ext.block_number))
+            .ok_or(EraValidationError::ExtHeaderRecordError(ext.block_number))
     }
 }
 
@@ -170,18 +170,18 @@ impl From<&ExtHeaderRecord> for HeaderRecord {
 /// decodes a [`ExtHeaderRecord`] from a [`Block`]. a [`BlockHeader`] must be present in the block,
 /// otherwise validating headers won't be possible
 impl TryFrom<&Block> for ExtHeaderRecord {
-    type Error = AuthenticationError;
+    type Error = EraValidationError;
 
     fn try_from(block: &Block) -> Result<Self, Self::Error> {
         let header: &BlockHeader = block
             .header
             .as_ref()
-            .ok_or(AuthenticationError::HeaderDecodeError)?;
+            .ok_or_else(|| EraValidationError::HeaderDecode(ProtosError::BlockHeaderMissing))?;
 
         let total_difficulty = header
             .total_difficulty
             .as_ref()
-            .ok_or(AuthenticationError::HeaderDecodeError)?;
+            .ok_or_else(|| EraValidationError::HeaderDecode(ProtosError::BlockConversionError))?;
 
         Ok(ExtHeaderRecord {
             block_number: block.number,

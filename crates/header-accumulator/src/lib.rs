@@ -83,7 +83,7 @@ pub use era_validation::ethereum::InclusionProof;
     since = "0.4.0",
     note = "use `era-validation::AuthenticationError` instead"
 )]
-pub use era_validation::error::AuthenticationError as EraValidateError;
+pub use era_validation::error::EraValidationError as EraValidateError;
 
 #[deprecated(
     since = "0.4.0",

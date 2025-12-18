@@ -61,7 +61,7 @@ pub use validator::EraValidatorGeneric;
 
 // re-export errors
 pub use error::{
-    AuthenticationError, EthereumPostCapellaError, EthereumPostMergeError, EthereumPreMergeError,
+    EraValidationError, EthereumPostCapellaError, EthereumPostMergeError, EthereumPreMergeError,
     SolanaValidatorError,
 };
 
