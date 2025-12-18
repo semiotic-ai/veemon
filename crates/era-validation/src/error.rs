@@ -104,9 +104,9 @@ pub enum EthereumPreMergeError {
     },
 }
 
-/// Ethereum post-merge (pre-Capella) specific errors
-#[derive(thiserror::Error, Debug)]
-pub enum EthereumPostMergeError {
+/// Common errors for Ethereum PoS eras (post-merge and post-Capella)
+#[derive(thiserror::Error, Debug, Clone)]
+pub enum EthereumPosEraError {
     #[error("number of execution block hashes must match the number of beacon blocks")]
     MismatchedBlockCount,
 
@@ -127,27 +127,18 @@ pub enum EthereumPostMergeError {
     },
 }
 
+/// Ethereum post-merge (pre-Capella) specific errors
+#[derive(thiserror::Error, Debug)]
+pub enum EthereumPostMergeError {
+    #[error(transparent)]
+    Common(#[from] EthereumPosEraError),
+}
+
 /// Ethereum post-Capella specific errors
 #[derive(thiserror::Error, Debug)]
 pub enum EthereumPostCapellaError {
-    #[error("number of execution block hashes must match the number of beacon blocks")]
-    MismatchedBlockCount,
-
-    #[error("execution block hash mismatch: expected {expected:?}, got {actual:?}")]
-    ExecutionBlockHashMismatch {
-        expected: Option<H256>,
-        actual: Option<H256>,
-    },
-
-    #[error("invalid era start: slot {0} is not a multiple of 8192")]
-    InvalidEraStart(u64),
-
-    #[error("invalid block summary root for era {era}: expected {expected}, got {actual}")]
-    InvalidBlockSummaryRoot {
-        era: usize,
-        expected: H256,
-        actual: H256,
-    },
+    #[error(transparent)]
+    Common(#[from] EthereumPosEraError),
 }
 
 /// Solana specific errors

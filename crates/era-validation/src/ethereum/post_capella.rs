@@ -1,7 +1,11 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{error::EthereumPostCapellaError, ethereum::common::*, traits::EraValidationContext};
+use crate::{
+    error::{EthereumPosEraError, EthereumPostCapellaError},
+    ethereum::common::*,
+    traits::EraValidationContext,
+};
 use alloy_primitives::FixedBytes;
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
@@ -50,7 +54,7 @@ impl EraValidationContext for EthereumBlockSummaryRoots {
         let blocks = input.1;
 
         if blocks.len() != exec_hashes.len() {
-            return Err(EthereumPostCapellaError::MismatchedBlockCount);
+            return Err(EthereumPosEraError::MismatchedBlockCount.into());
         }
 
         for (block, expected_exec_hash) in blocks.iter().zip(exec_hashes.iter()) {
@@ -61,19 +65,21 @@ impl EraValidationContext for EthereumBlockSummaryRoots {
                     // Compare the block hash from the execution payload to the provided hash.
                     let actual_hash = Some(execution_block_hash);
                     if Some(actual_hash) != Some(*expected_exec_hash) {
-                        return Err(EthereumPostCapellaError::ExecutionBlockHashMismatch {
+                        return Err(EthereumPosEraError::ExecutionBlockHashMismatch {
                             expected: *expected_exec_hash,
                             actual: actual_hash,
-                        });
+                        }
+                        .into());
                     }
                 }
                 None => {
                     // If there's no execution payload, make sure no hash was provided.
                     if expected_exec_hash.is_some() {
-                        return Err(EthereumPostCapellaError::ExecutionBlockHashMismatch {
+                        return Err(EthereumPosEraError::ExecutionBlockHashMismatch {
                             expected: None,
                             actual: *expected_exec_hash,
-                        });
+                        }
+                        .into());
                     }
                 }
             }
@@ -83,9 +89,7 @@ impl EraValidationContext for EthereumBlockSummaryRoots {
         // not an even multiple of 8192.
         let era = blocks[0].slot() / 8192;
         if blocks[0].slot() % 8192 != 0 {
-            return Err(EthereumPostCapellaError::InvalidEraStart(
-                blocks[0].slot().into(),
-            ));
+            return Err(EthereumPosEraError::InvalidEraStart(blocks[0].slot().into()).into());
         }
 
         // Calculate the beacon block roots for each beacon block in the era.
@@ -104,11 +108,12 @@ impl EraValidationContext for EthereumBlockSummaryRoots {
         let true_root = self.0[usize::from(era) - CAPELLA_FORK_EPOCH as usize];
 
         if beacon_block_roots_tree_hash_root != FixedBytes::<32>::from(true_root.0) {
-            return Err(EthereumPostCapellaError::InvalidBlockSummaryRoot {
+            return Err(EthereumPosEraError::InvalidBlockSummaryRoot {
                 era: usize::from(era),
                 expected: true_root,
                 actual: beacon_block_roots_tree_hash_root.0.into(),
-            });
+            }
+            .into());
         }
 
         Ok(())
