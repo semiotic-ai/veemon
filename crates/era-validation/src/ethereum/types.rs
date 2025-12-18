@@ -79,7 +79,7 @@ impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
         let data: Box<[HeaderRecord]> = data.into_iter().map(Into::into).collect();
         let data: Box<[HeaderRecord; MAX_EPOCH_SIZE]> = data
             .try_into()
-            .map_err(|_| AuthenticationError::InvalidEpochLength(len))?;
+            .map_err(|_| AuthenticationError::InvalidEpochLength(len as u64))?;
         Ok(Self {
             number: epoch_number as usize,
             data,

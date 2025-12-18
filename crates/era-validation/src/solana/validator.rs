@@ -62,7 +62,7 @@ impl EraValidationContext for SolanaHistoricalRoots {
         // Check that root matches the expected historical root
         if H256::from(root.0) != self.0[era_number] {
             return Err(SolanaValidatorError::InvalidHistoricalRoot {
-                era: era_number,
+                era: era_number as u64,
                 expected: self.0[era_number],
                 actual: H256::from(root.0),
             });

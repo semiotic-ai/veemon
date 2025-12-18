@@ -73,7 +73,7 @@ impl EthereumPreMergeValidator {
         epoch: &Epoch,
     ) -> Result<FixedBytes<32>, AuthenticationError> {
         if epoch.number() > FINAL_EPOCH {
-            return Err(AuthenticationError::EpochPostMerge(epoch.number()));
+            return Err(AuthenticationError::EpochPostMerge(epoch.number() as u64));
         }
 
         let header_records: Vec<_> = epoch.iter().cloned().collect();
@@ -121,7 +121,7 @@ impl EraValidationContext for HistoricalEpochRoots {
         // check that root matches the expected historical root
         if root != self[era_number] {
             return Err(EthereumPreMergeError::InvalidHistoricalRoot {
-                era: era_number,
+                era: era_number as u64,
                 expected: primitive_types::H256::from(self[era_number].0),
                 actual: primitive_types::H256::from(root.0),
             });

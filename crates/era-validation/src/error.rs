@@ -26,10 +26,10 @@ pub enum AuthenticationError {
 
     // Epoch/Era errors
     #[error("epoch is in post merge: {0}")]
-    EpochPostMerge(usize),
+    EpochPostMerge(u64),
 
     #[error("blocks in epoch must be exactly 8192 units, found {0}")]
-    InvalidEpochLength(usize),
+    InvalidEpochLength(u64),
 
     #[error("block was missing while creating epoch {epoch}. missing blocks: {blocks:?}")]
     MissingBlock {
@@ -45,19 +45,19 @@ pub enum AuthenticationError {
     #[error("block epoch {block_epoch} (block number {block_number}) could not be proven with provided epoch {epoch_number}.")]
     EpochNotMatchForHeader {
         /// Epoch number
-        epoch_number: usize,
+        epoch_number: u64,
         /// Block number
         block_number: u64,
         /// Block epoch
-        block_epoch: usize,
+        block_epoch: u64,
     },
 
     #[error("expected epoch {block_epoch} was not found in the provided epoch list. epochs provided: {epoch_list:?}.")]
     EpochNotFoundInProvidedList {
         /// Block epoch
-        block_epoch: usize,
+        block_epoch: u64,
         /// Provided epoch list
-        epoch_list: Vec<usize>,
+        epoch_list: Vec<u64>,
     },
 
     // Proof errors
@@ -98,7 +98,7 @@ pub enum EthereumPreMergeError {
 
     #[error("invalid historical root for era {era}: expected {expected}, got {actual}")]
     InvalidHistoricalRoot {
-        era: usize,
+        era: u64,
         expected: H256,
         actual: H256,
     },
@@ -121,7 +121,7 @@ pub enum EthereumPosEraError {
 
     #[error("invalid block summary root for era {era}: expected {expected}, got {actual}")]
     InvalidBlockSummaryRoot {
-        era: usize,
+        era: u64,
         expected: H256,
         actual: H256,
     },
@@ -149,7 +149,7 @@ pub enum SolanaValidatorError {
 
     #[error("invalid historical root for era {era}: expected {expected}, got {actual}")]
     InvalidHistoricalRoot {
-        era: usize,
+        era: u64,
         expected: H256,
         actual: H256,
     },

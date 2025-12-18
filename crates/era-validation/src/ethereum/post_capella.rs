@@ -109,7 +109,7 @@ impl EraValidationContext for EthereumBlockSummaryRoots {
 
         if beacon_block_roots_tree_hash_root != FixedBytes::<32>::from(true_root.0) {
             return Err(EthereumPosEraError::InvalidBlockSummaryRoot {
-                era: usize::from(era),
+                era: era.into(),
                 expected: true_root,
                 actual: beacon_block_roots_tree_hash_root.0.into(),
             }

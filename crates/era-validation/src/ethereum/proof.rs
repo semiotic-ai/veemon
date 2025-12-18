@@ -155,18 +155,18 @@ pub fn generate_inclusion_proofs(
     headers_to_prove: Vec<Header>,
 ) -> Result<Vec<InclusionProof>, AuthenticationError> {
     let mut inclusion_proof_vec: Vec<InclusionProof> = Vec::with_capacity(headers_to_prove.len());
-    let epoch_list: Vec<_> = epochs.iter().map(|epoch| epoch.number()).collect();
+    let epoch_list: Vec<_> = epochs.iter().map(|epoch| epoch.number() as u64).collect();
     let accumulators: Vec<_> = epochs
         .into_iter()
         .map(|epoch| (epoch.number(), EpochAccumulator::from(epoch)))
         .collect();
 
     for header in headers_to_prove {
-        let block_epoch = (header.number / MAX_EPOCH_SIZE as u64) as usize;
+        let block_epoch = header.number / MAX_EPOCH_SIZE as u64;
 
         let accumulator = accumulators
             .iter()
-            .find(|epoch| epoch.0 == block_epoch)
+            .find(|epoch| epoch.0 as u64 == block_epoch)
             .map(|epoch| &epoch.1)
             .ok_or(AuthenticationError::EpochNotFoundInProvidedList {
                 block_epoch,
@@ -193,10 +193,10 @@ pub fn generate_inclusion_proof(
     epoch: Epoch,
 ) -> Result<InclusionProof, AuthenticationError> {
     let block_number = header.number;
-    let block_epoch = (block_number / MAX_EPOCH_SIZE as u64) as usize;
-    if block_epoch != epoch.number() {
+    let block_epoch = block_number / MAX_EPOCH_SIZE as u64;
+    if block_epoch != epoch.number() as u64 {
         return Err(AuthenticationError::EpochNotMatchForHeader {
-            epoch_number: epoch.number(),
+            epoch_number: epoch.number() as u64,
             block_number,
             block_epoch,
         });
