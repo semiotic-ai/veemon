@@ -5,6 +5,7 @@ use crate::{
     error::{EthereumPosEraError, EthereumPostCapellaError},
     ethereum::common::*,
     traits::EraValidationContext,
+    types::{EraNumber, SlotNumber},
 };
 use alloy_primitives::FixedBytes;
 use merkle_proof::MerkleTree;
@@ -87,9 +88,10 @@ impl EraValidationContext for EthereumBlockSummaryRoots {
 
         // Get era number from the slot of the first block: era = slot / 8192. Return an error if
         // not an even multiple of 8192.
-        let era = blocks[0].slot() / 8192;
-        if blocks[0].slot() % 8192 != 0 {
-            return Err(EthereumPosEraError::InvalidEraStart(blocks[0].slot().into()).into());
+        let slot = SlotNumber(blocks[0].slot().into());
+        let era: EraNumber = slot.into();
+        if slot % 8192 != 0 {
+            return Err(EthereumPosEraError::InvalidEraStart(slot).into());
         }
 
         // Calculate the beacon block roots for each beacon block in the era.
@@ -105,11 +107,11 @@ impl EraValidationContext for EthereumBlockSummaryRoots {
 
         // We subract CAPELLA_FORK_EPOCH from the era number to get the index in the historical
         // summaries
-        let true_root = self.0[usize::from(era) - CAPELLA_FORK_EPOCH as usize];
+        let true_root = self.0[era - CAPELLA_FORK_EPOCH as usize];
 
         if beacon_block_roots_tree_hash_root != FixedBytes::<32>::from(true_root.0) {
             return Err(EthereumPosEraError::InvalidBlockSummaryRoot {
-                era: era.into(),
+                era,
                 expected: true_root,
                 actual: beacon_block_roots_tree_hash_root.0.into(),
             }

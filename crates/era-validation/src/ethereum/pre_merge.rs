@@ -10,6 +10,7 @@ use crate::{
     error::{EraValidationError, EthereumPreMergeError},
     ethereum::types::{Epoch, FINAL_EPOCH},
     traits::EraValidationContext,
+    types::EpochNumber,
 };
 
 /// a pre-merge ethereum validator that validates the era using historical roots. pre-merge
@@ -37,7 +38,7 @@ impl EthereumPreMergeValidator {
     /// is a vector of the block hashes for that era.
     pub fn validate_era(
         &self,
-        input: (usize, EpochAccumulator),
+        input: (EpochNumber, EpochAccumulator),
     ) -> Result<(), EthereumPreMergeError> {
         self.historical_roots.validate_era(input)
     }
@@ -72,15 +73,15 @@ impl EthereumPreMergeValidator {
         &self,
         epoch: &Epoch,
     ) -> Result<FixedBytes<32>, EraValidationError> {
-        if epoch.number() > FINAL_EPOCH {
-            return Err(EraValidationError::EpochPostMerge(epoch.number() as u64));
+        if usize::from(epoch.number()) > FINAL_EPOCH {
+            return Err(EraValidationError::EpochPostMerge(epoch.number()));
         }
 
         let header_records: Vec<_> = epoch.iter().cloned().collect();
         let epoch_accumulator = EpochAccumulator::from(header_records);
 
         let root = epoch_accumulator.tree_hash_root();
-        let valid_root = self.historical_roots[epoch.number()];
+        let valid_root = self.historical_roots[usize::from(epoch.number())];
 
         if root == valid_root {
             Ok(root)
@@ -110,7 +111,7 @@ impl From<PreMergeAccumulator> for EthereumPreMergeValidator {
 }
 
 impl EraValidationContext for HistoricalEpochRoots {
-    type EraInput = (usize, EpochAccumulator);
+    type EraInput = (EpochNumber, EpochAccumulator);
     type EraOutput = Result<(), EthereumPreMergeError>;
 
     fn validate_era(&self, input: Self::EraInput) -> Self::EraOutput {
@@ -119,10 +120,10 @@ impl EraValidationContext for HistoricalEpochRoots {
         let root = input.1.tree_hash_root();
 
         // check that root matches the expected historical root
-        if root != self[era_number] {
+        if root != self[usize::from(era_number)] {
             return Err(EthereumPreMergeError::InvalidHistoricalRoot {
-                era: era_number as u64,
-                expected: primitive_types::H256::from(self[era_number].0),
+                era: era_number,
+                expected: primitive_types::H256::from(self[usize::from(era_number)].0),
                 actual: primitive_types::H256::from(root.0),
             });
         }

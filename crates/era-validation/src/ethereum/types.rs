@@ -9,6 +9,7 @@ use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecor
 use firehose_protos::{BlockHeader, EthBlock as Block, ProtosError};
 
 use crate::error::EraValidationError;
+use crate::types::{BlockNumber, EpochNumber};
 
 /// the maximum number of slots per epoch in ethereum.
 ///
@@ -37,7 +38,7 @@ pub const MERGE_BLOCK: u64 = 15537394;
 /// all blocks must be at the same epoch
 #[derive(Clone)]
 pub struct Epoch {
-    number: usize,
+    number: EpochNumber,
     data: Box<[HeaderRecord; MAX_EPOCH_SIZE]>,
 }
 
@@ -51,15 +52,15 @@ impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
         data.truncate(MAX_EPOCH_SIZE);
         let len = data.len();
         // get the first block to get the block number
-        let epoch_number = data
+        let epoch_number: EpochNumber = data
             .first()
-            .map(|block| block.block_number / MAX_EPOCH_SIZE as u64)
+            .map(|block| block.block_number.into())
             .ok_or(EraValidationError::InvalidEpochLength(0))?;
         // cannot have any missing blocks
-        let blocks_missing: Vec<_> = data
+        let blocks_missing: Vec<BlockNumber> = data
             .windows(2)
-            .filter(|w| w[1].block_number - w[0].block_number != 1)
-            .map(|w| w[0].block_number + 1)
+            .filter(|w| (w[1].block_number.0 - w[0].block_number.0) != 1)
+            .map(|w| BlockNumber(w[0].block_number.0 + 1))
             .collect();
         if !blocks_missing.is_empty() {
             return Err(EraValidationError::MissingBlock {
@@ -69,10 +70,8 @@ impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
         }
 
         // check if all blocks are in the same era
-        let mut epochs_found: Vec<u64> = data
-            .iter()
-            .map(|block| block.block_number / MAX_EPOCH_SIZE as u64)
-            .collect();
+        let mut epochs_found: Vec<EpochNumber> =
+            data.iter().map(|block| block.block_number.into()).collect();
         epochs_found.sort_unstable();
         epochs_found.dedup();
         if epochs_found.len() > 1 {
@@ -83,7 +82,7 @@ impl TryFrom<Vec<ExtHeaderRecord>> for Epoch {
             .try_into()
             .map_err(|_| EraValidationError::InvalidEpochLength(len as u64))?;
         Ok(Self {
-            number: epoch_number as usize,
+            number: epoch_number,
             data,
         })
     }
@@ -98,7 +97,7 @@ impl From<Epoch> for EpochAccumulator {
 
 impl Epoch {
     /// get the epoch number
-    pub fn number(&self) -> usize {
+    pub fn number(&self) -> EpochNumber {
         self.number
     }
 
@@ -129,7 +128,7 @@ pub struct ExtHeaderRecord {
     /// total difficulty
     pub total_difficulty: Uint<256, 4>,
     /// block number
-    pub block_number: u64,
+    pub block_number: BlockNumber,
     /// full header
     pub full_header: Option<Header>,
 }
@@ -173,18 +172,24 @@ impl TryFrom<&Block> for ExtHeaderRecord {
     type Error = EraValidationError;
 
     fn try_from(block: &Block) -> Result<Self, Self::Error> {
-        let header: &BlockHeader = block
-            .header
-            .as_ref()
-            .ok_or_else(|| EraValidationError::HeaderDecode(ProtosError::BlockHeaderMissing))?;
+        let header: &BlockHeader =
+            block
+                .header
+                .as_ref()
+                .ok_or(EraValidationError::HeaderDecode(
+                    ProtosError::BlockHeaderMissing,
+                ))?;
 
-        let total_difficulty = header
-            .total_difficulty
-            .as_ref()
-            .ok_or_else(|| EraValidationError::HeaderDecode(ProtosError::BlockConversionError))?;
+        let total_difficulty =
+            header
+                .total_difficulty
+                .as_ref()
+                .ok_or(EraValidationError::HeaderDecode(
+                    ProtosError::BlockConversionError,
+                ))?;
 
         Ok(ExtHeaderRecord {
-            block_number: block.number,
+            block_number: BlockNumber(block.number),
             block_hash: B256::from_slice(&block.hash),
             total_difficulty: Uint::from_be_slice(total_difficulty.bytes.as_slice()),
             full_header: Some(block.try_into()?),

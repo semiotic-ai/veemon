@@ -41,10 +41,14 @@ pub mod error;
 pub mod ethereum;
 pub mod solana;
 pub mod traits;
+pub mod types;
 pub mod validator;
 
 // re-export core traits
 pub use traits::EraValidationContext;
+
+// re-export numeric types
+pub use types::{BlockNumber, EpochNumber, EraNumber, SlotNumber};
 
 // re-export ethereum types and validators
 pub use ethereum::{

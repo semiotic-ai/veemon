@@ -1,7 +1,11 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{error::EraValidationError, ethereum::types::MAX_EPOCH_SIZE, Epoch};
+use crate::{
+    error::EraValidationError,
+    types::{BlockNumber, EpochNumber},
+    Epoch,
+};
 
 use alloy_consensus::Header;
 use alloy_primitives::FixedBytes;
@@ -23,17 +27,17 @@ const PROOF_SIZE: usize = 15;
 /// A proof that contains the block number
 #[derive(Clone)]
 pub struct InclusionProof {
-    block_number: u64,
+    block_number: BlockNumber,
     proof: [FixedBytes<32>; PROOF_SIZE],
 }
 
 impl InclusionProof {
     /// Takes a header and turns the proof into a provable header
     pub fn with_header(self, header: Header) -> Result<HeaderWithProof, EraValidationError> {
-        if self.block_number != header.number {
+        if self.block_number.0 != header.number {
             Err(EraValidationError::HeaderMismatch {
                 expected_number: self.block_number,
-                block_number: header.number,
+                block_number: BlockNumber(header.number),
             })
         } else {
             Ok(HeaderWithProof {
@@ -155,18 +159,19 @@ pub fn generate_inclusion_proofs(
     headers_to_prove: Vec<Header>,
 ) -> Result<Vec<InclusionProof>, EraValidationError> {
     let mut inclusion_proof_vec: Vec<InclusionProof> = Vec::with_capacity(headers_to_prove.len());
-    let epoch_list: Vec<_> = epochs.iter().map(|epoch| epoch.number() as u64).collect();
+    let epoch_list: Vec<EpochNumber> = epochs.iter().map(|epoch| epoch.number()).collect();
     let accumulators: Vec<_> = epochs
         .into_iter()
         .map(|epoch| (epoch.number(), EpochAccumulator::from(epoch)))
         .collect();
 
     for header in headers_to_prove {
-        let block_epoch = header.number / MAX_EPOCH_SIZE as u64;
+        let block_number = BlockNumber(header.number);
+        let block_epoch: EpochNumber = block_number.into();
 
         let accumulator = accumulators
             .iter()
-            .find(|epoch| epoch.0 as u64 == block_epoch)
+            .find(|epoch| epoch.0 == block_epoch)
             .map(|epoch| &epoch.1)
             .ok_or(EraValidationError::EpochNotFoundInProvidedList {
                 block_epoch,
@@ -192,11 +197,11 @@ pub fn generate_inclusion_proof(
     header: Header,
     epoch: Epoch,
 ) -> Result<InclusionProof, EraValidationError> {
-    let block_number = header.number;
-    let block_epoch = block_number / MAX_EPOCH_SIZE as u64;
-    if block_epoch != epoch.number() as u64 {
+    let block_number = BlockNumber(header.number);
+    let block_epoch: EpochNumber = block_number.into();
+    if block_epoch != epoch.number() {
         return Err(EraValidationError::EpochNotMatchForHeader {
-            epoch_number: epoch.number() as u64,
+            epoch_number: epoch.number(),
             block_number,
             block_epoch,
         });
@@ -222,7 +227,7 @@ fn do_generate_inclusion_proof(
                 .map_err(|_| EraValidationError::ProofGenerationFailure)?;
 
             Ok(InclusionProof {
-                block_number: header.number,
+                block_number: BlockNumber(header.number),
                 proof: proof_array,
             })
         })

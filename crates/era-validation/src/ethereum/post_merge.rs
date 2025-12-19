@@ -5,6 +5,7 @@ use crate::{
     error::{EthereumPosEraError, EthereumPostMergeError},
     ethereum::common::*,
     traits::EraValidationContext,
+    types::{EraNumber, SlotNumber},
 };
 use alloy_primitives::FixedBytes;
 use merkle_proof::MerkleTree;
@@ -85,9 +86,10 @@ impl EraValidationContext for EthereumHistoricalRoots {
 
         // Get era number from the slot of the first block: era = slot / 8192. Return an error if
         // not an even multiple of 8192.
-        let era = blocks[0].slot() / 8192;
-        if blocks[0].slot() % 8192 != 0 {
-            return Err(EthereumPosEraError::InvalidEraStart(blocks[0].slot().into()).into());
+        let slot = SlotNumber(blocks[0].slot().into());
+        let era: EraNumber = slot.into();
+        if slot % 8192 != 0 {
+            return Err(EthereumPosEraError::InvalidEraStart(slot).into());
         }
 
         // Calculate the beacon block roots for each beacon block in the era.
@@ -105,7 +107,7 @@ impl EraValidationContext for EthereumHistoricalRoots {
 
         if beacon_block_roots_tree_hash_root != FixedBytes::<32>::from(true_root.0) {
             return Err(EthereumPosEraError::InvalidBlockSummaryRoot {
-                era: era.into(),
+                era,
                 expected: true_root,
                 actual: beacon_block_roots_tree_hash_root.0.into(),
             }

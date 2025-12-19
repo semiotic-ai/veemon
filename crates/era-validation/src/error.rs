@@ -4,6 +4,8 @@
 use firehose_protos::ProtosError;
 use primitive_types::H256;
 
+use crate::types::{BlockNumber, EpochNumber, EraNumber, SlotNumber};
+
 /// Unified era validation error type for all blockchain eras and chains
 #[derive(thiserror::Error, Debug)]
 pub enum EraValidationError {
@@ -25,7 +27,7 @@ pub enum EraValidationError {
 
     // Epoch/Era errors
     #[error("epoch is in post merge: {0}")]
-    EpochPostMerge(u64),
+    EpochPostMerge(EpochNumber),
 
     #[error("blocks in epoch must be exactly 8192 units, found {0}")]
     InvalidEpochLength(u64),
@@ -33,30 +35,30 @@ pub enum EraValidationError {
     #[error("block was missing while creating epoch {epoch}. missing blocks: {blocks:?}")]
     MissingBlock {
         /// Epoch number
-        epoch: u64,
+        epoch: EpochNumber,
         /// Missing blocks
-        blocks: Vec<u64>,
+        blocks: Vec<BlockNumber>,
     },
 
     #[error("not all blocks are in the same epoch. epochs found: {0:?}")]
-    InvalidBlockInEpoch(Vec<u64>),
+    InvalidBlockInEpoch(Vec<EpochNumber>),
 
     #[error("block epoch {block_epoch} (block number {block_number}) could not be proven with provided epoch {epoch_number}.")]
     EpochNotMatchForHeader {
         /// Epoch number
-        epoch_number: u64,
+        epoch_number: EpochNumber,
         /// Block number
-        block_number: u64,
+        block_number: BlockNumber,
         /// Block epoch
-        block_epoch: u64,
+        block_epoch: EpochNumber,
     },
 
     #[error("expected epoch {block_epoch} was not found in the provided epoch list. epochs provided: {epoch_list:?}.")]
     EpochNotFoundInProvidedList {
         /// Block epoch
-        block_epoch: u64,
+        block_epoch: EpochNumber,
         /// Provided epoch list
-        epoch_list: Vec<u64>,
+        epoch_list: Vec<EpochNumber>,
     },
 
     // Proof errors
@@ -71,18 +73,18 @@ pub enum EraValidationError {
     HeaderDecode(#[source] ProtosError),
 
     #[error("error converting ExtHeaderRecord to header block number {0}")]
-    ExtHeaderRecordError(u64),
+    ExtHeaderRecordError(BlockNumber),
 
     #[error("header block number ({block_number}) is different than expected ({expected_number})")]
     HeaderMismatch {
         /// Expected block number
-        expected_number: u64,
+        expected_number: BlockNumber,
         /// Actual block number
-        block_number: u64,
+        block_number: BlockNumber,
     },
 
     #[error("invalid block range: {0} - {1}")]
-    InvalidBlockRange(u64, u64),
+    InvalidBlockRange(BlockNumber, BlockNumber),
 
     // Accumulator errors
     #[error("era accumulator mismatch")]
@@ -97,7 +99,7 @@ pub enum EthereumPreMergeError {
 
     #[error("invalid historical root for era {era}: expected {expected}, got {actual}")]
     InvalidHistoricalRoot {
-        era: u64,
+        era: EpochNumber,
         expected: H256,
         actual: H256,
     },
@@ -116,11 +118,11 @@ pub enum EthereumPosEraError {
     },
 
     #[error("invalid era start: slot {0} is not a multiple of 8192")]
-    InvalidEraStart(u64),
+    InvalidEraStart(SlotNumber),
 
     #[error("invalid block summary root for era {era}: expected {expected}, got {actual}")]
     InvalidBlockSummaryRoot {
-        era: u64,
+        era: EraNumber,
         expected: H256,
         actual: H256,
     },
@@ -148,7 +150,7 @@ pub enum SolanaValidatorError {
 
     #[error("invalid historical root for era {era}: expected {expected}, got {actual}")]
     InvalidHistoricalRoot {
-        era: u64,
+        era: EpochNumber,
         expected: H256,
         actual: H256,
     },
