@@ -26,9 +26,9 @@ use vee::{
     generate_inclusion_proofs, read_blocks_from_reader, verify_inclusion_proofs,
     AnyBlock, Compression, Epoch, ExtHeaderRecord,
 };
-use vee::era_validation::AuthenticationError;
+use vee::era_validation::EraValidationError;
 
-fn main() -> Result<(), AuthenticationError> {
+fn main() -> Result<(), EraValidationError> {
    let mut headers: Vec<ExtHeaderRecord> = Vec::new();
 
     for flat_file_number in (0..=8200).step_by(100) {
@@ -97,13 +97,13 @@ use vee::{
     read_blocks_from_reader, AnyBlock, Compression, Epoch, ExtHeaderRecord,
 };
 use vee::era_validation::ethereum::EthereumPreMergeValidator;
-use vee::era_validation::AuthenticationError;
+use vee::era_validation::EraValidationError;
 
 fn create_test_reader(path: &str) -> BufReader<File> {
     BufReader::new(File::open(path).unwrap())
 }
 
-fn main() -> Result<(), AuthenticationError> {
+fn main() -> Result<(), EraValidationError> {
     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
     for number in (0..=8200).step_by(100) {
         let file_name = format!(
@@ -126,7 +126,7 @@ fn main() -> Result<(), AuthenticationError> {
     }
 
     assert_eq!(headers.len(), 8300);
-    assert_eq!(headers[0].block_number, 0);
+    assert_eq!(headers[0].block_number, vee::era_validation::BlockNumber(0));
     let era_verifier = EthereumPreMergeValidator::default();
     let epoch: Epoch = headers.try_into().unwrap();
     let result = era_verifier.validate_single_epoch(&epoch)?;
