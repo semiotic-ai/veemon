@@ -38,7 +38,7 @@ impl<T: EraValidationContext> EraValidatorGeneric<T> {
     }
 
     /// Validates an era using the wrapped context
-    pub fn validate_era(&self, input: T::EraInput) -> T::EraOutput {
+    pub fn validate_era(&self, input: T::EraInput) -> Result<(), T::Error> {
         self.context.validate_era(input)
     }
 }

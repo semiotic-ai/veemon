@@ -16,10 +16,10 @@
 ///
 /// ```rust,ignore
 /// impl EraValidationContext for HistoricalEpochRoots {
-///     type EraInput = (usize, EpochAccumulator);
-///     type EraOutput = Result<(), EthereumPreMergeError>;
+///     type EraInput = (EpochNumber, EpochAccumulator);
+///     type Error = EthereumPreMergeError;
 ///
-///     fn validate_era(&self, input: Self::EraInput) -> Self::EraOutput {
+///     fn validate_era(&self, input: Self::EraInput) -> Result<(), Self::Error> {
 ///         // era-specific validation logic
 ///     }
 /// }
@@ -31,10 +31,10 @@ pub trait EraValidationContext {
     /// to be validated (e.g., block hashes, beacon blocks).
     type EraInput;
 
-    /// The result of era validation
+    /// The error type returned when validation fails
     ///
-    /// This is typically a Result type indicating success or failure of validation.
-    type EraOutput;
+    /// Must implement `std::error::Error` to ensure proper error handling.
+    type Error: std::error::Error;
 
     /// Validates an era against historical trusted data
     ///
@@ -44,6 +44,7 @@ pub trait EraValidationContext {
     ///
     /// # Returns
     ///
-    /// The validation result as defined by `EraOutput`
-    fn validate_era(&self, input: Self::EraInput) -> Self::EraOutput;
+    /// * `Ok(())` - Validation succeeded
+    /// * `Err(Self::Error)` - Validation failed with era-specific error
+    fn validate_era(&self, input: Self::EraInput) -> Result<(), Self::Error>;
 }

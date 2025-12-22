@@ -81,7 +81,17 @@ impl EthereumPreMergeValidator {
         let epoch_accumulator = EpochAccumulator::from(header_records);
 
         let root = epoch_accumulator.tree_hash_root();
-        let valid_root = self.historical_roots[usize::from(epoch.number())];
+
+        let epoch_idx = usize::from(epoch.number());
+        if epoch_idx >= self.historical_roots.len() {
+            return Err(EraValidationError::EthereumPreMerge(
+                EthereumPreMergeError::EpochOutOfBounds {
+                    epoch: epoch.number(),
+                    max_epoch: EpochNumber::from(self.historical_roots.len().saturating_sub(1)),
+                },
+            ));
+        }
+        let valid_root = self.historical_roots[epoch_idx];
 
         if root == valid_root {
             Ok(root)
@@ -112,18 +122,25 @@ impl From<PreMergeAccumulator> for EthereumPreMergeValidator {
 
 impl EraValidationContext for HistoricalEpochRoots {
     type EraInput = (EpochNumber, EpochAccumulator);
-    type EraOutput = Result<(), EthereumPreMergeError>;
+    type Error = EthereumPreMergeError;
 
-    fn validate_era(&self, input: Self::EraInput) -> Self::EraOutput {
+    fn validate_era(&self, input: Self::EraInput) -> Result<(), Self::Error> {
         let era_number = input.0;
+        let epoch_idx = usize::from(era_number);
+
+        if epoch_idx >= self.len() {
+            return Err(EthereumPreMergeError::EpochOutOfBounds {
+                epoch: era_number,
+                max_epoch: EpochNumber::from(self.len().saturating_sub(1)),
+            });
+        }
 
         let root = input.1.tree_hash_root();
 
-        // check that root matches the expected historical root
-        if root != self[usize::from(era_number)] {
+        if root != self[epoch_idx] {
             return Err(EthereumPreMergeError::InvalidHistoricalRoot {
                 era: era_number,
-                expected: primitive_types::H256::from(self[usize::from(era_number)].0),
+                expected: primitive_types::H256::from(self[epoch_idx].0),
                 actual: primitive_types::H256::from(root.0),
             });
         }

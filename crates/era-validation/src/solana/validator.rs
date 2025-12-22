@@ -42,9 +42,9 @@ impl SolanaValidator {
 
 impl EraValidationContext for SolanaHistoricalRoots {
     type EraInput = (EpochNumber, Vec<H256>);
-    type EraOutput = Result<(), SolanaValidatorError>;
+    type Error = SolanaValidatorError;
 
-    fn validate_era(&self, input: Self::EraInput) -> Self::EraOutput {
+    fn validate_era(&self, input: Self::EraInput) -> Result<(), Self::Error> {
         let era_number = input.0;
         let block_roots = input.1;
         if block_roots.len() != SOLANA_EPOCH_LENGTH {
@@ -62,11 +62,19 @@ impl EraValidationContext for SolanaHistoricalRoots {
         )
         .hash();
 
+        let era_idx = usize::from(era_number);
+        if era_idx >= self.0.len() {
+            return Err(SolanaValidatorError::EpochOutOfBounds {
+                epoch: era_number,
+                max_epoch: EpochNumber::from(self.0.len().saturating_sub(1) as u64),
+            });
+        }
+
         // Check that root matches the expected historical root
-        if H256::from(root.0) != self.0[usize::from(era_number)] {
+        if H256::from(root.0) != self.0[era_idx] {
             return Err(SolanaValidatorError::InvalidHistoricalRoot {
                 era: era_number,
-                expected: self.0[usize::from(era_number)],
+                expected: self.0[era_idx],
                 actual: H256::from(root.0),
             });
         }

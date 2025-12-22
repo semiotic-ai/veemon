@@ -103,6 +103,12 @@ pub enum EthereumPreMergeError {
         expected: H256,
         actual: H256,
     },
+
+    #[error("epoch {epoch} is out of bounds (maximum valid epoch: {max_epoch})")]
+    EpochOutOfBounds {
+        epoch: EpochNumber,
+        max_epoch: EpochNumber,
+    },
 }
 
 /// Common errors for Ethereum PoS eras (post-merge and post-Capella)
@@ -126,6 +132,9 @@ pub enum EthereumPosEraError {
         expected: H256,
         actual: H256,
     },
+
+    #[error("era {era} is out of bounds (maximum valid era: {max_era})")]
+    EraOutOfBounds { era: EraNumber, max_era: EraNumber },
 }
 
 /// Ethereum post-merge (pre-Capella) specific errors
@@ -153,6 +162,12 @@ pub enum SolanaValidatorError {
         era: EpochNumber,
         expected: H256,
         actual: H256,
+    },
+
+    #[error("epoch {epoch} is out of bounds (maximum valid epoch: {max_epoch})")]
+    EpochOutOfBounds {
+        epoch: EpochNumber,
+        max_epoch: EpochNumber,
     },
 }
 

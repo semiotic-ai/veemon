@@ -3,7 +3,7 @@
 
 use crate::{
     error::{EthereumPosEraError, EthereumPostCapellaError},
-    ethereum::common::*,
+    ethereum::{common::*, types::MAX_EPOCH_SIZE},
     traits::EraValidationContext,
     types::{EraNumber, SlotNumber},
 };
@@ -48,9 +48,9 @@ impl EthereumPostCapellaValidator {
 
 impl EraValidationContext for EthereumBlockSummaryRoots {
     type EraInput = (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>);
-    type EraOutput = Result<(), EthereumPostCapellaError>;
+    type Error = EthereumPostCapellaError;
 
-    fn validate_era(&self, input: Self::EraInput) -> Self::EraOutput {
+    fn validate_era(&self, input: Self::EraInput) -> Result<(), Self::Error> {
         let exec_hashes = input.0;
         let blocks = input.1;
 
@@ -86,11 +86,11 @@ impl EraValidationContext for EthereumBlockSummaryRoots {
             }
         }
 
-        // Get era number from the slot of the first block: era = slot / 8192. Return an error if
-        // not an even multiple of 8192.
+        // Get era number from the slot of the first block: era = slot / MAX_EPOCH_SIZE. Return an error if
+        // not an even multiple of MAX_EPOCH_SIZE.
         let slot = SlotNumber(blocks[0].slot().into());
         let era: EraNumber = slot.into();
-        if slot % 8192 != 0 {
+        if slot % MAX_EPOCH_SIZE as u64 != 0 {
             return Err(EthereumPosEraError::InvalidEraStart(slot).into());
         }
 
@@ -107,7 +107,28 @@ impl EraValidationContext for EthereumBlockSummaryRoots {
 
         // We subract CAPELLA_FORK_EPOCH from the era number to get the index in the historical
         // summaries
-        let true_root = self.0[era - CAPELLA_FORK_EPOCH as usize];
+        let true_root = {
+            let era: u64 = era.into();
+
+            if era < CAPELLA_FORK_EPOCH {
+                return Err(EthereumPosEraError::InvalidEraStart(SlotNumber(
+                    era * (MAX_EPOCH_SIZE as u64),
+                ))
+                .into());
+            }
+
+            let era_idx = (era - CAPELLA_FORK_EPOCH) as usize;
+            if era_idx >= self.0.len() {
+                return Err(EthereumPosEraError::EraOutOfBounds {
+                    era: era.into(),
+                    max_era: EraNumber::from(
+                        (self.0.len() + CAPELLA_FORK_EPOCH as usize - 1) as u64,
+                    ),
+                }
+                .into());
+            }
+            self.0[era_idx as usize]
+        };
 
         if beacon_block_roots_tree_hash_root != FixedBytes::<32>::from(true_root.0) {
             return Err(EthereumPosEraError::InvalidBlockSummaryRoot {

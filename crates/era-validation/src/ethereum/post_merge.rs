@@ -3,7 +3,7 @@
 
 use crate::{
     error::{EthereumPosEraError, EthereumPostMergeError},
-    ethereum::common::*,
+    ethereum::{common::*, types::MAX_EPOCH_SIZE},
     traits::EraValidationContext,
     types::{EraNumber, SlotNumber},
 };
@@ -46,9 +46,9 @@ impl EthereumPostMergeValidator {
 
 impl EraValidationContext for EthereumHistoricalRoots {
     type EraInput = (Vec<Option<H256>>, Vec<BeaconBlock<MainnetEthSpec>>);
-    type EraOutput = Result<(), EthereumPostMergeError>;
+    type Error = EthereumPostMergeError;
 
-    fn validate_era(&self, input: Self::EraInput) -> Self::EraOutput {
+    fn validate_era(&self, input: Self::EraInput) -> Result<(), Self::Error> {
         let exec_hashes = input.0;
         let blocks = input.1;
 
@@ -84,11 +84,11 @@ impl EraValidationContext for EthereumHistoricalRoots {
             }
         }
 
-        // Get era number from the slot of the first block: era = slot / 8192. Return an error if
-        // not an even multiple of 8192.
+        // Get era number from the slot of the first block: era = slot / MAX_EPOCH_SIZE. Return an error if
+        // not an even multiple of MAX_EPOCH_SIZE.
         let slot = SlotNumber(blocks[0].slot().into());
         let era: EraNumber = slot.into();
-        if slot % 8192 != 0 {
+        if slot % MAX_EPOCH_SIZE as u64 != 0 {
             return Err(EthereumPosEraError::InvalidEraStart(slot).into());
         }
 
@@ -103,7 +103,17 @@ impl EraValidationContext for EthereumHistoricalRoots {
         // historical_summary.block_summary_root for the era.
         let beacon_block_roots_tree_hash_root = MerkleTree::create(roots.as_slice(), 13).hash();
 
-        let true_root = self.0[usize::from(era)];
+        let true_root = {
+            let era_idx = usize::from(era);
+            if era_idx >= self.0.len() {
+                return Err(EthereumPosEraError::EraOutOfBounds {
+                    era,
+                    max_era: EraNumber::from(self.0.len().saturating_sub(1) as u64),
+                }
+                .into());
+            }
+            self.0[era_idx]
+        };
 
         if beacon_block_roots_tree_hash_root != FixedBytes::<32>::from(true_root.0) {
             return Err(EthereumPosEraError::InvalidBlockSummaryRoot {
