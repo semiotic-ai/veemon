@@ -1,3 +1,6 @@
+// Copyright 2025 Semiotic AI, Inc.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Type-safe wrappers for blockchain numeric identifiers.
 //!
 //! This module provides newtype wrappers to prevent accidentally mixing:
