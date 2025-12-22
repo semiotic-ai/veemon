@@ -127,7 +127,7 @@ impl EraValidationContext for EthereumBlockSummaryRoots {
                 }
                 .into());
             }
-            self.0[era_idx as usize]
+            self.0[era_idx]
         };
 
         if beacon_block_roots_tree_hash_root != FixedBytes::<32>::from(true_root.0) {
