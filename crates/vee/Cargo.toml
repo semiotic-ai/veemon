@@ -1,3 +1,6 @@
+# Copyright 2025 Semiotic AI, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 [package]
 name = "vee"
 version = "0.2.2"
@@ -10,6 +13,7 @@ name = "vee"
 [dependencies]
 firehose-protos.workspace = true
 decoder.workspace = true
+era-validation.workspace = true
 header-accumulator.workspace = true
 arbitrum-ve.workspace = true
 

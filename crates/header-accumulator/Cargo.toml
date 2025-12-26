@@ -1,26 +1,15 @@
+# Copyright 2025 Semiotic AI, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 [package]
 name = "header-accumulator"
-version = "0.3.2"
+version = "0.4.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-alloy-consensus.workspace = true
-alloy-primitives.workspace = true
-base64.workspace = true
-ethportal-api.workspace = true
-firehose-protos.workspace = true
-serde = { workspace = true, features = ["derive"] }
-serde_json.workspace = true
-ethereum_ssz.workspace = true
-ssz_types.workspace = true
-ethereum_ssz_derive.workspace = true
-thiserror.workspace = true
-tracing.workspace = true
-tree_hash.workspace = true
-tree_hash_derive.workspace = true
-validation.workspace = true
+era-validation = { version = "0.1.0", path = "../era-validation" }
 
 [dev-dependencies]
 decoder.workspace = true

@@ -1,14 +1,10 @@
+# Copyright 2025 Semiotic AI, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
 [package]
 name = "era-validators"
-version = "0.1.5"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-types.workspace = true
-merkle_proof.workspace = true
-validation.workspace = true
-tree_hash.workspace = true
-thiserror.workspace = true
-ethportal-api.workspace = true
-alloy-primitives.workspace = true
-primitive-types.workspace = true
+era-validation = { version = "0.1.0", path = "../era-validation" }

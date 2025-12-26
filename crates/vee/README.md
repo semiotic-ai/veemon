@@ -23,11 +23,12 @@ inclusion proofs are for verifying specific blocks to be part of canonical epoch
 ```rust,no_run
 use std::{fs::File, io::BufReader};
 use vee::{
-    generate_inclusion_proofs, read_blocks_from_reader, verify_inclusion_proofs, 
-    AnyBlock, Compression, Epoch, EraValidateError, ExtHeaderRecord,
+    generate_inclusion_proofs, read_blocks_from_reader, verify_inclusion_proofs,
+    AnyBlock, Compression, Epoch, ExtHeaderRecord,
 };
+use vee::era_validation::EraValidationError;
 
-fn main() -> Result<(), EraValidateError> {
+fn main() -> Result<(), EraValidationError> {
    let mut headers: Vec<ExtHeaderRecord> = Vec::new();
 
     for flat_file_number in (0..=8200).step_by(100) {
@@ -93,15 +94,16 @@ with the example below.
 use std::{fs::File, io::BufReader};
 use tree_hash::Hash256;
 use vee::{
-    read_blocks_from_reader, AnyBlock, Compression, Epoch, EraValidateError, 
-    EraValidator, ExtHeaderRecord,
+    read_blocks_from_reader, AnyBlock, Compression, Epoch, ExtHeaderRecord,
 };
+use vee::era_validation::ethereum::EthereumPreMergeValidator;
+use vee::era_validation::EraValidationError;
 
 fn create_test_reader(path: &str) -> BufReader<File> {
     BufReader::new(File::open(path).unwrap())
 }
 
-fn main() -> Result<(), EraValidateError> {
+fn main() -> Result<(), EraValidationError> {
     let mut headers: Vec<ExtHeaderRecord> = Vec::new();
     for number in (0..=8200).step_by(100) {
         let file_name = format!(
@@ -122,12 +124,12 @@ fn main() -> Result<(), EraValidateError> {
             .collect::<Vec<_>>();
         headers.extend(successful_headers);
     }
-    
+
     assert_eq!(headers.len(), 8300);
-    assert_eq!(headers[0].block_number, 0);
-    let era_verifier = EraValidator::default();
+    assert_eq!(headers[0].block_number, vee::era_validation::BlockNumber(0));
+    let era_verifier = EthereumPreMergeValidator::default();
     let epoch: Epoch = headers.try_into().unwrap();
-    let result = era_verifier.validate_era(&epoch)?;
+    let result = era_verifier.validate_single_epoch(&epoch)?;
     let expected = Hash256::new([
         94, 193, 255, 184, 195, 177, 70, 244, 38, 6, 199, 76, 237, 151, 61, 193, 110, 197, 161, 7,
         192, 52, 88, 88, 195, 67, 252, 148, 120, 11, 66, 24,

@@ -1,26 +1,13 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::traits::EraValidationContext;
+use crate::{error::SolanaValidatorError, traits::EraValidationContext, types::EpochNumber};
 use alloy_primitives::FixedBytes;
 use merkle_proof::MerkleTree;
 use primitive_types::H256;
-use thiserror::Error;
 
 const SOLANA_EPOCH_LENGTH: usize = 432_000;
 const SOLANA_HISTORICAL_TREE_DEPTH: usize = 19;
-
-#[derive(Error, Debug)]
-pub enum SolanaValidatorError {
-    #[error("Number of execution block hashes must match the epoch length")]
-    MismatchedBlockCount,
-    #[error("Invalid historical root for era {era}: expected {expected}, got {actual}")]
-    InvalidHistoricalRoot {
-        era: usize,
-        expected: H256,
-        actual: H256,
-    },
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SolanaHistoricalRoots(pub Vec<H256>);
@@ -45,16 +32,19 @@ impl SolanaValidator {
     ///
     /// input: (era_number, block_hashes), where era_number is the era to validate and block_hashes
     /// is a vector of the block hashes for that era.
-    pub fn validate_era(&self, input: (usize, Vec<H256>)) -> Result<(), SolanaValidatorError> {
+    pub fn validate_era(
+        &self,
+        input: (EpochNumber, Vec<H256>),
+    ) -> Result<(), SolanaValidatorError> {
         self.historical_roots.validate_era(input)
     }
 }
 
 impl EraValidationContext for SolanaHistoricalRoots {
-    type EraInput = (usize, Vec<H256>);
-    type EraOutput = Result<(), SolanaValidatorError>;
+    type EraInput = (EpochNumber, Vec<H256>);
+    type Error = SolanaValidatorError;
 
-    fn validate_era(&self, input: Self::EraInput) -> Self::EraOutput {
+    fn validate_era(&self, input: Self::EraInput) -> Result<(), Self::Error> {
         let era_number = input.0;
         let block_roots = input.1;
         if block_roots.len() != SOLANA_EPOCH_LENGTH {
@@ -72,11 +62,19 @@ impl EraValidationContext for SolanaHistoricalRoots {
         )
         .hash();
 
+        let era_idx = usize::from(era_number);
+        if era_idx >= self.0.len() {
+            return Err(SolanaValidatorError::EpochOutOfBounds {
+                epoch: era_number,
+                max_epoch: EpochNumber::from(self.0.len().saturating_sub(1) as u64),
+            });
+        }
+
         // Check that root matches the expected historical root
-        if H256::from(root.0) != self.0[era_number] {
+        if H256::from(root.0) != self.0[era_idx] {
             return Err(SolanaValidatorError::InvalidHistoricalRoot {
                 era: era_number,
-                expected: self.0[era_number],
+                expected: self.0[era_idx],
                 actual: H256::from(root.0),
             });
         }

@@ -1,5 +1,6 @@
 // Copyright 2024-, Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
+
 use primitive_types::H256;
 use tree_hash::TreeHash;
 use types::{
@@ -7,7 +8,7 @@ use types::{
     BeaconBlockDeneb, BeaconBlockElectra, EthSpec,
 };
 
-// Get the execution payload block hash from the beacon block. Depends on the beackon block type.
+/// get the execution payload block hash from the beacon block. depends on the beacon block type.
 pub fn get_execution_payload_block_hash<E: EthSpec>(block: &BeaconBlock<E>) -> Option<H256> {
     match block {
         BeaconBlock::Base(_inner) => None,
@@ -75,6 +76,7 @@ pub fn get_execution_payload_block_hash<E: EthSpec>(block: &BeaconBlock<E>) -> O
     }
 }
 
+/// compute the tree hash root for a beacon block
 pub fn compute_tree_hash_root<E: EthSpec>(block: &BeaconBlock<E>) -> H256
 where
     BeaconBlockBase<E>: TreeHash,
