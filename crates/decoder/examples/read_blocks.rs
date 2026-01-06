@@ -1,4 +1,4 @@
-// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-FileCopyrightText: 2024- Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 use flat_files_decoder::{stream_blocks, AnyBlock, EndBlock, Reader};

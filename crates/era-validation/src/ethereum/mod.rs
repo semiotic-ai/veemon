@@ -1,4 +1,4 @@
-// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-FileCopyrightText: 2024- Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 //! ethereum block era validation across all eras

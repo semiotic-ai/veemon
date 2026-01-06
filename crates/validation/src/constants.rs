@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2025 Trin Contributors
+// SPDX-FileCopyrightText: 2021-2025 Trin Contributors
 // SPDX-License-Identifier: MIT
 
 // Execution Layer hard forks https://ethereum.org/en/history/

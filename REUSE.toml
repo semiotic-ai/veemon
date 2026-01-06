@@ -1,0 +1,118 @@
+version = 1
+SPDX-PackageName = "veemon"
+SPDX-PackageSupplier = "Semiotic AI, Inc."
+SPDX-PackageDownloadLocation = "https://github.com/semiotic-ai/veemon"
+
+[[annotations]]
+path = ".github/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "crates/firehose-protos/protos/**.proto"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "StreamingFast"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "**.json"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "**.toml"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "**.md"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "**/CHANGELOG.md"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "**/README.md"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ".gitignore"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "rust-toolchain.toml"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "Cargo.lock"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ".claude/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "LICENSES/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ".env.example"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "**.parquet"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "**.dbin"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "**.dbin.zst"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "**.ssz"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "**.bin"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "**.svg"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024- Semiotic AI, Inc."
+SPDX-License-Identifier = "Apache-2.0"
