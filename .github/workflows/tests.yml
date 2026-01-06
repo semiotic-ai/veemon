@@ -1,11 +1,9 @@
 name: tests
-
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
-
 jobs:
   fmt:
     name: cargo fmt
@@ -17,7 +15,6 @@ jobs:
       - run: |
           rustup component add rustfmt
           cargo fmt --all -- --check
-
   clippy:
     name: cargo clippy
     runs-on: ubuntu-latest
@@ -25,24 +22,14 @@ jobs:
       image: rust:1.82-bookworm
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 #v2.7.3
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Configure sccache
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.9
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
+      - name: Setup Rust build environment
+        uses: ./.github/actions/setup-rust-build
+        with:
+          skip-cache: ${{ startsWith(github.head_ref, 'renovate/') }}
       - run: |
           rustup component add clippy
           # Temporarily allowing dead-code, while denying all other warnings
           cargo clippy --all-features --all-targets -- -A dead-code -D warnings
-
   test:
     name: cargo test
     runs-on: ubuntu-latest
@@ -54,22 +41,12 @@ jobs:
       image: rust:1.82-bookworm
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 #v2.7.3
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Configure sccache
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.9
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
+      - name: Setup Rust build environment
+        uses: ./.github/actions/setup-rust-build
+        with:
+          skip-cache: ${{ startsWith(github.head_ref, 'renovate/') }}
       - name: Run tests
         run: cargo test --all-features --workspace
-
   # Cannot do with llvm-cov, see https://github.com/taiki-e/cargo-llvm-cov/issues/2
   test-docs:
     name: cargo test docs code snippets
@@ -82,22 +59,12 @@ jobs:
       image: rust:1.82-bookworm
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 #v2.7.3
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Configure sccache
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.9
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
+      - name: Setup Rust build environment
+        uses: ./.github/actions/setup-rust-build
+        with:
+          skip-cache: ${{ startsWith(github.head_ref, 'renovate/') }}
       - name: Test documentation code snippets
         run: cargo test --doc --all-features --workspace
-
   build:
     name: cargo check
     runs-on: ubuntu-latest
@@ -105,22 +72,12 @@ jobs:
       image: rust:1.82-bookworm
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 #v2.7.3
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Configure sccache
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.9
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
+      - name: Setup Rust build environment
+        uses: ./.github/actions/setup-rust-build
+        with:
+          skip-cache: ${{ startsWith(github.head_ref, 'renovate/') }}
       - name: Cargo check
         run: cargo check
-
   release-check:
     name: release-please dry-run
     permissions:
@@ -130,17 +87,14 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v3
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-
       - name: Install release-please CLI
         run: npm install -g release-please
-
       - name: Run release-please dry-run
-        run: |
+        run: |-
           release-please release-pr \
             --repo-url=semiotic-ai/veemon \
             --token=${{ secrets.GITHUB_TOKEN }} \

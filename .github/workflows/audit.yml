@@ -1,9 +1,9 @@
 name: Security audit
 on:
   push:
-    paths: 
-      - '**/Cargo.toml'
-      - '**/Cargo.lock'
+    paths:
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
 permissions:
   issues: write
   checks: write
@@ -13,19 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 #v2.7.3
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Configure sccache
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.9
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
+      - name: Setup Rust build environment
+        uses: ./.github/actions/setup-rust-build
+        with:
+          skip-cache: ${{ startsWith(github.head_ref, 'renovate/') }}
       - uses: rustsec/audit-check@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

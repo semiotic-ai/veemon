@@ -1,0 +1,24 @@
+name: 'Setup Rust Build Environment'
+description: 'Configures rust-cache, sccache, and protoc for Rust builds'
+inputs:
+  skip-cache:
+    description: 'Skip caching (set to true for renovate branches)'
+    required: false
+    default: 'false'
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 #v2.7.3
+      if: inputs.skip-cache != 'true'
+    - name: Configure sccache
+      shell: bash
+      run: |
+        echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+        echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+      if: inputs.skip-cache != 'true'
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.9
+      if: inputs.skip-cache != 'true'
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v3
