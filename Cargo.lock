@@ -1149,7 +1149,7 @@ dependencies = [
 [[package]]
 name = "beacon-protos"
 version = "0.3.0"
-source = "git+https://github.com/semiotic-ai/beacon-protos.git#fba35390dd90cbc36afd8ce5dde2e837424f5770"
+source = "git+https://github.com/semiotic-ai/beacon-protos.git?rev=fba3539#fba35390dd90cbc36afd8ce5dde2e837424f5770"
 dependencies = [
  "bls",
  "firehose-rs",
@@ -2370,9 +2370,9 @@ dependencies = [
 name = "encoder"
 version = "0.1.0"
 dependencies = [
- "beacon-protos 0.3.0 (git+https://github.com/semiotic-ai/beacon-protos.git)",
+ "beacon-protos 0.3.0 (git+https://github.com/semiotic-ai/beacon-protos.git?rev=fba3539)",
  "ethereum_ssz",
- "firehose-client 0.3.0 (git+https://github.com/semiotic-ai/firehose-client.git)",
+ "firehose-client 0.3.0 (git+https://github.com/semiotic-ai/firehose-client.git?rev=c511e4c)",
  "firehose-protos",
  "prost",
  "prost-wkt-types",
@@ -2715,7 +2715,7 @@ dependencies = [
 [[package]]
 name = "firehose-client"
 version = "0.3.0"
-source = "git+https://github.com/semiotic-ai/firehose-client.git#c511e4c134a22487aec2e1a4df4c20b945c8a53d"
+source = "git+https://github.com/semiotic-ai/firehose-client.git?rev=c511e4c#c511e4c134a22487aec2e1a4df4c20b945c8a53d"
 dependencies = [
  "dotenvy",
  "firehose-rs",
