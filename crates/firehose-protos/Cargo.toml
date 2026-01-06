@@ -19,7 +19,6 @@ alloy-rlp.workspace = true
 firehose-rs.workspace = true
 hex.workspace = true
 prost.workspace = true
-prost-wkt.workspace = true
 prost-wkt-types.workspace = true
 reth-primitives.workspace = true
 serde.workspace = true
@@ -30,8 +29,10 @@ tracing.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true
-tokio.workspace = true
 
 [build-dependencies]
 prost-build.workspace = true
 tonic-prost-build.workspace = true
+
+[package.metadata.cargo-machete]
+ignored = ["prost-build", "tonic-prost-build", "serde", "tonic-prost", "prost-wkt-types"]

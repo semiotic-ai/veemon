@@ -18,22 +18,11 @@ alloy-consensus.workspace = true
 alloy-primitives.workspace = true
 ethportal-api.workspace = true
 firehose-protos.workspace = true
-
-# ssz and tree hash
-ethereum_ssz.workspace = true
-ethereum_ssz_derive.workspace = true
-ssz_types.workspace = true
 tree_hash.workspace = true
-tree_hash_derive.workspace = true
 
 # lighthouse types (for beacon chain)
 types.workspace = true
 merkle_proof.workspace = true
-
-# utilities
-base64.workspace = true
 primitive-types.workspace = true
-serde = { workspace = true, features = ["derive"] }
-serde_json.workspace = true
 thiserror.workspace = true
 tracing.workspace = true

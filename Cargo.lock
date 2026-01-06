@@ -692,7 +692,6 @@ version = "0.1.0"
 dependencies = [
  "alloy-consensus",
  "alloy-primitives",
- "serde",
  "thiserror 2.0.17",
 ]
 
@@ -2017,8 +2016,6 @@ dependencies = [
 name = "decoder"
 version = "0.5.0"
 dependencies = [
- "alloy-consensus",
- "alloy-eip2930",
  "alloy-primitives",
  "bincode",
  "clap",
@@ -2027,7 +2024,6 @@ dependencies = [
  "parquet",
  "prost",
  "rand 0.9.2",
- "reth-primitives",
  "serde",
  "serde_json",
  "thiserror 2.0.17",
@@ -2413,27 +2409,17 @@ dependencies = [
 name = "encoder"
 version = "0.1.0"
 dependencies = [
- "alloy-consensus",
- "alloy-eip2930",
- "alloy-primitives",
  "beacon-protos 0.3.0 (git+https://github.com/semiotic-ai/beacon-protos.git)",
  "ethereum_ssz",
- "ethereum_ssz_derive",
  "firehose-client 0.3.0 (git+https://github.com/semiotic-ai/firehose-client.git)",
  "firehose-protos",
  "prost",
  "prost-wkt-types",
  "reqwest",
- "reth-primitives",
  "serde",
- "serde_json",
- "ssz_types 0.12.2",
- "thiserror 2.0.17",
  "tokio",
  "tracing",
- "tree_hash",
  "types",
- "zstd",
 ]
 
 [[package]]
@@ -2506,20 +2492,13 @@ version = "0.1.0"
 dependencies = [
  "alloy-consensus",
  "alloy-primitives",
- "base64 0.22.1",
- "ethereum_ssz",
- "ethereum_ssz_derive",
  "ethportal-api",
  "firehose-protos",
  "merkle_proof",
  "primitive-types 0.14.0",
- "serde",
- "serde_json",
- "ssz_types 0.12.2",
  "thiserror 2.0.17",
  "tracing",
  "tree_hash",
- "tree_hash_derive",
  "types",
  "validation",
 ]
@@ -2802,13 +2781,11 @@ dependencies = [
  "hex",
  "prost",
  "prost-build",
- "prost-wkt",
  "prost-wkt-types",
  "reth-primitives",
  "serde",
  "serde_json",
  "thiserror 2.0.17",
- "tokio",
  "tonic",
  "tonic-prost",
  "tonic-prost-build",
@@ -7301,7 +7278,6 @@ version = "0.1.0"
 dependencies = [
  "alloy-consensus",
  "alloy-primitives",
- "alloy-rlp",
  "anyhow",
  "ethereum_hashing 0.8.0",
  "ethereum_ssz",
@@ -7312,7 +7288,6 @@ dependencies = [
  "quickcheck_macros",
  "rust-embed",
  "serde",
- "serde_json",
  "ssz_types 0.12.2",
  "static_assertions",
  "tree_hash",

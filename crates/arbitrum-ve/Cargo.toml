@@ -7,7 +7,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-serde = { workspace = true, features = ["derive"] }
 alloy-primitives.workspace = true
 thiserror.workspace = true
 alloy-consensus.workspace = true
