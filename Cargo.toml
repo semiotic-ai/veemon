@@ -17,8 +17,6 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-alloy-core = "1.4.1"
-alloy-dyn-abi = "1.4.1"
 alloy-rlp = "0.3.12"
 alloy-consensus = "1.0.42"
 alloy-eip2930 = "0.2.1"
@@ -42,8 +40,6 @@ firehose-rs = "0.3.0"
 futures = "0.3.31"
 header-accumulator = { path = "crates/header-accumulator" }
 hex = "0.4.3"
-keccak-hash = "0.11.0"
-kzg = { git = "https://github.com/sigp/lighthouse.git", branch = "stable" }
 merkle_proof = { git = "https://github.com/sigp/lighthouse.git", branch = "stable" }
 parquet = "56.2.0"
 primitive-types = "0.14.0"
@@ -53,12 +49,9 @@ prost-wkt = "0.7.0"
 prost-wkt-types = "0.7.0"
 rand = "0.9.2"
 reth-primitives = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-reth-trie-common = { git = "https://github.com/paradigmxyz/reth", branch = "main" }
-rlp = "0.6.1"
 serde = "1.0.228"
 serde_json = "1.0.145"
 ssz_types = "0.12.2"
-tempfile = "3.23.0"
 thiserror = "2.0.17"
 tokio = "1.48.0"
 tonic = "0.14.2"

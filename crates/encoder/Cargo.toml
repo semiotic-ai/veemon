@@ -15,7 +15,6 @@ path = "src/lib.rs"
 alloy-consensus.workspace = true
 alloy-eip2930.workspace = true
 alloy-primitives.workspace = true
-bincode.workspace = true
 ethereum_ssz.workspace = true
 ethereum_ssz_derive.workspace = true
 firehose-protos.workspace = true

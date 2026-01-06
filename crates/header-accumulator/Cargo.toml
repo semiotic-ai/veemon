@@ -10,7 +10,3 @@ edition = "2021"
 
 [dependencies]
 era-validation = { version = "0.1.0", path = "../era-validation" }
-
-[dev-dependencies]
-decoder.workspace = true
-tempfile.workspace = true

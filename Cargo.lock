@@ -2417,7 +2417,6 @@ dependencies = [
  "alloy-eip2930",
  "alloy-primitives",
  "beacon-protos 0.3.0 (git+https://github.com/semiotic-ai/beacon-protos.git)",
- "bincode",
  "ethereum_ssz",
  "ethereum_ssz_derive",
  "firehose-client 0.3.0 (git+https://github.com/semiotic-ai/firehose-client.git)",
@@ -2508,7 +2507,6 @@ dependencies = [
  "alloy-consensus",
  "alloy-primitives",
  "base64 0.22.1",
- "decoder",
  "ethereum_ssz",
  "ethereum_ssz_derive",
  "ethportal-api",
@@ -2518,7 +2516,6 @@ dependencies = [
  "serde",
  "serde_json",
  "ssz_types 0.12.2",
- "tempfile",
  "thiserror 2.0.17",
  "tracing",
  "tree_hash",
@@ -3286,9 +3283,7 @@ dependencies = [
 name = "header-accumulator"
 version = "0.4.0"
 dependencies = [
- "decoder",
  "era-validation",
- "tempfile",
 ]
 
 [[package]]
