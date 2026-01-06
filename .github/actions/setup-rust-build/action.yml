@@ -18,7 +18,7 @@ runs:
         echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
       if: inputs.skip-cache != 'true'
     - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.9
+      uses: mozilla-actions/sccache-action@d651010b8da762cde178750d8eda7b5febfe147a # v0.0.9
       if: inputs.skip-cache != 'true'
     - name: Install Protoc
-      uses: arduino/setup-protoc@v3
+      uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b # v3.0.0
