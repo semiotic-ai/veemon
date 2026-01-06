@@ -1,16 +1,15 @@
 name: Release please
-
 on:
   push:
     branches:
       - main
-
 jobs:
   release-please:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write
-    runs-on: ubuntu-latest
     steps:
       - name: Release please
         id: release-please
