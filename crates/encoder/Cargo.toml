@@ -24,5 +24,5 @@ types.workspace = true
 beacon-protos = { git = "https://github.com/semiotic-ai/beacon-protos.git", commit = "fba3539"}
 firehose-client = { git = "https://github.com/semiotic-ai/firehose-client.git", commit = "c511e4c"}
 reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
-tokio = "1.39.2"
+tokio = "1.49.0"
 
