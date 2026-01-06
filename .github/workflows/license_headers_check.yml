@@ -1,11 +1,9 @@
 name: License headers check
-
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
-
 jobs:
   check:
     name: License headers check
@@ -14,12 +12,14 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Install addlicense
         run: |
-          wget https://github.com/google/addlicense/releases/download/v1.1.1/addlicense_1.1.1_Linux_x86_64.tar.gz
+          wget -q https://github.com/google/addlicense/releases/download/v1.1.1/addlicense_1.1.1_Linux_x86_64.tar.gz
+          echo "adad31f12ac4af835640dcc88284954706e38a3302eed07aa824926a12ab3498  addlicense_1.1.1_Linux_x86_64.tar.gz" | sha256sum -c -
           tar -xzf addlicense_1.1.1_Linux_x86_64.tar.gz
           sudo mv addlicense /usr/local/bin
       - name: Check license headers
         run: >
           addlicense \
+
             -check \
             -c "Semiotic AI, Inc." \
             -l "apache" \
