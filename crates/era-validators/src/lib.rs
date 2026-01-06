@@ -1,4 +1,4 @@
-// Copyright 2024-, Semiotic AI, Inc.
+// SPDX-FileCopyrightText: 2024- Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
 #![doc = "**DEPRECATED**: This crate has been superseded by the `era-validation` crate.\n\n\

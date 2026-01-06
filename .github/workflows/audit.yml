@@ -1,9 +1,9 @@
 name: Security audit
 on:
   push:
-    paths: 
-      - '**/Cargo.toml'
-      - '**/Cargo.lock'
+    paths:
+      - "**/Cargo.toml"
+      - "**/Cargo.lock"
 permissions:
   issues: write
   checks: write
@@ -11,21 +11,13 @@ permissions:
 jobs:
   security_audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 #v2.7.3
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Configure sccache
-        run: |
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.9
-        if: ${{ !startsWith(github.head_ref, 'renovate/') }}
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
-      - uses: rustsec/audit-check@v2
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Setup Rust build environment
+        uses: ./.github/actions/setup-rust-build
+        with:
+          skip-cache: ${{ startsWith(github.head_ref, 'renovate/') }}
+      - uses: rustsec/audit-check@69366f33c96575abad1ee0dba8212993eecbe998 # v2.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

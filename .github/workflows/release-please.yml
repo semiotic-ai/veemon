@@ -1,17 +1,16 @@
 name: Release please
-
 on:
   push:
     branches:
       - main
-
 jobs:
   release-please:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write
-    runs-on: ubuntu-latest
     steps:
       - name: Release please
         id: release-please
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@c3fc4de07084f75a2b61a5b933069bda6edf3d5c # v4
