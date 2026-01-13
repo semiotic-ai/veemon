@@ -5,7 +5,9 @@
 use firehose_protos::ProtosError;
 use primitive_types::H256;
 
-use crate::types::{BlockNumber, EpochNumber, EraNumber, SlotNumber};
+use crate::types::{BlockNumber, EpochNumber};
+#[cfg(feature = "beacon")]
+use crate::types::{EraNumber, SlotNumber};
 
 /// Unified era validation error type for all blockchain eras and chains
 #[derive(thiserror::Error, Debug)]
@@ -15,14 +17,17 @@ pub enum EraValidationError {
     EthereumPreMerge(#[from] EthereumPreMergeError),
 
     // Ethereum Post-Merge errors
+    #[cfg(feature = "beacon")]
     #[error("ethereum post-merge validation failed: {0}")]
     EthereumPostMerge(#[from] EthereumPostMergeError),
 
     // Ethereum Post-Capella errors
+    #[cfg(feature = "beacon")]
     #[error("ethereum post-capella validation failed: {0}")]
     EthereumPostCapella(#[from] EthereumPostCapellaError),
 
     // Solana errors
+    #[cfg(feature = "solana")]
     #[error("solana validation failed: {0}")]
     Solana(#[from] SolanaValidatorError),
 
@@ -114,6 +119,7 @@ pub enum EthereumPreMergeError {
 }
 
 /// Common errors for Ethereum PoS eras (post-merge and post-Capella)
+#[cfg(feature = "beacon")]
 #[derive(thiserror::Error, Debug, Clone)]
 pub enum EthereumPosEraError {
     #[error("number of execution block hashes must match the number of beacon blocks")]
@@ -140,6 +146,7 @@ pub enum EthereumPosEraError {
 }
 
 /// Ethereum post-merge (pre-Capella) specific errors
+#[cfg(feature = "beacon")]
 #[derive(thiserror::Error, Debug)]
 pub enum EthereumPostMergeError {
     #[error(transparent)]
@@ -147,6 +154,7 @@ pub enum EthereumPostMergeError {
 }
 
 /// Ethereum post-Capella specific errors
+#[cfg(feature = "beacon")]
 #[derive(thiserror::Error, Debug)]
 pub enum EthereumPostCapellaError {
     #[error(transparent)]
@@ -154,6 +162,7 @@ pub enum EthereumPostCapellaError {
 }
 
 /// Solana specific errors
+#[cfg(feature = "solana")]
 #[derive(thiserror::Error, Debug)]
 pub enum SolanaValidatorError {
     #[error("number of execution block hashes must match the epoch length")]
