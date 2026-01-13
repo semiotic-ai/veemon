@@ -5,6 +5,12 @@
 //!
 //! multi-chain block and header era validation library.
 //!
+//! ## Features
+//!
+//! - **firehose** (default): Enables support for converting from firehose-protos Block types
+//!   to ExtHeaderRecord. Disable with `default-features = false` to avoid pulling in reth
+//!   dependencies.
+//!
 //! ## ethereum era validation
 //!
 //! ethereum has three distinct validation eras:
@@ -13,7 +19,7 @@
 //! - **post-merge (pos)**: blocks 15,537,394-17,034,869 - validated against HistoricalRoots
 //! - **post-capella (pos)**: blocks 17,034,870+ - validated against HistoricalSummaries
 //!
-//! ### quick start
+//! ### quick start (with firehose)
 //!
 //! ```rust,ignore
 //! use era_validation::ethereum::{EthereumPreMergeValidator, Epoch};
@@ -21,6 +27,30 @@
 //!
 //! // create validator with default historical roots
 //! let validator = EthereumPreMergeValidator::default();
+//!
+//! // validate an epoch
+//! let epoch: Epoch = headers.try_into()?;
+//! let result = validator.validate_era((epoch.number(), epoch.into()))?;
+//! ```
+//!
+//! ### quick start (without firehose - using alloy types)
+//!
+//! ```rust,ignore
+//! use era_validation::ethereum::{EthereumPreMergeValidator, Epoch, ExtHeaderRecord};
+//! use era_validation::traits::EraValidationContext;
+//! use alloy_consensus::Header;
+//! use alloy_primitives::Uint;
+//!
+//! // create validator with default historical roots
+//! let validator = EthereumPreMergeValidator::default();
+//!
+//! // convert alloy Headers to ExtHeaderRecords
+//! let headers: Vec<ExtHeaderRecord> = alloy_headers
+//!     .into_iter()
+//!     .map(|(header, total_difficulty): (Header, Uint<256, 4>)| {
+//!         ExtHeaderRecord::new(header, total_difficulty)
+//!     })
+//!     .collect();
 //!
 //! // validate an epoch
 //! let epoch: Epoch = headers.try_into()?;

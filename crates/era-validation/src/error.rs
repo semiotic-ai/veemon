@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2024- Semiotic AI, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "firehose")]
 use firehose_protos::ProtosError;
 use primitive_types::H256;
 
@@ -69,6 +70,7 @@ pub enum EraValidationError {
     ProofValidationFailure,
 
     // Header/Block errors
+    #[cfg(feature = "firehose")]
     #[error("error decoding header from flat files: {0}")]
     HeaderDecode(#[source] ProtosError),
 
@@ -171,6 +173,7 @@ pub enum SolanaValidatorError {
     },
 }
 
+#[cfg(feature = "firehose")]
 impl From<ProtosError> for EraValidationError {
     fn from(error: ProtosError) -> Self {
         EraValidationError::HeaderDecode(error)

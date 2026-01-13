@@ -9,6 +9,10 @@ license = "Apache-2.0"
 description = "multi-chain block era validation for ethereum and solana"
 authors = ["Semiotic AI <info@semiotic.ai>"]
 
+[features]
+default = ["firehose"]
+firehose = ["dep:firehose-protos"]
+
 [dependencies]
 # foundation
 validation.workspace = true
@@ -17,7 +21,7 @@ validation.workspace = true
 alloy-consensus.workspace = true
 alloy-primitives.workspace = true
 ethportal-api.workspace = true
-firehose-protos.workspace = true
+firehose-protos = { workspace = true, optional = true }
 tree_hash.workspace = true
 
 # lighthouse types (for beacon chain)
