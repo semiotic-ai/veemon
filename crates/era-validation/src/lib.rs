@@ -5,6 +5,24 @@
 //!
 //! multi-chain block and header era validation library.
 //!
+//! ## Features
+//!
+//! - **firehose** (default): Enables support for converting from firehose-protos Block types
+//!   to ExtHeaderRecord. Disable with `default-features = false` to avoid pulling in reth
+//!   dependencies.
+//! - **beacon** (default): Enables post-merge and post-Capella Ethereum validation. Requires
+//!   lighthouse types. Disable to avoid libsqlite3-sys version conflicts.
+//! - **solana** (default): Enables Solana era validation. Requires lighthouse's merkle_proof.
+//!
+//! ### For amp-internal integration (avoiding reth and sqlite conflicts)
+//!
+//! ```toml
+//! [dependencies]
+//! era-validation = { git = "https://github.com/semiotic-ai/veemon", branch = "amp-integration", default-features = false }
+//! ```
+//!
+//! This gives you pre-merge Ethereum validation with alloy types only, no reth or lighthouse dependencies.
+//!
 //! ## ethereum era validation
 //!
 //! ethereum has three distinct validation eras:
@@ -13,7 +31,7 @@
 //! - **post-merge (pos)**: blocks 15,537,394-17,034,869 - validated against HistoricalRoots
 //! - **post-capella (pos)**: blocks 17,034,870+ - validated against HistoricalSummaries
 //!
-//! ### quick start
+//! ### quick start (with firehose)
 //!
 //! ```rust,ignore
 //! use era_validation::ethereum::{EthereumPreMergeValidator, Epoch};
@@ -21,6 +39,30 @@
 //!
 //! // create validator with default historical roots
 //! let validator = EthereumPreMergeValidator::default();
+//!
+//! // validate an epoch
+//! let epoch: Epoch = headers.try_into()?;
+//! let result = validator.validate_era((epoch.number(), epoch.into()))?;
+//! ```
+//!
+//! ### quick start (without firehose - using alloy types)
+//!
+//! ```rust,ignore
+//! use era_validation::ethereum::{EthereumPreMergeValidator, Epoch, ExtHeaderRecord};
+//! use era_validation::traits::EraValidationContext;
+//! use alloy_consensus::Header;
+//! use alloy_primitives::Uint;
+//!
+//! // create validator with default historical roots
+//! let validator = EthereumPreMergeValidator::default();
+//!
+//! // convert alloy Headers to ExtHeaderRecords
+//! let headers: Vec<ExtHeaderRecord> = alloy_headers
+//!     .into_iter()
+//!     .map(|(header, total_difficulty): (Header, Uint<256, 4>)| {
+//!         ExtHeaderRecord::new(header, total_difficulty)
+//!     })
+//!     .collect();
 //!
 //! // validate an epoch
 //! let epoch: Epoch = headers.try_into()?;
@@ -39,6 +81,7 @@
 
 pub mod error;
 pub mod ethereum;
+#[cfg(feature = "solana")]
 pub mod solana;
 pub mod traits;
 pub mod types;
@@ -53,21 +96,28 @@ pub use types::{BlockNumber, EpochNumber, EraNumber, SlotNumber};
 // re-export ethereum types and validators
 pub use ethereum::{
     generate_inclusion_proof, generate_inclusion_proofs, verify_inclusion_proof,
-    verify_inclusion_proofs, Epoch, EthereumPostCapellaValidator, EthereumPostMergeValidator,
-    EthereumPreMergeValidator, ExtHeaderRecord, HeaderWithProof, InclusionProof,
+    verify_inclusion_proofs, Epoch, EthereumPreMergeValidator, ExtHeaderRecord, HeaderWithProof,
+    InclusionProof,
 };
 
+#[cfg(feature = "beacon")]
+pub use ethereum::{EthereumPostCapellaValidator, EthereumPostMergeValidator};
+
 // re-export solana types and validators
+#[cfg(feature = "solana")]
 pub use solana::SolanaValidator;
 
 // re-export generic validator
 pub use validator::EraValidatorGeneric;
 
 // re-export errors
-pub use error::{
-    EraValidationError, EthereumPostCapellaError, EthereumPostMergeError, EthereumPreMergeError,
-    SolanaValidatorError,
-};
+pub use error::{EraValidationError, EthereumPreMergeError};
+
+#[cfg(feature = "beacon")]
+pub use error::{EthereumPostCapellaError, EthereumPostMergeError};
+
+#[cfg(feature = "solana")]
+pub use error::SolanaValidatorError;
 
 // re-export commonly used validation types
 pub use validation::header_validator::HeaderValidator;

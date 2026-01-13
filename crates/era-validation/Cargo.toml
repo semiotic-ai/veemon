@@ -9,6 +9,12 @@ license = "Apache-2.0"
 description = "multi-chain block era validation for ethereum and solana"
 authors = ["Semiotic AI <info@semiotic.ai>"]
 
+[features]
+default = ["firehose", "beacon", "solana"]
+firehose = ["dep:firehose-protos"]
+beacon = ["dep:types", "dep:merkle_proof"]
+solana = ["dep:merkle_proof"]
+
 [dependencies]
 # foundation
 validation.workspace = true
@@ -17,12 +23,12 @@ validation.workspace = true
 alloy-consensus.workspace = true
 alloy-primitives.workspace = true
 ethportal-api.workspace = true
-firehose-protos.workspace = true
+firehose-protos = { workspace = true, optional = true }
 tree_hash.workspace = true
 
-# lighthouse types (for beacon chain)
-types.workspace = true
-merkle_proof.workspace = true
+# lighthouse types (for beacon chain) - optional
+types = { workspace = true, optional = true }
+merkle_proof = { workspace = true, optional = true }
 primitive-types.workspace = true
 thiserror.workspace = true
 tracing.workspace = true

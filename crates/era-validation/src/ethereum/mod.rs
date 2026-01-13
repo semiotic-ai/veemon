@@ -3,15 +3,20 @@
 
 //! ethereum block era validation across all eras
 
+#[cfg(feature = "beacon")]
 mod common;
+#[cfg(feature = "beacon")]
 pub mod post_capella;
+#[cfg(feature = "beacon")]
 pub mod post_merge;
 pub mod pre_merge;
 pub mod proof;
 pub mod types;
 
 // re-export public types
+#[cfg(feature = "beacon")]
 pub use post_capella::EthereumPostCapellaValidator;
+#[cfg(feature = "beacon")]
 pub use post_merge::EthereumPostMergeValidator;
 pub use pre_merge::EthereumPreMergeValidator;
 pub use proof::{
