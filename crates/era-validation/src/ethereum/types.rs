@@ -152,7 +152,11 @@ impl ExtHeaderRecord {
     ///
     /// This is useful when you only need to validate the epoch accumulator
     /// but don't need the full header data.
-    pub fn new_minimal(block_hash: B256, total_difficulty: Uint<256, 4>, block_number: BlockNumber) -> Self {
+    pub fn new_minimal(
+        block_hash: B256,
+        total_difficulty: Uint<256, 4>,
+        block_number: BlockNumber,
+    ) -> Self {
         Self {
             block_hash,
             total_difficulty,
