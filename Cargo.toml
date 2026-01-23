@@ -18,9 +18,9 @@ resolver = "2"
 
 [workspace.dependencies]
 alloy-rlp = "0.3.12"
-alloy-consensus = "1.3.0"
+alloy-consensus = "^1.2" # use old version to match amp
 alloy-eip2930 = "0.2.3"
-alloy-primitives = "1.5.2"
+alloy-primitives = "^1.4" # use old version to match amp
 anyhow = "1.0.100"
 arbitrum-ve = { path = "crates/arbitrum-ve" }
 era-validation = { path = "crates/era-validation" }

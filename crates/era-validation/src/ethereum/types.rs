@@ -6,6 +6,7 @@ use std::array::IntoIter;
 use alloy_consensus::Header;
 use alloy_primitives::{Uint, B256};
 use ethportal_api::types::execution::accumulator::{EpochAccumulator, HeaderRecord};
+#[cfg(feature = "firehose")]
 use firehose_protos::{BlockHeader, EthBlock as Block, ProtosError};
 
 use crate::error::EraValidationError;
@@ -133,6 +134,38 @@ pub struct ExtHeaderRecord {
     pub full_header: Option<Header>,
 }
 
+impl ExtHeaderRecord {
+    /// Creates a new ExtHeaderRecord from alloy-consensus Header
+    ///
+    /// This constructor is useful when you're not using firehose and want to
+    /// create ExtHeaderRecords directly from alloy types.
+    pub fn new(header: Header, total_difficulty: Uint<256, 4>) -> Self {
+        Self {
+            block_hash: header.hash_slow(),
+            total_difficulty,
+            block_number: BlockNumber(header.number),
+            full_header: Some(header),
+        }
+    }
+
+    /// Creates a new ExtHeaderRecord with only the hash and total difficulty
+    ///
+    /// This is useful when you only need to validate the epoch accumulator
+    /// but don't need the full header data.
+    pub fn new_minimal(
+        block_hash: B256,
+        total_difficulty: Uint<256, 4>,
+        block_number: BlockNumber,
+    ) -> Self {
+        Self {
+            block_hash,
+            total_difficulty,
+            block_number,
+            full_header: None,
+        }
+    }
+}
+
 impl From<ExtHeaderRecord> for HeaderRecord {
     fn from(
         ExtHeaderRecord {
@@ -168,6 +201,7 @@ impl From<&ExtHeaderRecord> for HeaderRecord {
 
 /// decodes a [`ExtHeaderRecord`] from a [`Block`]. a [`BlockHeader`] must be present in the block,
 /// otherwise validating headers won't be possible
+#[cfg(feature = "firehose")]
 impl TryFrom<&Block> for ExtHeaderRecord {
     type Error = EraValidationError;
 
