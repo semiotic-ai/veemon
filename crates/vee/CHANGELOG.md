@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/semiotic-ai/veemon/compare/vee-v0.2.2...vee-v0.3.0) (2026-01-27)
+
+
+### Features
+
+* turn firehose-protos optional ([1836dcb](https://github.com/semiotic-ai/veemon/commit/1836dcbc30696110d84675b5beb352d43ebd979a))
+* turn firehose-protos optional ([b1178a4](https://github.com/semiotic-ai/veemon/commit/b1178a46e2552786b3e9a52f477d8ad7f4ba8d83))
+
 ## [0.2.2](https://github.com/semiotic-ai/veemon/compare/vee-v0.2.1...vee-v0.2.2) (2025-11-20)
 
 ## [0.2.1](https://github.com/semiotic-ai/veemon/compare/vee-v0.2.0...vee-v0.2.1) (2025-11-17)

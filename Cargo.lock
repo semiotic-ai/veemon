@@ -2755,7 +2755,7 @@ dependencies = [
 
 [[package]]
 name = "firehose-protos-examples"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "alloy-primitives",
  "beacon-protos 0.3.0 (git+https://github.com/semiotic-ai/beacon-protos.git?branch=main)",
@@ -7295,7 +7295,7 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 
 [[package]]
 name = "vee"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "arbitrum-ve",
  "decoder",
