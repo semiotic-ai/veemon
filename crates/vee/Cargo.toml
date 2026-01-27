@@ -12,12 +12,12 @@ name = "vee"
 
 [features]
 default = []
-firehose = ["dep:firehose-protos", "dep:decoder"]
+firehose = ["dep:firehose-protos", "dep:decoder", "era-validation/firehose"]
 
 [dependencies]
 firehose-protos = { workspace = true, optional = true }
 decoder = { workspace = true, optional = true }
-era-validation.workspace = true
+era-validation = { workspace = true, default-features = false }
 header-accumulator.workspace = true
 arbitrum-ve.workspace = true
 
