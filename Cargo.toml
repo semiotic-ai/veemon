@@ -74,3 +74,11 @@ codegen-units = 1
 [profile.release]
 codegen-units = 1
 lto = false
+
+# Pin vergen crates to avoid version mismatch between vergen and vergen-git2.
+# vergen-git2 1.0.7 requires vergen-lib 0.1.x, but newer vergen uses vergen-lib 9.x
+# This ensures compatibility when veemon is used as a git dependency.
+[patch.crates-io]
+vergen = { git = "https://github.com/rustyhorde/vergen", tag = "vergen_9.0.6" }
+vergen-git2 = { git = "https://github.com/rustyhorde/vergen", tag = "vergen_9.0.6" }
+vergen-lib = { git = "https://github.com/rustyhorde/vergen", tag = "vergen_9.0.6" }
