@@ -10,9 +10,13 @@ edition = "2021"
 path = "src/lib.rs"
 name = "vee"
 
+[features]
+default = []
+firehose = ["dep:firehose-protos", "dep:decoder"]
+
 [dependencies]
-firehose-protos.workspace = true
-decoder.workspace = true
+firehose-protos = { workspace = true, optional = true }
+decoder = { workspace = true, optional = true }
 era-validation.workspace = true
 header-accumulator.workspace = true
 arbitrum-ve.workspace = true
