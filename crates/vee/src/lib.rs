@@ -6,9 +6,11 @@
 
 // 🚀✨ Main Re-exports ✨🚀
 
+#[cfg(feature = "firehose")]
 #[doc(inline)]
 pub use firehose_protos as protos;
 
+#[cfg(feature = "firehose")]
 #[doc(inline)]
 pub use flat_files_decoder as decoder;
 
@@ -33,5 +35,9 @@ pub use era_validation::EraValidationContext;
 pub use accumulator::*;
 
 pub use arbitrum_ve::*;
+
+#[cfg(feature = "firehose")]
 pub use decoder::*;
+
+#[cfg(feature = "firehose")]
 pub use protos::*;
