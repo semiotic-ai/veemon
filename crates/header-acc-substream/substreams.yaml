@@ -1,0 +1,74 @@
+specVersion: v0.1.0
+package:
+  name: header_accumulator
+  version: v0.1.0
+
+imports:
+  ethereum: https://github.com/streamingfast/firehose-ethereum/releases/download/v1.4.8/ethereum-v1.0.0.spkg
+
+protobuf:
+  files:
+    - mydata.proto
+  importPaths:
+    - ./proto
+  excludePaths:
+    - sf/substreams
+    - sf/ethereum
+    - google
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: ./target/wasm32-unknown-unknown/release/substreams.wasm
+
+modules:
+  - name: map_my_data
+    kind: map
+    inputs:
+    - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:mydata.v1.Header
+  - name: store_block_headers
+    kind: store
+    updatePolicy: append
+    valueType: string 
+    inputs:
+    - map: map_my_data
+
+  - name: store_tick_epoch
+    kind: store
+    updatePolicy: set
+    valueType: string 
+    inputs:
+    - map: map_my_data
+    - store: store_block_headers
+
+  - name: map_hashes
+    kind: map
+    inputs:
+    - store: store_tick_epoch
+      mode: deltas
+    output:
+      type: proto:mydata.v1.Hashes
+
+  - name: map_accumulator
+    kind: map
+    inputs:
+    - map: map_hashes 
+    output:
+      type: proto:mydata.v1.HeaderAccumulator
+
+  # For performance, you should use a blockFilter whenever possible, like this:
+  # imports:
+  #   eth: https://spkg.io/streamingfast/ethereum-common-v0.3.0.spkg
+  #
+  # modules:
+  #   - name: (...)
+  #     blockFilter:
+  #      module: eth:index_events
+  #      query:
+  #          string: evt_sig:0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31
+  #
+  # see https://substreams.dev/streamingfast/ethereum-common/v0.3.0 for details
+
+network: mainnet
